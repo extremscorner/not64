@@ -1,0 +1,442 @@
+#!/bin/sh
+
+if [ -z "$CC" ]; then
+  CC=gcc
+fi
+if [ -z "$CXX" ]; then
+  CXX=g++
+fi
+
+# check for a C compiler
+check_cc()
+{
+  if [ ! -z "$CC" ]; then
+    if [ ! -x "`which "$CC"`" ]; then
+      echo "`which "$CC"` not executable, falling back to cc"
+      CC="cc"
+    fi
+  else
+    CC="cc"
+    if [ ! -x "`which "$CC"`" ]; then
+      echo "*** No C compiler found"
+      return 1
+    fi
+  fi
+
+  FILE="./config.temp"
+  OUTFILE="./config.temp"
+  echo "int main(void) { return 0; }" > "$FILE"
+  $CC -x "c" -o "$OUTFILE" "$FILE" 2>&1 | cat >>config.log
+
+  OK="0"
+  if [ ! -s "$OUTFILE" ]; then
+    echo "*** Couldn't compile test program."
+  else
+    chmod +x "$OUTFILE"
+    "$OUTFILE"
+    if [ "$?" -eq "0" ]; then
+      OK="1"
+    fi
+  fi
+
+  rm -f "$FILE"
+  rm -f "$OUTFILE"
+
+  if [ "$OK" -eq "0" ]; then
+    return 1
+  fi
+
+  echo "Found a working C compiler ($CC)."
+  return 0
+}
+
+# check for a C++ compiler
+check_cxx()
+{
+  if [ ! -z "$CXX" ]; then
+    if [ ! -x "`which "$CXX"`" ]; then
+      echo "`which "$CXX"` not executable, falling back to c++"
+      CXX="c++"
+    fi
+  else
+    CXX="c++"
+    if [ ! -x "`which "$CXX"`" ]; then
+      echo "*** No C++ compiler found"
+      return 1
+    fi
+  fi
+
+  FILE="./config.temp"
+  OUTFILE="./config.temp"
+  echo "int main(void) { return 0; }" > "$FILE"
+  $CXX -x "c++" -o "$OUTFILE" "$FILE" 2>&1 | cat >>config.log
+
+  OK="0"
+  if [ ! -s "$OUTFILE" ]; then
+    echo "*** Couldn't compile test program."
+  else
+    chmod +x "$OUTFILE"
+    "$OUTFILE"
+    if [ "$?" -eq "0" ]; then
+      OK="1"
+    fi
+  fi
+
+  rm -f "$FILE"
+  rm -f "$OUTFILE"
+
+  if [ "$OK" -eq "0" ]; then
+    return 1
+  fi
+
+  echo "Found a working C++ compiler ($CXX)."
+  return 0
+}
+
+# check for libavifile
+check_libavifile()
+{
+  echo "Checking avifile..."
+
+  if [ ! -x "`which avifile-config`" ]; then
+    echo "*** Couldn't find avifile-config. (You can get avifile at http://avifile.sourceforge.net/)"
+    exit 1
+  fi
+
+  FILE="./config.temp"
+  OUTFILE="./config.temp"
+  echo "#include <avifile.h>" > "$FILE"
+  echo "int main(void) { return 0; }" >> "$FILE"
+  $CXX -x "c++" -o "$OUTFILE" "$FILE" `avifile-config --libs` `avifile-config --cflags` 2>&1 | cat >>config.log
+
+  OK="0"
+  if [ ! -s "$OUTFILE" ]; then
+    echo "*** Couldn't compile avifile test."
+  else
+    chmod +x "$OUTFILE"
+    "$OUTFILE"
+    if [ "$?" -eq "0" ]; then
+      OK="1"
+    fi
+  fi
+
+  rm -f "$FILE"
+  rm -f "$OUTFILE"
+
+  if [ "$OK" -eq "0" ]; then
+    return 1
+  fi
+
+  echo "Found libavifile version `avifile-config --version`."
+  return 0
+}
+
+# check for libsdl
+check_libsdl()
+{
+  echo "Checking SDL..."
+
+  if [ ! -x "`which sdl-config`" ]; then
+    echo "*** Couldn't find sdl-config. (You can get libSDL at http://www.libsdl.org/)"
+    exit 1
+  fi
+
+  FILE="./config.temp"
+  OUTFILE="./config.temp"
+  echo "#include \"SDL.h\"" > "$FILE"
+  echo "#include <stdio.h>" >> "$FILE"
+  echo "int main(void) { if (SDL_Init( 0 ) < 0) { printf( \"SDL_Init(): %s\\n\", SDL_GetError() ); return 1; } return 0; }" >> "$FILE"
+  $CC -x "c" -o "$OUTFILE" "$FILE" `sdl-config --libs` `sdl-config --cflags` 2>&1 | cat >>config.log
+
+  OK="0"
+  if [ ! -s "$OUTFILE" ]; then
+    echo "*** Couldn't compile SDL test."
+  else
+    chmod +x "$OUTFILE"
+    "$OUTFILE"
+    if [ "$?" -eq "0" ]; then
+      OK="1"
+    fi
+  fi
+
+  rm -f "$FILE"
+  rm -f "$OUTFILE"
+
+  if [ "$OK" -eq "0" ]; then
+    return 1
+  fi
+
+  echo "Found SDL version `sdl-config --version`."
+  return 0
+}
+
+# check for gtk 1.2
+check_libgtk12()
+{
+  echo "Checking GTK 1.2..."
+
+  if [ ! -x "`which gtk-config`" ]; then
+    echo "*** Couldn't find gtk-config."
+    return 1
+  fi
+
+  FILE="./config.temp"
+  OUTFILE="./config.temp"
+  echo "#include <gtk/gtk.h>" > "$FILE"
+  echo "#include <stdio.h>" >> "$FILE"
+  echo "int main(int argc, char *argv[]) { if (gtk_init_check(&argc,&argv) == FALSE) { printf( \"gtk_init_check() failed\"); return 1; } return 0; }" >> "$FILE"
+  $CC -x "c" -o "$OUTFILE" "$FILE" `gtk-config --libs` `gtk-config --cflags` 2>&1 | cat >>config.log
+
+  OK="0"
+  if [ ! -s "$OUTFILE" ]; then
+    echo "*** Couldn't compile GTK 1.2 test."
+  else
+    chmod +x "$OUTFILE"
+    "$OUTFILE"
+    if [ "$?" -eq "0" ]; then
+      OK="1"
+    fi
+  fi
+
+  rm -f "$FILE"
+  rm -f "$OUTFILE"
+
+  if [ "$OK" -eq "0" ]; then
+    return 1
+  fi
+
+  echo "Found GTK version `gtk-config --version`."
+  return 0
+}
+
+# check for gtk 2
+check_libgtk2()
+{
+  echo "Checking GTK 2..."
+
+  if [ ! -x "`which pkg-config`" ]; then
+    echo "*** Couldn't find pkg-config (required to compile many programs)."
+    return 1
+  fi
+
+  FILE="./config.temp"
+  OUTFILE="./config.temp"
+  echo "#include <gtk/gtk.h>" > "$FILE"
+  echo "#include <stdio.h>" >> "$FILE"
+  echo "int main(int argc, char *argv[]) { if (gtk_init_check(&argc,&argv) == FALSE) { printf( \"gtk_init_check() failed\"); return 1; } return 0; }" >> "$FILE"
+  $CC -x "c" -o "$OUTFILE" "$FILE" `pkg-config gtk+-2.0 --libs` `pkg-config gtk+-2.0 --cflags` 2>&1 | cat >>config.log
+
+  OK="0"
+  if [ ! -s "$OUTFILE" ]; then
+    echo "*** Couldn't compile GTK 2 test."
+  else
+    chmod +x "$OUTFILE"
+    "$OUTFILE"
+    if [ "$?" -eq "0" ]; then
+      OK="1"
+    fi
+  fi
+
+  rm -f "$FILE"
+  rm -f "$OUTFILE"
+
+  if [ "$OK" -eq "0" ]; then
+    return 1
+  fi
+
+  echo "Found GTK version `pkg-config gtk+-2.0 --modversion`."
+  return 0
+}
+
+# main configuration routine
+echo "`date`" > config.log
+
+check_cc
+if [ "$?" -ne "0" ]; then
+  echo "*** Couldn't find a working C compiler!"
+  exit 1
+fi
+
+check_libsdl
+if [ "$?" -ne "0" ]; then
+  echo "*** Couldn't find a working SDL library!"
+  exit 1
+fi
+
+check_libgtk12
+if [ "$?" -ne "0" ]; then
+  GTK12="0"
+else
+  GTK12="1"
+fi
+
+check_libgtk2
+if [ "$?" -ne "0" ]; then
+  GTK2="0"
+else
+  GTK2="1"
+fi
+
+BOTHGTK="0"
+
+if [ "$GTK12" -eq "1" ]; then
+if [ "$GTK2" -eq "1" ]; then
+  BOTHGTK="1"
+  echo "Your system support both GTK 1.2 and GTK 2, do you want to compile mupen64 with GTK 2 support ?"
+  read -p "(Y)es or (N)o [Default is Yes]: " answer
+  if [ -n "$answer" ]
+  then
+    if [ $(echo $answer | cut -c 1 | tr a-z A-Z) = 'N' ]
+    then
+      UGTK2="0"
+    else
+      UGTK2="1"
+    fi
+  else
+    UGTK2="1"
+  fi
+fi
+fi
+
+if [ "$BOTHGTK" -eq "0" ]; then
+  if [ "$GTK12" -eq "1" ]
+  then
+    UGTK2="0"
+  else
+    if [ "$GTK2" -eq "1" ]
+    then
+      UGTK2="1"
+    else
+      echo "*** Couldn't find a working GTK library!"
+      exit 1
+    fi
+  fi
+fi
+
+if [ "$UGTK2" -eq "0" ]
+then
+  echo "Mupen64 will use GTK 1.2"
+else
+  echo "Mupen64 will use GTK 2"
+fi
+    
+echo
+echo "Do you want to configure mupen64 to run in a user directory? (Answering no"
+echo "will configure it for multi-users usage with the configuration stored in the"
+echo "HOME directory)"
+read -p "(Y)es or (N)o [Default is: Yes]: " answer
+
+if [ -n "$answer" ]
+then
+  if [ $(echo $answer | cut -c 1 | tr a-z A-Z) = 'N' ]
+  then
+
+    echo "In which prefix do u want to install mupen64 ? [Default: /usr/local/] "
+    read answer
+
+    if [ -z $answer ]
+    then
+      answer="/usr/local/"
+    fi
+
+    WITH_HOME=$answer
+  fi
+fi
+
+# ---- VCR
+echo
+echo "Do you want to enable VCR support (requires avifile and a C++ compiler)?"
+read -p "(Y)es or (N)o [Default is: No]: " answer
+
+if [ -n "$answer" ]
+then
+  if [ $(echo $answer | cut -c 1 | tr a-z A-Z) = 'Y' ]
+  then
+    check_cxx
+    if [ "$?" -eq "0" ]; then
+      check_libavifile
+      if [ "$?" -eq "0" ]; then
+        VCR_SUPPORT=1
+      else
+        echo "*** Couldn't find a working avifile library!"
+        echo "Disabling VCR support."
+      fi
+    else
+      echo "*** Couldn't find a working C++ compiler!"
+      echo "Disabling VCR support."
+    fi
+  fi
+fi
+
+# write config.h
+echo
+echo "Writing config.h..."
+
+touch config.h.old
+
+if [ -f config.h ]; then
+  cp config.h config.h.old
+fi
+
+echo "#ifndef CONFIG_H" > config.h
+echo "#define CONFIG_H" >> config.h
+echo "" >> config.h
+if [ -z "$WITH_HOME" ]; then
+  echo "#undef WITH_HOME" >> config.h
+else
+  echo "#define WITH_HOME \"${WITH_HOME}\"" >> config.h
+fi
+
+if [ -z "$VCR_SUPPORT" ]; then
+  echo "#undef VCR_SUPPORT" >> config.h
+else
+  echo "#define VCR_SUPPORT 1" >> config.h
+fi
+
+if [ "$UGTK2" -eq "0" ]; then
+  echo "#undef GTK2_SUPPORT" >> config.h
+else
+  echo "#define GTK2_SUPPORT 1" >> config.h
+fi
+
+echo "" >> config.h
+echo "#endif /* CONFIG_H */" >> config.h
+
+CONFIG_CHANGED=0
+if [ ! -z "`diff config.h config.h.old`" ]; then
+  CONFIG_CHANGED=1
+fi
+
+rm config.h.old
+
+# build mupen?
+echo
+echo "Do you want to build mupen64 now?"
+if [ "$CONFIG_CHANGED" -eq "0" ]; then
+  echo "Note: The configuration has not been changed since the last time it was written."
+fi
+read -p "(Y)es or (N)o [Default is: No]: " answer
+
+if [ -n "$answer" ]
+then
+  if [ $(echo $answer | cut -c 1 | tr a-z A-Z) = 'Y' ]
+  then
+    echo
+    echo "Building mupen64..."
+
+    export CC
+    export CXX
+    make clean 2>&1 | cat >>config.log
+    make 2>&1 | cat >>config.log
+    if [ "$?" -ne "0" ] || [ ! -x ./mupen64 ]; then
+      echo "Looks like something went wrong when building mupen64 :("
+      exit 1
+    else
+      echo -n "Everything seems to be ok, you can run ./mupen64 now if you have configured mupen64 to be run in a user directory or use "
+      echo "the install.sh shell-script to install it in your system otherwise."
+    fi
+  fi
+fi
+
+echo "Everything ok" >> config.log
+exit 0

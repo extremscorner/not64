@@ -1,0 +1,252 @@
+what's new in 0.5:
+  - Core
+    + detection of invalid code cache for ambiguous region now use
+      adler32 (faster than previous algorithm)
+    + fixed a bug in ini file compression
+    + added support for framebuffer effects functions : these functions
+      are there to help the plugins that support framebuffer extension
+      to zilmar's spec. These functions are based on rice's idea. I've
+      worked closely with Gonetz to implement these and the only plugin
+      that support this feature is Glide64 0.8 (when option is enabled).
+      Many hard to emulate framebuffer effects are supported by this
+      feature. Mariokart's monitor in first race running fullspeed and
+      puzzle effect in banjo's intro are two examples that i can think
+      about but there are many more.
+    + detection of VI interupt rate works on weird country codes
+    + better detection of self modifying code in dma
+    + warnings fixed on new gcc versions
+    + rsp's dmem and imem are now contiguous in PC's memory (some windows
+      plugins were requiring this)
+    + slightly improved audio timing
+    + better detection of self modifying code when accessing memory 
+      through TLB
+    + fixed a bug in RSP memory write
+    + reading from ai_current_delay register should work even when
+      Count register is looping
+    + in interpreter code : fixed a bug in jump opcodes (detection
+      of exceptions in delay slot in some rare conditions)
+    + the event scheduler has better support for Count register loops
+    + better AI interrupt handling (for musyx games for example)
+    + jump opcodes changed in pure interpreter core so that they are
+      timed exactly like on the other cores (easier to debug this way)
+    + fixed a bug when accessing memory through invalid TLB in LDL, LDR,
+      LWL, LWR, SWL, SDL, SDR, SWR opcodes
+    + added LL, SC opcodes
+    + two consecutive jump opcodes doesn't crash in the dynarec (result
+      is undefined according to the r4300 manual but some games are doing
+      it).
+    + basic implementation of fpu opcodes in dynarec
+    + division by 0 in FPU opcodes is returning NaN
+    + all jump opcodes implemented in the dynarec
+    + faster inside function loop with dynarec (register cache)
+    + various bug fixes in dynarec opcodes
+    + memory access improvements in dynarec
+  - Linux version
+    + GUI and all plugins have been switched to GKT2 (all old plugins
+      should be recompiled for GTK2)
+    + detection of GTK 1.2 or GTK 2 in the configure script : if both
+      are detected, the user can choose which one to use
+    + configure script rewritten so that it's compatible with standard
+      unix shells instead of bash
+    + much improved multi-user install support : if multi-user is choosen
+      in configure script, mupen64 should be compiled ("make") and installed
+      ("make install"). Then, when a user launch mupen64, it will create
+      automatically a .mupen64 folder in his home and put all required files
+      there.
+    + language saved and restored correctly when quitting mupen64
+    + the console version (mupen64_nogui) has command line support and can
+      read settings from the gui version config file thanks to jogibear's patch
+    + autoincrement save slot option when quick saving (thanks to jdratlif's
+      patch)
+    + speed limiter in the core
+    + support for plugin configuration changes when a rom is running
+  - Windows version
+    + autoincrement save slot option when quick saving (thanks to jdratlif's
+      patch)
+    + stabilty improvements on the GUI (when closing a rom for example)
+    + added support for readScreen function to support avi recording feature
+      on plugins that don't use opengl or directx (ie: glide64...)
+  - Sound plugin
+    + thread synchronisation improvements
+
+what's new in 0.4:
+  - A totally new core based on a dynamic recompiler with register caching, 
+    it doesn't compile the fpu yet but it's already much faster compared 
+    to older versions of mupen64 :)
+  - Self mod code detection has been improved and emulation is faster now
+  - A lot of little fixes that should improve compaibitlity quite a bit
+  - A new video recording feature (record in own mupen64 movie format that
+    can be converted later into a standard avi file)
+  - The windows GUI has been redesigned by linker
+  - A lot of other things i forgot... sorry :P
+
+what's new in 0.3:
+  - All versions
+    + General speed up, 10-20 in most games
+      Save states long loading time fixed, now it should load in less than
+      a second
+    + sound sync is far more accurate now (thanks to Azimer)
+      it makes some additionnal games booting
+    + 64dd detection to fix F-zero
+    + a little idle loops bug has been fixed
+  - Windows port
+    + Configuration and initialisation of plugins now can be done prior
+      running a rom. It fixes numerous configuration issues with plugins as
+      well
+    + Recent roms menu with option to clear and freeze
+    + Command line arguments support with option to run in GUIless mode,
+      compatible with 1964 options, read more about it in pdf
+    + Choosing and saving of plugins used per game, access it from Rom
+      Properties
+    + Reset rom menu added
+    + Speed Modifier to allow game to run at any speed between 1-200% of
+      original
+      Use + and - to increase, decrease it, while in the game. And . to
+      return to 100%.
+    + Start game in fullscreen option
+    + Pause emulation when idle fixes
+    + Global plugin settings (should be unchecked if you want to use plugins
+      per game option from rom properties)
+    + Switch on/off ToolBar (ALT+T) and Status Bar (ALT+S), usefull when
+      plugin sets wrong resolution in windowed mode, and for those who hate
+      toolbars :)
+    + Selection of columns to show in rom browser
+    + English language template updated
+    + Support for debugview by linker
+      Put dll in the main folder, if you want to see log output
+    + Tonnes of little fixes...
+  - RSP hle plugin
+    + mario kart sound fixed
+
+what's new in 0.2:
+  - Core
+    + better sound plugin integration
+    + optimizations in interrupt handling
+    + a totally new interpreter core (half of a compiler => far much faster)
+      it caches the opcodes when they're decoded
+    + self modifying code detection code for the new interpreter and the
+      compiler when it'll be implemented
+    + RSP plugin integration
+    + pif2 implemented for banjo tooie
+  - RSP hle plugin
+    + the first version of this plugin based on uhle sound code
+    + 3 main audio ucode implemented (based on uhle)
+    + mp3 ucode implemented (direct asm to c translation)
+    + jpeg ucode (direct asm to c translation)
+    + boot code for btooie and dk
+    + on windows: ability to use the hle part of a sound plugin while using another
+      to output the sound (example: using hle from Azimer's plugin and
+      ouputing with Jabo's plugin)
+      This option doesn't work with azimer's audio plugin 0.3 version
+      Please see more info about RSP and this feature in 
+      readme.pdf in chapter "3.3.2 Configuration"	
+  - Sound Plugin for linux
+   + a new lle sound plugin that's using the OSS api
+  - Windows port
+    + Major cleanup of gui code and bug fixes
+    + Gui improvements in rombrowser
+    + Gui changes in configuration sheets and about dialog
+    + Updates in language support and template
+      Dialog with proper credits to translators ,send us your translations now :)	
+    + Support for screenshots from menu (depends on video plugin) (F3 key)
+    + Added some shortcuts for gui functions to accelerators
+    + Option to choose directories of plugins,screenshots and save states in sheets
+    + Auto limit VI/s according to game region	(60 or 50)
+    + Ini updated with latest N64 releases
+    + ...
+
+what's new in 0.1:
+  - Core
+    + sram bug zelda oot fixed
+    + flashram is working
+    + a new interupt system that'll enabled
+      more accurate timing in the future but can cause
+      some compatibility issues right now
+    + bug in DMULT/DMULTU opcode fixed
+    + some optimizations in jump instructions
+    + sound plugins support implemented but not well supported
+      use sound at your own risk :D
+    + a clean tlb implementation
+    + tlb exception handled correctly
+    + compressed save states with slots
+    + the whole memory map has been almost completes
+    + newly emulated games include goldeneye, conker's bad fur day
+      and perfect dark :)
+  
+  - Windows port
+    + Zipped Cache to Rom Browser
+    + Multy slot save states
+    + Md5 based Ini 
+    + Rom properties dialog
+    + Sound support 
+    + Config plugins dialog
+      Allows you to chose and configure plugins 
+    + Multy directories in rom browser 
+      with recursion as an option
+    + Audit roms dialog 
+    + Many bugs fixed and minor features added
+    + ... 
+  - Linux port
+    + A new gui made by Blight very similar to the windows one
+      Everything in the gui is new so one line many new things ;)
+
+what's new in 0.0.90:
+  - this is a huge update many games are playable now :) but only pure 
+    interpreter work on this release it will be fixed in the future
+    but currently i am only working on compatibility
+  - i have totally rewritten the pure interpreter core
+  - nearly all missing opcodes have been added
+  - interrupt code has been totally rewritten and should never crash now
+  - tlb code rewritten, it's faster even if it's not perfect yet
+  - some fpu opcodes have been debugged
+  - fpu precision emulation improvements (only for x86 processors)
+  - many bugs to allow port to big endian processors
+  - fixed endianness when cpu write directly to pif ram
+  - rewritten dma code for pure interpreter (with this core it always
+    work now )
+  - update dp status register when a display list has been processed
+    it fixed a lot of roms
+  - implemented 8Mb RDRAM
+  - implemented memory pack, eeprom, sram (thanks to Jabo and Zilmar
+    for the pj64 source code on this part)
+  - flashram is partially implemented (it's enough to get zelda2 starting)
+  - a new debugger for linux was made by DavFR (it's for linux and 
+    it uses gtk library)
+  - zip file support
+  - a new gui for windows port has been made by ShadowPri, it features
+    a rom browser with *classic* UHLE look,multy directories support ,
+    a toolbar (thx Schibo for help on it :), multy languages support,
+    saving of configuration, ....
+  - and much more ;)
+
+what's new in 0.0.4:
+  - a new pure interpreter core (better compatibility but really slow,
+    will help to debug in the future)
+  - input plugins (a basic keyboard plugin is included and the obsidian
+    joystick plugin )
+  - coprocessor unusable exception implemented
+  - gui for windows
+  - again many little bugs i can't remember fixed
+  - automatic comparison between two cores via a pipe (for debugging)
+  - ....
+
+what's new in 0.0.3:
+  - unaligned dma exception fix
+  - a little gui in gtk
+  - new opcodes implemented
+  - memory map fixes
+  - better initial registers (this was find in the pj64 source code
+    	   	   	      thanks Zilmar and Jabo)
+  - implemented Zilmar spec Gfx plugins
+  - included : a linux port of the tr64 plugin v0.5c
+
+what's new in 0.0.2:
+  - MARIO64 works!!!
+  - sound temporarly disabled (Just to not hurt your ears because
+    hle audio doesn't work :)
+  - various speed improvements
+  - various stupid bugs removed
+
+what's new in 0.0.1:
+  - everything it's the first public release :)
+

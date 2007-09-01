@@ -1,0 +1,16 @@
+====[ FRANCAIS ]================================================================
+- Toujours beaucoup de nettoyage.
+  (document de reference: /usr/src/linux/Documentation/CodingStyle)
+- Fonction de forcage "a la main" du contenu des registres, en cours d'emulation.
+- Fonction de visionage de la memoire.
+- Gestion des breakpoints conditionnels (avec evaluation d'expression).
+- MI, etc.
+... des suggestions?...
+
+====[ENGLISH]===================================================================
+- Lots of clean-up (reference doc: /usr/src/linux/Documentation/CodingStyle).
+- Edition of a register content, on the fly.
+- strict and conditional breakpoints management, via GTK interface.
+- Memory display and edition.
+- MI, etc.
+...any suggestions?...
