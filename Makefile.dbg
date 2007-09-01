@@ -1,0 +1,169 @@
+#Makefile MUPEN64 for Linux
+
+#CC  		=gcc -DX86 -O3 -mpentium -Wall -DEMU64_DEBUG
+#CC		=gcc -DX86 -O3 -fomit-frame-pointer -funroll-loops -ffast-math -mcpu=pentium -Wall -pipe
+#CC		=gcc -DX86 -O3 -mpentium -Wall -g -pg
+#CC 		=gcc -DX86 -Wall -pipe -g -DEMU64_DEBUG
+#CC		=gcc -DX86 -Wall -pipe -g -DEMU64_DEBUG -DCOMPARE_CORE
+CC		=gcc -DX86 -Wall -pipe -g -DEMU64_DEBUG -DDBG
+#CC		=icc -DX86 -O3 -unroll -axM -vec_report3 -Dinline=
+#CC		=gcc -DX86 -Wall -pipe -g
+
+GL_PATH		=-I/usr/X11R6/include
+
+OBJ		=main/rom.o \
+		r4300/r4300.o \
+		r4300/cop0.o \
+		r4300/special.o \
+		r4300/regimm.o \
+		r4300/exception.o \
+		memory/tlb.o \
+		memory/memory.o \
+		memory/dma.o \
+		r4300/interupt.o \
+		r4300/cop1.o \
+		r4300/tlb.o \
+		r4300/cop1_w.o \
+		r4300/cop1_s.o \
+		r4300/cop1_d.o \
+		r4300/recomp.o \
+		memory/pif.o \
+		r4300/bc.o \
+		r4300/cop1_l.o \
+		r4300/pure_interp.o \
+		r4300/compare_core.o \
+		main/plugin.o \
+		main/unzip.o \
+		main/ioapi.o \
+		memory/flashram.o \
+		main/md5.o \
+		main/mupenIniApi.o \
+		main/savestates.o
+
+OBJ_X86         =r4300/x86/gr4300.o \
+		r4300/x86/gcop0.o \
+		r4300/x86/assemble.o \
+		r4300/x86/gcop1.o \
+		r4300/x86/gcop1_s.o \
+		r4300/x86/gcop1_d.o \
+		r4300/x86/gtlb.o \
+		r4300/x86/gregimm.o \
+		r4300/x86/gspecial.o \
+		r4300/x86/gcop1_w.o \
+		r4300/x86/debug.o \
+		r4300/x86/rjump.o \
+		r4300/x86/gbc.o \
+		r4300/x86/gcop1_l.o \
+		r4300/x86/regcache.o
+
+OBJ_DBG		=debugger/debugger.o \
+		debugger/breakpoints.o \
+		debugger/desasm.o \
+		debugger/decoder.o \
+		debugger/registers.o \
+		debugger/regGPR.o \
+		debugger/regCop0.o \
+		debugger/regSpecial.o \
+		debugger/regCop1.o \
+		debugger/regAI.o \
+		debugger/regPI.o \
+		debugger/regRI.o \
+		debugger/regSI.o \
+		debugger/regVI.o \
+		debugger/regTLB.o \
+		debugger/ui_clist_edit.o
+
+HEADER		=main/rom.h \
+		r4300/r4300.h \
+		r4300/ops.h \
+		r4300/macros.h \
+		r4300/exception.h \
+		memory/memory.h \
+		memory/tlb.h \
+		memory/dma.h \
+		r4300/interupt.h \
+		r4300/recomp.h \
+		memory/pif.h
+
+LIB		=-lz -lm
+
+all:	mupen64_dbg
+
+main/main.o:	main/main.c
+		$(CC) -c -o main/main.o main/main.c
+
+main/main_gtk.o:	main/main_gtk.c
+			$(CC) -c -o main/main_gtk.o main/main_gtk.c `gtk-config --cflags` `sdl-config --cflags`
+
+debugger/debugger.o:	debugger/debugger.c
+			$(CC) -c -o debugger/debugger.o debugger/debugger.c `gtk-config --cflags`
+
+debugger/breakpoints.o:	debugger/breakpoints.c
+			$(CC) -c -o debugger/breakpoints.o debugger/breakpoints.c `gtk-config --cflags`
+
+debugger/desasm.o:	debugger/desasm.c
+			$(CC) -c -o debugger/desasm.o debugger/desasm.c `gtk-config --cflags`
+
+debugger/decoder.o:	debugger/decoder.c
+			$(CC) -c -o debugger/decoder.o debugger/decoder.c `gtk-config --cflags`
+
+debugger/registers.o:	debugger/registers.c
+			$(CC) -c -o debugger/registers.o debugger/registers.c `gtk-config --cflags`
+
+debugger/regGPR.o:	debugger/regGPR.c
+			$(CC) -c -o debugger/regGPR.o debugger/regGPR.c `gtk-config --cflags`
+
+debugger/regCop0.o:	debugger/regCop0.c
+			$(CC) -c -o debugger/regCop0.o debugger/regCop0.c `gtk-config --cflags`
+
+debugger/regSpecial.o:	debugger/regSpecial.c
+			$(CC) -c -o debugger/regSpecial.o debugger/regSpecial.c `gtk-config --cflags`
+
+debugger/regCop1.o:	debugger/regCop1.c
+			$(CC) -c -o debugger/regCop1.o debugger/regCop1.c `gtk-config --cflags`
+
+debugger/regAI.o:	debugger/regAI.c
+			$(CC) -c -o debugger/regAI.o debugger/regAI.c `gtk-config --cflags`
+
+debugger/regPI.o:	debugger/regPI.c
+			$(CC) -c -o debugger/regPI.o debugger/regPI.c `gtk-config --cflags`
+
+debugger/regRI.o:	debugger/regRI.c
+			$(CC) -c -o debugger/regRI.o debugger/regRI.c `gtk-config --cflags`
+
+debugger/regSI.o:	debugger/regSI.c
+			$(CC) -c -o debugger/regSI.o debugger/regSI.c `gtk-config --cflags`
+
+debugger/regVI.o:	debugger/regVI.c
+			$(CC) -c -o debugger/regVI.o debugger/regVI.c `gtk-config --cflags`
+
+debugger/regTLB.o:	debugger/regTLB.c
+			$(CC) -c -o debugger/regTLB.o debugger/regTLB.c `gtk-config --cflags`
+
+debugger/ui_clist_edit.o:	debugger/ui_clist_edit.c
+			$(CC) -c -o debugger/ui_clist_edit.o debugger/ui_clist_edit.c `gtk-config --cflags`
+
+r4300/interupt.o:	r4300/interupt.c
+			$(CC) -c -o r4300/interupt.o r4300/interupt.c `sdl-config --cflags`
+
+mupen64_nogui:	$(OBJ) $(OBJ_X86) $(HEADER) main/main.o
+		$(CC) $(OBJ) $(OBJ_X86) $(LIB) -Wl,-export-dynamic main/main.o -L/usr/X11R6/lib -lSDL -lGL -lpthread -ldl -o $@
+#		strip --strip-all $@
+
+mupen64:	$(OBJ) $(OBJ_X86) $(HEADER) main/main_gtk.o
+		$(CC) $(OBJ) $(OBJ_X86) $(LIB) -Wl,-export-dynamic main/main_gtk.o `gtk-config --libs --cflags` -L/usr/X11R6/lib -lSDL -lGL -lpthread -ldl -o $@
+#		strip --strip-all $@
+
+mupen64_dbg:	$(OBJ) $(OBJ_X86) $(OBJ_DBG) $(HEADER) main/main_gtk.o
+		$(CC) $(OBJ) $(OBJ_X86) $(OBJ_DBG) $(LIB) -Wl,-export-dynamic main/main_gtk.o `gtk-config --libs gthread` -L/usr/X11R6/lib -lSDL -lGL -lpthread -ldl -o $@
+#		strip --strip-all $@
+
+clean:
+	find . -name '*.o' -print0 | xargs -0r rm -f
+	rm mupen64 mupen64_nogui mupen64_dbg
+	
+clean_jed:
+	find . -name '*~' -print0 | xargs -0r rm -f
+
+gprof:
+	gprof mupen64_nogui > stat.txt

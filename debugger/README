@@ -1,0 +1,31 @@
+MUPEN64 version 0.0.4.11 - Debugger patch by davFr (WIP2)
+
+Here is an intermediate release of Mupen64 with debugging functions.
+
+Those new functions are intended to ease Mupen64 development, and
+forcoming developments will tend to go further in this way.
+See TODO.dbg for more details.
+
+The "Work in Progress" status means that some functions are not totally
+implemented, and lots others are just planned. Please be aware of that
+before testing debugger functions.
+Those new functions has currently been tested on Linux only.
+
+to compile mupen-dbg, type:
+	make -f Makefile.dbg clean
+	make -f Makefile.dbg
+
+You can still compile mupen without debugger, by typing the usual:
+	make clean && make
+It must be noted that the resulting file will have no slowdown compared
+to mainstream source tree. See main.diff and r4300.diff to check modifications
+applied to 0.0.4.11 source tree.
+
+---------------------------------------------------------
+Most important limitations:
+- the "GoTo" button in Disassembly widget only goes to 0xa4000040.
+  (NB: This function is not intended to modify PC value)
+
+- MI and others are not displayed yet.
+
+- To scroll the disassembly window is still risky. So watch out.

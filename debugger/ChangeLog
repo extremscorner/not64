@@ -1,0 +1,21 @@
+===[ 0.0.2 - WIP2 ]=============================
+- better Cop1 registers display.
+- AI, PI, RI, SI, VI display.
+- TLB display.
+- better disassembly code managment (scrolling).
+- "add breakpoint" button now working.
+- clean-up.
+
+
+===[ 0.0.2 - WIP1 ]=============================
+- disassembly window.
+- initial breakpoints management.
+- new thread synchronisation system.
+- whole debugger source reorganisation.
+- clean-up.
+
+===[ 0.0.1 (Private) ]==========================
+- port from 0.0.3 mupen source tree, to 0.0.4-pre.
+- clean-up.
+
+
