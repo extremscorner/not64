@@ -51,25 +51,25 @@
 .endm
 
 /* FIXME: I don't think this is right.  Remove the labels? */
-emu_reg:
+/*emu_reg:*/
 	.extern emu_reg
 	.type   emu_reg, @object
-reg:
+/*reg:*/
 	.extern reg
 	.type   reg, @object
-lr:
+/*lr:*/
 	.extern lr
 	.type   lr, @object
-lr_i:
+/*lr_i:*/
 	.extern lr_i
 	.type   lr_i, @object
-return_address:
+/*return_address:*/
 	.extern return_address
 	.type   return_address, @object
-prefetch_opcode:
+/*prefetch_opcode:*/
 	.extern prefetch_opcode
 	.type   prefetch_opcode, @function
-interp_ops:
+/*interp_ops:*/
 	.extern interp_ops
 	.type   interp_ops, @function
 
@@ -204,7 +204,7 @@ decodeNInterpret:
 	lwz	3, 12(3)	/* (int)reg[1] = reg + 8 bytes/reg + 4 bytes hi */
 	lis	10, interp_ops@ha
 	la	10, interp_ops@l(10)
-	rlwinm	3, 3, 6, 0, 5	/* MIPS_GET_OPCODE(instr) */
+	rlwinm	3, 3, 5, 0, 5	/* MIPS_GET_OPCODE(instr) */
 	rlwinm	3, 3, 2, 2, 7	/* opcode * sizeof(func_ptr) */
 	add	10, 10, 3
 	lwz	10, 0(10)	/* Dereference function pointer */
