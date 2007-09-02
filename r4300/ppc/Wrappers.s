@@ -50,26 +50,24 @@
 	mtlr	10
 .endm
 
-/* FIXME: I don't think this is right.  Remove the labels? */
-/*emu_reg:*/
 	.extern emu_reg
 	.type   emu_reg, @object
-/*reg:*/
+
 	.extern reg
 	.type   reg, @object
-/*lr:*/
+
 	.extern lr
 	.type   lr, @object
-/*lr_i:*/
+
 	.extern lr_i
 	.type   lr_i, @object
-/*return_address:*/
+
 	.extern return_address
 	.type   return_address, @object
-/*prefetch_opcode:*/
+
 	.extern prefetch_opcode
 	.type   prefetch_opcode, @function
-/*interp_ops:*/
+
 	.extern interp_ops
 	.type   interp_ops, @function
 
@@ -221,8 +219,8 @@ decodeNInterpret:
 	lis	10, reg@ha
 	la	10, reg@l(10)
 	addi	10, 10, 4
-	RESTORE_REGS 1,  9, 4
-	RESTORE_REGS 11, 31, 4
+	RESTORE_REGS 1,  9, 8
+	RESTORE_REGS 11, 31, 8
 	lwz	10, 80(10)
 	andi.	0, 0, 0
 	
