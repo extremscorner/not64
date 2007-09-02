@@ -1840,6 +1840,7 @@ void go()
 	printf("dynamic recompiler\n");
 	init_blocks();
 #ifdef __PPC__
+	PC = malloc(sizeof(precomp_instr)); // For calls to interpreter
 	jump_to(0xa4000040);
 #else
 	code = (void *)(actual->code+(actual->block[0x40/4].local_addr));
