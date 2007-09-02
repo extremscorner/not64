@@ -54,7 +54,7 @@ static long skip;
 
 void prefetch();
 
-static void (*interp_ops[64])(void);
+/*static*/ void (*interp_ops[64])(void);
 
 extern unsigned long next_vi;
 
@@ -3092,7 +3092,7 @@ static void SD()
    write_dword_in_memory();
 }
 
-static void (*interp_ops[64])(void) =
+/*static*/ void (*interp_ops[64])(void) =
 {
    SPECIAL, REGIMM, J   , JAL  , BEQ , BNE , BLEZ , BGTZ ,
    ADDI   , ADDIU , SLTI, SLTIU, ANDI, ORI , XORI , LUI  ,
