@@ -1156,7 +1156,7 @@ static int convert_CoP(MIPS_instr mips, int z){
 	PowerPC_instr ppc = NEW_PPC_INSTR();
 	
 	switch(MIPS_GET_RS(mips)){
-	// FIXME: mfc1/mtc1 shouldn't do lwz/stw * temp@l(*)
+	
 	case MIPS_FRMT_MFC:
 		if(z == 0){
 #ifdef INTEPRET_COP0
@@ -1455,18 +1455,10 @@ static int convert_CoP(MIPS_instr mips, int z){
 	PPC_SET_RA    (ppc, MIPS_GET_FS(mips)); \
 	PPC_SET_RB    (ppc, MIPS_GET_FT(mips)); } while(0)
 
-// FIXME: The floating-point instructions need to be rewritten
-//        PowerPC uses doubles for all calculations, it wouldn't hurt
 static int convert_FP(MIPS_instr mips, int precision){
 	PowerPC_instr ppc = NEW_PPC_INSTR();
 	
-	// FIXME: I don't think it works quite like this
-	/*if(precision == PRECISION_SINGLE)
-		PPC_SET_OPCODE(ppc, PPC_OPCODE_FPS);
-	else if(precision == PRECISION_DOUBLE)
-		PPC_SET_OPCODE(ppc, PPC_OPCODE_FPD);
-	else return CONVERT_ERROR;*/
-	
+	// FIXME: We might have an issue if they try to do say add.w or add.l
 	PPC_SET_OPCODE(ppc, PPC_OPCODE_FPD);
 	
 	switch(MIPS_GET_FUNC(mips)){
@@ -1517,6 +1509,7 @@ static int convert_FP(MIPS_instr mips, int precision){
 		PPC_SET_RB  (ppc, MIPS_GET_FS(mips));
 		set_next_dst(ppc);
 		return CONVERT_SUCCESS;
+	// Rounding instructions set rounding mode then round
 	case MIPS_FUNC_ROUND_W_:
 		PPC_SET_FUNC  (ppc, PPC_FUNC_MTFSB0);
 		PPC_SET_RD    (ppc, 30);
@@ -1694,6 +1687,8 @@ static int convert_FP(MIPS_instr mips, int precision){
 		PPC_SET_RB  (ppc, MIPS_GET_FS(mips));
 		set_next_dst(ppc);
 		return CONVERT_SUCCESS;
+	// TODO: Figure this out, this link might help:
+	//         http://www.patentstorm.us/patents/4683546-description.html
 	// Note: The emulator uses cr bits 20-27 for cc 0-7
 	case MIPS_FUNC_C_F_:
 		return CONVERT_ERROR;

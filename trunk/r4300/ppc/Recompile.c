@@ -98,8 +98,6 @@ void recompile_block(PowerPC_block* ppc_block){
 	invalid_code_set(ppc_block->start_address>>12, 0);
 }
 
-/* TODO: We might have to do something with virtual addresses
- */
 void init_block(MIPS_instr* mips_code, PowerPC_block* ppc_block){
 	unsigned int length = (ppc_block->end_address - ppc_block->start_address)/sizeof(MIPS_instr);
 	if(!ppc_block->code){
@@ -111,6 +109,8 @@ void init_block(MIPS_instr* mips_code, PowerPC_block* ppc_block){
 		free(ppc_block->code_addr);
 	ppc_block->code_addr = malloc(length * sizeof(PowerPC_instr*));
 	ppc_block->mips_code = mips_code;
+	
+	// TODO: We should probably point all equivalent addresses to this block as well
 	
 	ppc_block->length = 0;
 	// We haven't actually recompiled the block
@@ -127,6 +127,8 @@ void deinit_block(PowerPC_block* ppc_block){
 		ppc_block->code_addr = NULL;
 	}
 	invalid_code_set(ppc_block->start_address>>12, 1);
+	
+	// TODO: We should probably mark all equivalent addresses as invalid
 }
 
 int is_j_out(int branch, int is_aa){
@@ -211,7 +213,6 @@ static void pass2(PowerPC_block* ppc_block){
 			                            ((unsigned int)ppc_block->start_address & 0xF0000000);
 			
 			if(!(jump_table[i].type & JUMP_TYPE_OUT)){
-				// FIXME: Should we consider using jump_to in case this block gets stale? no
 				// We're jumping within this block, find out where
 				int jump_offset = (jump_address - ppc_block->start_address) >> 2;
 				jump_table[i].new_jump = ppc_block->code_addr[jump_offset] - current;
@@ -310,6 +311,7 @@ void dyna_jump(){ jump_to(jump_to_address); }
 void dyna_stop(){ }
 void jump_to_func(){ jump_to(jump_to_address); }
 
+// Warning: This is a slow operation, try not to use it
 int resizeCode(PowerPC_block* block, int newSize){
 	if(!block->code) return 0;
 	

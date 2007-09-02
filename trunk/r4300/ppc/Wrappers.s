@@ -50,6 +50,7 @@
 	mtlr	10
 .endm
 
+/* FIXME: I don't think this is right.  Remove the labels? */
 emu_reg:
 	.extern emu_reg
 	.type   emu_reg, @object
@@ -199,13 +200,14 @@ decodeNInterpret:
 	bctrl		/* Call prefetch_opcode(instr) */
 	/* We've probably lost our instr register by now, load it */
 	lis	3, reg@ha
-	lwz	3, reg@l(3)	/* It was saved in reg[1] */
-	addi	3, 3, 12	/* (int)reg[1] = reg + 8 bytes/reg + 4 bytes hi */
+	la	3, reg@l(3)	/* It was saved in reg[1] */
+	lwz	3, 12(3)	/* (int)reg[1] = reg + 8 bytes/reg + 4 bytes hi */
 	lis	10, interp_ops@ha
 	la	10, interp_ops@l(10)
 	rlwinm	3, 3, 6, 0, 5	/* MIPS_GET_OPCODE(instr) */
 	rlwinm	3, 3, 2, 2, 7	/* opcode * sizeof(func_ptr) */
 	add	10, 10, 3
+	lwz	10, 0(10)	/* Dereference function pointer */
 	mtctr	10
 	bctrl		/* Call interp_ops[opcode]() */
 	
