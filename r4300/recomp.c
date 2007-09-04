@@ -2811,9 +2811,10 @@ void recompile_opcode()
 /**********************************************************************
  ************** decode one opcode (for the interpreter) ***************
  **********************************************************************/
-void prefetch_opcode(unsigned long op)
+void prefetch_opcode(unsigned long instr)
 {
    dst = PC;
-   src = op;
+   src = instr;
+   op = instr;
    recomp_ops[((src >> 26) & 0x3F)]();
 }
