@@ -152,6 +152,23 @@ static void SYNC()
    interp_addr+=4;
 }
 
+#define DUMP_ON_BREAK
+#ifdef DUMP_ON_BREAK
+#include <ogc/pad.h>
+#endif
+static void BREAK(){
+#ifdef DUMP_ON_BREAK
+	printf("-- BREAK: DUMPING N64 REGISTERS --\n");
+	int i;
+	for(i=0; i<32; i+=4)
+		printf("r%2d: %08x  r%2d: %08x  r%2d: %08x  r%2d: %08x\n",
+		       i, reg[i], i+1, reg[i+1], i+2, reg[i+2], i+3, reg[i+3]);
+	printf("Press A to continue execution\n");
+	while(!(PAD_ButtonsHeld(0) & PAD_BUTTON_A));
+	while( (PAD_ButtonsHeld(0) & PAD_BUTTON_A));
+#endif
+}
+
 static void MFHI()
 {
    rrd = hi;
@@ -475,7 +492,7 @@ static void DSRA32()
 static void (*interp_special[64])(void) =
 {
    SLL , NI   , SRL , SRA , SLLV   , NI    , SRLV  , SRAV  ,
-   JR  , JALR , NI  , NI  , SYSCALL, NI    , NI    , SYNC  ,
+   JR  , JALR , NI  , NI  , SYSCALL, BREAK , NI    , SYNC  ,
    MFHI, MTHI , MFLO, MTLO, DSLLV  , NI    , DSRLV , DSRAV ,
    MULT, MULTU, DIV , DIVU, DMULT  , DMULTU, DDIV  , DDIVU ,
    ADD , ADDU , SUB , SUBU, AND    , OR    , XOR   , NOR   ,
