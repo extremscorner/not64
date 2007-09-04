@@ -2811,6 +2811,7 @@ void recompile_opcode()
 /**********************************************************************
  ************** decode one opcode (for the interpreter) ***************
  **********************************************************************/
+extern unsigned long op;
 void prefetch_opcode(unsigned long instr)
 {
    dst = PC;
