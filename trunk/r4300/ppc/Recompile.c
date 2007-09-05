@@ -323,10 +323,14 @@ int resizeCode(PowerPC_block* block, int newSize){
 	       ((block->max_length < newSize) ? block->max_length : newSize)*sizeof(PowerPC_instr));
 	
 	// Readjusting pointers
+	// Optimization: Sepp256 suggested storing offsets instead of pointers
+	//                 then this step won't be necessary
 	dst = block->code + (dst - oldCode);
 	int i;
 	for(i=0; i<(block->end_address - block->start_address)/4; ++i)
 		block->code_addr[i] = block->code + (block->code_addr[i] - oldCode);
+	for(i=0; i<current_jump; ++i)
+		jump_table[i].dst_instr = block->code + (jump_table[i].dst_instr - oldCode);
 	
 	free(oldCode);
 	block->max_length = newSize;
