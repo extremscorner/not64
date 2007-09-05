@@ -581,7 +581,7 @@ static int convert_R(MIPS_instr mips){
 	           
 	           Must support jal some_addr
 	             some_addr: mov rx, r31
-	                        jar rx
+	                        jr  rx
 	             (currently support)
 	           
 	           I'd also like for returns from functions
