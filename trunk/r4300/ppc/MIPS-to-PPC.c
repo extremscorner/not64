@@ -568,7 +568,38 @@ static int convert_R(MIPS_instr mips){
 		PPC_SET_RB    (ppc, MIPS_GET_RS(mips));
 		set_next_dst(ppc);
 		return CONVERT_SUCCESS;
-	// FIXME: These will have issues if there are any hash functions
+	// FIXME: This is necessary to get any games running past the apploader
+	/* Issues: Must support lui rx, yyyy
+	                        li  rx, zzzz (or loading a value such as the PC)
+	                        jr  rx
+	             (currently don't!)
+	           
+	           Must support sw  r31, some_address
+	                        lw  rx,  same_address
+	                        jr  rx
+	              (currently support)
+	           
+	           Must support jal some_addr
+	             some_addr: mov rx, r31
+	                        jar rx
+	             (currently support)
+	           
+	           I'd also like for returns from functions
+	             to not have to call the emulator in any way
+	             (currently support)
+	   Ideas: Create a boolean array of whether registers
+	            are N64/GC addresses
+	            Drawback: We would to update the array every
+	                        lw, li, etc
+	            Major flaw: How would we know if we are loading
+	                          an N64 address, or a saved stack ptr?
+	                        Possible solution: Loads from stack are GC
+	                                           Otherwise, N64
+	          
+	          Calculate the LR as an N64 address
+	            Drawback: Every jr $31 (return)
+	                        will need to call jump_to
+	*/
 	case MIPS_FUNC_JR:
 		check_delaySlot();
 		// Check to see if this is a jlr
