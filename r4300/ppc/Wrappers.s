@@ -198,9 +198,9 @@ decodeNInterpret:
 	/* We've probably lost our instr register by now, load it */
 	lis	4, reg@ha
 	la	4, reg@l(4)	/* It was saved in reg[1] */
-	lwz	3, 0(4)	/* (int)reg[0] */
+	lwz	3, 4(4)		/* (int)reg[0] */
 	andi.	0, 0, 0
-	stw	0, 0(4) /* zero out reg[0], we don't want any confusion */
+	stw	0, 4(4)		/* zero out reg[0], we don't want any confusion */
 	lis	10, interp_ops@ha
 	la	10, interp_ops@l(10)
 	rlwinm	3, 3, 5, 27, 31	/* MIPS_GET_OPCODE(instr) */
