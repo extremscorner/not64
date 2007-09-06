@@ -188,7 +188,6 @@ decodeNInterpret:
 	la	10, emu_reg@l(10)
 	RESTORE_REGS 0,  9
 	RESTORE_REGS 11, 31
-	lwz	10, 40(10)
 	
 	/* Call functions */
 	mfctr	3	/* The instr we want to decode */
@@ -197,11 +196,11 @@ decodeNInterpret:
 	mtctr	10
 	bctrl		/* Call prefetch_opcode(instr) */
 	/* We've probably lost our instr register by now, load it */
-	lis	3, reg@ha
-	la	3, reg@l(3)	/* It was saved in reg[1] */
-	lwz	3, 0(3)	/* (int)reg[0] = reg + 8 bytes/reg + 4 bytes hi */
-	andi. 0, 0, 0
-	stw 0,0(3)
+	lis	4, reg@ha
+	la	4, reg@l(4)	/* It was saved in reg[1] */
+	lwz	3, 0(4)	/* (int)reg[0] */
+	andi.	0, 0, 0
+	stw	0, 0(4) /* zero out reg[0], we don't want any confusion */
 	lis	10, interp_ops@ha
 	la	10, interp_ops@l(10)
 	rlwinm	3, 3, 5, 27, 31	/* MIPS_GET_OPCODE(instr) */
