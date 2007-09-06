@@ -170,7 +170,7 @@ return_from_code:
 	.globl	decodeNInterpret
         .type   decodeNInterpret, @function	
 decodeNInterpret:
-	/* Save game regs - the instruction is passed through r1 */
+	/* Save game regs - the instruction is passed through r0 */
 	mtctr	10
 	lis	10, reg@ha
 	la	10, reg@l(10)
@@ -179,7 +179,7 @@ decodeNInterpret:
 	SAVE_REGS 11, 31, 8
 	mfctr	9
 	stw	9, 80(10)
-	mtctr	1	/* Hold the instr in ctr for now */
+	mtctr	0	/* Hold the instr in ctr for now */
 	
 	PUSH_LR
 	
@@ -199,7 +199,9 @@ decodeNInterpret:
 	/* We've probably lost our instr register by now, load it */
 	lis	3, reg@ha
 	la	3, reg@l(3)	/* It was saved in reg[1] */
-	lwz	3, 12(3)	/* (int)reg[1] = reg + 8 bytes/reg + 4 bytes hi */
+	lwz	3, 0(3)	/* (int)reg[0] = reg + 8 bytes/reg + 4 bytes hi */
+	andi. 0, 0, 0
+	stw 0,0(3)
 	lis	10, interp_ops@ha
 	la	10, interp_ops@l(10)
 	rlwinm	3, 3, 5, 27, 31	/* MIPS_GET_OPCODE(instr) */
