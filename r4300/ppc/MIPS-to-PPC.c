@@ -7,8 +7,6 @@
          If the lr is used in anything besides
            lw/sw/add(move) that should be supported
          Verify likely branches work properly
-         The Gekko uses a modified FPU,
-           make sure the single precision is compatible
          If jr is used for anything besides blr,
            we need some way to convert the register
          Maybe accesses to the stack can be recompiled
@@ -1913,17 +1911,17 @@ static int convert_M(MIPS_instr mips){
 }
 
 // FIXME: The call clobbers r1, instead store mips in memory
-/* TODO: Revised callInterp
+/* TODO: Revised callInterp, save in r0 instead
+	mtctr	r1
+	lis	r1, addr@ha(0)
+	la	r1, addr@l(r1)
+	mfctr	r0
 	mtctr	r1
 	lis	r1, mips@ha(0)
-	la	r0, mips@l(r1)
-	lis	r1, saved_mips@ha(0)
-	la	r1, saved_mips@l(r1)
-	stw	r0, 0(r1)
-	lis	r1, addr@ha(0)
-	la	r0, addr@l(r1)
-	mfctr	r1
-	mtctr	r0
+	li	r1, mips@l(r1)
+	xor	r1, r0, r1
+	xor	r0, r1, r0
+	xor	r1, r0, r1
 	mflr
 	bctrl
 	mtlr
