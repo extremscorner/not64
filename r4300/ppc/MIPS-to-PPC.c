@@ -1912,24 +1912,32 @@ static int convert_M(MIPS_instr mips){
 
 // FIXME: The call clobbers r1, instead store mips in memory
 /* TODO: Revised callInterp, save in r0 instead
-	mtctr	r1
-	lis	r1, addr@ha(0)
-	la	r1, addr@l(r1)
-	mfctr	r0
-	mtctr	r1
-	lis	r1, mips@ha(0)
-	li	r1, mips@l(r1)
-	xor	r1, r0, r1
-	xor	r0, r1, r0
-	xor	r1, r0, r1
-	mflr
-	bctrl
-	mtlr
+	mtctr	r1			
+	lis	r1, addr@ha(0)	
+	la	r1, addr@l(r1)	
+	mfctr	r0			
+	mtctr	r1			
+	lis	r1, mips@ha(0)	
+	li	r1, mips@l(r1)	
+	xor	r1, r0, r1		
+	xor	r0, r1, r0		
+	xor	r1, r0, r1		
+	mflr				
+	bctrl				
+	mtlr				
 */
 static void genCallInterp(MIPS_instr mips){
 	PowerPC_instr ppc = NEW_PPC_INSTR();
 	// Move the dst address to ctr
 	unsigned int addr = (unsigned int)&decodeNInterpret;
+	
+	// mtctr r1
+	ppc = NEW_PPC_INSTR();
+	PPC_SET_OPCODE(ppc, PPC_OPCODE_X);
+	PPC_SET_FUNC  (ppc, PPC_FUNC_MTSPR);
+	PPC_SET_RD    (ppc, 1);
+	PPC_SET_SPR   (ppc, 0x120);
+	set_next_dst(ppc);
 	// lis r1, addr@ha(0)
 	ppc = NEW_PPC_INSTR();
 	PPC_SET_OPCODE(ppc, PPC_OPCODE_ADDIS);
@@ -1943,20 +1951,19 @@ static void genCallInterp(MIPS_instr mips){
 	PPC_SET_RA    (ppc, 1);
 	PPC_SET_IMMED (ppc, addr);
 	set_next_dst(ppc);
+	// mfctr r0
+	ppc = NEW_PPC_INSTR();
+	PPC_SET_OPCODE(ppc, PPC_OPCODE_X);
+	PPC_SET_FUNC  (ppc, PPC_FUNC_MFSPR);
+	PPC_SET_RD    (ppc, 0);
+	PPC_SET_SPR   (ppc, 0x120);
+	set_next_dst(ppc);
 	// mtctr r1
 	ppc = NEW_PPC_INSTR();
 	PPC_SET_OPCODE(ppc, PPC_OPCODE_X);
 	PPC_SET_FUNC  (ppc, PPC_FUNC_MTSPR);
 	PPC_SET_RD    (ppc, 1);
 	PPC_SET_SPR   (ppc, 0x120);
-	set_next_dst(ppc);
-	// Then save the lr
-	// mflr
-	ppc = NEW_PPC_INSTR();
-	PPC_SET_OPCODE(ppc, PPC_OPCODE_X);
-	PPC_SET_FUNC  (ppc, PPC_FUNC_MFSPR);
-	PPC_SET_RD    (ppc, MIPS_REG_LR);
-	PPC_SET_SPR   (ppc, 0x100);
 	set_next_dst(ppc);
 	// Store the instruction
 	// lis r1, mips@ha(0)
@@ -1971,6 +1978,42 @@ static void genCallInterp(MIPS_instr mips){
 	PPC_SET_RD    (ppc, 1);
 	PPC_SET_RA    (ppc, 1);
 	PPC_SET_IMMED (ppc, mips);
+	set_next_dst(ppc);
+	
+	// xor r1, r0, r1
+	ppc = NEW_PPC_INSTR();
+	PPC_SET_OPCODE(ppc, PPC_OPCODE_X);
+	PPC_SET_FUNC  (ppc, PPC_FUNC_XOR);
+	PPC_SET_RD    (ppc, 1);
+	PPC_SET_RA    (ppc, 0);
+	PPC_SET_RB    (ppc, 1);
+	set_next_dst(ppc);
+	
+	// xor r0, r1, r0
+	ppc = NEW_PPC_INSTR();
+	PPC_SET_OPCODE(ppc, PPC_OPCODE_X);
+	PPC_SET_FUNC  (ppc, PPC_FUNC_XOR);
+	PPC_SET_RD    (ppc, 0);
+	PPC_SET_RA    (ppc, 1);
+	PPC_SET_RB    (ppc, 0);
+	set_next_dst(ppc);
+	
+	// xor r1, r0, r1
+	ppc = NEW_PPC_INSTR();
+	PPC_SET_OPCODE(ppc, PPC_OPCODE_X);
+	PPC_SET_FUNC  (ppc, PPC_FUNC_XOR);
+	PPC_SET_RD    (ppc, 1);
+	PPC_SET_RA    (ppc, 0);
+	PPC_SET_RB    (ppc, 1);
+	set_next_dst(ppc);
+	
+	// Then save the lr
+	// mflr
+	ppc = NEW_PPC_INSTR();
+	PPC_SET_OPCODE(ppc, PPC_OPCODE_X);
+	PPC_SET_FUNC  (ppc, PPC_FUNC_MFSPR);
+	PPC_SET_RD    (ppc, MIPS_REG_LR);
+	PPC_SET_SPR   (ppc, 0x100);
 	set_next_dst(ppc);
 	// Call the interpreter
 	// bctrl
