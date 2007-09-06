@@ -1969,8 +1969,8 @@ static void genCallInterp(MIPS_instr mips){
 	ppc = NEW_PPC_INSTR();
 	PPC_SET_OPCODE(ppc, PPC_OPCODE_X);
 	PPC_SET_FUNC  (ppc, PPC_FUNC_XOR);
-	PPC_SET_RD    (ppc, 1);
-	PPC_SET_RA    (ppc, 0);
+	PPC_SET_RA    (ppc, 1);
+	PPC_SET_RD    (ppc, 0);
 	PPC_SET_RB    (ppc, 1);
 	set_next_dst(ppc);
 	
@@ -1978,8 +1978,8 @@ static void genCallInterp(MIPS_instr mips){
 	ppc = NEW_PPC_INSTR();
 	PPC_SET_OPCODE(ppc, PPC_OPCODE_X);
 	PPC_SET_FUNC  (ppc, PPC_FUNC_XOR);
-	PPC_SET_RD    (ppc, 0);
-	PPC_SET_RA    (ppc, 1);
+	PPC_SET_RA    (ppc, 0);
+	PPC_SET_RD    (ppc, 1);
 	PPC_SET_RB    (ppc, 0);
 	set_next_dst(ppc);
 	
@@ -1987,8 +1987,8 @@ static void genCallInterp(MIPS_instr mips){
 	ppc = NEW_PPC_INSTR();
 	PPC_SET_OPCODE(ppc, PPC_OPCODE_X);
 	PPC_SET_FUNC  (ppc, PPC_FUNC_XOR);
-	PPC_SET_RD    (ppc, 1);
-	PPC_SET_RA    (ppc, 0);
+	PPC_SET_RA    (ppc, 1);
+	PPC_SET_RD    (ppc, 0);
 	PPC_SET_RB    (ppc, 1);
 	set_next_dst(ppc);
 	
@@ -2040,4 +2040,4 @@ static int mips_is_jump(MIPS_instr instr){
                   func == MIPS_RT_BLTZALL   ||
                   func == MIPS_RT_BGEZALL)));
 }
-
+PPC_SET_RA    (ppc, 0);
