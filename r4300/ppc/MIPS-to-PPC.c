@@ -1912,7 +1912,22 @@ static int convert_M(MIPS_instr mips){
 	}
 }
 
-// FIXME: The call clobbers r1, we can save r1 in r0
+// FIXME: The call clobbers r1, instead store mips in memory
+/* TODO: Revised callInterp
+	mtctr	r1
+	lis	r1, mips@ha(0)
+	la	r0, mips@l(r1)
+	lis	r1, saved_mips@ha(0)
+	la	r1, saved_mips@l(r1)
+	stw	r0, 0(r1)
+	lis	r1, addr@ha(0)
+	la	r0, addr@l(r1)
+	mfctr	r1
+	mtctr	r0
+	mflr
+	bctrl
+	mtlr
+*/
 static void genCallInterp(MIPS_instr mips){
 	PowerPC_instr ppc = NEW_PPC_INSTR();
 	// Move the dst address to ctr
