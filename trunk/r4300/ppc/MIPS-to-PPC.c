@@ -2040,4 +2040,4 @@ static int mips_is_jump(MIPS_instr instr){
                   func == MIPS_RT_BLTZALL   ||
                   func == MIPS_RT_BGEZALL)));
 }
-PPC_SET_RA    (ppc, 0);
+
