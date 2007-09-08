@@ -197,8 +197,8 @@ decodeNInterpret:
 	bctrl		/* Call prefetch_opcode(instr) */
 	/* We've probably lost our instr register by now, load it */
 	lis	4, reg@ha
-	la	4, reg@l(4)	/* It was saved in reg[1] */
-	lwz	3, 4(4)		/* (int)reg[0] */
+	la	4, reg@l(4)	/* It was saved in reg[0] */
+	lwz	3, 4(4)		/* (int)reg[0] = reg + 4 bytes for low */
 	andi.	0, 0, 0
 	stw	0, 4(4)		/* zero out reg[0], we don't want any confusion */
 	lis	10, interp_ops@ha
