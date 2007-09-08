@@ -165,7 +165,7 @@ static void pass2(PowerPC_block* ppc_block){
 				unsigned int dest = (jump_offset << 2) + ppc_block->start_address;
 				printf("Branching out to 0x%08x\n", dest);
 				
-				current = current - 5;
+				current -= 4;
 				// mtctr r1
 				*current = NEW_PPC_INSTR();
 				PPC_SET_OPCODE(*current, PPC_OPCODE_X);
@@ -179,17 +179,12 @@ static void pass2(PowerPC_block* ppc_block){
 				PPC_SET_RD    (*current, 1);
 				PPC_SET_IMMED (*current, dest>>16);
 				++current;
-				// la	r1, dest@l(r1)
+				// la	r0, dest@l(r1)
 				*current = NEW_PPC_INSTR();
 				PPC_SET_OPCODE(*current, PPC_OPCODE_ORI);
-				PPC_SET_RD    (*current, 1);
+				PPC_SET_RD    (*current, 0);
 				PPC_SET_RA    (*current, 1);
 				PPC_SET_IMMED (*current, dest);
-				++current;
-				// addi	r0, r1, 0
-				*current = NEW_PPC_INSTR();
-				PPC_SET_OPCODE(*current, PPC_OPCODE_ADDI);
-				PPC_SET_RA    (*current, 1);
 				++current;
 				// mfctr r1
 				*current = NEW_PPC_INSTR();
@@ -227,7 +222,7 @@ static void pass2(PowerPC_block* ppc_block){
 				// We're jumping out of this block
 				printf("Jumping out to 0x%08x\n", jump_address);
 				
-				current -= 5;
+				current -= 4;
 				// mtctr r1
 				*current = NEW_PPC_INSTR();
 				PPC_SET_OPCODE(*current, PPC_OPCODE_X);
@@ -241,17 +236,12 @@ static void pass2(PowerPC_block* ppc_block){
 				PPC_SET_RD    (*current, 1);
 				PPC_SET_IMMED (*current, jump_address>>16);
 				++current;
-				// la	r1, dest@l(r1)
+				// la	r0, dest@l(r1)
 				*current = NEW_PPC_INSTR();
 				PPC_SET_OPCODE(*current, PPC_OPCODE_ORI);
-				PPC_SET_RD    (*current, 1);
+				PPC_SET_RD    (*current, 0);
 				PPC_SET_RA    (*current, 1);
 				PPC_SET_IMMED (*current, jump_address);
-				++current;
-				// addi	r0, r1, 0
-				*current = NEW_PPC_INSTR();
-				PPC_SET_OPCODE(*current, PPC_OPCODE_ADDI);
-				PPC_SET_RA    (*current, 1);
 				++current;
 				// mfctr r1
 				*current = NEW_PPC_INSTR();

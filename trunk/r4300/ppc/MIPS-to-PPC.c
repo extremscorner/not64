@@ -94,14 +94,11 @@ int convert(void){
 		temp = 0;
 		if(is_j_out(MIPS_GET_LI(mips), 1)){
 			temp = 1;
-			// Allocate space for jumping out, 5 NOPs
-			PPC_SET_OPCODE(ppc, PPC_OPCODE_ORI);
-			set_next_dst(ppc);
-			set_next_dst(ppc);
-			set_next_dst(ppc);
-			set_next_dst(ppc);
-			set_next_dst(ppc);
-			ppc = NEW_PPC_INSTR();
+			// Allocate space for jumping out, 4 instrs
+			set_next_dst(0);
+			set_next_dst(0);
+			set_next_dst(0);
+			set_next_dst(0);
 		}
 		PPC_SET_OPCODE(ppc, PPC_OPCODE_B);
 		if(MIPS_GET_OPCODE(mips == MIPS_OPCODE_JAL))
@@ -145,14 +142,11 @@ int convert(void){
 		temp = 0;
 		if(is_j_out(signExtend(MIPS_GET_IMMED(mips),16), 0)){
 			temp = 1;
-			// Allocate space for jumping out, 5 NOPs
-			PPC_SET_OPCODE(ppc, PPC_OPCODE_ORI);
-			set_next_dst(ppc);
-			set_next_dst(ppc);
-			set_next_dst(ppc);
-			set_next_dst(ppc);
-			set_next_dst(ppc);
-			ppc = NEW_PPC_INSTR();
+			// Allocate space for jumping out, 4 instrs
+			set_next_dst(0);
+			set_next_dst(0);
+			set_next_dst(0);
+			set_next_dst(0);
 		}
 		// bc
 		ppc = NEW_PPC_INSTR();
@@ -197,14 +191,11 @@ int convert(void){
 		temp = 0;
 		if(is_j_out(signExtend(MIPS_GET_IMMED(mips),16), 0)){
 			temp = 1;
-			// Allocate space for jumping out, 5 NOPs
-			PPC_SET_OPCODE(ppc, PPC_OPCODE_ORI);
-			set_next_dst(ppc);
-			set_next_dst(ppc);
-			set_next_dst(ppc);
-			set_next_dst(ppc);
-			set_next_dst(ppc);
-			ppc = NEW_PPC_INSTR();
+			// Allocate space for jumping out, 4 instrs
+			set_next_dst(0);
+			set_next_dst(0);
+			set_next_dst(0);
+			set_next_dst(0);
 		}
 		// bc
 		ppc = NEW_PPC_INSTR();
@@ -1090,16 +1081,14 @@ static int convert_B(MIPS_instr mips){
 		ppc = NEW_PPC_INSTR();
 		if(is_j_out(signExtend(MIPS_GET_IMMED(mips),16), 0)){
 			temp = 1;
-			// Allocate space for jumping out, 5 NOPs
-			PPC_SET_OPCODE(ppc, PPC_OPCODE_ORI);
-			set_next_dst(ppc);
-			set_next_dst(ppc);
-			set_next_dst(ppc);
-			set_next_dst(ppc);
-			set_next_dst(ppc);
-			ppc = NEW_PPC_INSTR();
+			// Allocate space for jumping out, 4 instrs
+			set_next_dst(0);
+			set_next_dst(0);
+			set_next_dst(0);
+			set_next_dst(0);
 		}
 		// bc
+		ppc = NEW_PPC_INSTR();
 		PPC_SET_OPCODE(ppc, PPC_OPCODE_BC);
 		PPC_SET_BD(ppc, add_jump(signExtend(MIPS_GET_IMMED(mips),16), 0, temp));
 		PPC_SET_BO(ppc, bo);  // Test if CR is 1 or 0
@@ -1154,16 +1143,14 @@ static int convert_B(MIPS_instr mips){
 		ppc = NEW_PPC_INSTR();
 		if(is_j_out(signExtend(MIPS_GET_IMMED(mips),16), 0)){
 			temp = 1;
-			// Allocate space for jumping out, 5 NOPs
-			PPC_SET_OPCODE(ppc, PPC_OPCODE_ORI);
-			set_next_dst(ppc);
-			set_next_dst(ppc);
-			set_next_dst(ppc);
-			set_next_dst(ppc);
-			set_next_dst(ppc);
-			ppc = NEW_PPC_INSTR();
+			// Allocate space for jumping out, 4 instrs
+			set_next_dst(0);
+			set_next_dst(0);
+			set_next_dst(0);
+			set_next_dst(0);
 		}
 		// bc
+		ppc = NEW_PPC_INSTR();
 		PPC_SET_OPCODE(ppc, PPC_OPCODE_BC);
 		PPC_SET_BD(ppc, add_jump(signExtend(MIPS_GET_IMMED(mips),16), 0, temp));
 		PPC_SET_BO(ppc, bo);  // Test if CR is 1 or 0
@@ -1381,14 +1368,11 @@ static int convert_CoP(MIPS_instr mips, int z){
 				temp = 0;
 				if(is_j_out(signExtend(MIPS_GET_IMMED(mips),16), 0)){
 					temp = 1;
-					// Allocate space for jumping out, 5 NOPs
-					PPC_SET_OPCODE(ppc, PPC_OPCODE_ORI);
-					set_next_dst(ppc);
-					set_next_dst(ppc);
-					set_next_dst(ppc);
-					set_next_dst(ppc);
-					set_next_dst(ppc);
-					ppc = NEW_PPC_INSTR();
+					// Allocate space for jumping out, 4 instrs
+					set_next_dst(0);
+					set_next_dst(0);
+					set_next_dst(0);
+					set_next_dst(0);
 				}
 				PPC_SET_OPCODE(ppc, PPC_OPCODE_BC);
 				PPC_SET_BD(ppc, add_jump(signExtend(MIPS_GET_IMMED(mips),16), 0, temp));
@@ -1417,14 +1401,11 @@ static int convert_CoP(MIPS_instr mips, int z){
 				temp = 0;
 				if(is_j_out(signExtend(MIPS_GET_IMMED(mips),16), 0)){
 					temp = 1;
-					// Allocate space for jumping out, 5 NOPs
-					PPC_SET_OPCODE(ppc, PPC_OPCODE_ORI);
-					set_next_dst(ppc);
-					set_next_dst(ppc);
-					set_next_dst(ppc);
-					set_next_dst(ppc);
-					set_next_dst(ppc);
-					ppc = NEW_PPC_INSTR();
+					// Allocate space for jumping out, 4 instrs
+					set_next_dst(0);
+					set_next_dst(0);
+					set_next_dst(0);
+					set_next_dst(0);
 				}
 				PPC_SET_OPCODE(ppc, PPC_OPCODE_BC);
 				PPC_SET_BD(ppc, add_jump(signExtend(MIPS_GET_IMMED(mips),16), 0, temp));
