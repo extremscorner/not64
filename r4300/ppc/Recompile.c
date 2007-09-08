@@ -68,7 +68,9 @@ void recompile_block(PowerPC_block* ppc_block){
 	while(has_next_src()){
 		// Make sure the code doesn't overflow
 		// FIXME: The resize factor may not be optimal
-		if(*code_length + 8 >= ppc_block->max_length)
+		//          maybe we can make a guess based on
+		//          how far along we are now
+		if(*code_length + 13 >= ppc_block->max_length)
 			resizeCode(ppc_block, ppc_block->max_length * 3/2);
 		
 		ppc_block->code_addr[src-src_first] = dst;
@@ -160,7 +162,7 @@ static void pass2(PowerPC_block* ppc_block){
 				PPC_SET_BD(*current, jump_table[i].new_jump);
 				
 			} else { // jump couldn't be recalculated, should jump out
-				unsigned int dest = jump_offset + ppc_block->start_address;
+				unsigned int dest = (jump_offset << 2) + ppc_block->start_address;
 				printf("Branching out to 0x%08x\n", dest);
 				
 				current = current - 5;

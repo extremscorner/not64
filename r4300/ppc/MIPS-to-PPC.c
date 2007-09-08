@@ -4,6 +4,8 @@
    TODO: Finish all the important instructions
          Confirm hi/lo work properly for each case
            it probably breaks if a mult is followed by a madd
+           it definitely breaks if they do an operation, mutate
+           the registers, then mfhi or mflo
          If the lr is used in anything besides
            lw/sw/add(move) that should be supported
          Verify likely branches work properly
@@ -39,6 +41,8 @@ static void genCallInterp(MIPS_instr);
 static int inline mips_is_jump(MIPS_instr);
 
 // This should be called before the jump is recompiled
+// FIXME: If the delay slot contains a jump
+//        the branch destination will be off by 1
 static inline int check_delaySlot(void){
 #if SUPPORT_DELAY_SLOT
 	if(peek_next_src() == 0) // MIPS uses 0 as a NOP
