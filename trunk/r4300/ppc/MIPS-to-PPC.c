@@ -211,8 +211,9 @@ int convert(void){
 		}
 		return CONVERT_SUCCESS;
 	case MIPS_OPCODE_ADDIU:
+		// FIXME: We need to figure out how to add an unsigned immed
+		//          we might be able to just do an ori
 	case MIPS_OPCODE_ADDI:
-		// FIXME: It seems addi never generates OE
 		PPC_SET_OPCODE(ppc, PPC_OPCODE_ADDI);
 		CONVERT_I_TYPE(ppc, mips);
 		set_next_dst(ppc);
@@ -230,13 +231,13 @@ int convert(void){
 		ppc = NEW_PPC_INSTR();
 		PPC_SET_OPCODE(ppc, PPC_OPCODE_X);
 		PPC_SET_FUNC  (ppc, PPC_FUNC_MFCR);
-		PPC_SET_RD    (ppc, MIPS_GET_RD(mips));
+		PPC_SET_RD    (ppc, MIPS_GET_RT(mips));
 		set_next_dst(ppc);
 		// rlwinm
 		ppc = NEW_PPC_INSTR();
 		PPC_SET_OPCODE(ppc, PPC_OPCODE_RLWINM);
-		PPC_SET_RD    (ppc, MIPS_GET_RD(mips));
-		PPC_SET_RA    (ppc, MIPS_GET_RD(mips));
+		PPC_SET_RD    (ppc, MIPS_GET_RT(mips));
+		PPC_SET_RA    (ppc, MIPS_GET_RT(mips));
 		PPC_SET_SH    (ppc, 29); // Rotate LT bit to position 0
 		set_next_dst(ppc);
 		return CONVERT_SUCCESS;
