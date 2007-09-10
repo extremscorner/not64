@@ -212,6 +212,8 @@ int convert(void){
 		return CONVERT_SUCCESS;
 	case MIPS_OPCODE_ADDIU:
 		// Oddly, addiu uses a signed immediate
+		// I don't think it's a big deal that we
+		//   won't throw an overflow exception
 	case MIPS_OPCODE_ADDI:
 		PPC_SET_OPCODE(ppc, PPC_OPCODE_ADDI);
 		CONVERT_I_TYPE(ppc, mips);
