@@ -211,8 +211,7 @@ int convert(void){
 		}
 		return CONVERT_SUCCESS;
 	case MIPS_OPCODE_ADDIU:
-		// FIXME: We need to figure out how to add an unsigned immed
-		//          we might be able to just do an ori
+		// Oddly, addiu uses a signed immediate
 	case MIPS_OPCODE_ADDI:
 		PPC_SET_OPCODE(ppc, PPC_OPCODE_ADDI);
 		CONVERT_I_TYPE(ppc, mips);
