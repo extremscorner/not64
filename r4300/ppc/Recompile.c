@@ -182,8 +182,8 @@ static void pass2(PowerPC_block* ppc_block){
 				// la	r0, dest@l(r1)
 				*current = NEW_PPC_INSTR();
 				PPC_SET_OPCODE(*current, PPC_OPCODE_ORI);
-				PPC_SET_RD    (*current, 0);
-				PPC_SET_RA    (*current, 1);
+				PPC_SET_RD    (*current, 1);
+				PPC_SET_RA    (*current, 0);
 				PPC_SET_IMMED (*current, dest);
 				++current;
 				// mfctr r1
@@ -239,8 +239,8 @@ static void pass2(PowerPC_block* ppc_block){
 				// la	r0, dest@l(r1)
 				*current = NEW_PPC_INSTR();
 				PPC_SET_OPCODE(*current, PPC_OPCODE_ORI);
-				PPC_SET_RD    (*current, 0);
-				PPC_SET_RA    (*current, 1);
+				PPC_SET_RD    (*current, 1);
+				PPC_SET_RA    (*current, 0);
 				PPC_SET_IMMED (*current, jump_address);
 				++current;
 				// mfctr r1
@@ -367,7 +367,7 @@ static void genJumpPad(PowerPC_block* ppc_block){
 	//la	r0, (ppc_block->end_address+4)@l(r1)
 	ppc = NEW_PPC_INSTR();
 	PPC_SET_OPCODE(ppc, PPC_OPCODE_ORI);
-	PPC_SET_RA    (ppc, 1);
+	PPC_SET_RD    (ppc, 1);
 	PPC_SET_IMMED (ppc, (ppc_block->end_address+4));
 	set_next_dst(ppc);
 	//mfctr	r1
