@@ -6,6 +6,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+//#include <string.h> //possibly needed for clearing GX fifo memory
 #include <unistd.h>
 
 #include "main.h"
@@ -24,6 +25,8 @@
 
 #include <gccore.h>
 #include <sdcard.h>
+ 
+#define DEFAULT_FIFO_SIZE    (256*1024)
 
 int p_noask;
 
@@ -331,6 +334,24 @@ Initialise (void)
   VIDEO_WaitVSync ();        /*** Wait for VBL ***/
   if (vmode->viTVMode & VI_NON_INTERLACE)
     VIDEO_WaitVSync ();
+
+  // setup the fifo and then init GX
+  void *gp_fifo = NULL;
+  gp_fifo = MEM_K0_TO_K1 (memalign (32, DEFAULT_FIFO_SIZE));
+  memset (gp_fifo, 0, DEFAULT_FIFO_SIZE);
  
+  GX_Init (gp_fifo, DEFAULT_FIFO_SIZE);
+ 
+  // clears the bg to color and clears the z buffer
+  GX_SetCopyClear ((GXColor){64,64,64,255}, 0x00000000);
+  // init viewport
+  GX_SetViewport (0, 0, vmode->fbWidth, vmode->efbHeight, 0, 2);
+  // Set the correct y scaling for efb->xfb copy operation
+  GX_SetDispCopyYScale ((f32) vmode->xfbHeight / (f32) vmode->efbHeight);
+  GX_SetDispCopyDst (vmode->fbWidth, vmode->xfbHeight); 
+  GX_SetCullMode (GX_CULL_NONE); //default in rsp init
+  // Use the following command to copy efb to xfb:
+  //GX_CopyDisp (xfb, GX_TRUE);
+
 }
 
