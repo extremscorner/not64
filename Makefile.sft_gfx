@@ -1,0 +1,239 @@
+#Makefile MUPEN64 for Linux
+
+CC		=powerpc-gekko-gcc
+CXX		=powerpc-gekko-g++
+
+#CFLAGS		=-DX86 -O3 -mpentium -Wall -DEMU64_DEBUG
+#CFLAGS		=-DX86 -O3 -fexpensive-optimizations -fomit-frame-pointer -funroll-loops -ffast-math -fno-strict-aliasing -mcpu=athlon -Wall -pipe
+#CFLAGS		=-DX86 -O3 -mcpu=pentium -Wall -g -pg
+#CFLAGS		=-DX86 -Wall -pipe -g3 -DEMU64_DEBUG
+#CFLAGS		=-DX86 -Wall -pipe -g -DEMU64_DEBUG -DCOMPARE_CORE
+#CFLAGS		=-DX86 -Wall -pipe -g
+#CFLAGS  = -g -O2 -Wall $(MACHDEP) $(INCLUDE) -fomit-frame-pointer \
+CFLAGS  = -g -O2 -Wall $(MACHDEP) -fomit-frame-pointer \
+	  -DCPU_SHUTDOWN -DSPC700_SHUTDOWN -DVAR_CYCLES -DSOUND \
+	  -DNOASM -DNGC -DNOASM -DPIXEL_FORMAT=RGB565 -DSPC700_C \
+	  -DM_PI=3.14159265359 -DEXECUTE_SUPERFX_PER_LINE \
+	  -fno-exceptions -Wno-unused-parameter -pipe \
+	  -DDETECT_NASTY_FX_INTERLEAVE -DSDD1_DECOMP
+
+MACHDEP	= -DGEKKO -mcpu=750 -meabi -mhard-float 
+LDFLAGS	=	$(MACHDEP) -mogc -Wl,-Map,$(notdir $@).map -Wl,--cref
+
+
+CXXFLAGS	=$(CFLAGS)
+
+#GL_PATH		=-I/usr/X11R6/include
+
+OBJ		=main/rom_gc.o \
+		main/main_gc.o \
+		main/ROM-Cache.o \
+		main/textFileBrowser.o \
+		r4300/r4300.o \
+		r4300/cop0.o \
+		r4300/special.o \
+		r4300/regimm.o \
+		r4300/exception.o \
+		r4300/Invalid_Code.o \
+		gc_memory/ARAM.o \
+		gc_memory/tlb.o \
+		gc_memory/TLB-Cache.o \
+		gc_memory/memory.o \
+		gc_memory/dma.o \
+		r4300/interupt.o \
+		r4300/cop1.o \
+		r4300/tlb.o \
+		r4300/cop1_w.o \
+		r4300/cop1_s.o \
+		r4300/cop1_d.o \
+		r4300/recomp.o \
+		gc_memory/pif.o \
+		r4300/bc.o \
+		r4300/cop1_l.o \
+		r4300/pure_interp.o \
+		r4300/compare_core.o \
+		gc_memory/flashram.o \
+		gc_memory/Save-Prompt.o \
+		main/md5.o \
+		main/savestates_gc.o \
+		r4300/profile.o \
+		main/adler32.o
+		
+OBJ_PPC		=r4300/ppc/MIPS-to-PPC.o \
+		r4300/ppc/Recompile.o \
+		r4300/ppc/Wrappers.o \
+		r4300/ppc/ppc_disasm.o
+
+OBJ_X86         =r4300/x86/gr4300.o \
+		r4300/x86/gcop0.o \
+		r4300/x86/assemble.o \
+		r4300/x86/gcop1.o \
+		r4300/x86/gcop1_s.o \
+		r4300/x86/gcop1_d.o \
+		r4300/x86/gtlb.o \
+		r4300/x86/gregimm.o \
+		r4300/x86/gspecial.o \
+		r4300/x86/gcop1_w.o \
+		r4300/x86/debug.o \
+		r4300/x86/rjump.o \
+		r4300/x86/gbc.o \
+		r4300/x86/gcop1_l.o \
+		r4300/x86/regcache.o
+
+OBJ_VCR		=main/vcr.o \
+		main/vcr_compress.o \
+		main/vcr_resample.o \
+		main/gui_gtk/vcrcomp_dialog.o
+
+OBJ_GTK_GUI	=main/gui_gtk/main_gtk.o \
+		main/gui_gtk/translate.o \
+		main/gui_gtk/messagebox.o \
+		main/gui_gtk/aboutdialog.o \
+		main/gui_gtk/configdialog.o \
+		main/gui_gtk/support.o \
+		main/gui_gtk/rombrowser.o \
+		main/gui_gtk/romproperties.o \
+		main/gui_gtk/config.o \
+		main/gui_gtk/dirbrowser.o
+
+OBJ_INPUT	=gc_input/main.o
+
+OBJ_RSPHLE	=rsp_hle/main.o \
+		rsp_hle/jpeg.o \
+		rsp_hle/ucode3.o \
+		rsp_hle/ucode2.o \
+		rsp_hle/ucode1.o \
+		rsp_hle/ucode3mp3.o
+
+OBJ_AUDIO	=gc_audio/main.o
+
+OBJ_SOFT_GFX	=mupen64_soft_gfx/main.o \
+		mupen64_soft_gfx/rsp.o \
+		mupen64_soft_gfx/vi_GX.o \
+		mupen64_soft_gfx/vi.o \
+		mupen64_soft_gfx/rdp.o \
+		mupen64_soft_gfx/tx.o \
+		mupen64_soft_gfx/rs.o \
+		mupen64_soft_gfx/tf.o \
+		mupen64_soft_gfx/cc.o \
+		mupen64_soft_gfx/bl.o \
+		mupen64_soft_gfx/font.o
+
+HEADER		=main/rom.h \
+		r4300/r4300.h \
+		r4300/ops.h \
+		r4300/macros.h \
+		r4300/exception.h \
+		gc_memory/memory.h \
+		gc_memory/tlb.h \
+		gc_memory/dma.h \
+		r4300/interupt.h \
+		r4300/recomp.h \
+		gc_memory/pif.h
+
+LIB		=	-logc -lm -lz -logcsys -lsdcard
+
+ifeq ($(strip mupen64_soft_gfx/main.cpp),)
+	export LD	:=	$(CC)
+else
+	export LD	:=	$(CXX)
+endif
+
+PLUGINS		=plugins/mupen64_input.so plugins/blight_input.so plugins/mupen64_hle_rsp_azimer.so plugins/dummyaudio.so plugins/mupen64_audio.so plugins/jttl_audio.so plugins/mupen64_soft_gfx.so plugins/glN64.so
+
+all:	mupen64_gc
+
+r4300/interupt.o:	r4300/interupt.c
+			$(CC) $(CFLAGS) -c -o $@ $<
+
+main/main.o:	main/main.c
+		$(CC) $(CFLAGS) -c -o $@ $<
+
+main/main_gtk.o:	main/main_gtk.c
+			$(CC) $(CFLAGS) -c -o $@ $< 
+
+main/gui_gtk/main_gtk.o:	main/gui_gtk/main_gtk.c
+				$(CC) $(CFLAGS) -c -o $@ $< 
+
+main/gui_gtk/translate.o:	main/gui_gtk/translate.c
+				$(CC) $(CFLAGS) -c -o $@ $< 
+
+main/gui_gtk/messagebox.o:	main/gui_gtk/messagebox.c
+				$(CC) $(CFLAGS) -c -o $@ $< 
+
+main/gui_gtk/aboutdialog.o:	main/gui_gtk/aboutdialog.c
+				$(CC) $(CFLAGS) -c -o $@ $< 
+
+main/gui_gtk/configdialog.o:	main/gui_gtk/configdialog.c
+				$(CC) $(CFLAGS) -c -o $@ $< 
+
+main/gui_gtk/support.o:		main/gui_gtk/support.c
+				$(CC) $(CFLAGS) -c -o $@ $< 
+
+main/gui_gtk/rombrowser.o:	main/gui_gtk/rombrowser.c
+				$(CC) $(CFLAGS) -c -o $@ $< 
+
+main/gui_gtk/romproperties.o:	main/gui_gtk/romproperties.c
+				$(CC) $(CFLAGS) -c -o $@ $< 
+
+main/gui_gtk/config.o:		main/gui_gtk/config.c
+				$(CC) $(CFLAGS) -c -o $@ $< 
+
+main/gui_gtk/dirbrowser.o:	main/gui_gtk/dirbrowser.c
+				$(CC) $(CFLAGS) -c -o $@ $< 
+
+main/gui_gtk/vcrcomp_dialog.o:	main/gui_gtk/vcrcomp_dialog.c
+				$(CC) $(CFLAGS) -c -o $@ $< 
+
+main/vcr_compress.o:		main/vcr_compress.cpp
+				$(CXX) $(CXXFLAGS) -c -o $@ $<
+
+gc_input/main.o:		gc_input/input.c
+				$(CC) $(CFLAGS) -c -o $@ $<
+
+rsp_hle/main.o:			rsp_hle/main.c
+				$(CC) $(CFLAGS) -c -o $@ $<
+
+gc_audio/main.o:		gc_audio/audio.c
+				$(CC) $(CFLAGS) -c -o $@ $<
+
+mupen64_soft_gfx/main.o:	mupen64_soft_gfx/main.cpp
+				$(CXX) $(CFLAGS) -c -o $@ $<
+
+mupen64_soft_gfx/vi_GX.o:	mupen64_soft_gfx/vi_GX.cpp
+				$(CXX) $(CFLAGS) -c -o $@ $<
+
+r4300/ppc/Wrappers.o:		r4300/ppc/Wrappers.s
+				$(CC) $(CFLAGS) -c -o $@ $<
+
+
+mupen64_gc:	$(OBJ) $(OBJ_PPC) $(OBJ_INPUT) $(OBJ_SOFT_GFX) $(OBJ_AUDIO) $(OBJ_RSPHLE) main/main_gc.o
+		$(LD) $^ $(LDFLAGS) $(LDFLAGS) $(LIB) -Wl -o $@
+		#strip --strip-all $@
+		powerpc-gekko-objcopy -O binary $@ mupen64.dol
+#		~/GCos/dollz3 mupen64.dol mupen64-lz.dol
+
+
+
+
+install:
+	cp mupen64 "$(PREFIX)bin"
+	cp mupen64_nogui "$(PREFIX)bin"
+	mkdir "$(SHARE)" | echo
+	cp -rv mupen64.ini "$(SHARE)"
+	cp -rv lang "$(SHARE)"
+	cp -rv plugins "$(SHARE)"
+	cp -rv doc "$(SHARE)"
+	
+clean:
+	find . -name '*.o' -print0 | xargs -0r rm -f
+	rm mupen64 mupen64_nogui mupen64_dbg plugins/mupen64_input.so blight_input/arial.ttf.c blight_input/ttftoh plugins/blight_input.so plugins/mupen64_hle_rsp_azimer.so plugins/dummyaudio.so plugins/mupen64_audio.so plugins/jttl_audio.so plugins/mupen64_soft_gfx.so plugins/glN64.so
+
+clean_o:
+	find . -name '*.o' -print0 | xargs -0r rm -f
+
+clean_jed:
+	find . -name '*~' -print0 | xargs -0r rm -f
+
+gprof:
+	gprof mupen64_nogui > stat.txt
