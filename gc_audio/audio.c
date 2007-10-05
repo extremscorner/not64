@@ -12,7 +12,7 @@
 
 AUDIO_INFO AudioInfo;
 
-#define BUFFER_SIZE 2*1024
+#define BUFFER_SIZE 2048
 static char buffer[2][BUFFER_SIZE] __attribute__((aligned(32)));
 static char which_buffer = 0;
 static unsigned int buffer_offset = 0;
@@ -42,7 +42,7 @@ AiDacrateChanged( int SystemType )
 		printf("error initializing frequency:%x\n", f);
 		
 	// FIXME: Trying to force 48khz
-	AUDIO_SetStreamSampleRate(AI_SAMPLERATE_48KHZ);
+	AUDIO_SetStreamSampleRate(AI_SAMPLERATE_32KHZ);
 }
 
 static void inline play_buffer(void){
@@ -60,14 +60,16 @@ static void inline add_to_buffer(char* stream, unsigned int length){
 	if(buffer_offset + length > BUFFER_SIZE){
 		// Only write some into this buffer
 		unsigned int length1 = BUFFER_SIZE - buffer_offset;
-		unsigned int length2 = (buffer_offset + length) - BUFFER_SIZE;
+		unsigned int length2 = length - length1;
+		// FIXME: This chops off some data
+		length2 = length2 > BUFFER_SIZE ? BUFFER_SIZE : length2;
 		
 		memcpy(buffer[which_buffer] + buffer_offset, stream, length1);
 		
 		play_buffer();
 		
 		memcpy(buffer[which_buffer], stream + length1, length2);
-		buffer_offset += length2;
+		buffer_offset = length2;
 	} else {
 		memcpy(buffer[which_buffer] + buffer_offset, stream, length);
 		buffer_offset += length;
