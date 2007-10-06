@@ -27,7 +27,8 @@
 #include <gccore.h>
 #include <sdcard.h>
  
-#define DEFAULT_FIFO_SIZE    (256*1024)
+#define DEFAULT_FIFO_SIZE    (256*1024)//(64*1024)
+
 
 int p_noask;
 
@@ -205,6 +206,9 @@ int main(){
 	free_memory();
 	ARAM_manager_deinit();
 	
+	VIDEO_SetNextFramebuffer (xfb[0]); //switch xfb to show console
+	VIDEO_Flush ();
+
 	printf("Press X to return to SDLOAD\n  or START to load new ROM\n");
    	while(!(PAD_ButtonsHeld(0) & PAD_BUTTON_START) &&
    	      !(PAD_ButtonsHeld(0) & PAD_BUTTON_X));
@@ -364,13 +368,11 @@ Initialise (void)
   // clears the bg to color and clears the z buffer
   GX_SetCopyClear ((GXColor){64,64,64,255}, 0x00000000);
   // init viewport
-  GX_SetViewport (0, 0, vmode->fbWidth, vmode->efbHeight, 0, 2);
+  GX_SetViewport (0, 0, vmode->fbWidth, vmode->efbHeight, 0, 1);
   // Set the correct y scaling for efb->xfb copy operation
   GX_SetDispCopyYScale ((f32) vmode->xfbHeight / (f32) vmode->efbHeight);
   GX_SetDispCopyDst (vmode->fbWidth, vmode->xfbHeight); 
-  GX_SetCullMode (GX_CULL_NONE); //default in rsp init
-  // Use the following command to copy efb to xfb:
-  //GX_CopyDisp (xfb, GX_TRUE);
-
+  GX_SetCullMode (GX_CULL_NONE); // default in rsp init
+  GX_CopyDisp (xfb[1], GX_TRUE); // This clears the efb
 }
 
