@@ -15,7 +15,8 @@ static char ROM_filename[SDCARD_MAX_PATH_LEN];
 static int ROM_byte_swap;
 
 static ARQRequest ARQ_request;
-
+extern unsigned int rom_offsetDVD;	//dvd
+extern int isFromDVD;			//dvd
 static void byte_swap(char* buffer, unsigned int length);
 
 void ROMCache_init(u32 romSize){
@@ -35,22 +36,40 @@ void ROMCache_deinit(){
 }
 
 static void inline ROMCache_load_block(char* block, int rom_offset){
-	printf("Loading ROM block %08x from SD-Card with offset %08x\n", block, rom_offset);
-	sd_file* rom = SDCARD_OpenFile(ROM_filename, "rb");
-	SDCARD_SeekFile(rom, rom_offset, SDCARD_SEEK_SET);
-	int bytes_read, offset=0, bytes_to_read=ARQ_GetChunkSize();
-	char* buffer = memalign(32, bytes_to_read);
-	do {
-		bytes_read = SDCARD_ReadFile(rom, buffer, bytes_to_read);
-		byte_swap(buffer, bytes_read);
-		DCFlushRange(buffer, bytes_read);
-		ARQ_PostRequest(&ARQ_request, 0x10AD, AR_MRAMTOARAM, ARQ_PRIO_HI,
-		                block + offset, buffer, bytes_read);
-		offset += bytes_read;
-	} while(offset != BLOCK_SIZE && bytes_read == bytes_to_read);
-	free(buffer);
-	SDCARD_CloseFile(rom);
-	printf("Success\n", block);
+	if(isFromDVD) {
+		unsigned int tempDVDOffset = rom_offsetDVD+rom_offset;
+		printf("Loading ROM block %08x from DVD with offset %08x\n", block, rom_offset);
+		int bytes_read, offset=0, bytes_to_read=ARQ_GetChunkSize();
+		char* buffer = memalign(32, bytes_to_read);
+		do {
+			bytes_read = read_safe(buffer, tempDVDOffset, bytes_to_read);
+			byte_swap(buffer, bytes_read);
+			DCFlushRange(buffer, bytes_read);
+			ARQ_PostRequest(&ARQ_request, 0x10AD, AR_MRAMTOARAM, ARQ_PRIO_HI,
+			                block + offset, buffer, bytes_read);
+			offset += bytes_read;
+			tempDVDOffset+=bytes_read;
+		} while(offset != BLOCK_SIZE && bytes_read == bytes_to_read);
+		printf("Success\n", block);
+	}
+	else {
+		printf("Loading ROM block %08x from SD-Card with offset %08x\n", block, rom_offset);
+		sd_file* rom = SDCARD_OpenFile(ROM_filename, "rb");
+		SDCARD_SeekFile(rom, rom_offset, SDCARD_SEEK_SET);
+		int bytes_read, offset=0, bytes_to_read=ARQ_GetChunkSize();
+		char* buffer = memalign(32, bytes_to_read);
+		do {
+			bytes_read = SDCARD_ReadFile(rom, buffer, bytes_to_read);
+			byte_swap(buffer, bytes_read);
+			DCFlushRange(buffer, bytes_read);
+			ARQ_PostRequest(&ARQ_request, 0x10AD, AR_MRAMTOARAM, ARQ_PRIO_HI,
+			                block + offset, buffer, bytes_read);
+			offset += bytes_read;
+		} while(offset != BLOCK_SIZE && bytes_read == bytes_to_read);
+		free(buffer);
+		SDCARD_CloseFile(rom);
+		printf("Success\n", block);
+	}
 }
 
 void ROMCache_read(u32* ram_dest, u32 rom_offset, u32 length){
@@ -124,6 +143,7 @@ void ROMCache_read(u32* ram_dest, u32 rom_offset, u32 length){
 
 // TODO: Support byte-swapped ROMs
 void ROMCache_load_SDCard(char* filename, int byteSwap){
+	printf("byteSwap %i\n",byteSwap);
 	if(byteSwap == BYTE_SWAP_BAD) return;
 	ROM_byte_swap = byteSwap;
 	if(byteSwap == BYTE_SWAP_BYTE) printf("Byte swapped\n");
@@ -169,6 +189,61 @@ void ROMCache_load_SDCard(char* filename, int byteSwap){
 	}
 	free(buffer);
 	SDCARD_CloseFile(rom);
+}
+
+// TODO: Support byte-swapped ROMs
+void ROMCache_load_DVD(char* filename, int byteSwap){
+	printf("byteSwap %i\n",byteSwap);
+	if(byteSwap == BYTE_SWAP_BAD) return;
+	ROM_byte_swap = byteSwap;
+	if(byteSwap == BYTE_SWAP_BYTE) printf("Byte swapped\n");
+	else if(byteSwap == BYTE_SWAP_HALF) printf("Halfword swapped\n");
+	
+	printf("Loading ROM into ARAM %s\n", ROM_too_big ? "(ROM_too_big)" : "");
+	if(ROM_too_big) printf("%d blocks available\n", ARAM_block_available());
+	else            printf("%d contiguous blocks available\n", ARAM_block_available_contiguous());
+	
+	strncpy(ROM_filename, filename, SDCARD_MAX_PATH_LEN);
+	//sd_file* rom = SDCARD_OpenFile(filename, "rb");
+	//SDCARD_SeekFile(rom, 0, SDCARD_SEEK_SET);
+
+	int bytes_to_read = ARQ_GetChunkSize();
+	int* buffer = memalign(32, bytes_to_read);
+	unsigned int tempDVDOffset = rom_offsetDVD;
+	if(ROM_too_big){ // We can't load the entire ROM
+		int i, block, available = ARAM_block_available();
+		for(i=0; i<available; ++i){
+			block = ARAM_block_alloc(&ROM_blocks[i], 'R');
+			printf("ROM_blocks[%d] = 0x%08x\n", i, block);
+			int bytes_read, offset=0;
+			do {
+				bytes_read = read_safe(buffer,tempDVDOffset, bytes_to_read);
+				byte_swap(buffer, bytes_read);
+				DCFlushRange(buffer, bytes_read);
+				ARQ_PostRequest(&ARQ_request, 0x10AD, AR_MRAMTOARAM, ARQ_PRIO_HI,
+				                block + offset, buffer, bytes_read);
+				offset += bytes_read;
+				tempDVDOffset +=bytes_read;
+			} while(offset != BLOCK_SIZE);
+		}
+	} else {
+		ARAM_block_alloc_contiguous(&ROM, 'R', ROM_size / BLOCK_SIZE);
+		printf("ROM = 0x%08x using %d blocks\n", ROM, ROM_size/BLOCK_SIZE);
+		int bytes_read, offset=0;
+		do {
+			//bytes_read = SDCARD_ReadFile(rom, buffer, bytes_to_read);
+			bytes_read = read_safe(buffer, tempDVDOffset, bytes_to_read);
+			byte_swap(buffer, bytes_read);
+			DCFlushRange(buffer, bytes_read);
+			ARQ_PostRequest(&ARQ_request, 0x10AD, AR_MRAMTOARAM, ARQ_PRIO_HI,
+			                ROM + offset, buffer, bytes_read);
+			offset += bytes_read;
+			tempDVDOffset +=bytes_read;
+		} while(bytes_read == bytes_to_read && offset != ROM_size);
+	}
+	//free(buffer);
+	//SDCARD_CloseFile(rom);
+
 }
 
 static void byte_swap(char* buffer, unsigned int length){

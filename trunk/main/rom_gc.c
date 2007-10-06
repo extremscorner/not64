@@ -39,7 +39,7 @@
 #include <sdcard.h>
 
 #include "rom.h"
-#include "ROM-Cache.h"
+#include "ROM-Cache.h" 
 #include "../gc_memory/memory.h"
 #include "md5.h"
 
@@ -50,6 +50,10 @@ int rom_length;
 unsigned char *rom;
 rom_header *ROM_HEADER;
 rom_settings ROM_SETTINGS;
+//DVD
+extern int isFromDVD;
+extern int rom_sizeDVD;
+extern unsigned int rom_offsetDVD;
 
 static void findsize(){
 	SDSTAT s;
@@ -81,76 +85,52 @@ static int detectByteSwapping(char* filename){
 	}
 }
 
+static int detectByteSwappingDVD(){
+
+	char magicWord[4];
+	read_safe(magicWord, rom_offsetDVD, 4);
+	
+	switch(magicWord[0]){
+	case 0x37:
+		return BYTE_SWAP_HALF;
+	case 0x40:
+		return BYTE_SWAP_BYTE;
+	case 0x80:
+		return BYTE_SWAP_NONE;
+	default:
+		return BYTE_SWAP_BAD;
+	}
+}
+
 int rom_read(const char *argv){
    md5_state_t state;
    md5_byte_t digest[16];
    //mupenEntry *entry;
    char buf[1024], arg[1024], *s;
-   
    strncpy(arg, argv, 1000);
-   rom_file = SDCARD_OpenFile(argv, "rb");
-   if(rom_file) printf("file found\n");
-   else { printf("ERROR COULD NOT OPEN: %s\n", argv); return -1; }
+   
+   if(!isFromDVD) {
+	   rom_file = SDCARD_OpenFile(argv, "rb");
+	   if(rom_file) printf("file found\n");
+	   else { printf("ERROR COULD NOT OPEN: %s\n", argv); return -1; }
+	   findsize();
+	   SDCARD_CloseFile(rom_file);
+	   printf("Loading ROM: %s, please be patient...\n", arg);
+   	   ROMCache_init(rom_length);
+   	   ROMCache_load_SDCard(arg, detectByteSwapping(arg));
+	}
+	else {
+   		rom_length = rom_sizeDVD;  
+   		printf ("rom size: %d bytes (or %d Mb or %d Megabits)\n", 
+		rom_length, rom_length/1024/1024, rom_length/1024/1024*8);
+   	   	printf("Loading ROM: %s, please be patient...\n", arg);
+   	   	ROMCache_init(rom_length);
+   	   	ROMCache_load_DVD(arg, detectByteSwappingDVD());
+	   	}
 
-   findsize();
-   
-   SDCARD_CloseFile(rom_file);
-   
-   /*
-   if (rom) free(rom);
-   rom = malloc(rom_length);
-
-   tmp=0;
-
-   for (i=0; i<rom_length;i+=SDCARD_ReadFile(rom_file, rom+i, 1000)){
-   	if (tmp!=(int)((i/(float)rom_length)*100)){
-		  tmp=(int)(i/(float)(rom_length)*100);
-		  display_loading_progress(tmp);
-   	}
-   }
-   */
-   
-   printf("Loading ROM: %s, please be patient...\n", arg);
-   ROMCache_init(rom_length);
-   ROMCache_load_SDCard(arg, detectByteSwapping(arg));
-   
-   /*
-   if (rom[0]==0x37)
-     {
-	printf ("byteswaping rom...\n");
-	for (i=0; i<(rom_length/2); i++)
-	  {
-	     tmp=rom[i*2];
-	     rom[i*2]=rom[i*2+1];
-	     rom[i*2+1]=tmp;
-	  }
-	printf ("rom byteswaped\n");
-     }
-   if (rom[0]==0x40)
-     {
-	for (i=0; i<(rom_length/4); i++)
-	  {
-	     tmp=rom[i*4];
-	     rom[i*4]=rom[i*4+3];
-	     rom[i*4+3]=tmp;
-	     tmp=rom[i*4+1];
-	     rom[i*4+1]=rom[i*4+2];
-	     rom[i*4+2]=tmp;
-	  }
-	printf("rom byteswaped\n");
-     }
-   else if ((rom[0] != 0x80) || (rom[1] != 0x37) || (rom[2] != 0x12) || (rom[3] != 0x40))
-     {
-	printf("wrong file format !\n");
-	free(rom);
-	rom = NULL;
-	return 1;
-     }
-   */
    printf("rom loaded succesfully\n");
   
    if (!ROM_HEADER) ROM_HEADER = malloc(sizeof(rom_header));
-   //memcpy(ROM_HEADER, rom, sizeof(rom_header));
    ROMCache_read(ROM_HEADER, 0, sizeof(rom_header));
    //display_loading_progress(100);
    printf ("%x %x %x %x\n", ROM_HEADER->init_PI_BSB_DOM1_LAT_REG,
@@ -195,7 +175,7 @@ int rom_read(const char *argv){
    // FIXME: ROM_SETTINGS.goodname needs to be filled out
    strcpy(ROM_SETTINGS.goodname, ROM_HEADER->nom);
    
-#if 0 // I don't think I can/need to support this yet
+/*#if 0 // I don't think I can/need to support this yet
    // loading rom settings and checking if it's a good dump
    md5_init(&state);
    md5_append(&state, (const md5_byte_t *)rom, rom_length);
@@ -276,10 +256,10 @@ int rom_read(const char *argv){
    ROM_SETTINGS.eeprom_16kb = entry->eeprom16kb;
    printf("eeprom type:%d\n", ROM_SETTINGS.eeprom_16kb);
 #endif
-   
+   */
    return 0;
 }
-
+/*
 int fill_header(const char *argv)
 {
    char arg[1024];
@@ -289,7 +269,7 @@ int fill_header(const char *argv)
 	printf ("file not found or wrong path\n");
 	return 0;
    }
-/*------------------------------------------------------------------------*/   
+ 
    findsize();
    if (rom) free(rom);
    rom = malloc(0x40);
@@ -346,7 +326,7 @@ void calculateMD5(const char *argv, unsigned char digest[16])
 	printf("file not found or wrong path\n");
 	return;
    }
-/*------------------------------------------------------------------------*/   
+
    findsize();
    if (rom) free(rom);
    rom = malloc(rom_length);
@@ -400,3 +380,4 @@ void calculateMD5(const char *argv, unsigned char digest[16])
    free(rom);
    rom = NULL;
 }
+*/
