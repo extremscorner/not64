@@ -18,6 +18,7 @@ static ARQRequest ARQ_request;
 extern unsigned int rom_offsetDVD;	//dvd
 extern int isFromDVD;			//dvd
 static void byte_swap(char* buffer, unsigned int length);
+void showLoadProgress(float progress);
 
 void ROMCache_init(u32 romSize){
 	ARQ_Init();
@@ -38,9 +39,10 @@ void ROMCache_deinit(){
 static void inline ROMCache_load_block(char* block, int rom_offset){
 	if(isFromDVD) {
 		unsigned int tempDVDOffset = rom_offsetDVD+rom_offset;
-		printf("Loading ROM block %08x from DVD with offset %08x\n", block, rom_offset);
+		//printf("Loading ROM block %08x from DVD with offset %08x\n", block, rom_offset);
 		int bytes_read, offset=0, bytes_to_read=ARQ_GetChunkSize();
 		char* buffer = memalign(32, bytes_to_read);
+		int loads_til_update = 0;
 		do {
 			bytes_read = read_safe(buffer, tempDVDOffset, bytes_to_read);
 			byte_swap(buffer, bytes_read);
@@ -49,15 +51,25 @@ static void inline ROMCache_load_block(char* block, int rom_offset){
 			                block + offset, buffer, bytes_read);
 			offset += bytes_read;
 			tempDVDOffset+=bytes_read;
+			
+			if(!loads_til_update){
+				showLoadProgress( (float)offset/BLOCK_SIZE );
+				loads_til_update = 8;
+			}
+			--loads_til_update;
+			
 		} while(offset != BLOCK_SIZE && bytes_read == bytes_to_read);
-		printf("Success\n", block);
+		free(buffer);
+		showLoadProgress(1.0f);
+		//printf("Success\n", block);
 	}
 	else {
-		printf("Loading ROM block %08x from SD-Card with offset %08x\n", block, rom_offset);
+		//printf("Loading ROM block %08x from SD-Card with offset %08x\n", block, rom_offset);
 		sd_file* rom = SDCARD_OpenFile(ROM_filename, "rb");
 		SDCARD_SeekFile(rom, rom_offset, SDCARD_SEEK_SET);
 		int bytes_read, offset=0, bytes_to_read=ARQ_GetChunkSize();
 		char* buffer = memalign(32, bytes_to_read);
+		int loads_til_update = 0;
 		do {
 			bytes_read = SDCARD_ReadFile(rom, buffer, bytes_to_read);
 			byte_swap(buffer, bytes_read);
@@ -65,10 +77,18 @@ static void inline ROMCache_load_block(char* block, int rom_offset){
 			ARQ_PostRequest(&ARQ_request, 0x10AD, AR_MRAMTOARAM, ARQ_PRIO_HI,
 			                block + offset, buffer, bytes_read);
 			offset += bytes_read;
+			
+			if(!loads_til_update){
+				showLoadProgress( (float)offset/BLOCK_SIZE );
+				loads_til_update = 8;
+			}
+			--loads_til_update;
+			
 		} while(offset != BLOCK_SIZE && bytes_read == bytes_to_read);
 		free(buffer);
 		SDCARD_CloseFile(rom);
-		printf("Success\n", block);
+		showLoadProgress(1.0f);
+		//printf("Success\n", block);
 	}
 }
 
@@ -241,7 +261,7 @@ void ROMCache_load_DVD(char* filename, int byteSwap){
 			tempDVDOffset +=bytes_read;
 		} while(bytes_read == bytes_to_read && offset != ROM_size);
 	}
-	//free(buffer);
+	free(buffer);
 	//SDCARD_CloseFile(rom);
 
 }
