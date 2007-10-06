@@ -18,6 +18,7 @@
 #include "../gc_memory/memory.h"
 #include "../gc_memory/ARAM.h"
 #include "../gc_memory/TLB-Cache.h"
+#include "ROM-Cache.h" 
 #include "winlnxdefs.h"
 #include "savestates.h"
 
@@ -103,6 +104,9 @@ static void gfx_info_init(void);
 static void audio_info_init(void);
 static void rsp_info_init(void);
 static void control_info_init(void);
+//DVD
+int isFromDVD = 0;
+
 
 static void check_heap_space(void){
 	int space = 6 * 1024 * 1024, *ptr=NULL;
@@ -113,8 +117,10 @@ static void check_heap_space(void){
 	printf("At least %dB or %dKB space available\n", space, space/1024);
 }
 
+
 int main(){
-	char* romfile = NULL;
+	char* romfile = NULL;		//SD
+	char* romfileOffset = NULL;	//DVD
 	rom = NULL;
 	ROM_HEADER = NULL;
 	
@@ -124,17 +130,30 @@ int main(){
 	
 	ARAM_manager_init();
 	SDCARD_Init();
+	DVD_Init();
 	TLBCache_init();
 	
-	do {
-		if(romfile)	free(romfile);
-		//if(rom)		free(rom);
-		if(ROM_HEADER)	free(ROM_HEADER);
+	
+	if(romfile)	free(romfile);
+	//if(rom)		free(rom);
+	if(ROM_HEADER)	free(ROM_HEADER);
 		
-		printf("Press A to choose ROM from SDCard\n");
-		while (!(PAD_ButtonsHeld(0) & PAD_BUTTON_A));
-		romfile = textFileBrowser("dev0:\\N64ROMS");
-	} while(rom_read(romfile));
+	printf("Press A to choose ROM from SDCard\n");
+	printf("Press Z to choose ROM from DVD\n");
+	while(1){
+		if((PAD_ButtonsHeld(0) & PAD_BUTTON_A)) {
+			romfile = textFileBrowser("dev0:\\N64ROMS");
+			rom_read(romfile);
+			break;
+		}
+		if((PAD_ButtonsHeld(0) & PAD_TRIGGER_Z)) {
+			isFromDVD = 1;
+			romfile = textFileBrowserDVD();
+			rom_read(romfile); 
+			break;
+		}
+	}
+
 	
 	select_location(); // for game saves
 	

@@ -21,6 +21,5 @@ void ROMCache_read(u32* ram_dest, u32 rom_offset, u32 length);
 // TODO: Support loading from DVD, etc
 //         maybe one function, wrapped by macros
 void ROMCache_load_SDCard(char* filename, int byteSwap);
-
 #endif
 
