@@ -31,6 +31,10 @@ void gfx_set_fb(unsigned int* fb1, unsigned int* fb2){
 	vi->setFB(fb1, fb2);
 }
 
+void showLoadProgress(float percent){
+	vi->showLoadProg(percent);
+}
+
 /******************************************************************
   Function: CaptureScreen
   Purpose:  This function dumps the current frame to a file
@@ -321,4 +325,5 @@ EXPORT void CALL ViWidthChanged (void)
 {
    vi->widthChanged();
 }
+
 
