@@ -13,7 +13,9 @@ class VI_GX : public VI
    int which_fb;
    int width;
    int height;
-   
+   Mtx44 GXprojection2D;
+   Mtx GXmodelView2D;
+
    void setFB(unsigned int*, unsigned int*);
    void showFPS();
    virtual void setVideoMode(int w, int h);
@@ -28,6 +30,7 @@ class VI_GX : public VI
    virtual void switchFullScreenMode();
    virtual void switchWindowMode();
    virtual void setGamma(float gamma);
+   void showLoadProg(float);
 };
 
 #endif

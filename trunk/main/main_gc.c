@@ -27,7 +27,7 @@
 #include <gccore.h>
 #include <sdcard.h>
  
-#define DEFAULT_FIFO_SIZE    (256*1024)//(64*1024)
+#define DEFAULT_FIFO_SIZE    (256*1024)//(64*1024) minimum
 
 
 int p_noask;
