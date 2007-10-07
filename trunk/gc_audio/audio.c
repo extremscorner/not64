@@ -12,7 +12,7 @@
 
 AUDIO_INFO AudioInfo;
 
-#define BUFFER_SIZE 2048
+#define BUFFER_SIZE 4096
 static char buffer[2][BUFFER_SIZE] __attribute__((aligned(32)));
 static char which_buffer = 0;
 static unsigned int buffer_offset = 0;
@@ -39,7 +39,7 @@ AiDacrateChanged( int SystemType )
 	else if ( f == 48000 )
 		AUDIO_SetStreamSampleRate(AI_SAMPLERATE_48KHZ);
 	else 
-		printf("error initializing frequency:%x\n", f);
+		printf("error initializing frequency: %d\n", f);
 		
 	// FIXME: Trying to force 48khz
 	AUDIO_SetStreamSampleRate(AI_SAMPLERATE_32KHZ);
@@ -51,9 +51,6 @@ static void inline play_buffer(void){
 	DCFlushRange (buffer[which_buffer], BUFFER_SIZE);
 	AUDIO_InitDMA(buffer[which_buffer], BUFFER_SIZE);
 	AUDIO_StartDMA();
-	
-	which_buffer ^= 1;
-	buffer_offset = 0;
 }
 
 static void inline add_to_buffer(char* stream, unsigned int length){
@@ -61,16 +58,21 @@ static void inline add_to_buffer(char* stream, unsigned int length){
 		// Only write some into this buffer
 		unsigned int length1 = BUFFER_SIZE - buffer_offset;
 		unsigned int length2 = length - length1;
-		// FIXME: This chops off some data
+		// FIXME: This potentially chops off some data
 		length2 = length2 > BUFFER_SIZE ? BUFFER_SIZE : length2;
 		
 		memcpy(buffer[which_buffer] + buffer_offset, stream, length1);
 		
+		// We should wait for the other buffer to finish its DMA transfer first
+		while( AUDIO_GetDMABytesLeft() );
 		play_buffer();
 		
+		// Now write into the other buffer
+		which_buffer ^= 1;
 		memcpy(buffer[which_buffer], stream + length1, length2);
 		buffer_offset = length2;
 	} else {
+		// All the data fits in this buffer
 		memcpy(buffer[which_buffer] + buffer_offset, stream, length);
 		buffer_offset += length;
 	}
