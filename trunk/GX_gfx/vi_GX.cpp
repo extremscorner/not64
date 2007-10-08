@@ -209,6 +209,6 @@ void VI_GX::showLoadProg(float percent)
 	VIDEO_SetNextFramebuffer(xfb[which_fb]);
 	VIDEO_Flush();
 	which_fb ^= 1;
-//	VIDEO_WaitVSync();
+	VIDEO_WaitVSync();
 
 }

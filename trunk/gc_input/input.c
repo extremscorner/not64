@@ -138,7 +138,9 @@ EXPORT void CALL GetKeys(int Control, BUTTONS * Keys )
 	c->Y_AXIS       = PAD_StickY(Control);
 	
 	// In pure interpreter mode X+Y quits
-	if((b & PAD_BUTTON_X) && (b & PAD_BUTTON_Y)) stop = 1;
+	if((b & PAD_BUTTON_X) && (b & PAD_BUTTON_Y)) 
+		stop = 1;
+
 	
 }
 

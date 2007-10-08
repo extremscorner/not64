@@ -177,94 +177,22 @@ void flashram_command(unsigned long command)
 	   case ERASE_MODE:
 	       {
 		  int i;
-		  /*char *filename;
-		  sd_file *f;
-                  card_file CardFile;
-		  int i;
-                  int slot = (savetype & SELECTION_SLOT_B) ? CARD_SLOTB : CARD_SLOTA;
-		  filename = malloc(strlen(savepath)+
-				    strlen(ROM_SETTINGS.goodname)+4+1);
-		  strcpy(filename, savepath);
-		  strcat(filename, ROM_SETTINGS.goodname);
-		  strcat(filename, ".fla");
-		  if(savetype & SELECTION_TYPE_SD){
-			DIR* sddir;
-			if (SDCARD_ReadDir(filename, &sddir)){
-				f = SDCARD_OpenFile(filename, "rb");
-		  		SDCARD_ReadFile (f, flashram, 0x20000);
-		  		SDCARD_CloseFile(f);
-		  	} else for (i=0; i<0x20000; i++) flashram[i] = 0xff;
-                  } else {
-                  	if(CARD_Open(slot, filename, &CardFile) != CARD_ERROR_NOFILE){			
-				CARD_Read (&CardFile, flashram, 0x20000, 0);
-				CARD_Close(&CardFile);
-                  	} else for (i=0; i<0x20000; i++) flashram[i] = 0xff;
-                  }*/
-                  
-                  flashramWritten = TRUE;
+		  flashramWritten = TRUE;
 		  
 		  for (i=erase_offset; i<(erase_offset+128); i++)
 		    flashram[i^S8] = 0xff;
-		  
-                  /*if(savetype & SELECTION_TYPE_SD){
-                  	f = SDCARD_OpenFile(filename, "wb");
-		  	SDCARD_WriteFile(f, flashram, 0x20000);
-		  	SDCARD_CloseFile(f);
-                  } else {
-			if(CARD_Open(slot, filename, &CardFile) == CARD_ERROR_NOFILE)
-                  		CARD_Create(slot, filename, 0x20000, &CardFile);
-			CARD_Write(&CardFile, flashram, 0x20000, 0);
-			CARD_Close(&CardFile);
-                  }
-                  
-		  free(filename);*/
+ 
 	       }
 	     break;
 	   case WRITE_MODE:
 	       {
-	       	  int i;
-		  /*char *filename;
-		  sd_file *f;
-                  card_file CardFile;
-		  int i;
-                  int slot = (savetype & SELECTION_SLOT_B) ? CARD_SLOTB : CARD_SLOTA;
-		  filename = malloc(strlen(savepath)+
-				    strlen(ROM_SETTINGS.goodname)+4+1);
-		  strcpy(filename, savepath);
-		  strcat(filename, ROM_SETTINGS.goodname);
-		  strcat(filename, ".fla");
-		  if(savetype & SELECTION_TYPE_SD){
-			DIR* sddir;
-			if (SDCARD_ReadDir(filename, &sddir)){
-				f = SDCARD_OpenFile(filename, "rb");
-		  		SDCARD_ReadFile (f, flashram, 0x20000);
-		  		SDCARD_CloseFile(f);
-		  	} else for (i=0; i<0x20000; i++) flashram[i] = 0xff;
-                  } else {
-                  	if(CARD_Open(slot, filename, &CardFile) != CARD_ERROR_NOFILE){			
-				CARD_Read (&CardFile, flashram, 0x20000, 0);
-				CARD_Close(&CardFile);
-                  	} else for (i=0; i<0x20000; i++) flashram[i] = 0xff;
-                  }*/
-                  
-                  flashramWritten = TRUE;
+	       	  	int i;
+		  		flashramWritten = TRUE;
                   
 		  for (i=0; i<128; i++)
 		    flashram[(erase_offset+i)^S8]=
 		    ((unsigned char*)rdram)[(write_pointer+i)^S8];
-                  
-		  /*if(savetype & SELECTION_TYPE_SD){
-                  	f = SDCARD_OpenFile(filename, "wb");
-		  	SDCARD_WriteFile(f, flashram, 0x20000);
-		  	SDCARD_CloseFile(f);
-                  } else {
-                  	if(CARD_Open(slot, filename, &CardFile) == CARD_ERROR_NOFILE)
-                  		CARD_Create(slot, filename, 0x20000, &CardFile);		
-			CARD_Write(&CardFile, flashram, 0x20000, 0);
-			CARD_Close(&CardFile);
-		  }
-                  
-		  free(filename);*/
+
 	       }
 	     break;
 	   case STATUS_MODE:
@@ -292,12 +220,7 @@ void flashram_command(unsigned long command)
 void dma_read_flashram()
 {
    int i;
-   /*char *filename;
-   FILE *f;
-   card_file CardFile;
-   int i;
-   int slot = (savetype & SELECTION_SLOT_B) ? CARD_SLOTB : CARD_SLOTA;*/
-   
+
    switch(mode)
      {
       case STATUS_MODE:
@@ -305,25 +228,7 @@ void dma_read_flashram()
 	rdram[pi_register.pi_dram_addr_reg/4+1] = (unsigned long)(status);
 	break;
       case READ_MODE:
-	/*filename = malloc(strlen(savepath)+
-			  strlen(ROM_SETTINGS.goodname)+4+1);
-	strcpy(filename, savepath);
-	strcat(filename, ROM_SETTINGS.goodname);
-	strcat(filename, ".fla");
-	if(savetype & SELECTION_TYPE_SD){
-		DIR* sddir;
-		if (SDCARD_ReadDir(filename, &sddir)){
-			f = SDCARD_OpenFile(filename, "rb");
-	  		SDCARD_ReadFile (f, flashram, 0x20000);
-	  		SDCARD_CloseFile(f);
-	  	} else for (i=0; i<0x20000; i++) flashram[i] = 0xff;
-	} else {
-	        if(CARD_Open(slot, filename, &CardFile) != CARD_ERROR_NOFILE){			
-			CARD_Read (&CardFile, flashram, 0x20000, 0);
-			CARD_Close(&CardFile);
-        	} else for (i=0; i<0x20000; i++) flashram[i] = 0xff;
-	}
-	free(filename);*/
+
 	for (i=0; i<(pi_register.pi_wr_len_reg & 0x0FFFFFF)+1; i++)
 	  ((unsigned char*)rdram)[(pi_register.pi_dram_addr_reg+i)^S8]=
 	  flashram[(((pi_register.pi_cart_addr_reg-0x08000000)&0xFFFF)*2+i)^S8];
