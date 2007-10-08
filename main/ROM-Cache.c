@@ -54,7 +54,7 @@ static void inline ROMCache_load_block(char* block, int rom_offset){
 			
 			if(!loads_til_update){
 				showLoadProgress( (float)offset/BLOCK_SIZE );
-				loads_til_update = 8;
+				loads_til_update = 16;
 			}
 			--loads_til_update;
 			
@@ -80,7 +80,7 @@ static void inline ROMCache_load_block(char* block, int rom_offset){
 			
 			if(!loads_til_update){
 				showLoadProgress( (float)offset/BLOCK_SIZE );
-				loads_til_update = 8;
+				loads_til_update = 16;
 			}
 			--loads_til_update;
 			

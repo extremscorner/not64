@@ -49,11 +49,13 @@
 #include "../main/guifuncs.h"
 #include "../main/vcr.h"
 #include "Saves.h"
+#include "mcbanner.h"
 
 static unsigned char eeprom[0x800] __attribute__((aligned(32)));
 static unsigned char mempack[4][0x8000] __attribute__((aligned(32)));
 static BOOL eepromWritten = FALSE;
 static BOOL mempakWritten = FALSE;
+#define EEP_MC_OFFSET 0x1000
 
 void check_input_sync(unsigned char *value);
 
@@ -81,10 +83,11 @@ void loadEeprom(void){
 	} else {
 		card_file CardFile;
 		int slot = (savetype & SELECTION_SLOT_B) ? CARD_SLOTB : CARD_SLOTA;
-		
+		unsigned int SectorSize = 0;
+        CARD_GetSectorSize (slot, &SectorSize);
         	if(CARD_Open(slot, filename, &CardFile) != CARD_ERROR_NOFILE){
         		printf("Loading EEPROM, please be patient...\n");			
-			CARD_Read(&CardFile, eeprom, 0x800, 0);
+			CARD_Read(&CardFile, eeprom, 0x800, EEP_MC_OFFSET);
 			CARD_Close(&CardFile);
 			printf("OK\n");
         	} else for (i=0; i<0x800; i++) eeprom[i] = 0;
@@ -93,6 +96,7 @@ void loadEeprom(void){
 	free(filename);
 }
 
+extern long long gettime();
 // Note: must be called after load
 void saveEeprom(void){
 	if(!eepromWritten) return;
@@ -106,22 +110,38 @@ void saveEeprom(void){
 
 	if(savetype & SELECTION_TYPE_SD){
 		sd_file *f;
-		
-                f = SDCARD_OpenFile(filename, "wb");
+		f = SDCARD_OpenFile(filename, "wb");
 	  	SDCARD_WriteFile(f, eeprom, 0x800);
 	  	SDCARD_CloseFile(f);
 	} else {
 		card_file CardFile;
+		card_stat CardStat;
 		int slot = (savetype & SELECTION_SLOT_B) ? CARD_SLOTB : CARD_SLOTA;
-		
-		if(CARD_Open(slot, filename, &CardFile) == CARD_ERROR_NOFILE)
-			CARD_Create(slot, filename, 0x800, &CardFile);			
-		CARD_Write(&CardFile, eeprom, 0x800, 0);
-		CARD_Close(&CardFile);
+		unsigned int SectorSize = 0;
+        CARD_GetSectorSize (slot, &SectorSize);
+		if(CARD_Open(slot, filename, &CardFile) == CARD_ERROR_NOFILE) {
+			CARD_Create(slot, filename, SectorSize, &CardFile);
+		}
+		//Update card stats
+        CARD_GetStatus(slot,CardFile.filenum,&CardStat);
+        time_t gc_time;
+        gc_time = time (NULL);
+		CardStat.icon_fmt = 2;
+		CardStat.icon_speed = 1;
+		CardStat.banner_fmt = 0;
+		CardStat.comment_addr = sizeof(mupenicon);
+		CardStat.icon_addr = 0;
+		char* buffer = memalign(32, 0x800 + 0x40 + sizeof(mupenicon) );
+		memcpy(buffer,mupenicon,sizeof(mupenicon));
+		strcpy(buffer+sizeof(mupenicon),ROM_SETTINGS.goodname);
+		strcpy(buffer+0x20+sizeof(mupenicon),ctime (&gc_time));
+		memcpy(buffer+EEP_MC_OFFSET,eeprom,0x800);
+		CARD_SetStatus(slot,CardFile.filenum,&CardStat);
+		CARD_Write(&CardFile, buffer, SectorSize, 0);
+		CARD_Close(&CardFile);		
+		free(buffer);
 	}
-	
 	free(filename);
-	printf("OK\n");
 }
 
 //#define DEBUG_PIF
@@ -161,89 +181,13 @@ void EepromCommand(BYTE *Command)
 	break;
       case 4: // read
 	  {
-	     /*char *filename;
-	     sd_file *f;
-             card_file CardFile;
-             int slot = (savetype & SELECTION_SLOT_B) ? CARD_SLOTB : CARD_SLOTA;
-	     int i;
-	     filename = malloc(strlen(savepath)+
-			       strlen(ROM_SETTINGS.goodname)+4+1);
-	     strcpy(filename, savepath);
-	     strcat(filename, ROM_SETTINGS.goodname);
-	     strcat(filename, ".eep");
-	     
-	     printf("Reading eeprom\n");
-	     
-	     if(savetype & SELECTION_TYPE_SD){
-			DIR* sddir;
-			// FIXME: Drop the support for saves right now
-			if (0 && SDCARD_ReadDir(filename, &sddir)){
-				f = SDCARD_OpenFile(filename, "rb");
-		  		SDCARD_ReadFile (f, eeprom, 0x800);
-		  		SDCARD_CloseFile(f);
-		  	} else for (i=0; i<0x800; i++) eeprom[i] = 0;
-             } else {
-             		//printf("Trying to open %s on memcard...", filename);
-             		fflush(stdout);
-                  	if(CARD_Open(slot, filename, &CardFile) != CARD_ERROR_NOFILE){			
-				CARD_Read(&CardFile, eeprom, 0x800, 0);
-				CARD_Close(&CardFile);
-                  	} else for (i=0; i<0x800; i++) eeprom[i] = 0;
-                  	//printf("done\n");
-             }
-	     
-	     free(filename);*/
 	     memcpy(&Command[4], eeprom + Command[3]*8, 8);
 	  }
 	break;
       case 5: // write
 	  {
-	     /*char *filename;
-	     sd_file *f;
-             card_file CardFile;
-             int slot = (savetype & SELECTION_SLOT_B) ? CARD_SLOTB : CARD_SLOTA;
-	     int i;
-	     filename = malloc(strlen(savepath)+
-			       strlen(ROM_SETTINGS.goodname)+4+1);
-	     strcpy(filename, savepath);
-	     strcat(filename, ROM_SETTINGS.goodname);
-	     strcat(filename, ".eep");
-	     
-	     printf("Writing eeprom\n");
-	     
-	     if(savetype & SELECTION_TYPE_SD){
-			DIR* sddir;
-			if(0 && SDCARD_ReadDir(filename, &sddir)){
-				f = SDCARD_OpenFile(filename, "rb");
-		  		SDCARD_ReadFile (f, eeprom, 0x800);
-		  		SDCARD_CloseFile(f);
-		  	} else for (i=0; i<0x800; i++) eeprom[i] = 0;
-             } else {
-                  	if(CARD_Open(slot, filename, &CardFile) != CARD_ERROR_NOFILE){			
-				CARD_Read(&CardFile, eeprom, 0x800, 0);
-				CARD_Close(&CardFile);
-                  	} else for (i=0; i<0x800; i++) eeprom[i] = 0;
-             }*/
-	     
 	     eepromWritten = TRUE;
-	     
 	     memcpy(eeprom + Command[3]*8, &Command[4], 8);
-	     
-	     /*if(savetype & SELECTION_TYPE_SD){
-                  	f = SDCARD_OpenFile(filename, "wb");
-		  	SDCARD_WriteFile(f, eeprom, 0x800);
-		  	SDCARD_CloseFile(f);
-             } else {
-             		//printf("Writing eeprom to memcard...");
-             		fflush(stdout);
-                  	if(CARD_Open(slot, filename, &CardFile) == CARD_ERROR_NOFILE)
-                  		CARD_Create(slot, filename, 0x800, &CardFile);			
-			CARD_Write(&CardFile, eeprom, 0x800, 0);
-			CARD_Close(&CardFile);
-			//printf("done\n");
-	     }
-	     
-	     free(filename);*/
 	  }
 	break;
       default:
@@ -466,40 +410,7 @@ void internal_ControllerCommand(int Control, BYTE *Command)
 			    address &= 0xFFE0;
 			    if (address <= 0x7FE0)
 			      {
-				 /*char *filename;
-				 sd_file *f;
-            			 card_file CardFile;
-            			 int slot = (savetype & SELECTION_SLOT_B) ? CARD_SLOTB : CARD_SLOTA;
-				 filename = malloc(strlen(savepath)+
-						   strlen(ROM_SETTINGS.goodname)+4+1);
-				 strcpy(filename, savepath);
-				 strcat(filename, ROM_SETTINGS.goodname);
-				 strcat(filename, ".mpk");
-				 
-				 printf("Reading memory pack\n");
-				 
-				 if(savetype & SELECTION_TYPE_SD){
-					DIR* sddir;
-					if(SDCARD_ReadDir(filename, &sddir)){
-						f = SDCARD_OpenFile(filename, "rb");
-				  		SDCARD_ReadFile (f, mempack[0], 0x8000);
-				  		SDCARD_ReadFile (f, mempack[1], 0x8000);
-				  		SDCARD_ReadFile (f, mempack[2], 0x8000);
-				  		SDCARD_ReadFile (f, mempack[3], 0x8000);
-				  		SDCARD_CloseFile(f);
-				  	} else format_mempacks();
-		                  } else {
-		                  	if(CARD_Open(slot, filename, &CardFile) != CARD_ERROR_NOFILE){
-						CARD_Read (&CardFile, mempack[0], 0x8000, 0);
-						CARD_Read (&CardFile, mempack[1], 0x8000, 0x8000);
-						CARD_Read (&CardFile, mempack[2], 0x8000, 0x8000*2);
-						CARD_Read (&CardFile, mempack[3], 0x8000, 0x8000*3);
-						CARD_Close(&CardFile);
-		                  	} else format_mempacks();
-		                  }
-				 
-				 free(filename);*/
-				 memcpy(&Command[5], &mempack[Control][address], 0x20);
+				 	 memcpy(&Command[5], &mempack[Control][address], 0x20);
 			      }
 			    else
 			      {
@@ -535,61 +446,9 @@ void internal_ControllerCommand(int Control, BYTE *Command)
 			    address &= 0xFFE0;
 			    if (address <= 0x7FE0)
 			      {
-				 /*char *filename;
-				 sd_file *f;
-            			 card_file CardFile;
-            			 int slot = (savetype & SELECTION_SLOT_B) ? CARD_SLOTB : CARD_SLOTA;
-				 filename = malloc(strlen(savepath)+
-						   strlen(ROM_SETTINGS.goodname)+4+1);
-				 strcpy(filename, savepath);
-				 strcat(filename, ROM_SETTINGS.goodname);
-				 strcat(filename, ".mpk");
-				 
-				 printf("Writing memory pack\n");
-				 
-				 if(savetype & SELECTION_TYPE_SD){
-					DIR* sddir;
-					if(SDCARD_ReadDir(filename, &sddir)){
-						f = SDCARD_OpenFile(filename, "rb");
-				  		SDCARD_ReadFile (f, mempack[0], 0x8000);
-				  		SDCARD_ReadFile (f, mempack[1], 0x8000);
-				  		SDCARD_ReadFile (f, mempack[2], 0x8000);
-				  		SDCARD_ReadFile (f, mempack[3], 0x8000);
-				  		SDCARD_CloseFile(f);
-				  	} else format_mempacks();
-		                 } else {
-		                  	if(CARD_Open(slot, filename, &CardFile) != CARD_ERROR_NOFILE){			
-						CARD_Read (&CardFile, mempack[0], 0x8000, 0);
-						CARD_Read (&CardFile, mempack[1], 0x8000, 0x8000);
-						CARD_Read (&CardFile, mempack[2], 0x8000, 0x8000*2);
-						CARD_Read (&CardFile, mempack[3], 0x8000, 0x8000*3);
-						CARD_Close(&CardFile);
-		                  	} else format_mempacks();
-		                 }*/
-		                 
-		                 mempakWritten = TRUE;
-		                 
-				 memcpy(&mempack[Control][address], &Command[5], 0x20);
-				 
-				 /*if(savetype & SELECTION_TYPE_SD){
-		                  	f = SDCARD_OpenFile(filename, "wb");
-				  	SDCARD_WriteFile(f, mempack[0], 0x8000);
-				  	SDCARD_WriteFile(f, mempack[1], 0x8000);
-				  	SDCARD_WriteFile(f, mempack[2], 0x8000);
-				  	SDCARD_WriteFile(f, mempack[3], 0x8000);
-				  	SDCARD_CloseFile(f);
-		                  } else {
-					CARD_Open (slot, filename, &CardFile);			
-					CARD_Write(&CardFile, mempack[0], 0x8000, 0);
-					CARD_Write(&CardFile, mempack[1], 0x8000, 0x8000);
-					CARD_Write(&CardFile, mempack[2], 0x8000, 0x8000*2);
-					CARD_Write(&CardFile, mempack[3], 0x8000, 0x8000*3);
-					CARD_Close(&CardFile);
-		                  }
-				 
-				 free(filename);*/
-			      }
-			    Command[0x25] = mempack_crc(&Command[5]);
+	                 mempakWritten = TRUE;
+					 memcpy(&mempack[Control][address], &Command[5], 0x20);
+				 	 Command[0x25] = mempack_crc(&Command[5]);
 			 }
 		    }
 		  break;
@@ -599,6 +458,7 @@ void internal_ControllerCommand(int Control, BYTE *Command)
 		default:
 		  Command[0x25] = mempack_crc(&Command[5]);
 	       }
+       }
 	  }
 	else
 	  Command[1] |= 0x80;
