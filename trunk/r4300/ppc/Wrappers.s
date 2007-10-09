@@ -165,7 +165,7 @@ return_from_code:
 	
 	
 	
-/* void decodeNInterpret(void); // instr passed through r1 */	
+/* void decodeNInterpret(void); // instr passed through r0 */	
 	.align	2
 	.globl	decodeNInterpret
         .type   decodeNInterpret, @function	
