@@ -34,6 +34,7 @@ static char hi_shift[4][2], lo_shift[4][2];
 // Booleans: Do the addresses in the respective registers
 //             refer to recompiled code or N64 addresses
 static char isGCAddr[32];
+void jump_to(unsigned int);
 
 static int convert_R  (MIPS_instr);
 static int convert_B  (MIPS_instr);
