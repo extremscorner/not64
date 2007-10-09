@@ -31,6 +31,9 @@ static int hi_instr_count, lo_instr_count;
 static PowerPC_instr hi_instr[4], lo_instr[4];
 // If rd is used in instruction, shift it this amount (if > 0)
 static char hi_shift[4][2], lo_shift[4][2];
+// Booleans: Do the addresses in the respective registers
+//             refer to recompiled code or N64 addresses
+static char isGCAddr[32];
 
 static int convert_R  (MIPS_instr);
 static int convert_B  (MIPS_instr);
@@ -88,6 +91,7 @@ int convert(void){
 	case MIPS_OPCODE_M:
 		return convert_M(mips);
 	case MIPS_OPCODE_JAL:
+		// FIXME: Somehow, the link bit seems to get lost
 	case MIPS_OPCODE_J:
 		check_delaySlot();
 		// temp is used for is_out
@@ -218,6 +222,10 @@ int convert(void){
 		PPC_SET_OPCODE(ppc, PPC_OPCODE_ADDI);
 		CONVERT_I_TYPE(ppc, mips);
 		set_next_dst(ppc);
+		
+		// Only allow it to maintain it's status if it's an addi rd, rs, 0
+		isGCAddr[MIPS_GET_RT(mips)] = !MIPS_GET_IMMED(mips) && isGCAddr[MIPS_GET_RS(mips)];
+		
 		return CONVERT_SUCCESS;
 	case MIPS_OPCODE_SLTI:
 	case MIPS_OPCODE_SLTIU:
@@ -251,6 +259,10 @@ int convert(void){
 		PPC_SET_OPCODE(ppc, PPC_OPCODE_ORI);
 		CONVERT_I_TYPE2(ppc, mips);
 		set_next_dst(ppc);
+		
+		// Only allow it to maintain it's status if it's an ori rd, rs, 0
+		isGCAddr[MIPS_GET_RS(mips)] = !MIPS_GET_IMMED(mips) && isGCAddr[MIPS_GET_RT(mips)];
+		
 		return CONVERT_SUCCESS;
 	case MIPS_OPCODE_XORI:
 		PPC_SET_OPCODE(ppc, PPC_OPCODE_XORI);
@@ -262,6 +274,10 @@ int convert(void){
 		PPC_SET_RD    (ppc, MIPS_GET_RT(mips));
 		PPC_SET_IMMED (ppc, MIPS_GET_IMMED(mips));
 		set_next_dst(ppc);
+		
+		// lui guarantees this is an N64 addr
+		isGCAddr[MIPS_GET_RT(mips)] = 0;
+		
 		return CONVERT_SUCCESS;
 	case MIPS_OPCODE_DADDI:
 	case MIPS_OPCODE_DADDIU:
@@ -330,6 +346,10 @@ int convert(void){
 			PPC_SET_SPR   (ppc, 0x100);
 			set_next_dst(ppc);
 		}
+		
+		// Assuming that any load from the stack is a return address
+		isGCAddr[MIPS_GET_RT(mips)] = MIPS_GET_RS(mips) == MIPS_REG_SP;
+		
 		return CONVERT_SUCCESS;
 #endif
 	case MIPS_OPCODE_LBU:
@@ -584,8 +604,8 @@ static int convert_R(MIPS_instr mips){
 	             (currently support)
 	   Ideas: Create a boolean array of whether registers
 	            are N64/GC addresses
-	            Drawback: We would to update the array every
-	                        lw, li, etc
+	            Drawback: We would have to update the array
+	            		every lw, li, etc
 	            Major flaw: How would we know if we are loading
 	                          an N64 address, or a saved stack ptr?
 	                        Possible solution: Loads from stack are GC
@@ -597,6 +617,105 @@ static int convert_R(MIPS_instr mips){
 	*/
 	case MIPS_FUNC_JR:
 		check_delaySlot();
+		
+		// Quick hack since this is never explicity set
+		isGCAddr[MIPS_REG_LR] = 1;
+		
+		// If this is an N64 address, we have to use jump_to
+		if(!isGCAddr[MIPS_GET_RS(mips)]){
+			//mtctr	r1
+			PPC_SET_OPCODE(ppc, PPC_OPCODE_X);
+			PPC_SET_FUNC  (ppc, PPC_FUNC_MTSPR);
+			PPC_SET_RD    (ppc, 1);
+			PPC_SET_SPR   (ppc, 0x120);
+			set_next_dst(ppc);
+			//lis	r1, emu_reg@ha(0)
+			ppc = NEW_PPC_INSTR();
+			PPC_SET_OPCODE(ppc, PPC_OPCODE_ADDIS);
+			PPC_SET_RD    (ppc, 1);
+			PPC_SET_IMMED (ppc, (unsigned int)emu_reg>>16);
+			set_next_dst(ppc);
+			//la	r1, emu_reg@l(r1)
+			ppc = NEW_PPC_INSTR();
+			PPC_SET_OPCODE(ppc, PPC_OPCODE_ORI);
+			PPC_SET_RD    (ppc, 1);
+			PPC_SET_RA    (ppc, 1);
+			PPC_SET_IMMED (ppc, (unsigned int)emu_reg);
+			set_next_dst(ppc);
+			//stw	r0, 3*4(r1)       // pass dest address as arg0
+			ppc = NEW_PPC_INSTR();
+			PPC_SET_OPCODE(ppc, PPC_OPCODE_STW);
+			PPC_SET_RD    (ppc, MIPS_GET_RS(mips));
+			PPC_SET_RA    (ppc, 1);
+			PPC_SET_IMMED (ppc, 3*4);
+			set_next_dst(ppc);
+			//lis	r1, jump_to@ha(0)
+			ppc = NEW_PPC_INSTR();
+			PPC_SET_OPCODE(ppc, PPC_OPCODE_ADDIS);
+			PPC_SET_RD    (ppc, 1);
+			PPC_SET_IMMED (ppc, (unsigned int)jump_to>>16);
+			set_next_dst(ppc);
+			//la	r0, jump_to@l(r1)
+			ppc = NEW_PPC_INSTR();
+			PPC_SET_OPCODE(ppc, PPC_OPCODE_ORI);
+			PPC_SET_RD    (ppc, 1);
+			PPC_SET_RA    (ppc, 0);
+			PPC_SET_IMMED (ppc, (unsigned int)jump_to);
+			set_next_dst(ppc);
+			//lis	r1, &return_address@ha(0)
+			ppc = NEW_PPC_INSTR();
+			PPC_SET_OPCODE(ppc, PPC_OPCODE_ADDIS);
+			PPC_SET_RD    (ppc, 1);
+			PPC_SET_IMMED (ppc, (unsigned int)&return_address>>16);
+			set_next_dst(ppc);
+			//la	r1, &return_address@l(r1)
+			ppc = NEW_PPC_INSTR();
+			PPC_SET_OPCODE(ppc, PPC_OPCODE_ORI);
+			PPC_SET_RD    (ppc, 1);
+			PPC_SET_RA    (ppc, 1);
+			PPC_SET_IMMED (ppc, (unsigned int)&return_address);
+			set_next_dst(ppc);
+			//stw	r0, 0(r1) // return to jump_to(dest)
+			ppc = NEW_PPC_INSTR();
+			PPC_SET_OPCODE(ppc, PPC_OPCODE_STW);
+			PPC_SET_RA    (ppc, 1);
+			set_next_dst(ppc);
+			//lis	r1, return_from_code@ha(0)
+			ppc = NEW_PPC_INSTR();
+			PPC_SET_OPCODE(ppc, PPC_OPCODE_ADDIS);
+			PPC_SET_RD    (ppc, 1);
+			PPC_SET_IMMED (ppc, (unsigned int)return_from_code>>16);
+			set_next_dst(ppc);
+			//la	r0, return_from_code@l(r1)
+			ppc = NEW_PPC_INSTR();
+			PPC_SET_OPCODE(ppc, PPC_OPCODE_ORI);
+			PPC_SET_RD    (ppc, 1);
+			PPC_SET_RA    (ppc, 0);
+			PPC_SET_IMMED (ppc, (unsigned int)return_from_code);
+			set_next_dst(ppc);
+			//mfctr	r1
+			ppc = NEW_PPC_INSTR();
+			PPC_SET_OPCODE(ppc, PPC_OPCODE_X);
+			PPC_SET_FUNC  (ppc, PPC_FUNC_MFSPR);
+			PPC_SET_RD    (ppc, 1);
+			PPC_SET_SPR   (ppc, 0x120);
+			set_next_dst(ppc);
+			//mtctr	r0
+			ppc = NEW_PPC_INSTR();
+			PPC_SET_OPCODE(ppc, PPC_OPCODE_X);
+			PPC_SET_FUNC  (ppc, PPC_FUNC_MTSPR);
+			PPC_SET_SPR   (ppc, 0x120);
+			set_next_dst(ppc);
+			//bctr		// return_from_code();
+			ppc = NEW_PPC_INSTR();
+			PPC_SET_OPCODE(ppc, PPC_OPCODE_XL);
+			PPC_SET_FUNC  (ppc, PPC_FUNC_BCCTR);
+			PPC_SET_BO    (ppc, 0x14);
+			set_next_dst(ppc);
+			
+			return INTERPRETED;
+		}
+		
 		// Check to see if this is a jlr
 		if(MIPS_GET_RS(mips)==MIPS_REG_LR){
 			PPC_SET_OPCODE(ppc, PPC_OPCODE_XL);
@@ -621,6 +740,106 @@ static int convert_R(MIPS_instr mips){
 		}
 	case MIPS_FUNC_JALR:
 		check_delaySlot();
+		
+		// Quick hack since this is never explicity set
+		isGCAddr[MIPS_REG_LR] = 1;
+		
+		// If this is an N64 address, we have to use jump_to
+		if(!isGCAddr[MIPS_GET_RS(mips)]){
+			//mtctr	r1
+			PPC_SET_OPCODE(ppc, PPC_OPCODE_X);
+			PPC_SET_FUNC  (ppc, PPC_FUNC_MTSPR);
+			PPC_SET_RD    (ppc, 1);
+			PPC_SET_SPR   (ppc, 0x120);
+			set_next_dst(ppc);
+			//lis	r1, emu_reg@ha(0)
+			ppc = NEW_PPC_INSTR();
+			PPC_SET_OPCODE(ppc, PPC_OPCODE_ADDIS);
+			PPC_SET_RD    (ppc, 1);
+			PPC_SET_IMMED (ppc, (unsigned int)emu_reg>>16);
+			set_next_dst(ppc);
+			//la	r1, emu_reg@l(r1)
+			ppc = NEW_PPC_INSTR();
+			PPC_SET_OPCODE(ppc, PPC_OPCODE_ORI);
+			PPC_SET_RD    (ppc, 1);
+			PPC_SET_RA    (ppc, 1);
+			PPC_SET_IMMED (ppc, (unsigned int)emu_reg);
+			set_next_dst(ppc);
+			//stw	r0, 3*4(r1)       // pass dest address as arg0
+			ppc = NEW_PPC_INSTR();
+			PPC_SET_OPCODE(ppc, PPC_OPCODE_STW);
+			PPC_SET_RD    (ppc, MIPS_GET_RS(mips));
+			PPC_SET_RA    (ppc, 1);
+			PPC_SET_IMMED (ppc, 3*4);
+			set_next_dst(ppc);
+			//lis	r1, jump_to@ha(0)
+			ppc = NEW_PPC_INSTR();
+			PPC_SET_OPCODE(ppc, PPC_OPCODE_ADDIS);
+			PPC_SET_RD    (ppc, 1);
+			PPC_SET_IMMED (ppc, (unsigned int)jump_to>>16);
+			set_next_dst(ppc);
+			//la	r0, jump_to@l(r1)
+			ppc = NEW_PPC_INSTR();
+			PPC_SET_OPCODE(ppc, PPC_OPCODE_ORI);
+			PPC_SET_RD    (ppc, 1);
+			PPC_SET_RA    (ppc, 0);
+			PPC_SET_IMMED (ppc, (unsigned int)jump_to);
+			set_next_dst(ppc);
+			//lis	r1, &return_address@ha(0)
+			ppc = NEW_PPC_INSTR();
+			PPC_SET_OPCODE(ppc, PPC_OPCODE_ADDIS);
+			PPC_SET_RD    (ppc, 1);
+			PPC_SET_IMMED (ppc, (unsigned int)&return_address>>16);
+			set_next_dst(ppc);
+			//la	r1, &return_address@l(r1)
+			ppc = NEW_PPC_INSTR();
+			PPC_SET_OPCODE(ppc, PPC_OPCODE_ORI);
+			PPC_SET_RD    (ppc, 1);
+			PPC_SET_RA    (ppc, 1);
+			PPC_SET_IMMED (ppc, (unsigned int)&return_address);
+			set_next_dst(ppc);
+			//stw	r0, 0(r1) // return to jump_to(dest)
+			ppc = NEW_PPC_INSTR();
+			PPC_SET_OPCODE(ppc, PPC_OPCODE_STW);
+			PPC_SET_RA    (ppc, 1);
+			set_next_dst(ppc);
+			//lis	r1, return_from_code@ha(0)
+			ppc = NEW_PPC_INSTR();
+			PPC_SET_OPCODE(ppc, PPC_OPCODE_ADDIS);
+			PPC_SET_RD    (ppc, 1);
+			PPC_SET_IMMED (ppc, (unsigned int)return_from_code>>16);
+			set_next_dst(ppc);
+			//la	r0, return_from_code@l(r1)
+			ppc = NEW_PPC_INSTR();
+			PPC_SET_OPCODE(ppc, PPC_OPCODE_ORI);
+			PPC_SET_RD    (ppc, 1);
+			PPC_SET_RA    (ppc, 0);
+			PPC_SET_IMMED (ppc, (unsigned int)return_from_code);
+			set_next_dst(ppc);
+			//mfctr	r1
+			ppc = NEW_PPC_INSTR();
+			PPC_SET_OPCODE(ppc, PPC_OPCODE_X);
+			PPC_SET_FUNC  (ppc, PPC_FUNC_MFSPR);
+			PPC_SET_RD    (ppc, 1);
+			PPC_SET_SPR   (ppc, 0x120);
+			set_next_dst(ppc);
+			//mtctr	r0
+			ppc = NEW_PPC_INSTR();
+			PPC_SET_OPCODE(ppc, PPC_OPCODE_X);
+			PPC_SET_FUNC  (ppc, PPC_FUNC_MTSPR);
+			PPC_SET_SPR   (ppc, 0x120);
+			set_next_dst(ppc);
+			//bctrl		// return_from_code();
+			ppc = NEW_PPC_INSTR();
+			PPC_SET_OPCODE(ppc, PPC_OPCODE_XL);
+			PPC_SET_FUNC  (ppc, PPC_FUNC_BCCTR);
+			PPC_SET_BO    (ppc, 0x14);
+			PPC_SET_LK    (ppc, 1);
+			set_next_dst(ppc);
+			
+			return INTERPRETED;
+		}
+		
 		// Check to see if this is a jlr
 		if(MIPS_GET_RS(mips)!=MIPS_REG_LR){ // If its not, move the appropriate reg
 			// mtlr
@@ -939,12 +1158,18 @@ static int convert_R(MIPS_instr mips){
 			PPC_SET_RD    (ppc, MIPS_REG_LR);
 			PPC_SET_SPR   (ppc, 0x100);
 			set_next_dst(ppc);
+			
+			isGCAddr[MIPS_REG_LR] = 1;
+			
 			ppc = NEW_PPC_INSTR();
 		}
 		PPC_SET_OPCODE(ppc, PPC_OPCODE_X);
 		PPC_SET_FUNC  (ppc, PPC_FUNC_ADD);
 		CONVERT_REGS  (ppc, mips);
 		set_next_dst(ppc);
+		
+		isGCAddr[MIPS_GET_RD(mips)] = isGCAddr[MIPS_GET_RT(mips)];
+		
 		return CONVERT_SUCCESS;
 	case MIPS_FUNC_SUB:
 		PPC_SET_OE    (ppc, 1);
