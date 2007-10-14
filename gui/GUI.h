@@ -18,8 +18,8 @@ void GUI_clear(void);
 // Should be called before a call to get_text, reformats text
 void GUI_update(void);
 
-// Returns pointer to a 2D char array of dimensions WIDTH,HEIGHT
-char* GUI_get_text(void);
+// Returns pointer to an array of char*
+char** GUI_get_text(void);
 
 #endif
 

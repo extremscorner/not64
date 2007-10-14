@@ -6,9 +6,9 @@
 #define DEBUG_H
 
 // The max number of strings that will be held onto
-#define DEBUG_NUM_STRINGS
+#define DEBUG_NUM_STRINGS 25
 // Amount of time each string will be held onto
-#define DEBUG_STRING_LIFE
+#define DEBUG_STRING_LIFE 2.0f
 // Dimensions of array returned by get_text
 #define GUI_TEXT_WIDTH  64
 #define GUI_TEXT_HEIGHT 20
@@ -19,8 +19,8 @@ void DEBUG_print(char* string);
 // Should be called before get_text. Ages the strings, and remove old ones
 void DEBUG_update(float dt);
 
-// Returns pointer to a 2D char array of dimensions WIDTH,HEIGHT
-char* DEBUG_get_text(void);
+// Returns pointer to an array of char*
+char** GUI_get_text(void);
 
 #endif
 
