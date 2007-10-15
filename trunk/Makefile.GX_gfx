@@ -99,12 +99,12 @@ OBJ_GTK_GUI	=main/gui_gtk/main_gtk.o \
 
 OBJ_INPUT	=gc_input/main.o
 
-OBJ_RSPHLE	=rsp_hle/main.o \
-		rsp_hle/jpeg.o \
-		rsp_hle/ucode3.o \
-		rsp_hle/ucode2.o \
-		rsp_hle/ucode1.o \
-		rsp_hle/ucode3mp3.o
+OBJ_RSPHLE	=rsp_hle-ppc/main.o \
+		rsp_hle-ppc/jpeg.o \
+		rsp_hle-ppc/ucode3.o \
+		rsp_hle-ppc/ucode2.o \
+		rsp_hle-ppc/ucode1.o \
+#		rsp_hle-ppc/ucode3mp3.o
 
 OBJ_AUDIO	=gc_audio/main.o
 
@@ -198,7 +198,7 @@ main/vcr_compress.o:		main/vcr_compress.cpp
 gc_input/main.o:		gc_input/input.c
 				$(CC) $(CFLAGS) -c -o $@ $<
 
-rsp_hle/main.o:			rsp_hle/main.c
+rsp_hle-ppc/main.o:			rsp_hle-ppc/main.c
 				$(CC) $(CFLAGS) -c -o $@ $<
 
 gc_audio/main.o:		gc_audio/audio.c
@@ -224,7 +224,7 @@ mupen64_gc:	$(OBJ) $(OBJ_PPC) $(OBJ_INPUT) $(OBJ_GX_GFX) $(OBJ_AUDIO) $(OBJ_RSPH
 		$(LD) $^ $(LDFLAGS) $(LDFLAGS) $(LIB) -Wl -o $@
 		#strip --strip-all $@
 		powerpc-gekko-objcopy -O binary $@ mupen64.dol
-#		~/GCos/dollz3 mupen64.dol mupen64-lz.dol
+		~/GCos/dollz3 mupen64.dol mupen64-lz.dol
 
 
 
