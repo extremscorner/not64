@@ -1,5 +1,12 @@
 /* audio.c - Low-level Audio plugin for the gamecube
    by Mike Slegeir for Mupen64-GC
+   ----------------------------------------------------
+   FIXME: This probably needs to be threaded so that we
+            can start playing the next buffer once the
+            playing buffer is finished.  However, this
+            is nontrivial since we need to make sure
+            the buffer has a length divisble by 32
+          We need to confirm the audio formats are the same
  */
 
 #include "../main/winlnxdefs.h"
@@ -42,29 +49,44 @@ AiDacrateChanged( int SystemType )
 		printf("error initializing frequency: %d\n", f);
 		
 	// FIXME: Trying to force 48khz
-	AUDIO_SetStreamSampleRate(AI_SAMPLERATE_32KHZ);
+	AUDIO_SetStreamSampleRate(AI_SAMPLERATE_48KHZ);
 }
 
+// THREADME: This should probably be a DMA finished call back
 static void inline play_buffer(void){
+	// THREADME: This line should be deleted
+	// We should wait for the other buffer to finish its DMA transfer first
+	while( AUDIO_GetDMABytesLeft() );
+	
 	AUDIO_StopDMA();
+	
+	// THREADME: sem_wait( buffer_full )
 	
 	DCFlushRange (buffer[which_buffer], BUFFER_SIZE);
 	AUDIO_InitDMA(buffer[which_buffer], BUFFER_SIZE);
 	AUDIO_StartDMA();
 }
 
+static void inline copy_to_buffer(char* buffer, char* stream, unsigned int length){
+	// FIXME: We need to fix the endian-ness issue from the source: RSP
+	// Here we're byte-swapping 16-bit samples
+	int i;
+	for(i=0; i<length; ++i)
+		buffer[i] = stream[i];
+}
+
 static void inline add_to_buffer(char* stream, unsigned int length){
+#if 0
 	if(buffer_offset + length > BUFFER_SIZE){
 		// Only write some into this buffer
 		unsigned int length1 = BUFFER_SIZE - buffer_offset;
 		unsigned int length2 = length - length1;
 		// FIXME: This potentially chops off some data
+		//          we could do a while loop?
 		length2 = length2 > BUFFER_SIZE ? BUFFER_SIZE : length2;
 		
 		memcpy(buffer[which_buffer] + buffer_offset, stream, length1);
 		
-		// We should wait for the other buffer to finish its DMA transfer first
-		while( AUDIO_GetDMABytesLeft() );
 		play_buffer();
 		
 		// Now write into the other buffer
@@ -76,13 +98,43 @@ static void inline add_to_buffer(char* stream, unsigned int length){
 		memcpy(buffer[which_buffer] + buffer_offset, stream, length);
 		buffer_offset += length;
 	}
+#else
+		// This shouldn't lose any data and works for any size
+		unsigned int lengthi;
+		unsigned int lengthLeft = length;
+		unsigned int stream_offset = 0;
+		while(1){
+			lengthi = (buffer_offset + lengthLeft < BUFFER_SIZE) ?
+			           lengthLeft : (BUFFER_SIZE - buffer_offset);
+		
+			//memcpy(buffer[which_buffer] + buffer_offset, stream + stream_offset, lengthi);
+			copy_to_buffer(buffer[which_buffer] + buffer_offset,
+			               stream + stream_offset, lengthi);
+			
+			if(buffer_offset + lengthLeft < BUFFER_SIZE){
+				buffer_offset += lengthi;
+				return;
+			}
+			
+			lengthLeft    -= lengthi;
+			stream_offset += lengthi;
+			
+			/* THREADME: Replace play_buffer with:
+				sem_post( buffer_full )
+			 */
+			play_buffer();
+			
+			which_buffer ^= 1;
+			buffer_offset = 0;
+		}
+#endif
 }
 
 EXPORT void CALL
 AiLenChanged( void )
 {
 	// FIXME: We need near full speed before this is going to work
-	return;
+	//return;
 	
 	short* stream = (short*)(AudioInfo.RDRAM + 
 		         (*AudioInfo.AI_DRAM_ADDR_REG & 0xFFFFFF));
