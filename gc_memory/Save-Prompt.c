@@ -13,6 +13,13 @@
 #include <ogc/pad.h>
 #include "Saves.h"
 
+#ifdef USE_GUI
+#include "../gui/GUI.h"
+#define PRINT GUI_print
+#else
+#define PRINT printf
+#endif
+
 #define MAX_SAVE_PATH       64
 
 // globals set when user chooses location
@@ -27,17 +34,16 @@ void card_removed_cb(s32 chn, s32 result){ CARD_Unmount(chn); }
 // or when the user wants to save somewhere else
 void select_location(void){
 	int selection = 0;
+	char buffer[64];
 	
 	// Get user selection here
 	BOOL inited = FALSE;
 	while(!inited){
-#ifdef USE_GUI
-	
-#else
-	printf("--SAVE GAME--\n");
-	printf("Choose slot:\n"
-	       "  (A) Slot A\n"
-	       "  (B) Slot B\n");
+
+	PRINT("--SAVE GAME--\n");
+	PRINT("Choose slot:\n"
+	      "  (A) Slot A\n"
+	      "  (B) Slot B\n");
 	while(!(PAD_ButtonsHeld(0) & PAD_BUTTON_A || 
 	        PAD_ButtonsHeld(0) & PAD_BUTTON_B )); // Wait for input
 	if(PAD_ButtonsHeld(0) & PAD_BUTTON_A) selection |= SELECTION_SLOT_A;
@@ -45,9 +51,9 @@ void select_location(void){
 	while((PAD_ButtonsHeld(0) & PAD_BUTTON_A || 
 	       PAD_ButtonsHeld(0) & PAD_BUTTON_B )); // Wait for button release
 
-	printf("Choose card type:\n"
-	       "  (A) Memory Card\n"
-	       "  (B) SD Card\n");
+	PRINT("Choose card type:\n"
+	      "  (A) Memory Card\n"
+	      "  (B) SD Card\n");
 	while(!(PAD_ButtonsHeld(0) & PAD_BUTTON_A || 
 	        PAD_ButtonsHeld(0) & PAD_BUTTON_B )); // Wait for input
 	if(PAD_ButtonsHeld(0) & PAD_BUTTON_A) selection |= SELECTION_TYPE_MEM;
@@ -55,11 +61,10 @@ void select_location(void){
 	while((PAD_ButtonsHeld(0) & PAD_BUTTON_A || 
 	       PAD_ButtonsHeld(0) & PAD_BUTTON_B )); // Wait for button release
 
-
-	printf("Saving to %s in slot %c...\n",
+	sprintf(buffer, "Saving to %s in slot %c...\n",
 	        (selection & SELECTION_TYPE_SD) ? "SD card" : "memory card",
 	        (selection & SELECTION_SLOT_B)  ? 'B'       : 'A');
-#endif
+	PRINT(buffer);
 	
 	// Determine savepath
 	if(selection & SELECTION_TYPE_SD){
@@ -74,12 +79,11 @@ void select_location(void){
 		savepath[0] = 0;
 		if(CARD_Mount((selection&SELECTION_SLOT_B) ? CARD_SLOTB : CARD_SLOTA,
 			                             SysArea, card_removed_cb) < 0){
-#ifdef USE_GUI
-				
-#else
-			printf("Cannot mount Memory Card in Slot %c\n",
+			                             
+			sprintf(buffer, "Cannot mount Memory Card in Slot %c\n",
 			        (selection&SELECTION_SLOT_B) ? 'B' : 'A');
-#endif
+			PRINT(buffer);
+
 		} else inited = TRUE;
 	}
 	}

@@ -51,6 +51,13 @@
 #include "Saves.h"
 #include "mcbanner.h"
 
+#ifdef USE_GUI
+#include "../gui/GUI.h"
+#define PRINT GUI_print
+#else
+#define PRINT printf
+#endif
+
 static unsigned char eeprom[0x800] __attribute__((aligned(32)));
 static unsigned char mempack[4][0x8000] __attribute__((aligned(32)));
 static BOOL eepromWritten = FALSE;
@@ -72,11 +79,11 @@ void loadEeprom(void){
 		DIR* sddir = NULL;
 		
 		if(SDCARD_ReadDir(filename, &sddir) > 0){
-			printf("Loading EEPROM, please be patient...\n");
+			PRINT("Loading EEPROM, please be patient...\n");
 			f = SDCARD_OpenFile(filename, "rb");
 	  		SDCARD_ReadFile (f, eeprom, 0x800);
 	  		SDCARD_CloseFile(f);
-	  		printf("OK\n");
+	  		PRINT("OK\n");
 	  	} else for (i=0; i<0x800; i++) eeprom[i] = 0;
 	  	
 	  	if(sddir) free(sddir);
@@ -86,10 +93,10 @@ void loadEeprom(void){
 		unsigned int SectorSize = 0;
         CARD_GetSectorSize (slot, &SectorSize);
         	if(CARD_Open(slot, filename, &CardFile) != CARD_ERROR_NOFILE){
-        		printf("Loading EEPROM, please be patient...\n");			
+        		PRINT("Loading EEPROM, please be patient...\n");			
 			CARD_Read(&CardFile, eeprom, 0x800, EEP_MC_OFFSET);
 			CARD_Close(&CardFile);
-			printf("OK\n");
+			PRINT("OK\n");
         	} else for (i=0; i<0x800; i++) eeprom[i] = 0;
 	}
 
@@ -100,7 +107,7 @@ extern long long gettime();
 // Note: must be called after load
 void saveEeprom(void){
 	if(!eepromWritten) return;
-	printf("Saving EEPROM, please do not turn off console...\n");
+	PRINT("Saving EEPROM, please do not turn off console...\n");
 	
 	char* filename = malloc(strlen(savepath)+
 	                        strlen(ROM_SETTINGS.goodname)+4+1);
@@ -259,14 +266,14 @@ void loadMempak(void){
 		DIR* sddir = NULL;
 		
 		if(SDCARD_ReadDir(filename, &sddir) > 0){
-			printf("Loading mempak, please be patient...\n");
+			PRINT("Loading mempak, please be patient...\n");
 			f = SDCARD_OpenFile(filename, "rb");
 			SDCARD_ReadFile (f, mempack[0], 0x8000);
 			SDCARD_ReadFile (f, mempack[1], 0x8000);
 			SDCARD_ReadFile (f, mempack[2], 0x8000);
 			SDCARD_ReadFile (f, mempack[3], 0x8000);
 			SDCARD_CloseFile(f);
-			printf("OK\n");
+			PRINT("OK\n");
 		} else format_mempacks();
 		
 	  	if(sddir) free(sddir);
@@ -275,13 +282,13 @@ void loadMempak(void){
 		int slot = (savetype & SELECTION_SLOT_B) ? CARD_SLOTB : CARD_SLOTA;
 		
 		if(CARD_Open(slot, filename, &CardFile) != CARD_ERROR_NOFILE){
-			printf("Loading mempak, please be patient...\n");
+			PRINT("Loading mempak, please be patient...\n");
 			CARD_Read (&CardFile, mempack[0], 0x8000, 0);
 			CARD_Read (&CardFile, mempack[1], 0x8000, 0x8000);
 			CARD_Read (&CardFile, mempack[2], 0x8000, 0x8000*2);
 			CARD_Read (&CardFile, mempack[3], 0x8000, 0x8000*3);
 			CARD_Close(&CardFile);
-			printf("OK\n");
+			PRINT("OK\n");
 		} else format_mempacks();
 	}
 
@@ -290,7 +297,7 @@ void loadMempak(void){
 
 void saveMempak(void){
 	if(!mempakWritten) return;
-	printf("Saving mempak, please do not turn off console...\n");
+	PRINT("Saving mempak, please do not turn off console...\n");
 
 	char* filename = malloc(strlen(savepath)+
 	                        strlen(ROM_SETTINGS.goodname)+4+1);
@@ -321,7 +328,7 @@ void saveMempak(void){
 	}
 	
 	free(filename);
-	printf("OK\n");
+	PRINT("OK\n");
 }
 
 void internal_ReadController(int Control, BYTE *Command)

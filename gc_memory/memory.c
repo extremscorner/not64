@@ -54,45 +54,6 @@
 #include "../main/vcr.h"
 #include <assert.h>
 
-/* TODO: Create a wrapper to call mem functions
-           which pulls data off the stack,
-           or change all the functions to use the stack
-         Maybe not... I just call the interpreter
-
-// wrapper for memory accesses, all parameters are on stack
-void memoryAccess(void){
-	ASM_SAVE_REGISTERS();
-	ASM_PUSH_LR();
-	
-	// Load type off stack
-	ASM_POP_STACK(r3);
-	static int type;
-	asm("stw	r3, type\n");
-	// Load data or register number off stack
-	ASM_POP_STACK(r4);
-	if(type & 0x1){ // write, so we have data
-		if(type >> 1 == 3) // double word, we need another word off stack
-			ASM_POP_STACK(r5);
-	} else
-		set register number
-	// Load address off stack
-	ASM_POP_STACK(r6);
-	asm("stw	r6, address\n");
-	switch(type & 0x6){
-		if(type & 0x1)
-			(for write: set byte/half/word/double)
-			write b/h/w/d
-		else
-			read b/h/w/d
-			(for read: lb/h/w/d rd, rdword)
-	}
-	ASM_POP_LR();
-	ASM_RESTORE_REGISTERS();
-	blr
-	// the caller must restore its link register
-}
- */
-
 /* definitions of the rcp's structures and memory area */
 RDRAM_register rdram_register;
 mips_register MI_register;
