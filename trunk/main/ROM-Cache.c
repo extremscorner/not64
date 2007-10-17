@@ -170,18 +170,18 @@ void ROMCache_read(u32* ram_dest, u32 rom_offset, u32 length){
 
 // TODO: Support byte-swapped ROMs
 void ROMCache_load_SDCard(char* filename, int byteSwap){
-	char buffer[64];
+	char txt[64];
 	
 	if(byteSwap == BYTE_SWAP_BAD) return;
 	ROM_byte_swap = byteSwap;
 	if(byteSwap == BYTE_SWAP_BYTE) PRINT("Byte swapped\n");
 	else if(byteSwap == BYTE_SWAP_HALF) PRINT("Halfword swapped\n");
 	
-	sprintf(buffer, "Loading ROM into ARAM %s\n", ROM_too_big ? "(ROM_too_big)" : "");
-	PRINT(buffer);
-	if(ROM_too_big) sprintf(buffer, "%d blocks available\n", ARAM_block_available());
-	else            sprintf(buffer, "%d contiguous blocks available\n", ARAM_block_available_contiguous());
-	PRINT(buffer);
+	sprintf(txt, "Loading ROM into ARAM %s\n", ROM_too_big ? "(ROM_too_big)" : "");
+	PRINT(txt);
+	if(ROM_too_big) sprintf(txt, "%d blocks available\n", ARAM_block_available());
+	else            sprintf(txt, "%d contiguous blocks available\n", ARAM_block_available_contiguous());
+	PRINT(txt);
 	
 	strncpy(ROM_filename, filename, SDCARD_MAX_PATH_LEN);
 	sd_file* rom = SDCARD_OpenFile(filename, "rb");
@@ -193,8 +193,8 @@ void ROMCache_load_SDCard(char* filename, int byteSwap){
 		int i, block, available = ARAM_block_available();
 		for(i=0; i<available; ++i){
 			block = ARAM_block_alloc(&ROM_blocks[i], 'R');
-			sprintf(buffer, "ROM_blocks[%d] = 0x%08x\n", i, block);
-			PRINT(buffer);
+			sprintf(txt, "ROM_blocks[%d] = 0x%08x\n", i, block);
+			PRINT(txt);
 			int bytes_read, offset=0;
 			do {
 				bytes_read = SDCARD_ReadFile(rom, buffer, bytes_to_read);
@@ -207,8 +207,8 @@ void ROMCache_load_SDCard(char* filename, int byteSwap){
 		}
 	} else {
 		ARAM_block_alloc_contiguous(&ROM, 'R', ROM_size / BLOCK_SIZE);
-		sprintf(buffer, "ROM = 0x%08x using %d blocks\n", ROM, ROM_size/BLOCK_SIZE);
-		PRINT(buffer);
+		sprintf(txt, "ROM = 0x%08x using %d blocks\n", ROM, ROM_size/BLOCK_SIZE);
+		PRINT(txt);
 		int bytes_read, offset=0;
 		do {
 			bytes_read = SDCARD_ReadFile(rom, buffer, bytes_to_read);
@@ -225,18 +225,18 @@ void ROMCache_load_SDCard(char* filename, int byteSwap){
 
 // TODO: Support byte-swapped ROMs
 void ROMCache_load_DVD(char* filename, int byteSwap){
-	char buffer[64];
+	char txt[64];
 	
 	if(byteSwap == BYTE_SWAP_BAD) return;
 	ROM_byte_swap = byteSwap;
 	if(byteSwap == BYTE_SWAP_BYTE) PRINT("Byte swapped\n");
 	else if(byteSwap == BYTE_SWAP_HALF) PRINT("Halfword swapped\n");
 	
-	sprintf(buffer, "Loading ROM into ARAM %s\n", ROM_too_big ? "(ROM_too_big)" : "");
-	PRINT(buffer);
-	if(ROM_too_big) sprintf(buffer, "%d blocks available\n", ARAM_block_available());
-	else            sprintf(buffer, "%d contiguous blocks available\n", ARAM_block_available_contiguous());
-	PRINT(buffer);
+	sprintf(txt, "Loading ROM into ARAM %s\n", ROM_too_big ? "(ROM_too_big)" : "");
+	PRINT(txt);
+	if(ROM_too_big) sprintf(txt, "%d blocks available\n", ARAM_block_available());
+	else            sprintf(txt, "%d contiguous blocks available\n", ARAM_block_available_contiguous());
+	PRINT(txt);
 	
 	strncpy(ROM_filename, filename, SDCARD_MAX_PATH_LEN);
 	//sd_file* rom = SDCARD_OpenFile(filename, "rb");
@@ -249,8 +249,8 @@ void ROMCache_load_DVD(char* filename, int byteSwap){
 		int i, block, available = ARAM_block_available();
 		for(i=0; i<available; ++i){
 			block = ARAM_block_alloc(&ROM_blocks[i], 'R');
-			sprintf(buffer, "ROM_blocks[%d] = 0x%08x\n", i, block);
-			PRINT(buffer);
+			sprintf(txt, "ROM_blocks[%d] = 0x%08x\n", i, block);
+			PRINT(txt);
 			int bytes_read, offset=0;
 			do {
 				bytes_read = read_safe(buffer,tempDVDOffset, bytes_to_read);
@@ -264,8 +264,8 @@ void ROMCache_load_DVD(char* filename, int byteSwap){
 		}
 	} else {
 		ARAM_block_alloc_contiguous(&ROM, 'R', ROM_size / BLOCK_SIZE);
-		sprintf(buffer, "ROM = 0x%08x using %d blocks\n", ROM, ROM_size/BLOCK_SIZE);
-		PRINT(buffer);
+		sprintf(txt, "ROM = 0x%08x using %d blocks\n", ROM, ROM_size/BLOCK_SIZE);
+		PRINT(txt);
 		int bytes_read, offset=0;
 		do {
 			//bytes_read = SDCARD_ReadFile(rom, buffer, bytes_to_read);
