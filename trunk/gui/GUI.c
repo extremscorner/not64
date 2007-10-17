@@ -29,13 +29,14 @@ void GUI_print(char* string){
 	
 	// Finally, fill out the next lines of text with the strings
 	for(i=0; i<num_lines; ++i)
-		strncpy( textptrs[text_next_line++ % GUI_TEXT_HEIGHT], &TEXT_split_lines[i], GUI_TEXT_WIDTH );
+		strncpy( textptrs[text_next_line++ % GUI_TEXT_HEIGHT],
+		         &TEXT_split_lines[i], GUI_TEXT_WIDTH );
 	
-	if(isWrapped) text_zero_line = text_next_line;
+	if(isWrapped) text_zero_line = text_next_line % GUI_TEXT_HEIGHT;
 	else { 
 		if(text_next_line >= GUI_TEXT_HEIGHT){
 			isWrapped = 1;
-			text_zero_line = text_next_line;
+			text_zero_line = text_next_line % GUI_TEXT_HEIGHT;
 		}
 	}
 }
@@ -56,9 +57,16 @@ void GUI_clear(void){
 
 void GUI_update(void){
 	if(isWrapped){
+#if 0
 		// Unwrap the text so it is linear again
+		//   we have two indices: i,j
+		//   i begins at the 'zero' index
+		//   j begins at the beginning of the array
+		//   Run j through each index,
+		//     increment i until the last, don't wrap
+		//   Swap the string at i with that at j
 		int i=text_zero_line, j;
-		for(j=0; j<GUI_TEXT_HEIGHT-1; ++j){
+		for(j=0; j<GUI_TEXT_HEIGHT; ++j){
 			// Swap textptrs
 			char* temp  = textptrs[j];
 			textptrs[j] = textptrs[i];
@@ -66,6 +74,14 @@ void GUI_update(void){
 			// Only run i to the last ptr
 			if(i < GUI_TEXT_HEIGHT-1) ++i;
 		}
+#else
+		char* temp[GUI_TEXT_HEIGHT];
+		int i,j=text_zero_line;
+		for(i=0; i<GUI_TEXT_HEIGHT; ++i, ++j)
+			temp[i] = textptrs[j % GUI_TEXT_HEIGHT];
+		for(i=0; i<GUI_TEXT_HEIGHT; ++i)
+			textptrs[i] = temp[i];
+#endif
 		// Reset state
 		text_zero_line = 0;
 		text_next_line = 0;
