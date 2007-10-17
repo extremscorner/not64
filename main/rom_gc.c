@@ -146,7 +146,7 @@ int rom_read(const char *argv){
    if (!ROM_HEADER) ROM_HEADER = malloc(sizeof(rom_header));
    ROMCache_read(ROM_HEADER, 0, sizeof(rom_header));
    //display_loading_progress(100);
-   sprint(buffer, "%x %x %x %x\n", ROM_HEADER->init_PI_BSB_DOM1_LAT_REG,
+   sprintf(buffer, "%x %x %x %x\n", ROM_HEADER->init_PI_BSB_DOM1_LAT_REG,
 	   ROM_HEADER->init_PI_BSB_DOM1_PGS_REG,
 	   ROM_HEADER->init_PI_BSB_DOM1_PWD_REG,
 	   ROM_HEADER->init_PI_BSB_DOM1_PGS_REG2);
