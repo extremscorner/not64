@@ -6,7 +6,6 @@
 
 #include <stdlib.h>
 #include <stdio.h>
-//#include <string.h> //possibly needed for clearing GX fifo memory
 #include <unistd.h>
 
 #include "main.h"
@@ -14,6 +13,7 @@
 
 #include "plugin.h"
 
+#include "../gui/gui_GX.h"
 #include "../r4300/r4300.h"
 #include "../gc_memory/memory.h"
 #include "../gc_memory/ARAM.h"
@@ -187,6 +187,7 @@ int main(){
 	//check_heap_space();
 	printf("Press START to begin execution\n");
 	while(!(PAD_ButtonsHeld(0) & PAD_BUTTON_START));
+	VIDEO_SetPostRetraceCallback (PAD_ScanPads);
 	go();
 	romClosed_RSP();
 	romClosed_input();
@@ -215,8 +216,8 @@ int main(){
    	if(PAD_ButtonsHeld(0) & PAD_BUTTON_X) break;
    	
    	}
-   	
-   	void (*reload)() = (void (*)()) 0x80001800;
+	
+	void (*reload)() = (void (*)()) 0x80001800;
 	reload();
    	
 	return 0;
@@ -373,6 +374,10 @@ Initialise (void)
   GX_SetDispCopyYScale ((f32) vmode->xfbHeight / (f32) vmode->efbHeight);
   GX_SetDispCopyDst (vmode->fbWidth, vmode->xfbHeight); 
   GX_SetCullMode (GX_CULL_NONE); // default in rsp init
-  GX_CopyDisp (xfb[1], GX_TRUE); // This clears the efb
+  GX_CopyDisp (xfb[0], GX_TRUE); // This clears the efb
+  GX_CopyDisp (xfb[0], GX_TRUE); // This clears the xfb
+
+//  GUI_setFB(xfb[0], xfb[1]);
+//  GUI_init();
 }
 

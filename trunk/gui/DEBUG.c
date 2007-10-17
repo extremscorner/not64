@@ -19,6 +19,8 @@ static int nextString;
 static char* text[DEBUG_TEXT_HEIGHT];
 static int numLiveStrings;
 
+extern char TEXT_split_lines[TEXT_MAX_SPLIT][TEXT_WIDTH];
+
 void DEBUG_print(char* string){
 	// First split the string into lines of text
 	int num_lines = TEXT_split(string);
@@ -44,7 +46,7 @@ void DEBUG_print(char* string){
 void DEBUG_update(float dt){
 	// Shorten the strings life by dt
 	int i;
-	for(i=0; i<DEBUG_NUM_STRINGS; ++i){
+	for(i=0; i<DEBUG_NUM_STRINGS; i++){
 		strings[i].life -= dt;
 		// Mark them as invalid if they've died
 		if(strings[i].valid && strings[i].life <= 0.0f){

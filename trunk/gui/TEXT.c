@@ -12,7 +12,7 @@ int TEXT_split(char* string){
 		if( *string == '\n' ){
 			if(++current_line >= TEXT_MAX_SPLIT) return current_line;
 			i = 0;
-		} else TEXT_split[current_line][i++] = *string;
+		} else TEXT_split_lines[current_line][i++] = *string;
 		
 		++string;
 	}

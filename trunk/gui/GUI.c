@@ -16,6 +16,9 @@ static int text_next_line;
 // Keep track of whether we've had to wrap the text
 static char isWrapped;
 
+extern char TEXT_split_lines[TEXT_MAX_SPLIT][TEXT_WIDTH];
+
+
 void GUI_print(char* string){
 	// First split the string into lines of text
 	int num_lines = TEXT_split(string);
@@ -42,7 +45,7 @@ void GUI_clear(void){
 	int i;
 	for(i=0; i<GUI_TEXT_HEIGHT; ++i){
 		text[i][0]  = 0;
-		textptrs[i] = &text[i]
+		textptrs[i] = &text[i];
 	}
 	
 	// Reset state
@@ -71,7 +74,10 @@ void GUI_update(void){
 char** GUI_get_text(void){
 	// Make sure the text we give is properly ordered
 	if(isWrapped) GUI_update();
-	
+
+//For testing purposes - this shows that we can see a string printed into text here:
+	sprintf(textptrs[0],"Testing.");
+
 	// Simply return our array
 	return &textptrs;
 }
