@@ -3,10 +3,14 @@
  */
 
 #include <stdlib.h>
+#include <assert.h>
 #include "TLB-Cache.h"
 
 // Num Slots must be a power of 2!
 #define TLB_NUM_SLOTS 64
+// The amount of bits required to represent a page
+//   number, don't change. Required for hash calc
+#define TLB_BITS_PER_PAGE_NUM 20
 
 typedef struct node {
 	unsigned int value;
@@ -25,6 +29,7 @@ void TLBCache_init(void){
 		temp >>= 1;
 		++TLB_hash_shift;
 	}
+	TLB_hash_shift = TLB_BITS_PER_PAGE_NUM - TLB_hash_shift;
 }
 
 void TLBCache_deinit(void){
@@ -76,6 +81,7 @@ void inline TLBCache_set_r(unsigned int page, unsigned int val){
 	node->page  = page;
 	node->value = val;
 	node->next  = next;
+	TLB_LUT_r[ TLB_hash(page) ] = node;
 	
 	// Remove any old values for this page from the linked list
 	for(; node != NULL; node = node->next)
@@ -94,6 +100,7 @@ void inline TLBCache_set_w(unsigned int page, unsigned int val){
 	node->page  = page;
 	node->value = val;
 	node->next  = next;
+	TLB_LUT_w[ TLB_hash(page) ] = node;
 	
 	// Remove any old values for this page from the linked list
 	for(; node != NULL; node = node->next)
