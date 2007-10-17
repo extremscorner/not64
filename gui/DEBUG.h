@@ -10,8 +10,8 @@
 // Amount of time each string will be held onto
 #define DEBUG_STRING_LIFE 2.0f
 // Dimensions of array returned by get_text
-#define GUI_TEXT_WIDTH  64
-#define GUI_TEXT_HEIGHT 20
+#define DEBUG_TEXT_WIDTH  64
+#define DEBUG_TEXT_HEIGHT 20
 
 // Pre-formatted string (use sprintf before sending to print)
 void DEBUG_print(char* string);

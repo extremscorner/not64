@@ -7,9 +7,9 @@
 
 // Maximum number of lines that can be in one split
 #define TEXT_MAX_SPLIT 5
-#define TEXT_WIDTH     64
+#define TEXT_WIDTH     35
 
-extern char TEXT_split_lines[TEXT_MAX_SPLIT][TEXT_WIDTH];
+//extern char TEXT_split_lines[TEXT_MAX_SPLIT][TEXT_WIDTH];
 
 // Splits the text on newlines
 // string:  the string to split

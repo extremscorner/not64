@@ -6,8 +6,8 @@
 #define GUI_H
 
 // Dimensions of array returned by get_text
-#define GUI_TEXT_WIDTH  64
-#define GUI_TEXT_HEIGHT 20
+#define GUI_TEXT_WIDTH  35
+#define GUI_TEXT_HEIGHT 17
 
 // Pre-formatted string (use sprintf before sending to print)
 void GUI_print(char* string);
