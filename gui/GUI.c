@@ -58,11 +58,13 @@ void GUI_update(void){
 	if(isWrapped){
 		// Unwrap the text so it is linear again
 		int i=text_zero_line, j;
-		for(j=0; j<GUI_TEXT_HEIGHT; ++j, ++i){
+		for(j=0; j<GUI_TEXT_HEIGHT-1; ++j){
 			// Swap textptrs
-			char* temp                  = textptrs[j];
-			textptrs[j]                 = textptrs[i%GUI_TEXT_HEIGHT];
-			textptrs[i%GUI_TEXT_HEIGHT] = temp;
+			char* temp  = textptrs[j];
+			textptrs[j] = textptrs[i];
+			textptrs[i] = temp;
+			// Only run i to the last ptr
+			if(i < GUI_TEXT_HEIGHT-1) ++i;
 		}
 		// Reset state
 		text_zero_line = 0;
@@ -74,9 +76,6 @@ void GUI_update(void){
 char** GUI_get_text(void){
 	// Make sure the text we give is properly ordered
 	if(isWrapped) GUI_update();
-
-//For testing purposes - this shows that we can see a string printed into text here:
-	sprintf(textptrs[0],"Testing.");
 
 	// Simply return our array
 	return &textptrs;
