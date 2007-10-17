@@ -52,7 +52,7 @@ static unsigned int inline TLB_hash(unsigned int page){
 }
 
 unsigned int inline TLBCache_get_r(unsigned int page){
-	TLB_hash_node* node = TLB_LUT_r[ hash(page) ];
+	TLB_hash_node* node = TLB_LUT_r[ TLB_hash(page) ];
 	
 	for(; node != NULL; node = node->next)
 		if(node->page == page) return node->value;
@@ -61,7 +61,7 @@ unsigned int inline TLBCache_get_r(unsigned int page){
 }
 
 unsigned int inline TLBCache_get_w(unsigned int page){
-	TLB_hash_node* node = TLB_LUT_w[ hash(page) ];
+	TLB_hash_node* node = TLB_LUT_w[ TLB_hash(page) ];
 	
 	for(; node != NULL; node = node->next)
 		if(node->page == page) return node->value;
@@ -70,7 +70,7 @@ unsigned int inline TLBCache_get_w(unsigned int page){
 }
 
 void inline TLBCache_set_r(unsigned int page, unsigned int val){
-	TLB_hash_node* next = TLB_LUT_r[ hash(page) ];
+	TLB_hash_node* next = TLB_LUT_r[ TLB_hash(page) ];
 	
 	TLB_hash_node* node = malloc( sizeof(TLB_hash_node) );
 	node->page  = page;
@@ -88,7 +88,7 @@ void inline TLBCache_set_r(unsigned int page, unsigned int val){
 }
 
 void inline TLBCache_set_w(unsigned int page, unsigned int val){
-	TLB_hash_node* next = TLB_LUT_w[ hash(page) ];
+	TLB_hash_node* next = TLB_LUT_w[ TLB_hash(page) ];
 	
 	TLB_hash_node* node = malloc( sizeof(TLB_hash_node) );
 	node->page  = page;

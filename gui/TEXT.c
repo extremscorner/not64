@@ -16,6 +16,8 @@ int TEXT_split(char* string){
 		
 		++string;
 	}
+	
+	return current_line;
 }
 
 void TEXT_expand(char* string){
