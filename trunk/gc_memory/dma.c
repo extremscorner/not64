@@ -44,6 +44,13 @@
 #include "../r4300/ops.h"
 #include "Saves.h"
 
+#ifdef USE_GUI
+#include "../gui/GUI.h"
+#define PRINT GUI_print
+#else
+#define PRINT printf
+#endif
+
 static unsigned char sram[0x8000] __attribute__((aligned(32)));
 
 static BOOL sramWritten = FALSE;
@@ -61,11 +68,11 @@ void loadSram(void){
 		DIR* sddir = NULL;
 		
 		if (SDCARD_ReadDir(filename, &sddir) > 0){
-			printf("Loading SRAM, please be patient...\n");
+			PRINT("Loading SRAM, please be patient...\n");
 			f = SDCARD_OpenFile(filename, "rb");
 	  		SDCARD_ReadFile (f, sram, 0x8000);
 	  		SDCARD_CloseFile(f);
-	  		printf("OK\n");
+	  		PRINT("OK\n");
 	  	} else for (i=0; i<0x8000; i++) sram[i] = 0;
 	  	
 	  	if(sddir) free(sddir);
@@ -74,10 +81,10 @@ void loadSram(void){
 		int slot = (savetype & SELECTION_SLOT_B) ? CARD_SLOTB : CARD_SLOTA;
 	
 	        if(CARD_Open(slot, filename, &CardFile) != CARD_ERROR_NOFILE){
-	        	printf("Loading SRAM, please be patient...\n");		
+	        	PRINT("Loading SRAM, please be patient...\n");		
 			CARD_Read (&CardFile, sram, 0x8000, 0);
 			CARD_Close(&CardFile);
-			printf("OK\n");
+			PRINT("OK\n");
 	        } else for (i=0; i<0x8000; i++) sram[i] = 0;
 	}
 	
@@ -86,7 +93,7 @@ void loadSram(void){
 
 void saveSram(void){
 	if(!sramWritten) return;
-	printf("Saving SRAM, do not turn off the console...\n");
+	PRINT("Saving SRAM, do not turn off the console...\n");
 	
 	char* filename = malloc(strlen(savepath)+
 	                        strlen(ROM_SETTINGS.goodname)+4+1);
@@ -111,7 +118,7 @@ void saveSram(void){
 	}
 	
 	free(filename);
-	printf("OK\n");
+	PRINT("OK\n");
 }
 
 void dma_pi_read()

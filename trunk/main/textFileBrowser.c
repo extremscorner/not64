@@ -5,7 +5,20 @@
 #include <stdlib.h>
 #include "gc_dvd.h"
 
+#ifdef USE_GUI
+#include "../gui/GUI.h"
+#define PRINT GUI_print
+#else
+#define PRINT printf
+#endif
+
+#ifdef USE_GUI
+#define CLEAR() GUI_clear()
+#else
 #define CLEAR() printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
+#endif
+
+static char buffer[96];
 
 char* textFileBrowser(char* directory){
 	DIR *sddir = NULL;
@@ -16,13 +29,17 @@ char* textFileBrowser(char* directory){
 	int currentSelection = 0;
 	while(1){
 		CLEAR();
-		printf("browsing %s:\n", directory); 
+		sprintf(buffer, "browsing %s:\n", directory);
+		PRINT(buffer);
 		int i = MIN(MAX(0,currentSelection-13),MAX(0,entries_found-13));
 		int max = MIN(entries_found, currentSelection+25);
 		for(; i<max; ++i){
 			if(i == currentSelection)
-				printf("*");
-			printf("\t%-32s\t%s\n", sddir[i].fname, (sddir[i].fattr&SDCARD_ATTR_DIR) ? "DIR" : "");
+				sprintf(buffer, "*");
+			else    sprintf(buffer, " ");
+			sprintf(buffer, "%s\t%-32s\t%s\n", buffer,
+			        sddir[i].fname, (sddir[i].fattr&SDCARD_ATTR_DIR) ? "DIR" : "");
+			PRINT(buffer);
 		}
 		
 		/*** Wait for A/up/down press ***/
@@ -35,7 +52,8 @@ char* textFileBrowser(char* directory){
 				sprintf(newDir, "%s\\%s", directory, sddir[currentSelection].fname);		
 				if(sddir) free(sddir);
 				CLEAR();
-				printf("MOVING TO %s. Press B\n",newDir);
+				sprintf(buffer,"MOVING TO %s. Press B\n",newDir);
+				PRINT(buffer);
 				while (!(PAD_ButtonsHeld(0) & PAD_BUTTON_B));
 				return textFileBrowser(newDir);
 			} else {
@@ -43,7 +61,8 @@ char* textFileBrowser(char* directory){
 				sprintf(newDir, "%s\\%s", directory, sddir[currentSelection].fname);
 				if(sddir) free(sddir);
 				CLEAR();
-				printf("SELECTING %s. Press B\n",newDir);
+				sprintf(buffer,"SELECTING %s. Press B\n",newDir);
+				PRINT(buffer);
 				while (!(PAD_ButtonsHeld(0) & PAD_BUTTON_B));
 				return newDir;
 			}
@@ -56,9 +75,9 @@ char* textFileBrowser(char* directory){
 int rom_sizeDVD = 0;
 unsigned int rom_offsetDVD = 0;
 char *textFileBrowserDVD(){
-	printf("Mounting DVD...\n");
+	PRINT("Mounting DVD...\n");
 	DVD_Mount ();
-	printf("Reading DVD...\n");
+	PRINT("Reading DVD...\n");
 
 	int sector = 16;
 	static unsigned char buffer[2048] __attribute__((aligned(32)));
@@ -68,7 +87,7 @@ char *textFileBrowserDVD(){
 	while (sector < 32)
 	{
 		if (read_sector(buffer, sector))
-			printf("FATAL ERROR...\n");
+			PRINT("FATAL ERROR...\n");
 		if (!memcmp(((struct pvd_s *)buffer)->id, "\2CD001\1", 8))
 		{
 			svd = (void*)buffer;
@@ -83,7 +102,7 @@ char *textFileBrowserDVD(){
 		while (sector < 32)
 		{
 			if (read_sector(buffer, sector))
-				printf("FATAL ERROR...\n");
+				PRINT("FATAL ERROR...\n");
 
 			if (!memcmp(((struct pvd_s *)buffer)->id, "\1CD001\1", 8))
 			{
@@ -96,7 +115,7 @@ char *textFileBrowserDVD(){
 
 	if ((!pvd) && (!svd))
 	{
-		printf("No ISO9660 DVD Found!\n");
+		PRINT("No ISO9660 DVD Found!\n");
 		return;
 	}
 
@@ -122,13 +141,15 @@ char *textFileBrowserDVD(){
 	while(1){
 		entries_found = files;
 		CLEAR();
-		printf("browsing DVD:\n"); 
+		PRINT("browsing DVD:\n"); 
 		int i = MIN(MAX(0,currentSelection-13),MAX(0,entries_found-13));
 		int max = MIN(entries_found, currentSelection+17);
 		for(; i<max; ++i){
 			if(i == currentSelection)
-				printf("->");
-			printf("\t%-32s\t%s\n", file[i].name,(file[i].flags & 2) ? "DIR" : "");
+				sprintf(buffer, "->");
+			else    sprintf(buffer, "  ");
+			sprintf(buffer, "%s\t%-32s\t%s\n", buffer,
+			        file[i].name,(file[i].flags & 2) ? "DIR" : "");
 		}
 				// Wait for A/up/down press
 		while (!(PAD_ButtonsHeld(0) & PAD_BUTTON_A) && !(PAD_ButtonsHeld(0) & PAD_BUTTON_UP) && !(PAD_ButtonsHeld(0) & PAD_BUTTON_DOWN));
@@ -142,7 +163,8 @@ char *textFileBrowserDVD(){
 				currentSelection = 0;
 			} else {
 				CLEAR();
-				printf("SELECTING %s. Press B\n",file[currentSelection].name);
+				sprintf(buffer,"SELECTING %s. Press B\n",file[currentSelection].name);
+				PRINT(buffer);
 				while (!(PAD_ButtonsHeld(0) & PAD_BUTTON_B));
 				rom_sizeDVD = file[currentSelection].size;
 				rom_offsetDVD = file[currentSelection].sector*2048;

@@ -43,6 +43,13 @@
 #include "../gc_memory/memory.h"
 #include "md5.h"
 
+#ifdef USE_GUI
+#include "../gui/GUI.h"
+#define PRINT GUI_print
+#else
+#define PRINT printf
+#endif
+
 static sd_file *rom_file;
 static int i, tmp, z;
 
@@ -60,8 +67,10 @@ static void findsize(){
 	SDCARD_GetStats(rom_file, &s);
 	SDCARD_SeekFile(rom_file, 0, SDCARD_SEEK_SET);
 	rom_length = s.size;
-	printf ("rom size: %d bytes (or %d Mb or %d Megabits)\n", 
+	char buffer[96];
+	sprintf(buffer, "rom size: %d bytes (or %d Mb or %d Megabits)\n", 
 		rom_length, rom_length/1024/1024, rom_length/1024/1024*8);
+	PRINT(buffer);
 }
 
 static int detectByteSwapping(char* filename){
@@ -108,42 +117,52 @@ int rom_read(const char *argv){
    //mupenEntry *entry;
    char buf[1024], arg[1024], *s;
    strncpy(arg, argv, 1000);
+   char buffer[1024];
    
    if(!isFromDVD) {
 	   rom_file = SDCARD_OpenFile(argv, "rb");
-	   if(rom_file) printf("file found\n");
-	   else { printf("ERROR COULD NOT OPEN: %s\n", argv); return -1; }
+	   if(rom_file) PRINT("file found\n");
+	   else { sprintf(buffer, "ERROR COULD NOT OPEN: %s\n", argv); PRINT(buffer); return -1; }
 	   findsize();
 	   SDCARD_CloseFile(rom_file);
-	   printf("Loading ROM: %s, please be patient...\n", arg);
+	   sprintf(buffer, "Loading ROM: %s, please be patient...\n", arg);
+	   PRINT(buffer);
    	   ROMCache_init(rom_length);
    	   ROMCache_load_SDCard(arg, detectByteSwapping(arg));
 	}
 	else {
    		rom_length = rom_sizeDVD;  
-   		printf ("rom size: %d bytes (or %d Mb or %d Megabits)\n", 
-		rom_length, rom_length/1024/1024, rom_length/1024/1024*8);
-   	   	printf("Loading ROM: %s, please be patient...\n", arg);
+   		sprintf(buffer, "rom size: %d bytes (or %d Mb or %d Megabits)\n", 
+		        rom_length, rom_length/1024/1024, rom_length/1024/1024*8);
+		PRINT(buffer);
+   	   	sprintf(buffer, "Loading ROM: %s, please be patient...\n", arg);
+   	   	PRINT(buffer);
    	   	ROMCache_init(rom_length);
    	   	ROMCache_load_DVD(arg, detectByteSwappingDVD());
-	   	}
+	}
 
-   printf("rom loaded succesfully\n");
+   PRINT("rom loaded succesfully\n");
   
    if (!ROM_HEADER) ROM_HEADER = malloc(sizeof(rom_header));
    ROMCache_read(ROM_HEADER, 0, sizeof(rom_header));
    //display_loading_progress(100);
-   printf ("%x %x %x %x\n", ROM_HEADER->init_PI_BSB_DOM1_LAT_REG,
+   sprint(buffer, "%x %x %x %x\n", ROM_HEADER->init_PI_BSB_DOM1_LAT_REG,
 	   ROM_HEADER->init_PI_BSB_DOM1_PGS_REG,
 	   ROM_HEADER->init_PI_BSB_DOM1_PWD_REG,
 	   ROM_HEADER->init_PI_BSB_DOM1_PGS_REG2);
-   printf("ClockRate=%x\n", sl((unsigned int)ROM_HEADER->ClockRate));
-   printf("Version:%x\n", sl((unsigned int)ROM_HEADER->Release));
-   printf("CRC: %x %x\n", sl((unsigned int)ROM_HEADER->CRC1), sl((unsigned int)ROM_HEADER->CRC2));
-   printf ("name: %s\n", ROM_HEADER->nom);
-   if (sl(ROM_HEADER->Manufacturer_ID) == 'N') printf ("Manufacturer: Nintendo\n");
-   else printf ("Manufacturer: %x\n", (unsigned int)(ROM_HEADER->Manufacturer_ID));
-   printf("Cartridge_ID: %x\n", ROM_HEADER->Cartridge_ID);
+   PRINT(buffer);
+   sprintf(buffer, "ClockRate=%x\n", sl((unsigned int)ROM_HEADER->ClockRate));
+   PRINT(buffer);
+   sprintf(buffer, "Version:%x\n", sl((unsigned int)ROM_HEADER->Release));
+   PRINT(buffer);
+   sprintf(buffer, "CRC: %x %x\n", sl((unsigned int)ROM_HEADER->CRC1), sl((unsigned int)ROM_HEADER->CRC2));
+   PRINT(buffer);
+   sprintf(buffer, "name: %s\n", ROM_HEADER->nom);
+   PRINT(buffer);
+   if (sl(ROM_HEADER->Manufacturer_ID) == 'N') PRINT("Manufacturer: Nintendo\n");
+   else { sprintf(buffer, "Manufacturer: %x\n", (unsigned int)(ROM_HEADER->Manufacturer_ID)); PRINT(buffer); }
+   sprintf(buffer, "Cartridge_ID: %x\n", ROM_HEADER->Cartridge_ID);
+   PRINT(buffer);
    
    // Swap country code since I know it's used
    char temp = ((char*)&ROM_HEADER->Country_code)[0];
@@ -153,24 +172,27 @@ int rom_read(const char *argv){
    switch(ROM_HEADER->Country_code)
      {
       case 0x0044:
-	printf("Country : Germany\n");
+	PRINT("Country : Germany\n");
 	break;
       case 0x0045:
-	printf("Country : United States\n");
+	PRINT("Country : United States\n");
 	break;
       case 0x004A:
-	printf("Country : Japan\n");
+	PRINT("Country : Japan\n");
 	break;
       case 0x0050:
-	printf("European cartridge\n");
+	PRINT("European cartridge\n");
 	break;
       case 0x0055:
-	printf("Country : Australie\n");
+	PRINT("Country : Australie\n");
       default:
-	printf("Country Code : %x\n", ROM_HEADER->Country_code);
+	sprintf(buffer, "Country Code : %x\n", ROM_HEADER->Country_code);
+	PRINT(buffer);
      }
-   printf ("size: %d\n", (unsigned int)(sizeof(rom_header)));
-   printf ("PC= %x\n", sl((unsigned int)ROM_HEADER->PC));
+   sprintf(buffer, "size: %d\n", (unsigned int)(sizeof(rom_header)));
+   PRINT(buffer);
+   sprintf(buffer, "PC= %x\n", sl((unsigned int)ROM_HEADER->PC));
+   PRINT(buffer);
    
    // FIXME: ROM_SETTINGS.goodname needs to be filled out
    strcpy(ROM_SETTINGS.goodname, ROM_HEADER->nom);

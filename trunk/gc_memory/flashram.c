@@ -38,6 +38,13 @@
 #include <ogc/card.h>
 #include "Saves.h"
 
+#ifdef USE_GUI
+#include "../gui/GUI.h"
+#define PRINT GUI_print
+#else
+#define PRINT printf
+#endif
+
 int use_flashram;
 
 typedef enum flashram_mode
@@ -69,11 +76,11 @@ void loadFlashram(void){
 		sd_file *f;
 		
 		if (SDCARD_ReadDir(filename, &sddir) > 0){
-			printf("Loading flashram, please be patient...\n");
+			PRINT("Loading flashram, please be patient...\n");
 			f = SDCARD_OpenFile(filename, "rb");
 			SDCARD_ReadFile (f, flashram, 0x20000);
 			SDCARD_CloseFile(f);
-			printf("OK\n");
+			PRINT("OK\n");
 		} else for (i=0; i<0x20000; i++) flashram[i] = 0xff;
 		
 		if(sddir) free(sddir);
@@ -82,10 +89,10 @@ void loadFlashram(void){
 		int slot = (savetype & SELECTION_SLOT_B) ? CARD_SLOTB : CARD_SLOTA;
 		
 		if(CARD_Open(slot, filename, &CardFile) != CARD_ERROR_NOFILE){
-			printf("Loading flashram, please be patient...\n");			
+			PRINT("Loading flashram, please be patient...\n");			
 			CARD_Read (&CardFile, flashram, 0x20000, 0);
 			CARD_Close(&CardFile);
-			printf("OK\n");
+			PRINT("OK\n");
 		} else for (i=0; i<0x20000; i++) flashram[i] = 0xff;
 	}
 	
@@ -94,7 +101,7 @@ void loadFlashram(void){
 
 void saveFlashram(void){
 	if(!flashramWritten) return;
-	printf("Saving flashram, do not turn off the console...\n");
+	PRINT("Saving flashram, do not turn off the console...\n");
 	
 	char* filename = malloc(strlen(savepath)+
 	                        strlen(ROM_SETTINGS.goodname)+4+1);
@@ -119,7 +126,7 @@ void saveFlashram(void){
 	}
 	
 	free(filename);
-	printf("OK\n");
+	PRINT("OK\n");
 }
 
 void save_flashram_infos(char *buf)

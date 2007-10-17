@@ -26,6 +26,13 @@
 
 #include <gccore.h>
 #include <sdcard.h>
+
+#ifdef USE_GUI
+#include "../gui/GUI.h"
+#define PRINT GUI_print
+#else
+#define PRINT printf
+#endif
  
 #define DEFAULT_FIFO_SIZE    (256*1024)//(64*1024) minimum
 
@@ -139,8 +146,8 @@ int main(){
 	//if(rom)		free(rom);
 	if(ROM_HEADER)	free(ROM_HEADER);
 		
-	printf("Press A to choose ROM from SDCard\n");
-	printf("Press Z to choose ROM from DVD\n");
+	PRINT("Press A to choose ROM from SDCard\n");
+	PRINT("Press Z to choose ROM from DVD\n");
 	while(1){
 		if((PAD_ButtonsHeld(0) & PAD_BUTTON_A)) {
 			romfile = textFileBrowser("dev0:\\N64ROMS");
@@ -160,9 +167,12 @@ int main(){
 	
 	init_memory();
 	
-	printf("Goodname:%s\n", ROM_SETTINGS.goodname);
-	printf("16kb eeprom=%d\n", ROM_SETTINGS.eeprom_16kb);
-	printf("emulation mode:\n"
+	char buffer[64];
+	sprintf(buffer, "Goodname:%s\n", ROM_SETTINGS.goodname);
+	PRINT(buffer);
+	sprintf(buffer, "16kb eeprom=%d\n", ROM_SETTINGS.eeprom_16kb);
+	PRINT(buffer);
+	PRINT( "emulation mode:\n"
 	       "	  A. interpreter (PROBABLY BROKEN)\n"
 	       "	  B. dynamic recompiler (NOT SUPPORTED YET!)\n"
 	       "	  X. pure interpreter\n");
@@ -185,7 +195,7 @@ int main(){
 	romOpen_audio();
 	romOpen_input();
 	//check_heap_space();
-	printf("Press START to begin execution\n");
+	PRINT("Press START to begin execution\n");
 	while(!(PAD_ButtonsHeld(0) & PAD_BUTTON_START));
 	VIDEO_SetPostRetraceCallback (PAD_ScanPads);
 	go();
@@ -210,7 +220,7 @@ int main(){
 	VIDEO_SetNextFramebuffer (xfb[0]); //switch xfb to show console
 	VIDEO_Flush ();
 
-	printf("Press X to return to SDLOAD\n  or START to load new ROM\n");
+	PRINT("Press X to return to SDLOAD\n  or START to load new ROM\n");
    	while(!(PAD_ButtonsHeld(0) & PAD_BUTTON_START) &&
    	      !(PAD_ButtonsHeld(0) & PAD_BUTTON_X));
    	if(PAD_ButtonsHeld(0) & PAD_BUTTON_X) break;
