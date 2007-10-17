@@ -17,7 +17,11 @@ int TEXT_split(char* string){
 		++string;
 	}
 	
-	return current_line;
+	// Return the number of lines created
+	//   the boolean checks whether the last line
+	//   contains any characters or not, hence
+	//   whether or not to count it
+	return current_line + (i == 0) ? 0 : 1;
 }
 
 void TEXT_expand(char* string){
