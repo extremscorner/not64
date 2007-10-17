@@ -29,7 +29,7 @@ void TLBCache_init(void){
 		temp >>= 1;
 		++TLB_hash_shift;
 	}
-	TLB_hash_shift = TLB_BITS_PER_PAGE_NUM - TLB_hash_shift;
+	TLB_hash_shift = TLB_BITS_PER_PAGE_NUM - TLB_hash_shift + 1;
 }
 
 void TLBCache_deinit(void){
