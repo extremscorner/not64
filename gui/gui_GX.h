@@ -14,13 +14,13 @@ typedef struct
    int which_fb;
    int width;
    int height;
-//   char GUItext [10][50];
 } GUIinfo;
 
 
 void GUI_setFB(unsigned int*, unsigned int*);
 void GUI_init();
-void GUI_drawScreen();
+void GUI_toggle();
+void GUI_main();
 void GUI_displayText();
 int GUI_loadBGtex();
 void GUI_drawLogo();

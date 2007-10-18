@@ -9,13 +9,13 @@ CXX		=powerpc-gekko-g++
 #CFLAGS		=-DX86 -Wall -pipe -g3 -DEMU64_DEBUG
 #CFLAGS		=-DX86 -Wall -pipe -g -DEMU64_DEBUG -DCOMPARE_CORE
 #CFLAGS		=-DX86 -Wall -pipe -g
-#CFLAGS  = -g -O2 -Wall $(MACHDEP) $(INCLUDE) -fomit-frame-pointer \
+#CFLAGS  = -g -O2 -Wall $(MACHDEP) $(INCLUDE) -fomit-frame-pointer 
 CFLAGS  = -g -O2 -Wall $(MACHDEP) -fomit-frame-pointer \
 	  -DCPU_SHUTDOWN -DSPC700_SHUTDOWN -DVAR_CYCLES -DSOUND \
 	  -DNOASM -DNGC -DNOASM -DPIXEL_FORMAT=RGB565 -DSPC700_C \
 	  -DM_PI=3.14159265359 -DEXECUTE_SUPERFX_PER_LINE \
 	  -fno-exceptions -Wno-unused-parameter -pipe \
-	  -DDETECT_NASTY_FX_INTERLEAVE -DSDD1_DECOMP
+	  -DDETECT_NASTY_FX_INTERLEAVE -DSDD1_DECOMP -DUSE_GUI
 
 MACHDEP	= -DGEKKO -mcpu=750 -meabi -mhard-float 
 LDFLAGS	=	$(MACHDEP) -mogc -Wl,-Map,$(notdir $@).map -Wl,--cref
@@ -109,7 +109,7 @@ OBJ_RSPHLE	=rsp_hle-ppc/main.o \
 		rsp_hle-ppc/jpeg.o \
 		rsp_hle-ppc/ucode3.o \
 		rsp_hle-ppc/ucode2.o \
-		rsp_hle-ppc/ucode1.o \
+		rsp_hle-ppc/ucode1.o 
 #		rsp_hle-ppc/ucode3mp3.o
 
 OBJ_AUDIO	=gc_audio/main.o
@@ -249,7 +249,7 @@ install:
 	
 clean:
 	find . -name '*.o' -print0 | xargs -0r rm -f
-	rm mupen64 mupen64_nogui mupen64_dbg 
+#	rm mupen64 mupen64_nogui mupen64_dbg 
 #	rm plugins/mupen64_input.so blight_input/arial.ttf.c blight_input/ttftoh plugins/blight_input.so plugins/mupen64_hle_rsp_azimer.so plugins/dummyaudio.so plugins/mupen64_audio.so plugins/jttl_audio.so plugins/mupen64_GX_gfx.so plugins/mupen64_soft_gfx.so plugins/glN64.so
 
 clean_o:

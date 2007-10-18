@@ -67,6 +67,8 @@ char* textFileBrowser(char* directory){
 				return newDir;
 			}
 		}
+		/*** Wait for up/down button release ***/
+		while (!(!(PAD_ButtonsHeld(0) & PAD_BUTTON_A) && !(PAD_ButtonsHeld(0) & PAD_BUTTON_UP) && !(PAD_ButtonsHeld(0) & PAD_BUTTON_DOWN)));
 	}
 }
 
@@ -172,6 +174,8 @@ char *textFileBrowserDVD(){
 				
 			}
 		}
+		/*** Wait for up/down button release ***/
+		while (!(!(PAD_ButtonsHeld(0) & PAD_BUTTON_A) && !(PAD_ButtonsHeld(0) & PAD_BUTTON_UP) && !(PAD_ButtonsHeld(0) & PAD_BUTTON_DOWN)));
 	}
 	
 }
