@@ -5,6 +5,7 @@
 #ifndef GC_DVD_H
 #define GC_DVD_H
 
+void dvd_motor_off();
 void read_directory(int sector, int len);
 int read_sector(void* buffer, int sector);
 unsigned int dvd_read(void* dst, int len, unsigned int offset);

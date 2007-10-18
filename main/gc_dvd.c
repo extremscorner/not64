@@ -1,6 +1,21 @@
 #include "gc_dvd.h"
 int last_current_dir = -1;
 volatile unsigned long* dvd = (volatile long*)0xCC006000;
+
+void dvd_motor_off()
+{
+	dvd[0] = 0x2E;
+	dvd[1] = 0;
+
+	dvd[2] = 0xe3000000;
+	dvd[3] = 0;
+	dvd[4] = 0;
+	dvd[5] = 0;
+	dvd[6] = 0;
+	dvd[7] = 1; // enable reading!
+	while (dvd[7] & 1);
+}
+
 unsigned int dvd_read(void* dst, int len, unsigned int offset)
 {
 	if ((((int)dst) & 0xC0000000) == 0x80000000) // cached?
