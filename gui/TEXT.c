@@ -10,6 +10,7 @@ int TEXT_split(char* string){
 	int current_line = 0, i = 0;
 	while( *string != 0 ){
 		if( *string == '\n' ){
+			TEXT_split_lines[current_line][i] = 0;
 			if(++current_line >= TEXT_MAX_SPLIT) return current_line;
 			i = 0;
 		} else TEXT_split_lines[current_line][i++] = *string;
@@ -17,12 +18,15 @@ int TEXT_split(char* string){
 		++string;
 	}
 	
+	// Null out the last byte
+	TEXT_split_lines[current_line][i] = 0;
+	
 	// Return the number of lines created
 	//   the boolean checks whether the last line
 	//   contains any characters or not, hence
 	//   whether or not to count it
-	return current_line + 1;
-//	return current_line + (i == 0) ? 0 : 1;
+	//return current_line + 1;
+	return current_line + (i == 0) ? 0 : 1;
 }
 
 void TEXT_expand(char* string){
