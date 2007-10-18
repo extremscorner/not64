@@ -131,6 +131,7 @@ int main(){
 	char* romfileOffset = NULL;	//DVD
 	rom = NULL;
 	ROM_HEADER = NULL;
+
 	
 	Initialise();
 	
@@ -197,8 +198,9 @@ int main(){
 	//check_heap_space();
 	PRINT("Press START to begin execution\n");
 	while(!(PAD_ButtonsHeld(0) & PAD_BUTTON_START));
-	VIDEO_SetPostRetraceCallback (PAD_ScanPads);
+	GUI_toggle();
 	go();
+	GUI_toggle();
 	romClosed_RSP();
 	romClosed_input();
 	romClosed_audio();
@@ -220,6 +222,8 @@ int main(){
 	VIDEO_SetNextFramebuffer (xfb[0]); //switch xfb to show console
 	VIDEO_Flush ();
 
+	// Wait until X & Y are released before continuing
+   	while(!(!(PAD_ButtonsHeld(0) & PAD_BUTTON_X) && !(PAD_ButtonsHeld(0) & PAD_BUTTON_Y)));
 	PRINT("Press X to return to SDLOAD\n  or START to load new ROM\n");
    	while(!(PAD_ButtonsHeld(0) & PAD_BUTTON_START) &&
    	      !(PAD_ButtonsHeld(0) & PAD_BUTTON_X));
@@ -387,7 +391,7 @@ Initialise (void)
   GX_CopyDisp (xfb[0], GX_TRUE); // This clears the efb
   GX_CopyDisp (xfb[0], GX_TRUE); // This clears the xfb
 
-//  GUI_setFB(xfb[0], xfb[1]);
-//  GUI_init();
+  GUI_setFB(xfb[0], xfb[1]);
+  GUI_init();
 }
 

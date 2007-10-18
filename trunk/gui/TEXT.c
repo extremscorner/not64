@@ -21,7 +21,8 @@ int TEXT_split(char* string){
 	//   the boolean checks whether the last line
 	//   contains any characters or not, hence
 	//   whether or not to count it
-	return current_line + (i == 0) ? 0 : 1;
+	return current_line + 1;
+//	return current_line + (i == 0) ? 0 : 1;
 }
 
 void TEXT_expand(char* string){

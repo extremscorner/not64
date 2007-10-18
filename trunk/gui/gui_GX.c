@@ -10,6 +10,8 @@
 
 
 static GUIinfo GUI;
+static int GUI_on = 0;
+static lwp_t GUIthread;
 GXTexObj BGtex;
 GXTlutObj BGtlut;
 //static u16 BGtexture[640*480] ATTRIBUTE_ALIGN (32); //size of background image
@@ -28,6 +30,7 @@ void GUI_setFB(unsigned int* fb1, unsigned int* fb2){
 }
 
 void GUI_init(){
+	s32 stat;
 
 	init_font();
 //	SDCARD_Init(); //for future functionality to load alternate background from SD card
@@ -38,23 +41,46 @@ void GUI_init(){
 
 	//TODO: init spinning cube display list
 
-// The following 2 lines are just for testing - to be removed
-	GUI_drawScreen();
-	while(1) {}
+	GUI_on = 1;
 
-	//set postretracecallback to GUI_drawScreen()
-	VIDEO_SetPostRetraceCallback (GUI_drawScreen);
+	stat = LWP_CreateThread(&GUIthread, &GUI_main, NULL, NULL, 0, 100);
+	if (stat<0)
+		GUI_print("Error creating GUIthread.\n");
 
 }
 
+void GUI_toggle()
+{
+	s32 stat;
 
-void GUI_drawScreen()
+	if (GUI_on == 1) {
+		stat = LWP_SuspendThread(GUIthread);
+		GX_CopyDisp (GUI.xfb[GUI.which_fb], GX_TRUE); // This clears the efb
+		GX_CopyDisp (GUI.xfb[GUI.which_fb], GX_TRUE); // This clears the xfb
+		GX_Flush ();
+		VIDEO_SetNextFramebuffer(GUI.xfb[GUI.which_fb]);
+		VIDEO_Flush();
+		GUI.which_fb ^= 1;
+	}
+	else {
+		GUI_clear();
+		GUI_loadBGtex();
+		stat = LWP_ResumeThread(GUIthread);
+	}
+	if (stat<0)
+		GUI_print("Error toggling GUIthread.");
+
+	GUI_on ^= 1;
+}
+
+void GUI_main()
 {
 	Mtx44 GXprojection2D;
 	Mtx GXmodelView2D;
 	int i;
 
-	PAD_ScanPads(0);
+	while(1) {
+//	PAD_ScanPads(0);
 
 	guMtxIdentity(GXmodelView2D);
 	GX_LoadPosMtxImm(GXmodelView2D,GX_PNMTX2);
@@ -106,19 +132,13 @@ void GUI_drawScreen()
 	VIDEO_Flush();
 	GUI.which_fb ^= 1;
 	VIDEO_WaitVSync();
-
+	VIDEO_WaitVSync();
+	}
 }
 
 void GUI_displayText(){
-	int i;
-	char test_text[66];
+	int i = 1;
 	char** temp_textptrs;
-
-// This is just for texting GUI_print - to be removed
-	for (i=0;i<GUI_TEXT_HEIGHT;i++) {
-		sprintf(test_text,"Testing line %d.",i);
-		GUI_print(test_text);
-	}
 
 	temp_textptrs = GUI_get_text();
 	for (i=0;i<GUI_TEXT_HEIGHT;i++)
