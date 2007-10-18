@@ -277,6 +277,7 @@ void ROMCache_load_DVD(char* filename, int byteSwap){
 			offset += bytes_read;
 			tempDVDOffset +=bytes_read;
 		} while(bytes_read == bytes_to_read && offset != ROM_size);
+		dvd_motor_off();
 	}
 	free(buffer);
 	//SDCARD_CloseFile(rom);

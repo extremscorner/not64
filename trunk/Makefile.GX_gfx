@@ -44,7 +44,7 @@ OBJ		=main/rom_gc.o \
 		r4300/Invalid_Code.o \
 		gc_memory/ARAM.o \
 		gc_memory/tlb.o \
-		gc_memory/TLB-Cache.o \
+		gc_memory/TLB-Cache-hash.o \
 		gc_memory/memory.o \
 		gc_memory/dma.o \
 		r4300/interupt.o \
