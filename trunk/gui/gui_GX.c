@@ -8,20 +8,97 @@
 #include "gui_GX.h"
 #include "font.h"
 
+#define X1 30
+#define X2 13
+#define Y1 30
+#define Y2  5
+#define Z1 30
+#define Z2 13
+
+// N64 logo vertex data
+s8 logo[] ATTRIBUTE_ALIGN (32) =
+{ // x y z
+  -X1, -Y1,  Z1,		// 0 (side A, XY plane, Z=Z1)
+  -X2, -Y1,  Z1,		// 1		6 7   8 9
+   X2, -Y1,  Z1,		// 2		  5    
+   X1, -Y1,  Z1,		// 3		      4  
+   X2, -Y2,  Z1,		// 4		0 1   2 3
+  -X2,  Y2,  Z1,		// 5
+  -X1,  Y1,  Z1,		// 6
+  -X2,  Y1,  Z1,		// 7
+   X2,  Y1,  Z1,		// 8
+   X1,  Y1,  Z1,		// 9
+   Z1, -Y1,  X1,		// 10 (side B, -ZY plane, X=Z1)
+   Z1, -Y1,  X2,		// 11		6 7   8 9
+   Z1, -Y1, -X2,		// 12		  5    
+   Z1, -Y1, -X1,		// 13		      4  
+   Z1, -Y2, -X2,		// 14		0 1   2 3
+   Z1,  Y2,  X2,		// 15
+   Z1,  Y1,  X1,		// 16
+   Z1,  Y1,  X2,		// 17
+   Z1,  Y1, -X2,		// 18
+   Z1,  Y1, -X1,		// 19
+   X1, -Y1, -Z1,		// 20 (side C, -XY plane, Z=-Z1)
+   X2, -Y1, -Z1,		// 21		6 7   8 9
+  -X2, -Y1, -Z1,		// 22		  5    
+  -X1, -Y1, -Z1,		// 23		      4  
+  -X2, -Y2, -Z1,		// 24		0 1   2 3
+   X2,  Y2, -Z1,		// 25
+   X1,  Y1, -Z1,		// 26
+   X2,  Y1, -Z1,		// 27
+  -X2,  Y1, -Z1,		// 28
+  -X1,  Y1, -Z1,		// 29
+  -Z1, -Y1, -X1,		// 30 (side D, ZY plane, X=-Z1)
+  -Z1, -Y1, -X2,		// 31		6 7   8 9
+  -Z1, -Y1,  X2,		// 32		  5    
+  -Z1, -Y1,  X1,		// 33		      4  
+  -Z1, -Y2,  X2,		// 34		0 1   2 3
+  -Z1,  Y2, -X2,		// 35
+  -Z1,  Y1, -X1,		// 36
+  -Z1,  Y1, -X2,		// 37
+  -Z1,  Y1,  X2,		// 38
+  -Z1,  Y1,  X1,		// 39
+  -X2,  Y1,  Z2,		// 40,7A (top, XZ plane, Y=Y1)
+   X2,  Y1,  Z2,		// 41,7B		
+   X2,  Y1, -Z2,		// 42,7C		  7D 7C
+  -X2,  Y1, -Z2,		// 43,7D		  7A 7B  
+  -X2,  Y2,  Z2,		// 44,5A (upper-middle, XZ plane, Y=Y2)
+   X2,  Y2,  Z2,		// 45,5B		
+   X2,  Y2, -Z2,		// 46,5C		  5D 5C
+  -X2,  Y2, -Z2,		// 47,5D		  5A 5B  
+  -X2, -Y2,  Z2,		// 48,4D (lower-middle, XZ plane, Y=-Y2)
+   X2, -Y2,  Z2,		// 49,4A		
+   X2, -Y2, -Z2,		// 50,4B		  4C 4B
+  -X2, -Y2, -Z2,		// 51,4C		  4D 4A  
+  -X2, -Y1,  Z2,		// 52,1A (bottom, XZ plane, Y=-Y1)
+   X2, -Y1,  Z2,		// 53,1B		
+   X2, -Y1, -Z2,		// 54,1C		  1D 1C
+  -X2, -Y1, -Z2,		// 55,1D		  1A 1B  
+};
+ 
+// N64 logo color data
+u8 colors[] ATTRIBUTE_ALIGN (32) =
+{ // r, g, b, a
+	  8, 147,  48, 255,		// 0 green
+	  1,  29, 169, 255,		// 1 blue
+	254,  32,  21, 255,		// 2 orange/red
+	255, 192,   1, 255,		// 3 yellow/gold
+};
 
 static GUIinfo GUI;
 static int GUI_on = 0;
+static int GXtoggleFlag = 1;
 static lwp_t GUIthread;
+lwp_t GXthread;
 GXTexObj BGtex;
 GXTlutObj BGtlut;
-//static u16 BGtexture[640*480] ATTRIBUTE_ALIGN (32); //size of background image
-//static u8 BGtexture[640*480] ATTRIBUTE_ALIGN (32); //size of background image
-//static u16 BGtextureCI[256] ATTRIBUTE_ALIGN (32); //size of 256 color index
 
 extern  u8 BGtexture[];
 extern  u16 BGtextureCI[];
 extern long BGtexture_length;
 extern long BGtextureCI_length;
+
+void draw_quad (u8, u8, u8, u8, u8);
 
 void GUI_setFB(unsigned int* fb1, unsigned int* fb2){
 	GUI.xfb[0] = fb1;
@@ -43,7 +120,7 @@ void GUI_init(){
 
 	GUI_on = 1;
 
-	stat = LWP_CreateThread(&GUIthread, &GUI_main, NULL, NULL, 0, 100);
+	stat = LWP_CreateThread(&GUIthread, &GUI_main, NULL, NULL, 0, 80);
 	if (stat<0)
 		GUI_print("Error creating GUIthread.\n");
 
@@ -55,6 +132,7 @@ void GUI_toggle()
 
 	if (GUI_on == 1) {
 		stat = LWP_SuspendThread(GUIthread);
+		GXthread = GX_SetCurrentGXThread();
 		GX_CopyDisp (GUI.xfb[GUI.which_fb], GX_TRUE); // This clears the efb
 		GX_CopyDisp (GUI.xfb[GUI.which_fb], GX_TRUE); // This clears the xfb
 		GX_Flush ();
@@ -65,6 +143,8 @@ void GUI_toggle()
 	else {
 		GUI_clear();
 		GUI_loadBGtex();
+//		GX_CopyDisp (GUI.xfb[GUI.which_fb], GX_TRUE);
+		GXtoggleFlag = 1;
 		stat = LWP_ResumeThread(GUIthread);
 	}
 	if (stat<0)
@@ -80,18 +160,23 @@ void GUI_main()
 	int i;
 
 	while(1) {
-//	PAD_ScanPads(0);
+
+	if(GXtoggleFlag = 1) {
+		GXthread = GX_SetCurrentGXThread();
+		GXtoggleFlag = 0;
+	}
 
 	guMtxIdentity(GXmodelView2D);
-	GX_LoadPosMtxImm(GXmodelView2D,GX_PNMTX2);
 	GX_LoadTexMtxImm(GXmodelView2D,GX_TEXMTX0,GX_MTX2x4);
-	guOrtho(GXprojection2D, 0, 479, 0, 639, 0, 1);
+	guMtxTransApply (GXmodelView2D, GXmodelView2D, 0.0F, 0.0F, -5.0F);
+	GX_LoadPosMtxImm(GXmodelView2D,GX_PNMTX0);
+	guOrtho(GXprojection2D, 0, 479, 0, 639, 0, 100);
 	GX_LoadProjectionMtx(GXprojection2D, GX_ORTHOGRAPHIC);
 
-	GX_SetZMode(GX_DISABLE,GX_GEQUAL,GX_TRUE);
+	GX_SetZMode(GX_ENABLE,GX_ALWAYS,GX_TRUE);
 
 	GX_ClearVtxDesc();
-	GX_SetVtxDesc(GX_VA_PTNMTXIDX, GX_PNMTX2);
+	GX_SetVtxDesc(GX_VA_PTNMTXIDX, GX_PNMTX0);
 	GX_SetVtxDesc(GX_VA_TEX0MTXIDX, GX_TEXMTX0);
 	GX_SetVtxDesc(GX_VA_POS, GX_DIRECT);
 	GX_SetVtxDesc(GX_VA_TEX0, GX_DIRECT);
@@ -99,13 +184,12 @@ void GUI_main()
 	GX_SetVtxAttrFmt(GX_VTXFMT1, GX_VA_POS, GX_POS_XY, GX_F32, 0);
 	GX_SetVtxAttrFmt(GX_VTXFMT1, GX_VA_TEX0, GX_TEX_ST, GX_F32, 0);
 
-	//disable textures
+	//enable textures
 	GX_SetNumChans (1);
 	GX_SetNumTexGens (1);
 	GX_SetTevOrder (GX_TEVSTAGE0, GX_TEXCOORD0, GX_TEXMAP0, GX_COLOR0A0); // change to (u8) tile later
 	GX_SetTevOp (GX_TEVSTAGE0, GX_REPLACE);
 	//set blend mode
-//		GX_SetBlendMode(GX_BM_BLEND, GX_BL_SRCALPHA, GX_BL_INVSRCALPHA, GX_LO_CLEAR); //Fix src alpha
 	GX_SetBlendMode(GX_BM_NONE, GX_BL_ONE, GX_BL_ZERO, GX_LO_CLEAR); //Fix src alpha
 	GX_SetColorUpdate(GX_ENABLE);
 	GX_SetAlphaUpdate(GX_ENABLE);
@@ -124,14 +208,16 @@ void GUI_main()
 	GX_TexCoord2f32(0,1);
 	GX_End();
 
+	GUI_drawLogo();
+
     GX_DrawDone ();
 	GX_CopyDisp (GUI.xfb[GUI.which_fb], GX_FALSE);
     GX_Flush ();
+	VIDEO_WaitVSync();
 	GUI_displayText();
 	VIDEO_SetNextFramebuffer(GUI.xfb[GUI.which_fb]);
 	VIDEO_Flush();
 	GUI.which_fb ^= 1;
-	VIDEO_WaitVSync();
 	VIDEO_WaitVSync();
 	}
 }
@@ -205,79 +291,132 @@ int GUI_loadBGtex(){
 
 void GUI_drawLogo(){
 
-	//draw test geometry here
-/*  Mtx v, p;            // view and perspective matrices
-  Vector cam = { 0.0F, 0.0F, 0.0F }, up =
-  {
-  0.0F, 1.0F, 0.0F}, look =
-  {
-  0.0F, 0.0F, -1.0F};
+  Mtx v, m, mv, p, tmp;            // view, model, modelview, and perspective matrices
+  Vector cam = { 0.0F, 0.0F, 0.0F }, 
+		 up = {0.0F, 1.0F, 0.0F}, 
+		 look = {0.0F, 0.0F, -1.0F},
+		 axisX = {1.0F, 0.0F, 0.0F},
+		 axisY = {0.0F, 1.0F, 0.0F};
+  static float rotateby = 45,
+			   rotatebyX = 0,
+			   rotatebyY = 0;
+  s8 stickX,stickY;
+  int i, j;
+
+  // Clear Z buffer manually
+//  for(i = 530; i < 630; i++) {
+//	  for(j = 20; j < 120; j++)
+//		  GX_PokeZ (i, j, 0);
+//  }
+
   guLookAt (v, &cam, &up, &look);
-  guPerspective (p, 60, (f32) 4 / 3, 10.0F, 300.0F);
-  GX_LoadProjectionMtx (p, GX_PERSPECTIVE);
-
-  	  printf("\tPrj =\t%f, %f, %f, %f\n",p[0][0],p[0][1],p[0][2],p[0][3]);
-	  printf("\t     \t%f, %f, %f, %f\n",p[1][0],p[1][1],p[1][2],p[1][3]);
-	  printf("\t     \t%f, %f, %f, %f\n",p[2][0],p[2][1],p[2][2],p[2][3]);
-	  printf("\t     \t%f, %f, %f, %f\n",p[3][0],p[3][1],p[3][2],p[3][3]);
-
-
-
-    //draw cube
-    Mtx m;            // model matrix.
-  Mtx mv;            // modelview matrix.
-  Vector axis = { -1, 1, 0 };
-  static float rotateby = 0;
+//  guPerspective (p, 60, (f32) 4 / 3, 10.0F, 300.0F);
+//  GX_LoadProjectionMtx (p, GX_PERSPECTIVE);
+//  guOrtho(p, 0, 479, 0, 639, 0, 100);
+//  GX_LoadProjectionMtx(p, GX_ORTHOGRAPHIC);
  
+//  if (++rotateby > 360) rotateby -= 360;
   rotateby++;
- 
-  // move the cube out in front of us and rotate it
+
+  stickX = PAD_SubStickX(0);
+  stickY = PAD_SubStickY(0);
+  if(stickX > 18 || stickX < -18) rotatebyX += stickX/32;
+  if(stickY > 18 || stickY < -18) rotatebyY += stickY/32;
+
+  // move the logo out in front of us and rotate it
   guMtxIdentity (m);
-  guMtxRotAxisDeg (m, &axis, rotateby);
-  guMtxTransApply (m, m, 0.0F, 0.0F, -200.0F);
+  guMtxRotAxisDeg (tmp, &axisX, 25);			//change to isometric view
+  guMtxConcat (m, tmp, m);
+  guMtxRotAxisDeg (tmp, &axisX, -rotatebyY);
+  guMtxConcat (m, tmp, m);
+  guMtxRotAxisDeg (tmp, &axisY, -rotatebyX);
+  guMtxConcat (m, tmp, m);
+  guMtxRotAxisDeg (tmp, &axisY, rotateby);		//slowly rotate logo
+  guMtxConcat (m, tmp, m);
+  guMtxTransApply (m, m, 580.0F, 70.0F, -50.0F);
   guMtxConcat (v, m, mv);
   // load the modelview matrix into matrix memory
   GX_LoadPosMtxImm (mv, GX_PNMTX0);
-	  printf("\tMV =\t%f, %f, %f, %f\n",mv[0][0],mv[0][1],mv[0][2],mv[0][3]);
-	  printf("\t\t%f, %f, %f, %f\n",mv[1][0],mv[1][1],mv[1][2],mv[1][3]);
-	  printf("\t\t%f, %f, %f, %f\n",mv[2][0],mv[2][1],mv[2][2],mv[2][3]);
 
-    GX_ClearVtxDesc();
-   GX_SetVtxDesc(GX_VA_PTNMTXIDX, GX_PNMTX0);
-   //GX_SetVtxDesc(GX_VA_TEX0MTXIDX, ...);
-   GX_SetVtxDesc(GX_VA_POS, GX_DIRECT);
-   GX_SetVtxDesc(GX_VA_CLR0, GX_DIRECT);
+  GX_SetCullMode (GX_CULL_BACK); // show only the outside facing quads
+  GX_SetZMode(GX_ENABLE,GX_GEQUAL,GX_TRUE);
 
-      //set vertex attribute formats here
-   GX_SetVtxAttrFmt(GX_VTXFMT0, GX_VA_POS, GX_POS_XYZ, GX_F32, 0);
-//   if (lighting) GX_SetVtxAttrFmt(GX_VTXFMT0, GX_VA_NRM, GX_NRM_XYZ, GX_F32, 0);
-   GX_SetVtxAttrFmt(GX_VTXFMT0, GX_VA_CLR0, GX_CLR_RGBA, GX_RGBA8, 0);
-
+  // setup the vertex descriptor
+  GX_ClearVtxDesc ();
+  GX_SetVtxDesc(GX_VA_PTNMTXIDX, GX_PNMTX0);
+  GX_SetVtxDesc (GX_VA_POS, GX_INDEX8);
+  GX_SetVtxDesc (GX_VA_CLR0, GX_INDEX8);
+ 
+  // setup the vertex attribute table
+  GX_SetVtxAttrFmt (GX_VTXFMT0, GX_VA_POS, GX_POS_XYZ, GX_S8, 0);
+  GX_SetVtxAttrFmt (GX_VTXFMT0, GX_VA_CLR0, GX_CLR_RGBA, GX_RGBA8, 0);
+ 
+  // set the array stride
+  GX_SetArray (GX_VA_POS, logo, 3 * sizeof (s8));
+  GX_SetArray (GX_VA_CLR0, colors, 4 * sizeof (u8));
+ 
   GX_SetNumChans (1);
   GX_SetNumTexGens (0);
   GX_SetTevOrder (GX_TEVSTAGE0, GX_TEXCOORDNULL, GX_TEXMAP_NULL, GX_COLOR0A0);
   GX_SetTevOp (GX_TEVSTAGE0, GX_PASSCLR);
 
-     GX_Begin(GX_TRIANGLES, GX_VTXFMT0, 3);
-     // vert 0
-     GX_Position3f32((f32) -10, (f32) -10, (f32) 0);
-//	 if (lighting) GX_Normal3f32(vtx[v0].n[0], vtx[v0].n[1], vtx[v0].n[2]);
-//	 GXcol.r = (u8)vtx[v0].c.getR();
-//	 GXcol.g = (u8)vtx[v0].c.getG();
-//	 GXcol.b = (u8)vtx[v0].c.getB();
-//	 GXcol.a = (u8)vtx[v0].c.getAlpha();
-//	 GX_Color4u8(GXcol.r, GXcol.g, GXcol.b, GXcol.a);
-	 GX_Color4u8((u8) 50, (u8) 250, (u8) 10, (u8) 255);
+  GX_Begin (GX_QUADS, GX_VTXFMT0, 160);  //40 quads, so 160 verts
 
-     // vert 1
-     GX_Position3f32((f32) 0, (f32) 10, (f32) 0);
-	 GX_Color4u8((u8) 50, (u8) 250, (u8) 10, (u8) 255);
+  draw_quad ( 0,  6,  7,  1, 0); //Side A, green
+  draw_quad ( 7,  4,  2,  5, 0);
+  draw_quad ( 2,  8,  9,  3, 0);
+  draw_quad (31, 35, 47, 55, 0); //Side A1
+  draw_quad (55, 51, 42, 46, 0);
+  draw_quad (50, 42, 18, 14, 0);
+  draw_quad (10, 16, 17, 11, 1); //Side B, blue
+  draw_quad (17, 14, 12, 15, 1);
+  draw_quad (12, 18, 19, 13, 1);
+  draw_quad ( 1,  5, 44, 52, 1); //Side B1
+  draw_quad (52, 48, 43, 47, 1);
+  draw_quad (51, 43, 28, 24, 1);
+  draw_quad (20, 26, 27, 21, 0); //Side C, green
+  draw_quad (27, 24, 22, 25, 0);
+  draw_quad (22, 28, 29, 23, 0);
+  draw_quad (11, 15, 45, 53, 0); //Side C1
+  draw_quad (53, 49, 40, 44, 0);
+  draw_quad (48, 40, 38, 34, 0);
+  draw_quad (30, 36, 37, 31, 1); //Side D, blue
+  draw_quad (37, 34, 32, 35, 1);
+  draw_quad (32, 38, 39, 33, 1);
+  draw_quad (21, 25, 46, 54, 1); //Side D1
+  draw_quad (54, 50, 41, 45, 1);
+  draw_quad (49, 41,  8,  4, 1);
+  draw_quad ( 6, 38, 40,  7, 3); //Top, yellow
+  draw_quad ( 8, 41, 17,  9, 3);
+  draw_quad (42, 27, 19, 18, 3);
+  draw_quad (37, 29, 28, 43, 3); 
+  draw_quad ( 7, 40, 49,  4, 2); //Top, red(green?)
+  draw_quad (17, 41, 50, 14, 0);
+  draw_quad (27, 42, 51, 24, 2);
+  draw_quad (37, 43, 48, 34, 0); 
+  draw_quad ( 0,  1, 52, 32, 3); //Bottom, yellow
+  draw_quad ( 3, 11, 53,  2, 3);
+  draw_quad (13, 21, 54, 12, 3);
+  draw_quad (23, 31, 55, 22, 3); 
+  draw_quad ( 2, 53, 44,  5, 2); //Bottom, red(green?)
+  draw_quad (12, 54, 45, 15, 0);
+  draw_quad (22, 55, 46, 25, 2);
+  draw_quad (32, 52, 47, 35, 0); 
 
-     // vert 2
-     GX_Position3f32((f32) 10, (f32) -10, (f32) 0);
-	 GX_Color4u8((u8) 50, (u8) 250, (u8) 10, (u8) 255);
-   GX_End();
+  GX_End ();
+}
 
-*/
-
+// draws a quad from 4 vertex idx and one color idx
+void draw_quad (u8 v0, u8 v1, u8 v2, u8 v3, u8 c)
+{
+  // one 8bit position idx
+  GX_Position1x8 (v0);
+  // one 8bit color idx
+  GX_Color1x8 (c);
+  GX_Position1x8 (v1);
+  GX_Color1x8 (c);
+  GX_Position1x8 (v2);
+  GX_Color1x8 (c);
+  GX_Position1x8 (v3);
+  GX_Color1x8 (c);
 }

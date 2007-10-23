@@ -198,9 +198,13 @@ int main(){
 	//check_heap_space();
 	PRINT("Press START to begin execution\n");
 	while(!(PAD_ButtonsHeld(0) & PAD_BUTTON_START));
+#ifdef USE_GUI
 	GUI_toggle();
+#endif
 	go();
+#ifdef USE_GUI
 	GUI_toggle();
+#endif
 	romClosed_RSP();
 	romClosed_input();
 	romClosed_audio();
@@ -391,7 +395,9 @@ Initialise (void)
   GX_CopyDisp (xfb[0], GX_TRUE); // This clears the efb
   GX_CopyDisp (xfb[0], GX_TRUE); // This clears the xfb
 
+#ifdef USE_GUI
   GUI_setFB(xfb[0], xfb[1]);
   GUI_init();
+#endif
 }
 
