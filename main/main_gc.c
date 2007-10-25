@@ -129,6 +129,7 @@ static void check_heap_space(void){
 int main(){
 	char* romfile = NULL;		//SD
 	char* romfileOffset = NULL;	//DVD
+	int i;
 	rom = NULL;
 	ROM_HEADER = NULL;
 
@@ -161,6 +162,11 @@ int main(){
 			rom_read(romfile); 
 			break;
 		}
+  VIDEO_WaitVSync ();        /*** Wait for VBL ***/
+  VIDEO_WaitVSync ();        /*** Wait for VBL ***/
+  VIDEO_WaitVSync ();        /*** Wait for VBL ***/
+  VIDEO_WaitVSync ();        /*** Wait for VBL ***/
+  VIDEO_WaitVSync ();        /*** Wait for VBL ***/
 	}
 
 	

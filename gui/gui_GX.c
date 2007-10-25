@@ -132,7 +132,7 @@ void GUI_toggle()
 
 	if (GUI_on == 1) {
 		stat = LWP_SuspendThread(GUIthread);
-		GXthread = GX_SetCurrentGXThread();
+//		GXthread = GX_SetCurrentGXThread();
 		GX_CopyDisp (GUI.xfb[GUI.which_fb], GX_TRUE); // This clears the efb
 		GX_CopyDisp (GUI.xfb[GUI.which_fb], GX_TRUE); // This clears the xfb
 		GX_Flush ();
@@ -162,7 +162,7 @@ void GUI_main()
 	while(1) {
 
 	if(GXtoggleFlag = 1) {
-		GXthread = GX_SetCurrentGXThread();
+//		GXthread = GX_SetCurrentGXThread();
 		GXtoggleFlag = 0;
 	}
 
@@ -272,8 +272,8 @@ int GUI_loadBGtex(){
 	printf("First 2 CI values are: %x %x\n", BGtextureCI[0], BGtextureCI[1]);
 */
 
-	//GX_TL_RGB5A3 == 0x02?
-	//GX_TL_RGB565 == 0x05
+	//GX_TL_RGB5A3 == 0x02? 
+	//GX_TL_RGB565 == 0x01? 0x05?
 	GX_InitTlutObj(&BGtlut, BGtextureCI,(u8) 0x01,(u16) 256/16); //GX_TL_RGB565 is missing in gx.h
 	DCFlushRange(BGtextureCI, 256*2);
 	GX_LoadTlut(&BGtlut, GX_TLUT0);	// use GX_TLUT0 or (u32) tile??
@@ -303,19 +303,8 @@ void GUI_drawLogo(){
   s8 stickX,stickY;
   int i, j;
 
-  // Clear Z buffer manually
-//  for(i = 530; i < 630; i++) {
-//	  for(j = 20; j < 120; j++)
-//		  GX_PokeZ (i, j, 0);
-//  }
 
   guLookAt (v, &cam, &up, &look);
-//  guPerspective (p, 60, (f32) 4 / 3, 10.0F, 300.0F);
-//  GX_LoadProjectionMtx (p, GX_PERSPECTIVE);
-//  guOrtho(p, 0, 479, 0, 639, 0, 100);
-//  GX_LoadProjectionMtx(p, GX_ORTHOGRAPHIC);
- 
-//  if (++rotateby > 360) rotateby -= 360;
   rotateby++;
 
   stickX = PAD_SubStickX(0);
