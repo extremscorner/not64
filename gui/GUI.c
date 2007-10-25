@@ -86,7 +86,10 @@ void GUI_update(void){
 		text_zero_line = 0;
 		text_next_line = 0;
 	}
-	isWrapped = 0;
+	// Although we've reordered the text,
+	//   isWrapped should still be true
+	//   because the buffer still wraps
+	//   around.
 }
 
 char** GUI_get_text(void){
