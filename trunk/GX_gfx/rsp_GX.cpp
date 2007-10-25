@@ -62,6 +62,7 @@ RSP::RSP(GFX_INFO info) : gfxInfo(info), error(false), end(false)
    zbuffer = false;
    geometryMode = 0;
    //TODO: Set these flags in GX, too?
+   GX_SetCullMode (GX_CULL_NONE); // default in rsp init
 
    light_mask = GX_LIGHTNULL;
    GX_SetChanCtrl(GX_COLOR0A0,GX_DISABLE,GX_SRC_REG,GX_SRC_VTX,light_mask,GX_DF_CLAMP,GX_AF_NONE);

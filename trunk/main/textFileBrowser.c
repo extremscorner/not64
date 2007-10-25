@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <math.h>
 #include <gccore.h>		/*** Wrapper to include common libogc headers ***/
 #include <ogcsys.h>		/*** Needed for console support ***/
 #include <sdcard.h>		/*** SDCard Header. Remember to add -lsdcard in your Makefile ***/
@@ -7,8 +8,10 @@
 
 #ifdef USE_GUI
 #include "../gui/GUI.h"
+#define MAXLINES 17
 #define PRINT GUI_print
 #else
+#define MAXLINES 30
 #define PRINT printf
 #endif
 
@@ -29,10 +32,10 @@ char* textFileBrowser(char* directory){
 	int currentSelection = 0;
 	while(1){
 		CLEAR();
-		sprintf(buffer, "browsing %s:\n", directory);
+		sprintf(buffer, "browsing %s:\n\n", directory);
 		PRINT(buffer);
-		int i = MIN(MAX(0,currentSelection-13),MAX(0,entries_found-13));
-		int max = MIN(entries_found, currentSelection+25);
+		int i = MIN(MAX(0,currentSelection-floor((MAXLINES-0.5)/2)),MAX(0,entries_found-(MAXLINES-2)));
+		int max = MIN(entries_found, MAX(currentSelection+ceil((MAXLINES)/2)-1,MAXLINES-2));
 		for(; i<max; ++i){
 			if(i == currentSelection)
 				sprintf(buffer, "*");
@@ -52,7 +55,7 @@ char* textFileBrowser(char* directory){
 				sprintf(newDir, "%s\\%s", directory, sddir[currentSelection].fname);		
 				if(sddir) free(sddir);
 				CLEAR();
-				sprintf(buffer,"MOVING TO %s. Press B\n",newDir);
+				sprintf(buffer,"MOVING TO %s.\nPress B to continue.\n",newDir);
 				PRINT(buffer);
 				while (!(PAD_ButtonsHeld(0) & PAD_BUTTON_B));
 				return textFileBrowser(newDir);
@@ -61,7 +64,7 @@ char* textFileBrowser(char* directory){
 				sprintf(newDir, "%s\\%s", directory, sddir[currentSelection].fname);
 				if(sddir) free(sddir);
 				CLEAR();
-				sprintf(buffer,"SELECTING %s. Press B\n",newDir);
+				sprintf(buffer,"SELECTING %s.\nPress B to continue.\n",newDir);
 				PRINT(buffer);
 				while (!(PAD_ButtonsHeld(0) & PAD_BUTTON_B));
 				return newDir;
@@ -143,9 +146,9 @@ char *textFileBrowserDVD(){
 	while(1){
 		entries_found = files;
 		CLEAR();
-		PRINT("browsing DVD:\n"); 
-		int i = MIN(MAX(0,currentSelection-13),MAX(0,entries_found-13));
-		int max = MIN(entries_found, currentSelection+17);
+		PRINT("browsing DVD:\n\n"); 
+		int i = MIN(MAX(0,currentSelection-floor((MAXLINES-0.5)/2)),MAX(0,entries_found-(MAXLINES-2)));
+		int max = MIN(entries_found, MAX(currentSelection+ceil((MAXLINES)/2)-1,MAXLINES-2));
 		for(; i<max; ++i){
 			if(i == currentSelection)
 				sprintf(buffer, "->");
@@ -165,7 +168,7 @@ char *textFileBrowserDVD(){
 				currentSelection = 0;
 			} else {
 				CLEAR();
-				sprintf(buffer,"SELECTING %s. Press B\n",file[currentSelection].name);
+				sprintf(buffer,"SELECTING %s.\nPress B to continue.\n",file[currentSelection].name);
 				PRINT(buffer);
 				while (!(PAD_ButtonsHeld(0) & PAD_BUTTON_B));
 				rom_sizeDVD = file[currentSelection].size;
