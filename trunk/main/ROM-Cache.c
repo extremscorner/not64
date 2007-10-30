@@ -5,6 +5,8 @@
 #include <string.h>
 #include <sdcard.h>
 #include <ogc/arqueue.h>
+#include <gccore.h>
+#include "gc_dvd.h"
 #include "../gc_memory/ARAM.h"
 #include "ROM-Cache.h"
 
@@ -239,8 +241,6 @@ void ROMCache_load_DVD(char* filename, int byteSwap){
 	PRINT(txt);
 	
 	strncpy(ROM_filename, filename, SDCARD_MAX_PATH_LEN);
-	//sd_file* rom = SDCARD_OpenFile(filename, "rb");
-	//SDCARD_SeekFile(rom, 0, SDCARD_SEEK_SET);
 
 	int bytes_to_read = ARQ_GetChunkSize();
 	int* buffer = memalign(32, bytes_to_read);
@@ -268,7 +268,6 @@ void ROMCache_load_DVD(char* filename, int byteSwap){
 		PRINT(txt);
 		int bytes_read, offset=0;
 		do {
-			//bytes_read = SDCARD_ReadFile(rom, buffer, bytes_to_read);
 			bytes_read = read_safe(buffer, tempDVDOffset, bytes_to_read);
 			byte_swap(buffer, bytes_read);
 			DCFlushRange(buffer, bytes_read);
@@ -276,7 +275,9 @@ void ROMCache_load_DVD(char* filename, int byteSwap){
 			                ROM + offset, buffer, bytes_read);
 			offset += bytes_read;
 			tempDVDOffset +=bytes_read;
-		} while(bytes_read == bytes_to_read && offset != ROM_size);
+		}
+		 while(bytes_read == bytes_to_read && offset != ROM_size);
+		 PRINT("Stopping motor, as you wont need it :)\n");
 		dvd_motor_off();
 	}
 	free(buffer);
