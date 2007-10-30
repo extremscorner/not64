@@ -6,6 +6,11 @@
 #include <stdlib.h>
 #include "gc_dvd.h"
 
+/* Worked out manually from my original Disc */
+#define OOT_OFFSET 0x54FBEEF4
+#define MQ_OFFSET  0x52CCC5FC
+#define ZELDA_SIZE 0x2000000
+
 #ifdef USE_GUI
 #include "../gui/GUI.h"
 #define MAXLINES 17
@@ -85,17 +90,39 @@ char *textFileBrowserDVD(){
 	PRINT("Reading DVD...\n");
 
 	int sector = 16;
-	static unsigned char buffer[2048] __attribute__((aligned(32)));
+	static unsigned char bufferDVD[2048] __attribute__((aligned(32)));
 
+	read_sector(bufferDVD, 0);
+	if (!memcmp(bufferDVD, "D43U01", 6)) {
+		CLEAR();
+		PRINT("\n\nDisc Contents:\n\n");
+		PRINT("Zelda Ocarina of Time MQ (PUSH X)\n");
+		PRINT("Zelda Ocarina of Time     (PUSH Y) \n\n");
+		while (!(PAD_ButtonsHeld(0) & PAD_BUTTON_X) && !(PAD_ButtonsHeld(0) & PAD_BUTTON_Y));
+		if(PAD_ButtonsHeld(0) & PAD_BUTTON_X) {
+			rom_offsetDVD = MQ_OFFSET;
+			rom_sizeDVD = ZELDA_SIZE;
+			CLEAR();
+			return "Ocarina of Time - Master Quest";
+		}
+		if(PAD_ButtonsHeld(0) & PAD_BUTTON_Y) {
+			rom_offsetDVD = OOT_OFFSET;
+			rom_sizeDVD = ZELDA_SIZE;
+			CLEAR();
+			return "Ocarina of Time";
+		}
+	}
+	
+	
 	struct pvd_s* pvd = 0;
 	struct pvd_s* svd = 0;
 	while (sector < 32)
 	{
-		if (read_sector(buffer, sector))
+		if (read_sector(bufferDVD, sector))
 			PRINT("FATAL ERROR...\n");
-		if (!memcmp(((struct pvd_s *)buffer)->id, "\2CD001\1", 8))
+		if (!memcmp(((struct pvd_s *)bufferDVD)->id, "\2CD001\1", 8))
 		{
-			svd = (void*)buffer;
+			svd = (void*)bufferDVD;
 			break;
 		}
 		++sector;
@@ -106,12 +133,12 @@ char *textFileBrowserDVD(){
 		sector = 16;
 		while (sector < 32)
 		{
-			if (read_sector(buffer, sector))
+			if (read_sector(bufferDVD, sector))
 				PRINT("FATAL ERROR...\n");
 
-			if (!memcmp(((struct pvd_s *)buffer)->id, "\1CD001\1", 8))
+			if (!memcmp(((struct pvd_s *)bufferDVD)->id, "\1CD001\1", 8))
 			{
-				pvd = (void*)buffer;
+				pvd = (void*)bufferDVD;
 				break;
 			}
 			++sector;
@@ -149,12 +176,14 @@ char *textFileBrowserDVD(){
 		PRINT("browsing DVD:\n\n"); 
 		int i = MIN(MAX(0,currentSelection-floor((MAXLINES-0.5)/2)),MAX(0,entries_found-(MAXLINES-2)));
 		int max = MIN(entries_found, MAX(currentSelection+ceil((MAXLINES)/2)-1,MAXLINES-2));
+
 		for(; i<max; ++i){
 			if(i == currentSelection)
 				sprintf(buffer, "->");
 			else    sprintf(buffer, "  ");
 			sprintf(buffer, "%s\t%-32s\t%s\n", buffer,
 			        file[i].name,(file[i].flags & 2) ? "DIR" : "");
+			PRINT(buffer);
 		}
 				// Wait for A/up/down press
 		while (!(PAD_ButtonsHeld(0) & PAD_BUTTON_A) && !(PAD_ButtonsHeld(0) & PAD_BUTTON_UP) && !(PAD_ButtonsHeld(0) & PAD_BUTTON_DOWN));

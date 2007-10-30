@@ -1,3 +1,7 @@
+#include <ogc/dvd.h>
+#include <malloc.h>
+#include <string.h>
+#include <gccore.h>
 #include "gc_dvd.h"
 int last_current_dir = -1;
 volatile unsigned long* dvd = (volatile long*)0xCC006000;
@@ -40,9 +44,11 @@ int read_sector(void* buffer, int sector)
 {
 	return dvd_read(buffer, 2048, sector * 2048);
 }
+
 int read_safe(void* dst, int offset, int len)
 {
 	int ol = len;
+	
 	while (len)
 	{
 		int sector = offset / 2048;
@@ -156,6 +162,7 @@ void read_directory(int sector, int len)
 {
 	read_sector(sector_buffer, sector);
 
+	
 	int ptr = 0;
 	files = 0;
 	memset(file,0,sizeof(file));
