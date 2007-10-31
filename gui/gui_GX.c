@@ -142,6 +142,7 @@ void GUI_toggle()
 	}
 	else {
 		GUI_clear();
+		GX_DrawDone();
 		GUI_loadBGtex();
 //		GX_CopyDisp (GUI.xfb[GUI.which_fb], GX_TRUE);
 		GXtoggleFlag = 1;
@@ -276,6 +277,7 @@ int GUI_loadBGtex(){
 	//GX_TL_RGB565 == 0x01? 0x05?
 	GX_InitTlutObj(&BGtlut, BGtextureCI,(u8) 0x01,(u16) 256/16); //GX_TL_RGB565 is missing in gx.h
 	DCFlushRange(BGtextureCI, 256*2);
+	GX_InvalidateTexAll();
 	GX_LoadTlut(&BGtlut, GX_TLUT0);	// use GX_TLUT0 or (u32) tile??
 
 //	GX_InitTexObj(&BGtex, BGtexture, (u16) 640, (u16) 480, GX_TF_RGB565, GX_CLAMP, GX_CLAMP, GX_FALSE); 

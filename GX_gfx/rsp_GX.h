@@ -9,6 +9,7 @@
 #include "../main/winlnxdefs.h"
 #include "Gfx_#1.3.h"
 //#include "rdp.h"
+#include "tx_GX.h"
 #include "color.h"
 #include "vektor.h"
 #include "matrix.h"
@@ -82,6 +83,36 @@ typedef struct
    int alpha;
 } Vertex;
 
+typedef struct
+{
+   int newblock;
+   int tile;
+   float uls;
+   float ult;
+   float lrs;
+   int dxt;
+} TXBlock;
+
+/*typedef struct
+{
+   u8 GXtexfmt;
+   int format;
+   int size;
+   int line;
+   int tmem;
+   int palette;
+   int cmt;
+   int maskt;
+   int shiftt;
+   int cms;
+   int masks;
+   int shifts;
+   float uls;
+   float ult;
+   float lrs;
+   float lrt;
+} Descriptor;*/
+
 
 class RSP;
 typedef void (RSP::*COMMANDS)();
@@ -91,6 +122,7 @@ class RSP
    // general members
    GFX_INFO gfxInfo;
    //RDP *rdp;
+   TX *tx;
    bool error;
    bool end;
    unsigned long *currentCommand;
@@ -100,10 +132,30 @@ class RSP
    Mtx44 GXprojection;
    Mtx GXmodelView;
    Mtx GXnormal;
+   Mtx44 GXprojection2D;
+   Mtx GXmodelView2D;
+   Mtx GXnormal2D;
    Matrix<float, 4> normal;
    GXColor GXcol;
    GXLightObj GXlight;
    u8 light_mask;
+   int fillColor;
+   GXColor GXfillColor;
+//   GXTexObj	GXtex;
+//   GXTlutObj GXtlut;
+   
+
+   // rdp variables
+   int cycleType;
+
+   // texture img variables
+/*   void *tImg;
+   int TXformat;
+   int TXsize;
+   int textureLUT;*/
+   int TXwidth;
+   Descriptor descriptor[8];
+   TXBlock TXblock;
 
    // rsp ucode variables
    unsigned long segments[16];

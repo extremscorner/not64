@@ -128,6 +128,7 @@ OBJ_AUDIO	=gc_audio/main.o
 
 OBJ_GX_GFX	=GX_gfx/main.o \
 		GX_gfx/rsp_GX.o \
+		GX_gfx/tx_GX.o \
 		GX_gfx/vi_GX.o \
 		GX_gfx/vi.o 
 #		GX_gfx/font.o
@@ -213,10 +214,10 @@ rsp_hle-ppc/main.o:			rsp_hle-ppc/main.c
 gc_audio/main.o:		gc_audio/audio.c
 				$(CC) $(CFLAGS) -c -o $@ $<
 
-mupen64_GX_gfx/main.o:	mupen64_GX_gfx/main.cpp
+GX_gfx/main.o:	GX_gfx/main.cpp
 				$(CXX) $(CFLAGS) -c -o $@ $<
 
-mupen64_GX_gfx/vi_GX.o:	mupen64_GX_gfx/vi_GX.cpp
+GX_gfx/vi_GX.o:	GX_gfx/vi_GX.cpp
 				$(CXX) $(CFLAGS) -c -o $@ $<
 
 #mupen64_soft_gfx/main.o:	mupen64_soft_gfx/main.cpp
