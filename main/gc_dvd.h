@@ -12,6 +12,7 @@ unsigned int dvd_read(void* dst, int len, unsigned int offset);
 unsigned char sector_buffer[2048] __attribute__((aligned(32)));
 int is_unicode;
 int files;
+unsigned int dvd_read_id();
 
 struct pvd_s
 {

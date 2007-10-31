@@ -116,7 +116,8 @@ static void rsp_info_init(void);
 static void control_info_init(void);
 //DVD
 int isFromDVD = 0;
-
+extern int rom_sizeDVD;
+extern unsigned int rom_offsetDVD;
 
 static void check_heap_space(void){
 	int space = 6 * 1024 * 1024, *ptr=NULL;
@@ -127,129 +128,144 @@ static void check_heap_space(void){
 	printf("At least %dB or %dKB space available\n", space, space/1024);
 }
 
-
+unsigned int isWii = 0; //this will come in handly later (used for DVD now)
+#define mfpvr()   ({unsigned int rval; \
+      asm volatile("mfpvr %0" : "=r" (rval)); rval;})
+      
 int main(){
 	char* romfile = NULL;		//SD
-	char* romfileOffset = NULL;	//DVD
 	int i;
+	
 	rom = NULL;
 	ROM_HEADER = NULL;
 
-	
 	Initialise();
 	
+	isWii = mfpvr();
+	if(isWii == 0x87102)
+	{
+		isWii = 1;
+		PRINT("Running on a Wii :)\n");
+	}
+	else {
+		PRINT("Running on a GC :)\n");
+		isWii = 0;
+	}
+		
 	while(TRUE){
 	
-	ARAM_manager_init();
-	SDCARD_Init();
-	DVD_Init();
-	TLBCache_init();
-	
-	
-	if(romfile)	free(romfile);
-	//if(rom)		free(rom);
-	if(ROM_HEADER)	free(ROM_HEADER);
+		ARAM_manager_init();
+		TLBCache_init();
+		SDCARD_Init();
+		DVD_Init();
 		
-	PRINT("Press A to choose ROM from SDCard\n");
-	PRINT("Press Z to choose ROM from DVD\n");
-	while(1){
-		if((PAD_ButtonsHeld(0) & PAD_BUTTON_A)) {
-			romfile = textFileBrowser("dev0:\\N64ROMS");
-			rom_read(romfile);
-			break;
+		PRINT("Press A to choose ROM from SDCard\n");
+		PRINT("Press Z to choose ROM from DVD\n");
+		while(1){
+			if((PAD_ButtonsHeld(0) & PAD_BUTTON_A)) {
+				romfile = textFileBrowser("dev0:\\N64ROMS");
+				rom_read(romfile);
+				break;
+			}
+			if((PAD_ButtonsHeld(0) & PAD_TRIGGER_Z)) {
+				isFromDVD = 1;
+				romfile = malloc(1024);
+				strcpy(romfile,textFileBrowserDVD());
+				rom_read(romfile); 
+				break;
+			}
+	  	VIDEO_WaitVSync ();        /*** Wait for VBL ***/
+	  	VIDEO_WaitVSync ();        /*** Wait for VBL ***/
+	  	VIDEO_WaitVSync ();        /*** Wait for VBL ***/
+	  	VIDEO_WaitVSync ();        /*** Wait for VBL ***/
+	  	VIDEO_WaitVSync ();        /*** Wait for VBL ***/
 		}
-		if((PAD_ButtonsHeld(0) & PAD_TRIGGER_Z)) {
-			isFromDVD = 1;
-			romfile = textFileBrowserDVD();
-			rom_read(romfile); 
-			break;
+		free(romfile); 
+		
+		select_location(); // for game saves
+		
+		init_memory();
+			
+		char buffer[64];
+		sprintf(buffer, "Goodname:%s\n", ROM_SETTINGS.goodname);
+		PRINT(buffer);
+		sprintf(buffer, "16kb eeprom=%d\n", ROM_SETTINGS.eeprom_16kb);
+		PRINT(buffer);
+	
+		PRINT("Enable Audio?\n"
+		      "  A. Yes\n"
+		      "  B. No\n");
+		while (!(PAD_ButtonsHeld(0) & PAD_BUTTON_A ||
+		         PAD_ButtonsHeld(0) & PAD_BUTTON_B ));
+		if(PAD_ButtonsHeld(0) & PAD_BUTTON_A) audioEnabled = 1;
+		else audioEnabled = 0;
+		while (PAD_ButtonsHeld(0) & PAD_BUTTON_A ||
+		       PAD_ButtonsHeld(0) & PAD_BUTTON_B );
+	
+		PRINT( "emulation mode:\n"
+		       "	  A. interpreter (PROBABLY BROKEN)\n"
+		       "	  B. dynamic recompiler (NOT SUPPORTED YET!)\n"
+		       "	  X. pure interpreter\n");
+		
+		while (!(PAD_ButtonsHeld(0) & PAD_BUTTON_A ||
+		         PAD_ButtonsHeld(0) & PAD_BUTTON_B ||
+		         PAD_ButtonsHeld(0) & PAD_BUTTON_X ));
+		
+		if (PAD_ButtonsHeld(0) & PAD_BUTTON_A) dynacore=0;
+		else if(PAD_ButtonsHeld(0) & PAD_BUTTON_X) dynacore=2;
+		else dynacore=1;
+		
+		gfx_info_init();
+		audio_info_init();
+		control_info_init();
+		rsp_info_init();
+		
+		romOpen_gfx();
+		gfx_set_fb(xfb[0], xfb[1]);
+		romOpen_audio();
+		romOpen_input();
+		//check_heap_space();
+		PRINT("Press START to begin execution\n");
+		while(!(PAD_ButtonsHeld(0) & PAD_BUTTON_START));
+	#ifdef USE_GUI
+		GUI_toggle();
+	#endif
+		go();
+	#ifdef USE_GUI
+		GUI_toggle();
+	#endif
+		romClosed_RSP();
+		romClosed_input();
+		romClosed_audio();
+		romClosed_gfx();
+		closeDLL_RSP();
+		closeDLL_input();
+		closeDLL_audio();
+		closeDLL_gfx();
+		
+		ROMCache_deinit();
+		if(isFromDVD) {
+			isFromDVD = 0;
+			rom_sizeDVD = 0;
+			rom_offsetDVD = 0;
 		}
-  VIDEO_WaitVSync ();        /*** Wait for VBL ***/
-  VIDEO_WaitVSync ();        /*** Wait for VBL ***/
-  VIDEO_WaitVSync ();        /*** Wait for VBL ***/
-  VIDEO_WaitVSync ();        /*** Wait for VBL ***/
-  VIDEO_WaitVSync ();        /*** Wait for VBL ***/
-	}
-
+		free(romfile);
+		romfile = NULL;
 	
-	select_location(); // for game saves
+		free(ROM_HEADER);
+		ROM_HEADER = NULL;
+		free_memory();
+		ARAM_manager_deinit();
+		
+		VIDEO_SetNextFramebuffer (xfb[0]); //switch xfb to show console
+		VIDEO_Flush ();
 	
-	init_memory();
-	
-	PRINT("Enable Audio?\n"
-	      "  A. Yes\n"
-	      "  B. No\n");
-	while (!(PAD_ButtonsHeld(0) & PAD_BUTTON_A ||
-	         PAD_ButtonsHeld(0) & PAD_BUTTON_B ));
-	if(PAD_ButtonsHeld(0) & PAD_BUTTON_A) audioEnabled = 1;
-	else audioEnabled = 0;
-	while (PAD_ButtonsHeld(0) & PAD_BUTTON_A ||
-	       PAD_ButtonsHeld(0) & PAD_BUTTON_B );
-	
-	char buffer[64];
-	sprintf(buffer, "Goodname:%s\n", ROM_SETTINGS.goodname);
-	PRINT(buffer);
-	sprintf(buffer, "16kb eeprom=%d\n", ROM_SETTINGS.eeprom_16kb);
-	PRINT(buffer);
-	PRINT( "emulation mode:\n"
-	       "	  A. interpreter (PROBABLY BROKEN)\n"
-	       "	  B. dynamic recompiler (NOT SUPPORTED YET!)\n"
-	       "	  X. pure interpreter\n");
-	
-	while (!(PAD_ButtonsHeld(0) & PAD_BUTTON_A ||
-	         PAD_ButtonsHeld(0) & PAD_BUTTON_B ||
-	         PAD_ButtonsHeld(0) & PAD_BUTTON_X ));
-	
-	if (PAD_ButtonsHeld(0) & PAD_BUTTON_A) dynacore=0;
-	else if(PAD_ButtonsHeld(0) & PAD_BUTTON_X) dynacore=2;
-	else dynacore=1;
-	
-	gfx_info_init();
-	audio_info_init();
-	control_info_init();
-	rsp_info_init();
-	
-	romOpen_gfx();
-	gfx_set_fb(xfb[0], xfb[1]);
-	romOpen_audio();
-	romOpen_input();
-	//check_heap_space();
-	PRINT("Press START to begin execution\n");
-	while(!(PAD_ButtonsHeld(0) & PAD_BUTTON_START));
-#ifdef USE_GUI
-	GUI_toggle();
-#endif
-	go();
-#ifdef USE_GUI
-	GUI_toggle();
-#endif
-	romClosed_RSP();
-	romClosed_input();
-	romClosed_audio();
-	romClosed_gfx();
-	closeDLL_RSP();
-	closeDLL_input();
-	closeDLL_audio();
-	closeDLL_gfx();
-	
-	ROMCache_deinit();
-	free(romfile);
-	romfile = NULL;
-	//free(rom);
-	free(ROM_HEADER);
-	ROM_HEADER = NULL;
-	free_memory();
-	ARAM_manager_deinit();
-	
-	VIDEO_SetNextFramebuffer (xfb[0]); //switch xfb to show console
-	VIDEO_Flush ();
-
-	// Wait until X & Y are released before continuing
-   	while(!(!(PAD_ButtonsHeld(0) & PAD_BUTTON_X) && !(PAD_ButtonsHeld(0) & PAD_BUTTON_Y)));
-	PRINT("Press X to return to SDLOAD\n  or START to load new ROM\n");
-   	while(!(PAD_ButtonsHeld(0) & PAD_BUTTON_START) &&
-   	      !(PAD_ButtonsHeld(0) & PAD_BUTTON_X));
-   	if(PAD_ButtonsHeld(0) & PAD_BUTTON_X) break;
+		// Wait until X & Y are released before continuing
+	   	while(((PAD_ButtonsHeld(0) & PAD_BUTTON_A) && (PAD_ButtonsHeld(0) & PAD_BUTTON_Y)));
+		PRINT("Press X to return to SDLOAD\n  or START to load new ROM\n");
+	   	while(!(PAD_ButtonsHeld(0) & PAD_BUTTON_START) &&
+	   	      !(PAD_ButtonsHeld(0) & PAD_BUTTON_X));
+	   	if(PAD_ButtonsHeld(0) & PAD_BUTTON_X) break;
    	
    	}
 	

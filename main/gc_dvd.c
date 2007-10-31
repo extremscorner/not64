@@ -178,3 +178,21 @@ void read_directory(int sector, int len)
 	}
 }
 
+unsigned int dvd_read_id()
+{
+	dvd[0] = 0x2E;
+	dvd[1] = 0;
+	dvd[2] = 0xA8000040;
+	dvd[3] = 0;
+	dvd[4] = 0x20;
+	dvd[5] = 0x80000000;
+	dvd[6] = 0x20;
+	dvd[7] = 3; // enable reading!
+
+	while (dvd[7] & 1);
+
+	if (dvd[0] & 0x4)
+		return 1;
+	return 0;
+}
+
