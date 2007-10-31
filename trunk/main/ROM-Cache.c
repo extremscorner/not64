@@ -30,6 +30,7 @@ static void byte_swap(char* buffer, unsigned int length);
 void showLoadProgress(float progress);
 
 void ROMCache_init(u32 romSize){
+	ARQ_Reset();
 	ARQ_Init();
 	ROM_too_big = romSize > (ARAM_block_available_contiguous() * BLOCK_SIZE);
 	ROM_size = romSize;
@@ -213,6 +214,7 @@ void ROMCache_load_SDCard(char* filename, int byteSwap){
 		PRINT(txt);
 		int bytes_read, offset=0;
 		do {
+			PRINT("Loading block\n");
 			bytes_read = SDCARD_ReadFile(rom, buffer, bytes_to_read);
 			byte_swap(buffer, bytes_read);
 			DCFlushRange(buffer, bytes_read);

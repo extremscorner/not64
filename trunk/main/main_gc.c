@@ -151,7 +151,8 @@ int main(){
 		PRINT("Running on a GC :)\n");
 		isWii = 0;
 	}
-		
+
+
 	while(TRUE){
 	
 		ARAM_manager_init();
@@ -181,7 +182,7 @@ int main(){
 	  	VIDEO_WaitVSync ();        /*** Wait for VBL ***/
 		}
 		free(romfile); 
-		
+
 		select_location(); // for game saves
 		
 		init_memory();
