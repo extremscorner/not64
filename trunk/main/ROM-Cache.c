@@ -214,7 +214,6 @@ void ROMCache_load_SDCard(char* filename, int byteSwap){
 		PRINT(txt);
 		int bytes_read, offset=0;
 		do {
-			PRINT("Loading block\n");
 			bytes_read = SDCARD_ReadFile(rom, buffer, bytes_to_read);
 			byte_swap(buffer, bytes_read);
 			DCFlushRange(buffer, bytes_read);
