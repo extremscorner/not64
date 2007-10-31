@@ -6,7 +6,10 @@
             playing buffer is finished.  However, this
             is nontrivial since we need to make sure
             the buffer has a length divisble by 32
-          We need to confirm the audio formats are the same
+   ----------------------------------------------------
+   MEMORY USAGE:
+     STATIC:
+   	Audio Buffer: 2x BUFFER_SIZE (currently 4kb each)
  */
 
 #include "../main/winlnxdefs.h"
@@ -19,10 +22,12 @@
 
 AUDIO_INFO AudioInfo;
 
-#define BUFFER_SIZE 4096
+#define BUFFER_SIZE 4*1024
 static char buffer[2][BUFFER_SIZE] __attribute__((aligned(32)));
 static char which_buffer = 0;
 static unsigned int buffer_offset = 0;
+
+char audio_enabled;
 
 EXPORT void CALL
 AiDacrateChanged( int SystemType )
@@ -133,8 +138,8 @@ static void inline add_to_buffer(char* stream, unsigned int length){
 EXPORT void CALL
 AiLenChanged( void )
 {
-	// FIXME: We need near full speed before this is going to work
-	//return;
+	// FIXME: We may need near full speed before this is going to work
+	if(!audioEnabled) return;
 	
 	short* stream = (short*)(AudioInfo.RDRAM + 
 		         (*AudioInfo.AI_DRAM_ADDR_REG & 0xFFFFFF));
