@@ -183,6 +183,8 @@ int main(){
 	         PAD_ButtonsHeld(0) & PAD_BUTTON_B ));
 	if (PAD_ButtonsHeld(0) & PAD_BUTTON_A) audioEnabled = 1;
 	else audioEnabled = 0;
+	while (PAD_ButtonsHeld(0) & PAD_BUTTON_A ||
+	       PAD_ButtonsHeld(0) & PAD_BUTTON_B );
 	
 	char buffer[64];
 	sprintf(buffer, "Goodname:%s\n", ROM_SETTINGS.goodname);
