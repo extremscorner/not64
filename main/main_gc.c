@@ -39,7 +39,7 @@
 
 int p_noask;
 
-extern audioEnabled;
+extern char audioEnabled;
 
 CONTROL Controls[4];
 
@@ -181,7 +181,7 @@ int main(){
 	      "  B. No\n");
 	while (!(PAD_ButtonsHeld(0) & PAD_BUTTON_A ||
 	         PAD_ButtonsHeld(0) & PAD_BUTTON_B ));
-	if (PAD_ButtonsHeld(0) & PAD_BUTTON_A) audioEnabled = 1;
+	if(PAD_ButtonsHeld(0) & PAD_BUTTON_A) audioEnabled = 1;
 	else audioEnabled = 0;
 	while (PAD_ButtonsHeld(0) & PAD_BUTTON_A ||
 	       PAD_ButtonsHeld(0) & PAD_BUTTON_B );
