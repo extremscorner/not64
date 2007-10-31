@@ -206,6 +206,7 @@ EXPORT void CALL RomOpen()
 EXPORT void CALL
 RomClosed( void )
 {
+	AUDIO_StopDMA(); // So we don't have a buzzing sound when we exit the game
 }
 
 EXPORT void CALL
