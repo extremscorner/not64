@@ -10,6 +10,7 @@
 #define OOT_OFFSET 0x54FBEEF4
 #define MQ_OFFSET  0x52CCC5FC
 #define ZELDA_SIZE 0x2000000
+extern unsigned int isWii;
 
 #ifdef USE_GUI
 #include "../gui/GUI.h"
@@ -86,7 +87,12 @@ int rom_sizeDVD = 0;
 unsigned int rom_offsetDVD = 0;
 char *textFileBrowserDVD(){
 	PRINT("Mounting DVD...\n");
-	DVD_Mount ();
+	if(!isWii)
+		DVD_Mount ();
+	if(isWii) {
+		DVD_Reset(DVD_RESETHARD);
+		dvd_read_id();
+	}
 	PRINT("Reading DVD...\n");
 
 	int sector = 16;
