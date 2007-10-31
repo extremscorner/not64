@@ -27,7 +27,7 @@ static char buffer[2][BUFFER_SIZE] __attribute__((aligned(32)));
 static char which_buffer = 0;
 static unsigned int buffer_offset = 0;
 
-char audio_enabled;
+char audioEnabled;
 
 EXPORT void CALL
 AiDacrateChanged( int SystemType )
