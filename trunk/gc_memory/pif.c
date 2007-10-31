@@ -101,13 +101,14 @@ void loadEeprom(void){
 	}
 
 	free(filename);
+	eepromWritten = FALSE;
 }
 
 extern long long gettime();
 // Note: must be called after load
 void saveEeprom(void){
 	if(!eepromWritten) return;
-	PRINT("Saving EEPROM, please do not turn off console...\n");
+	PRINT("Please wait, saving EEPROM,\n do NOT turn off the console...\n");
 	
 	char* filename = malloc(strlen(savepath)+
 	                        strlen(ROM_SETTINGS.goodname)+4+1);
@@ -293,11 +294,12 @@ void loadMempak(void){
 	}
 
 	free(filename);
+	mempakWritten = FALSE;
 }
 
 void saveMempak(void){
 	if(!mempakWritten) return;
-	PRINT("Saving mempak, please do not turn off console...\n");
+	PRINT("Please wait, saving mempak,\n do NOT turn off the console...\n");
 
 	char* filename = malloc(strlen(savepath)+
 	                        strlen(ROM_SETTINGS.goodname)+4+1);

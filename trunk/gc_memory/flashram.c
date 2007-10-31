@@ -97,11 +97,12 @@ void loadFlashram(void){
 	}
 	
 	free(filename);
+	flashramWritten = FALSE;
 }
 
 void saveFlashram(void){
 	if(!flashramWritten) return;
-	PRINT("Saving flashram, do not turn off the console...\n");
+	PRINT("Please wait, saving flashram,\n do NOT turn off the console...\n");
 	
 	char* filename = malloc(strlen(savepath)+
 	                        strlen(ROM_SETTINGS.goodname)+4+1);

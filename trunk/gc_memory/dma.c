@@ -89,11 +89,12 @@ void loadSram(void){
 	}
 	
 	free(filename);
+	sramWritten = FALSE;
 }
 
 void saveSram(void){
 	if(!sramWritten) return;
-	PRINT("Saving SRAM, do not turn off the console...\n");
+	PRINT("Please wait, saving SRAM,\n do NOT turn off the console...\n");
 	
 	char* filename = malloc(strlen(savepath)+
 	                        strlen(ROM_SETTINGS.goodname)+4+1);
