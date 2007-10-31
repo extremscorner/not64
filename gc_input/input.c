@@ -140,6 +140,9 @@ EXPORT void CALL GetKeys(int Control, BUTTONS * Keys )
 	// In pure interpreter mode X+Y quits
 	if((b & PAD_BUTTON_X) && (b & PAD_BUTTON_Y)) 
 		stop = 1;
+		
+	if(!((*(u32*)0xCC003000)>>16))
+		stop = 1;
 
 	
 }
