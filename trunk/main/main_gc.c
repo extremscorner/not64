@@ -39,6 +39,8 @@
 
 int p_noask;
 
+extern audioEnabled;
+
 CONTROL Controls[4];
 
 static GFX_INFO gfx_info;
@@ -173,6 +175,14 @@ int main(){
 	select_location(); // for game saves
 	
 	init_memory();
+	
+	PRINT("Enable Audio?\n"
+	      "  A. Yes\n"
+	      "  B. No\n");
+	while (!(PAD_ButtonsHeld(0) & PAD_BUTTON_A ||
+	         PAD_ButtonsHeld(0) & PAD_BUTTON_B ));
+	if (PAD_ButtonsHeld(0) & PAD_BUTTON_A) audioEnabled = 1;
+	else audioEnabled = 0;
 	
 	char buffer[64];
 	sprintf(buffer, "Goodname:%s\n", ROM_SETTINGS.goodname);
