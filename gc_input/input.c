@@ -8,12 +8,47 @@
 #include "../main/winlnxdefs.h"
 #include "InputPlugin.h"
 #include "Controller_#1.1.h"
+#include "PakIO.h"
 
 #ifdef USE_GUI
 
 #endif
 
 static CONTROL_INFO control_info;
+static BOOL lastData[4];
+
+unsigned char mempack_crc(unsigned char *data);
+
+static BYTE writePak(int Control, BYTE* Command){
+	// From N-Rage Plugin by Norbert Wladyka
+	BYTE* data = &Command[2];
+	unsigned int dwAddress = (Command[0] << 8) + (Command[1] & 0xE0);
+	
+	if( dwAddress == PAK_IO_RUMBLE ){
+		if( *data ) PAD_ControlMotor(Control, PAD_MOTOR_RUMBLE);
+		else PAD_ControlMotor(Control, PAD_MOTOR_STOP);
+	} else if( dwAddress >= 0x8000 && dwAddress < 0x9000 ){
+		lastData[Control] = (*data) ? TRUE : FALSE;
+	}
+	
+	data[32] = mempack_crc(data);
+	return RD_OK;
+}
+
+static BYTE readPak(int Control, BYTE* Command){
+	// From N-Rage Plugin by Norbert Wladyka
+	BYTE* data = &Command[2];
+	unsigned int dwAddress = (Command[0] << 8) + (Command[1] & 0xE0);
+	
+	int i;
+	if( ((dwAddress >= 0x8000) && (dwAddress < 0x9000)) && lastData[Control] )
+		for(i=0; i<32; ++i) data[i] = 0x80;
+	else
+		for(i=0; i<32; ++i) data[i] = 0;
+	
+	data[32] = mempack_crc(data);
+	return RD_OK;
+}
 
 /******************************************************************
   Function: CloseDLL
@@ -44,6 +79,9 @@ EXPORT void CALL CloseDLL (void)
 *******************************************************************/
 EXPORT void CALL ControllerCommand ( int Control, BYTE * Command)
 {
+	// We don't need to handle this because apparently
+	//   a call to ReadController immediately follows
+	return;
 }
 
 /******************************************************************
@@ -170,8 +208,9 @@ EXPORT void CALL InitiateControllers (CONTROL_INFO ControlInfo)
 					FALSE : TRUE;
 		printf("Controller %d is %s\n", i,
 		       control_info.Controls[i].Present ? "plugged in" : "unplugged");
-		// TODO: Support rumble
+		
 		control_info.Controls[i].Plugin = PLUGIN_MEMPAK;
+		//control_info.Controls[i].Plugin = PLUGIN_RAW; // Uncomment for rumble
 	}
 }
 
@@ -188,6 +227,44 @@ EXPORT void CALL InitiateControllers (CONTROL_INFO ControlInfo)
 *******************************************************************/
 EXPORT void CALL ReadController ( int Control, BYTE * Command )
 {
+	if(Control < 0 || !Command) return;
+	
+	// From N-Rage Plugin by Norbert Wladyka
+	switch(Command[2]){
+	case RD_RESETCONTROLLER:
+	case RD_GETSTATUS:
+		// expected: controller gets 1 byte (command), controller sends back 3 bytes
+		// should be:	Command[0] == 0x01
+		//				Command[1] == 0x03
+		Command[3] = RD_GAMEPAD | RD_ABSOLUTE;
+		Command[4] = RD_NOEEPROM;
+		if(control_info.Controls[Control].Present)
+			Command[5] = ( control_info.Controls[Control].Plugin != PLUGIN_NONE )
+			              ? RD_PLUGIN : RD_NOPLUGIN;
+		else
+			Command[5] = RD_NOPLUGIN | RD_NOTINITIALIZED;
+		break;
+	case RD_READKEYS:
+		// I don't think I should be getting this command
+		//   but just in case
+		GetKeys(Control, &Command[3]);
+		break;
+	case RD_READPAK:
+		readPak(Control, &Command[3]);
+		break;
+	case RD_WRITEPAK:
+		writePak(Control, &Command[3]);
+		break;
+	case RD_READEEPROM:
+		// Should be handled by the Emulator
+		break;
+	case RD_WRITEEPROM:
+		// Should be handled by the Emulator
+		break;
+	default:
+		// only accessible if the Emulator has bugs.. or maybe the Rom is flawed
+		Command[1] = Command[1] | RD_ERROR;
+	}
 }
 
 /******************************************************************
