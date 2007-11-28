@@ -77,6 +77,7 @@ void DEBUG_print(char* string){
 			if(i == num_lines){
 				for(i=0; i<num_lines; ++i, other = other->next)
 					other->start_tick = start_tick;
+				return;
 			}
 			other = o;
 		} else {
@@ -96,7 +97,7 @@ void DEBUG_print(char* string){
 		next->prev       = tail;
 		next->next       = NULL;
 		// Set the last string to point to this one
-		tail->next = next;
+		if(tail) tail->next = next;
 		tail = next;
 		if(head == NULL) head = next;
 	}
