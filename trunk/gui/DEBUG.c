@@ -87,6 +87,7 @@ void DEBUG_print(char* string){
 	
 	// Finally, create a DEBUG_string for each line
 	//   and fill in it's start time
+	numLiveStrings += num_lines;
 	DEBUG_string* next;
 	for(i=0; i<num_lines; ++i){
 		next = malloc( sizeof(DEBUG_string) );
