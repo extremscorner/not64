@@ -9,9 +9,11 @@
 #include <ogc/gu.h>
 #include "vi_GX.h"
 #include "font.h"
+#include "../gui/DEBUG.h"
 
 VI_GX::VI_GX(GFX_INFO info) : VI(info), width(0), height(0), which_fb(1){
 	init_font();
+	updateDEBUGflag = true;
 	// FIXME: Instead of creating our own fb, we should use main's
 	//xfb[0] = (unsigned int*) MEM_K0_TO_K1(SYS_AllocateFramebuffer(&TVNtsc480IntDf));
 	//xfb[1] = (unsigned int*) MEM_K0_TO_K1(SYS_AllocateFramebuffer(&TVNtsc480IntDf));
@@ -39,10 +41,13 @@ void* VI_GX::getScreenPointer(){ return xfb[which_fb]; }
 
 void VI_GX::blit(){
 	//printf("Should be blitting.");
+	showFPS();
+	showDEBUG();
+	updateDEBUGflag = false;
     GX_DrawDone (); //needed?
 	GX_CopyDisp (xfb[which_fb], GX_FALSE); //TODO: Figure out where the UpdateScreen interrupts are coming from!
     GX_Flush (); //needed?
-	showFPS();
+//	showFPS();
 	VIDEO_SetNextFramebuffer(xfb[which_fb]);
 	VIDEO_Flush();
 	which_fb ^= 1;
@@ -69,7 +74,17 @@ void VI_GX::showFPS(){
 		lastTick = nowTick;
 	}
 	
-	write_font(10,10,caption,xfb,which_fb);
+	if (updateDEBUGflag)
+	{
+		GXColor fontColor = {150,255,150,255};
+		write_font_init_GX(fontColor);
+		write_font(10,15,caption, 1.0);
+		//write_font(10,10,caption,xfb,which_fb);
+
+		//reset swap table from GUI/DEBUG
+		GX_SetTevSwapModeTable(GX_TEV_SWAP0, GX_CH_RED, GX_CH_GREEN, GX_CH_BLUE, GX_CH_ALPHA);
+		GX_SetTevSwapMode(GX_TEVSTAGE0, GX_TEV_SWAP0, GX_TEV_SWAP0);
+	}
 }
 
 void VI_GX::showLoadProg(float percent)
@@ -135,4 +150,30 @@ void VI_GX::showLoadProg(float percent)
 	VIDEO_Flush();
 	which_fb ^= 1;
 	VIDEO_WaitVSync();
+}
+
+void VI_GX::updateDEBUG()
+{
+	updateDEBUGflag = true;
+}
+
+void VI_GX::showDEBUG()
+{
+	if (updateDEBUGflag)
+	{
+		int i = 1;
+		char** temp_textptrs;
+		GXColor fontColor = {150, 255, 150, 255};
+
+		DEBUG_update();
+		temp_textptrs = DEBUG_get_text();
+		write_font_init_GX(fontColor);
+		for (i=0;i<DEBUG_TEXT_HEIGHT;i++)
+			if (temp_textptrs[i]!=NULL)
+				write_font(10,(10*i+30),temp_textptrs[i], 0.5); 
+
+	   //reset swap table from GUI/DEBUG
+		GX_SetTevSwapModeTable(GX_TEV_SWAP0, GX_CH_RED, GX_CH_GREEN, GX_CH_BLUE, GX_CH_ALPHA);
+		GX_SetTevSwapMode(GX_TEVSTAGE0, GX_TEV_SWAP0, GX_TEV_SWAP0);
+	}
 }

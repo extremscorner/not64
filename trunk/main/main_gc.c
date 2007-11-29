@@ -269,7 +269,7 @@ int main(){
 	   	if(PAD_ButtonsHeld(0) & PAD_BUTTON_X) break;
    	
    	}
-	
+
 	void (*reload)() = (void (*)()) 0x80001800;
 	reload();
    	

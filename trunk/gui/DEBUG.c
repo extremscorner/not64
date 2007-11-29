@@ -110,7 +110,7 @@ void DEBUG_update(void){
 	// Fill out text with living strings oldest first
 	DEBUG_string* x = tail;
 	int i = (numLiveStrings > DEBUG_TEXT_HEIGHT) ? DEBUG_TEXT_HEIGHT : DEBUG_TEXT_HEIGHT-numLiveStrings;
-	for(; i > 0; x != NULL; x = x->prev)
+	for(; i > 0 && x != NULL; x = x->prev)
 		text[--i] = &x->text[0];
 	// NULL any remaining strings
 	while(i > 0) text[--i] = NULL;

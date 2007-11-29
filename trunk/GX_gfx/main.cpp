@@ -191,6 +191,7 @@ EXPORT void CALL ProcessDList(void)
 {
    GX_CopyDisp (vi->getScreenPointer(), GX_TRUE);
    RSP rsp(gfxInfo);
+   vi->updateDEBUG();
    /*static int firstTime=0;
    
    if(firstTime< 1)
