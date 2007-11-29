@@ -9,6 +9,8 @@
 #include "global.h"
 #include "rsp_GX.h"
 
+#include "../gui/DEBUG.h"
+
 RSP::RSP(GFX_INFO info) : gfxInfo(info), error(false), end(false)
 {
    for (int i=0; i<0x100; i++) commands[i]=&RSP::NI;
@@ -78,6 +80,11 @@ RSP::RSP(GFX_INFO info) : gfxInfo(info), error(false), end(false)
    GX_LoadPosMtxImm(GXmodelView2D,GX_PNMTX0);
    GX_LoadNrmMtxImm(GXnormal2D,GX_PNMTX0);
 
+   //reset swap table from GUI/DEBUG
+	GX_SetTevSwapModeTable(GX_TEV_SWAP0, GX_CH_RED, GX_CH_GREEN, GX_CH_BLUE, GX_CH_ALPHA);
+	GX_SetTevSwapMode(GX_TEVSTAGE0, GX_TEV_SWAP0, GX_TEV_SWAP0);
+
+
 //	guOrtho(GXprojection2D, 0, 239, 0, 319, 0, 1021);
 
    TXblock.newblock = 0;
@@ -85,6 +92,7 @@ RSP::RSP(GFX_INFO info) : gfxInfo(info), error(false), end(false)
    //rdp = new RDP(info);
       tx = new TX(info);
 
+   DEBUG_print("Executing DList...\n");
    executeDList();
 }
 

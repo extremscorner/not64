@@ -9,6 +9,7 @@
 
 class VI_GX : public VI
 {
+   bool updateDEBUGflag;
    unsigned int* xfb[2];
    int which_fb;
    int width;
@@ -18,6 +19,7 @@ class VI_GX : public VI
 
    void setFB(unsigned int*, unsigned int*);
    void showFPS();
+   void showDEBUG();
    virtual void setVideoMode(int w, int h);
 //   virtual void* getScreenPointer();
    virtual void blit();
@@ -31,6 +33,7 @@ class VI_GX : public VI
    virtual void switchWindowMode();
    virtual void setGamma(float gamma);
    void showLoadProg(float);
+   void updateDEBUG();
 };
 
 #endif
