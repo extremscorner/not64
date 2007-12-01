@@ -18,6 +18,7 @@ extern GXColor GUI_color_special;
 
 // Pre-formatted string (use sprintf before sending to print)
 void GUI_print(char* string);
+void GUI_print_color(char* string, GXColor color);
 
 // Clear text to be displayed each frame
 void GUI_clear(void);
@@ -26,6 +27,7 @@ void GUI_clear(void);
 void GUI_update(void);
 
 // Returns pointer to an array of char*
+// Call BEFORE you call get_colors
 char** GUI_get_text(void);
 
 // Returns an array of GXColor
