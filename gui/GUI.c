@@ -6,6 +6,11 @@
 #include "GUI.h"
 #include "TEXT.h"
 
+// Basic colors
+GXColor GUI_color_default     = {255, 255, 255, 255}; // White
+GXColor GUI_color_highlighted = {255,   0,   0, 255}; // Red
+GXColor GUI_color_special     = {  0, 255,   0, 255}; // Green
+
 // This is the text that gets displayed
 static char text[GUI_TEXT_HEIGHT][GUI_TEXT_WIDTH];
 static char* textptrs[GUI_TEXT_HEIGHT];
@@ -15,11 +20,12 @@ static int text_zero_line;
 static int text_next_line;
 // Keep track of whether we've had to wrap the text
 static char isWrapped;
+// Keep track of the colors of each line
+static GXColor colors[GUI_TEXT_HEIGHT];
 
 extern char TEXT_split_lines[TEXT_MAX_SPLIT][TEXT_WIDTH];
 
-
-void GUI_print(char* string){
+void GUI_print_color(char* string, GXColor color){
 	// First split the string into lines of text
 	int num_lines = TEXT_split(string);
 	
@@ -28,9 +34,11 @@ void GUI_print(char* string){
 	for(i=0; i<num_lines; ++i) TEXT_expand( &TEXT_split_lines[i] );
 	
 	// Finally, fill out the next lines of text with the strings
-	for(i=0; i<num_lines; ++i)
-		strncpy( textptrs[text_next_line++ % GUI_TEXT_HEIGHT],
+	for(i=0; i<num_lines; ++i){
+		strncpy( textptrs[text_next_line % GUI_TEXT_HEIGHT],
 		         &TEXT_split_lines[i], GUI_TEXT_WIDTH );
+		colors[text_next_line] = color;
+	}
 	
 	if(isWrapped) text_zero_line = text_next_line % GUI_TEXT_HEIGHT;
 	else { 
@@ -39,6 +47,10 @@ void GUI_print(char* string){
 			text_zero_line = text_next_line % GUI_TEXT_HEIGHT;
 		}
 	}
+}
+
+void GUI_print(char* string){
+	GUI_print_color(string, GUI_color_default);
 }
 
 void GUI_clear(void){
@@ -75,12 +87,17 @@ void GUI_update(void){
 			if(i < GUI_TEXT_HEIGHT-1) ++i;
 		}
 #else
-		char* temp[GUI_TEXT_HEIGHT];
+		char*   temp[GUI_TEXT_HEIGHT];
+		GXColor tempc[GUI_TEXT_HEIGHT];
 		int i,j=text_zero_line;
-		for(i=0; i<GUI_TEXT_HEIGHT; ++i, ++j)
-			temp[i] = textptrs[j % GUI_TEXT_HEIGHT];
-		for(i=0; i<GUI_TEXT_HEIGHT; ++i)
+		for(i=0; i<GUI_TEXT_HEIGHT; ++i, ++j){
+			temp[i]  = textptrs[j % GUI_TEXT_HEIGHT];
+			tempc[i] = colors[j % GUI_TEXT_HEIGHT];
+		}
+		for(i=0; i<GUI_TEXT_HEIGHT; ++i){
 			textptrs[i] = temp[i];
+			colors[i]   = tempc[i];
+		}
 #endif
 		// Reset state
 		text_zero_line = 0;
@@ -98,5 +115,10 @@ char** GUI_get_text(void){
 
 	// Simply return our array
 	return &textptrs;
+}
+
+GXColor* GUI_get_colors(void){
+	// Simply return our array
+	return &colors;
 }
 
