@@ -217,8 +217,6 @@ void GUI_main()
 	GX_DrawDone ();
 	GX_CopyDisp (GUI.xfb[GUI.which_fb], GX_FALSE);
     GX_Flush ();
-//	VIDEO_WaitVSync();
-//	GUI_displayText();
 	VIDEO_SetNextFramebuffer(GUI.xfb[GUI.which_fb]);
 	VIDEO_Flush();
 	GUI.which_fb ^= 1;
@@ -230,12 +228,17 @@ void GUI_displayText(){
 	int i = 1;
 	char** temp_textptrs;
 	GXColor fontColor = {255, 255, 255, 255};
+	GXColor* fontColorPtr;
 
 	temp_textptrs = GUI_get_text();
+	fontColorPtr = GUI_get_colors();
 	write_font_init_GX(fontColor);
 	for (i=0;i<GUI_TEXT_HEIGHT;i++)
+	{
+		write_font_color(&fontColorPtr[i]);
+//		GX_SetTevColor(GX_TEVREG1,fontColorPtr[i]);
 		write_font(60,(20*i+85),temp_textptrs[i], 1.0); 
-//		write_font(60,(20*i+85),temp_textptrs[i],GUI.xfb,GUI.which_fb); 
+	}
 
    //reset swap table from GUI/DEBUG
 	GX_SetTevSwapModeTable(GX_TEV_SWAP0, GX_CH_RED, GX_CH_GREEN, GX_CH_BLUE, GX_CH_ALPHA);

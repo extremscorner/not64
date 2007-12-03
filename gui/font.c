@@ -29,7 +29,7 @@ typedef struct
 	u16 s[256], t[256], font_size[256], fheight;
 } CHAR_INFO;
 
-unsigned char* GXfontTexture;
+//unsigned char* GXfontTexture;
 static unsigned char fontFont[ 0x40000 ] __attribute__((aligned(32)));
 
 /****************************************************************************
@@ -101,45 +101,18 @@ void yay0_decode(unsigned char *s, unsigned char *d)
 	} while(q < i);
 }
 
-/*void untile(unsigned char *dst, unsigned char *src, int xres, int yres)
-{
-	// 8x8 tiles
-	int x, y;
-	int t=0;
-	for (y = 0; y < yres; y += 8)
-		for (x = 0; x < xres; x += 8)
-		{
-			t = !t;
-			int iy, ix;
-			for (iy = 0; iy < 8; ++iy, src+=2)
-			{
-				unsigned char *d = dst + (y + iy) * xres + x;
-				for (ix = 0; ix < 2; ++ix)
-				{
-					int v = src[ix];
-					*d++ = ((v>>6)&3);
-					*d++ = ((v>>4)&3);
-					*d++ = ((v>>2)&3);
-					*d++ = ((v)&3);
-				}
-			}
-		}
-}*/
-
 void TF_I2toI4(unsigned char *dst, unsigned char *src, int xres, int yres)
 {
 	// 8x8 tiles
 	int x, y;
 	unsigned char *d = dst;
-//	int t=0;
+
 	for (y = 0; y < yres; y += 8)
 		for (x = 0; x < xres; x += 8)
 		{
-//			t = !t;
 			int iy, ix;
 			for (iy = 0; iy < 8; ++iy, src+=2)
 			{
-//				unsigned char *d = dst + ((y + iy) * xres + x) / 2;
 				for (ix = 0; ix < 2; ++ix)
 				{
 					int v = src[ix];
@@ -150,7 +123,6 @@ void TF_I2toI4(unsigned char *dst, unsigned char *src, int xres, int yres)
 		}
 }
 
-//int font_offset[256], font_size[256], fheight;
 CHAR_INFO fontChars;
 extern void __SYS_ReadROM(void *buf,u32 len,u32 offset);
 
@@ -167,14 +139,6 @@ void init_font(void)
 
 	fnt = ( FONT_HEADER * )&fontWork;
 
-//	GXfontTexture = (unsigned char*) memalign(32,512*256);
-//	memcpy(&GXfontTexture, &fontWork[fnt->offset_tile], 512*256);
-	
-	printf("fontFont addy: %x",fontFont);
-
-//	for (i=0;i<512*256;i++)
-//		fontFont[i] = fontWork[fnt->offset_tile + i];
-//	memcpy(&fontFont, &fontWork[fnt->offset_tile], 512*256);
 	TF_I2toI4((unsigned char*)&fontFont, (unsigned char*)&fontWork[fnt->offset_tile], fnt->texture_width, fnt->texture_height);
 	DCFlushRange(fontFont, 512*256);
 	//untile((unsigned char*)&fontFont, (unsigned char*)&fontWork[fnt->offset_tile], fnt->texture_width, fnt->texture_height);
@@ -193,7 +157,6 @@ void init_font(void)
 
 		fontChars.s[i] = c * fnt->cell_width;
 		fontChars.t[i] = r * fnt->cell_height;
-		//font_offset[i] = (r * fnt->cell_height) * fnt->texture_width + (c * fnt->cell_width);
 	}
 	
 	fontChars.fheight = fnt->cell_height;
@@ -232,24 +195,19 @@ void write_font_init_GX(GXColor fontColor)
 	GX_SetTexCoordGen(GX_TEXCOORD0, GX_TG_MTX2x4, GX_TG_TEX0, GX_IDENTITY);
 
 	GX_InvalidateTexAll();
-//	GX_InitTexObj(&fontTexObj, fontFont, 512, 512, GX_TF_I4, GX_MIRROR, GX_MIRROR, GX_FALSE);
 	GX_InitTexObj(&fontTexObj, &fontFont, 512, 512, GX_TF_I4, GX_CLAMP, GX_CLAMP, GX_FALSE);
-//	GX_InitTexObj(&fontTexObj, GXfontTexture, 512, 512, GX_TF_I4, GX_CLAMP, GX_CLAMP, GX_FALSE);
 	GX_LoadTexObj(&fontTexObj, GX_TEXMAP1);
 
 	GX_SetTevColor(GX_TEVREG1,fontColor);
 	GX_SetNumTevStages (1);
 	GX_SetTevOrder (GX_TEVSTAGE0, GX_TEXCOORD0, GX_TEXMAP1, GX_COLOR0A0); // change to (u8) tile later
 	GX_SetTevColorIn (GX_TEVSTAGE0, GX_CC_C1, GX_CC_ZERO, GX_CC_ZERO, GX_CC_ZERO);
-//	GX_SetTevColorIn (GX_TEVSTAGE0, GX_CC_TEXC, GX_CC_ZERO, GX_CC_ZERO, GX_CC_ZERO);
 	GX_SetTevColorOp (GX_TEVSTAGE0, GX_TEV_ADD, GX_TB_ZERO, GX_CS_SCALE_1, GX_ENABLE, GX_TEVPREV);
 	GX_SetTevAlphaIn (GX_TEVSTAGE0, GX_CA_TEXA, GX_CA_ZERO, GX_CA_ZERO, GX_CA_ZERO);
 	GX_SetTevAlphaOp (GX_TEVSTAGE0, GX_TEV_ADD, GX_TB_ZERO, GX_CS_SCALE_1, GX_ENABLE, GX_TEVPREV);
 	GX_SetTevSwapModeTable(GX_TEV_SWAP0, GX_CH_RED, GX_CH_GREEN, GX_CH_BLUE, GX_CH_RED);
 //	GX_SetTevSwapModeTable(GX_TEV_SWAP0, GX_CH_RED, GX_CH_GREEN, GX_CH_BLUE, GX_CH_ALPHA);
 	GX_SetTevSwapMode(GX_TEVSTAGE0, GX_TEV_SWAP0, GX_TEV_SWAP0);
-
-	//GX_SetTevOp (GX_TEVSTAGE0, GX_REPLACE);
 
 	//set blend mode
 	GX_SetBlendMode(GX_BM_BLEND, GX_BL_SRCALPHA, GX_BL_INVSRCALPHA, GX_LO_CLEAR); //Fix src alpha
@@ -259,6 +217,11 @@ void write_font_init_GX(GXColor fontColor)
 	//set cull mode
 	GX_SetCullMode (GX_CULL_NONE);
 
+}
+
+void write_font_color(GXColor* fontColorPtr)
+{
+	GX_SetTevColor(GX_TEVREG1, *fontColorPtr);
 }
 
 void write_font(int x, int y, char *string, float scale)
@@ -290,62 +253,3 @@ void write_font(int x, int y, char *string, float scale)
 		string++;
 	}
 }
-
-/*
-#define TRANSPARENCY (COLOR_WHITE)
-
-unsigned int blit_lookup_inv[4] = {COLOR_WHITE, COLOR_WHITE, COLOR_WHITE, COLOR_WHITE};
-unsigned int blit_lookup[4] = {COLOR_WHITE, COLOR_WHITE, COLOR_WHITE, COLOR_WHITE};
-unsigned int blit_lookup_norm[4] = {COLOR_WHITE, COLOR_BLACK, COLOR_BLACK, COLOR_WHITE};
-
-void blit_char(u32 **axfb,int whichfb,int x, int y, unsigned char c, unsigned int *lookup)
-{
-	unsigned char *fnt = ((unsigned char*)fontFont) + font_offset[c];
-	int ay, ax;
-	unsigned int llookup;
-
-	for (ay=0; ay<fheight; ++ay)
-	{
-		int h = (ay + y) * 320;
-
-		for (ax=0; ax<font_size[c]; ax++)
-		{
-			int v0 = fnt[ax];
-			int p = h + (( ax + x ) >> 1);
-			unsigned long o = axfb[whichfb][p];
-
-			llookup = lookup[v0];
-
-			if ((v0== 0) && (llookup == TRANSPARENCY))
-				llookup = o;
-
-			if ((ax+x) & 1)
-			{
-				o &= ~0x00FFFFFF;
-				o |= llookup & 0x00FFFFFF;
-			}
-			else
-			{
-				o &= ~0xFF000000;
-				o |= llookup & 0xFF000000;
-			}
-
-			axfb[whichfb][p] = o;
-		}
-		
-		fnt += 512;
-	}
-}
-
-u8 norm_blit = 1;
-
-void write_font(int x, int y, char *string,u32 **axfb,int whichfb)
-{
-	int ox = x;
-	while (*string && (x < (ox + back_framewidth)))
-	{
-		blit_char(axfb,whichfb,x, y, *string, norm_blit ? blit_lookup_norm : blit_lookup);
-		x += font_size[*string];
-		string++;
-	}
-}*/

@@ -38,6 +38,7 @@ void GUI_print_color(char* string, GXColor color){
 		strncpy( textptrs[text_next_line % GUI_TEXT_HEIGHT],
 		         &TEXT_split_lines[i], GUI_TEXT_WIDTH );
 		colors[text_next_line] = color;
+		text_next_line++;
 	}
 	
 	if(isWrapped) text_zero_line = text_next_line % GUI_TEXT_HEIGHT;
