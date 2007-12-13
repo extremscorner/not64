@@ -92,6 +92,7 @@ void DEBUG_print(char* string){
 	for(i=0; i<num_lines; ++i){
 		next = malloc( sizeof(DEBUG_string) );
 		strncpy(&next->text, &TEXT_split_lines[i], DEBUG_TEXT_WIDTH);
+		next->text[DEBUG_TEXT_WIDTH-1] = NULL; // strncpy doesn't guarentee this
 		next->start_tick = start_tick;
 		next->checksum   = cs;
 		next->num_lines  = num_lines;
