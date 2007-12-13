@@ -137,7 +137,7 @@ int convert(void){
 			ppc = NEW_PPC_INSTR();
 			PPC_SET_OPCODE(ppc, PPC_OPCODE_BC);
 			PPC_SET_BD(ppc, (peek_next_src() == 0) ? 2 : 3); // past delay & branch
-			PPC_SET_BO(ppc, bo^0x8); // !cond
+			PPC_SET_BO(ppc, (bo^0x8)); // !cond
 			PPC_SET_BI(ppc, 30);     // Check CR bit 30 (CR7, EQ FIELD)
 			set_next_dst(ppc);
 		}
@@ -186,7 +186,7 @@ int convert(void){
 			ppc = NEW_PPC_INSTR();
 			PPC_SET_OPCODE(ppc, PPC_OPCODE_BC);
 			PPC_SET_BD(ppc, (peek_next_src() == 0) ? 2 : 3); // past delay & branch
-			PPC_SET_BO(ppc, bo^0x8); // !cond
+			PPC_SET_BO(ppc, (bo^0x8)); // !cond
 			PPC_SET_BI(ppc, 29);     // Check CR bit 29 (CR7, GT FIELD)
 			set_next_dst(ppc);
 		}
@@ -515,7 +515,7 @@ int convert(void){
 
 static int convert_R(MIPS_instr mips){
 	PowerPC_instr ppc = NEW_PPC_INSTR();
-	int i;
+//	int i;
 	
 	switch(MIPS_GET_FUNC(mips)){
 	
@@ -1298,7 +1298,7 @@ static int convert_B(MIPS_instr mips){
 			ppc = NEW_PPC_INSTR();
 			PPC_SET_OPCODE(ppc, PPC_OPCODE_BC);
 			PPC_SET_BD(ppc, (peek_next_src() == 0) ? 2 : 3); // past delay & branch
-			PPC_SET_BO(ppc, bo^0x8); // !cond
+			PPC_SET_BO(ppc, (bo^0x8)); // !cond
 			PPC_SET_BI(ppc, 28);     // Check CR bit 28 (CR7, LT FIELD)
 			set_next_dst(ppc);
 		}
@@ -1360,7 +1360,7 @@ static int convert_B(MIPS_instr mips){
 			ppc = NEW_PPC_INSTR();
 			PPC_SET_OPCODE(ppc, PPC_OPCODE_BC);
 			PPC_SET_BD(ppc, (peek_next_src() == 0) ? 2 : 3); // past delay & branch
-			PPC_SET_BO(ppc, bo^0x8); // !cond
+			PPC_SET_BO(ppc, (bo^0x8)); // !cond
 			PPC_SET_BI(ppc, 28);     // Check CR bit 28 (CR7, LT FIELD)
 			set_next_dst(ppc);
 		}

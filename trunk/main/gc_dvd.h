@@ -7,6 +7,8 @@
 
 void dvd_motor_off();
 void read_directory(int sector, int len);
+int read_safe(void* dst, int offset, int len);
+int read_direntry(unsigned char* direntry);
 int read_sector(void* buffer, int sector);
 unsigned int dvd_read(void* dst, int len, unsigned int offset);
 unsigned char sector_buffer[2048] __attribute__((aligned(32)));

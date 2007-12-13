@@ -26,7 +26,7 @@
  * USA.
  *
 **/
-
+#include "../r4300/Invalid_Code.h"
 #include <sdcard.h>
 #include <ogc/card.h>
 #include "dma.h"

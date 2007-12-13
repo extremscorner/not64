@@ -25,7 +25,7 @@
  * Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139,
  * USA.
  *
-**/
+**/ 
 
 #include <zlib.h>
 #include <stdlib.h>
@@ -65,8 +65,8 @@ void savestates_select_filename(unsigned char *fn)
 void savestates_save()
 {
    char *filename, buf[1024];
-   gzFile f;
-   int len, i;
+//   gzFile f;
+//   int len, i;
    
    /*if (*autoinc_save_slot)
      {
@@ -146,8 +146,8 @@ void savestates_save()
 void savestates_load()
 {
    char *filename, buf[1024];
-   gzFile f;
-   int len, i;
+   gzFile f = NULL;
+//   int len, i;
    
    if (slot <= 9)
      {

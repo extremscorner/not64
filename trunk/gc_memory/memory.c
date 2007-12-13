@@ -28,7 +28,7 @@
 **/
 
 #include "../config.h"
-
+#include "../r4300/Invalid_Code.h"
 #include <stdio.h>
 #include <stdlib.h>
 #ifndef __WIN32__

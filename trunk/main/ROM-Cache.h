@@ -12,7 +12,8 @@ void ROMCache_init(u32 romSize);
 void ROMCache_deinit();
 
 void ROMCache_read(u32* ram_dest, u32 rom_offset, u32 length);
-
+void ROMCache_load_DVD(char* filename, int byteSwap);
+void ROMCache_load_SDCard(char* filename, int byteSwap);
 #define BYTE_SWAP_BAD -1
 #define BYTE_SWAP_NONE 0
 #define BYTE_SWAP_HALF 1

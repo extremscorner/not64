@@ -124,7 +124,7 @@ static void imm(struct DisasmPara_PPC *dp,ppc_word in,int uimm,int type)
 /* type 2: S/D register is ignored (trap,cmpi) */
 /* type 3: A register is ignored (li) */
 {
-  char *s;
+//  char *s;
   int i = (int)(in & 0xffff);
 
   dp->type = PPCINSTR_IMM;

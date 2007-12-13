@@ -43,11 +43,11 @@
 #else
 #include "plugin_rsp.h"
 #endif // SIXTYFORCE_PLUGIN
-
+#include <string.h>
 #include "hle.h"
 
 //unsigned long inst1, inst2;
-static char stemp[1024];
+//static char stemp[1024];
 
 static struct
 {
@@ -144,7 +144,7 @@ static void adpcm_block(short *out,int src, int bits)
 	j=1;
 	for(i=0;i<16;i++)
 	  {
-	     int d;
+	     int d = 0;
 	     if(!(i&1)) d=buf[j++]<<24;
 	     else d<<=4;
 	     
@@ -166,7 +166,7 @@ static void adpcm_block(short *out,int src, int bits)
 	j=1;
         for(i=0;i<16;i++)
 	  {
-	     int d;
+	     int d = 0;
 	     if(!(i&3)) d=buf[j++]<<24;
 	     else d<<=2;
 	     
@@ -201,12 +201,12 @@ static void ADPCM(void)
    else if (flags & 2) // loop
      {
 	for (i=0; i<16; i++)
-	  d.in[d.buf_out/2 + i] = ((short*)rsp.RDRAM)[d.loop_addr/2 + i^S];
+	  d.in[d.buf_out/2 + i] = ((short*)rsp.RDRAM)[(d.loop_addr/2) + (i^S)];
      }
    else
      {
 	for (i=0; i<16; i++)
-	  d.in[d.buf_out/2 + i] = ((short*)rsp.RDRAM)[addr/2 + i^S];
+	  d.in[d.buf_out/2 + i] = ((short*)rsp.RDRAM)[(addr/2) + (i^S)];
      }
    
    // main loop
@@ -231,7 +231,7 @@ static void ADPCM(void)
    
    // save adpcm state
    for (i=0; i<16; i++)
-     ((short*)rsp.RDRAM)[addr/2 + i^S] = d.in[d.buf_out/2 + 16*(len0) + i];
+     ((short*)rsp.RDRAM)[(addr/2) + (i^S)] = d.in[d.buf_out/2 + 16*(len0) + i];
 }
 
 static void CLEARBUFF(void)
@@ -241,7 +241,7 @@ static void CLEARBUFF(void)
    
    if (len)
      {
-	unsigned long out = inst2 >> 16;
+//	unsigned long out = inst2 >> 16;
 	
 	memset((char*)d.in + dmem, 0, len);
      }
@@ -402,7 +402,7 @@ static void LOADADPCM(void)
    unsigned long count = (inst1 & 0xFFF)>>1;
    unsigned int i;
    for (i=0; i<count; i++)
-     d.adpcm[i] = ((short*)rsp.RDRAM)[addr + i^S];
+     d.adpcm[i] = ((short*)rsp.RDRAM)[(addr) + (i^S)];
 }
 
 static void MIXER(void)
@@ -614,7 +614,7 @@ static void LOADBUFF(void)
    unsigned long buf_len = (inst1 >> 12) & 0xFFF;
    unsigned int i;
    for (i=0; i<buf_len/2; i++)
-     d.in[buf_in/2 + i] = ((short*)rsp.RDRAM)[addr + i^S];
+     d.in[buf_in/2 + i] = ((short*)rsp.RDRAM)[addr + (i^S)];
 }
 
 static void SAVEBUFF(void)
@@ -624,7 +624,7 @@ static void SAVEBUFF(void)
    unsigned long buf_len = (inst1 >> 12) & 0xFFF;
    unsigned int i;
    for (i=0; i<buf_len/2; i++)
-     ((short*)rsp.RDRAM)[addr + i^S] = d.in[buf_out/2 +i];
+     ((short*)rsp.RDRAM)[addr + (i^S)] = d.in[buf_out/2 +i];
 }
 
 static void ENVSET2(void)
