@@ -20,7 +20,8 @@
 #include "hle.h"
 
 #include "Audio_#1.1.h"
-
+#include <malloc.h>
+#include <string.h>
 RSP_INFO rsp;
 
 u32 inst1, inst2;
@@ -250,7 +251,7 @@ __declspec(dllexport) DWORD DoRspCycles ( DWORD Cycles )
    
      {
 	char s[1024];
-	FILE *f;
+//	FILE *f;
 	sprintf(s, "unknown task:\n\ttype:%d\n\tsum:%x\n\tPC:%x", task->type, sum, rsp.SP_PC_REG);
 #ifdef __WIN32__
 	MessageBox(NULL, s, "unknown task", MB_OK);

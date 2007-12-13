@@ -11,7 +11,7 @@
 #define MQ_OFFSET  0x52CCC5FC
 #define ZELDA_SIZE 0x2000000
 extern unsigned int isWii;
-
+#include <string.h>
 #ifdef USE_GUI
 #include "../gui/GUI.h"
 #define MAXLINES 17
@@ -154,7 +154,7 @@ char *textFileBrowserDVD(){
 	if ((!pvd) && (!svd))
 	{
 		PRINT("No ISO9660 DVD Found!\n");
-		return;
+		return "ISO9660 ERROR!";
 	}
 
 	files = 0;

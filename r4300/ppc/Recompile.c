@@ -9,9 +9,10 @@
  */
 
 #include <stdlib.h>
-
+#include <string.h>
+#include <stdio.h>
 #include "../../gc_memory/memory.h"
-
+#include "../Invalid_Code.h"
 #include "Recompile.h"
 #include "Wrappers.h"
 
@@ -36,6 +37,7 @@ int lr_i;
 static void pass2(PowerPC_block* ppc_block);
 static void genRecompileBlock(PowerPC_block*);
 static void genJumpPad(PowerPC_block*);
+int resizeCode(PowerPC_block* block, int newSize);
 
 MIPS_instr get_next_src(void) { return *(src++); }
 MIPS_instr peek_next_src(void){ return *src;     }
@@ -293,7 +295,7 @@ void jump_to(unsigned int address){
 	
 	// Recompute the block offset
 	int offset = 0;
-	if(address&0xFFF > 0)
+	if((address&0xFFF) > 0)
 		offset = dst_block->code_addr[address&0xFFF] - dst_block->code;
 	
 	start(dst_block, offset);

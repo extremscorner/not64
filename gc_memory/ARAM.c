@@ -2,6 +2,8 @@
    by Mike Slegeir for Mupen64-GC
  */
 
+#include <malloc.h>
+#include <stdio.h>
 #include <ogc/aram.h>
 #include "ARAM.h"
 
@@ -100,7 +102,7 @@ char* ARAM_block_alloc_contiguous(unsigned char** ptr, unsigned char owner, unsi
 	PRINT("ARAM_block_alloc_contiguous:\n");
 	if(!initialized || alloced_blocks+num_blocks > max_blocks) return NULL;
 	
-	int count = 0, block, i;
+	int count = 0, block = 0, i;
 	for(i=0; i<max_blocks; ++i){
 		if(!ARAM_blocks[i].valid){
 			if(count++ == 0) block = i;
@@ -154,7 +156,7 @@ void ARAM_block_free_contiguous(unsigned char** ptr, unsigned int num_blocks){
 unsigned char** ARAM_block_LRU(unsigned char owner){
 	if(!initialized) return NULL;
 	
-	char max=0,max_i=-1,i;
+	int max=0,max_i=-1,i;
 	for(i=0; i<max_blocks; ++i)
 		if(ARAM_blocks[i].lru >= max &&
 		   ARAM_blocks[i].valid && ARAM_blocks[i].owner == owner){

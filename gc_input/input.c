@@ -4,6 +4,7 @@
 
 #include <string.h>
 #include <ogc/pad.h>
+#include <stdio.h>
 
 #include "../main/winlnxdefs.h"
 #include "InputPlugin.h"
@@ -13,7 +14,7 @@
 #ifdef USE_GUI
 
 #endif
-
+ 
 static CONTROL_INFO control_info;
 static BOOL lastData[4];
 
@@ -93,11 +94,11 @@ EXPORT void CALL ControllerCommand ( int Control, BYTE * Command)
 *******************************************************************/ 
 EXPORT void CALL DllAbout ( HWND hParent )
 {
-   char s[] = "Input plugin for Mupen64 emulator for GC\n\tby Mike Slegeir\n";
 #ifdef USE_GUI
    
 #else
-   printf(s);
+	char s[] = "Input plugin for Mupen64 emulator for GC\n\tby Mike Slegeir\n";
+   	printf(s);
 #endif
 }
 

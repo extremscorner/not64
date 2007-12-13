@@ -24,7 +24,7 @@ AUDIO_INFO AudioInfo;
 
 #define BUFFER_SIZE 4*1024
 static char buffer[2][BUFFER_SIZE] __attribute__((aligned(32)));
-static char which_buffer = 0;
+static int which_buffer = 0;
 static unsigned int buffer_offset = 0;
 
 char audioEnabled;
@@ -33,7 +33,7 @@ EXPORT void CALL
 AiDacrateChanged( int SystemType )
 {
 	// Taken from mupen_audio
-	int f;
+	int f = 32000; //default to 32khz incase we get a bad systemtype
 	switch (SystemType){
 	      case SYSTEM_NTSC:
 		f = 48681812 / (*AudioInfo.AI_DACRATE_REG + 1);

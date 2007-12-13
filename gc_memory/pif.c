@@ -28,7 +28,7 @@
 **/
 
 #include "../config.h"
-
+#include <malloc.h>
 #include <stdio.h>
 #include <stdlib.h>
 #ifndef __WIN32__

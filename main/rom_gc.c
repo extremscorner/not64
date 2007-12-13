@@ -39,6 +39,7 @@
 #include <sdcard.h>
 
 #include "rom.h"
+#include "gc_dvd.h"
 #include "ROM-Cache.h" 
 #include "../gc_memory/memory.h"
 #include "md5.h"
@@ -51,8 +52,8 @@
 #endif
 
 static sd_file *rom_file;
-static int i, tmp, z;
-
+//static int i, tmp, z;
+ 
 int rom_length;
 unsigned char *rom;
 rom_header *ROM_HEADER;
@@ -112,10 +113,10 @@ static int detectByteSwappingDVD(){
 }
 
 int rom_read(const char *argv){
-   md5_state_t state;
-   md5_byte_t digest[16];
+//   md5_state_t state;
+//  md5_byte_t digest[16];
    //mupenEntry *entry;
-   char buf[1024], arg[1024], *s;
+   char arg[1024];
    strncpy(arg, argv, 1000);
    char buffer[1024];
    
