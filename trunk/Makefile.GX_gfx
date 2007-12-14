@@ -12,10 +12,10 @@ CXX		=powerpc-gekko-g++
 #CFLAGS  = -g -O2 -Wall $(MACHDEP) $(INCLUDE) -fomit-frame-pointer 
 CFLAGS  = -g -O2 -Wall $(MACHDEP) -fomit-frame-pointer \
 	  -DCPU_SHUTDOWN -DSPC700_SHUTDOWN -DVAR_CYCLES -DSOUND \
-	  -DNOASM -DNGC -DNOASM -DPIXEL_FORMAT=RGB565 -DSPC700_C \
-	  -DM_PI=3.14159265359 -DEXECUTE_SUPERFX_PER_LINE \
+	  -DNOASM -DNGC -DNOASM -DPIXEL_FORMAT=RGB565  \
+	  -DM_PI=3.14159265359  \
 	  -fno-exceptions -Wno-unused-parameter -pipe \
-	  -DDETECT_NASTY_FX_INTERLEAVE -DSDD1_DECOMP -DUSE_GUI
+	   -DUSE_GUI -DSHOW_DEBUG
 
 MACHDEP	= -DGEKKO -mcpu=750 -meabi -mhard-float 
 LDFLAGS	=	$(MACHDEP) -mogc -Wl,-Map,$(notdir $@).map -Wl,--cref
