@@ -5,7 +5,14 @@
 #ifndef DEBUG_H
 #define DEBUG_H
 
-
+#define DBG_DLIST 0
+#define DBG_DLISTTYPE 1
+#define DBG_RSPINFO 2
+#define DBG_RSPINFO1 3
+#define DBG_TXINFO 4
+#define DBG_TXINFO1 5
+#define DBG_AUDIOINFO 6
+static char txtbuffer[1024];
 // Amount of time each string will be held onto
 #define DEBUG_STRING_LIFE 3000
 // Dimensions of array returned by get_text
@@ -17,7 +24,7 @@ extern "C" {
 #endif
 
 // Pre-formatted string (use sprintf before sending to print)
-void DEBUG_print(char* string);
+void DEBUG_print(char* string,int pos);
 
 // Should be called before get_text. Ages the strings, and remove old ones
 void DEBUG_update(void);

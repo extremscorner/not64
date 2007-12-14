@@ -291,23 +291,24 @@ void ROMCache_load_DVD(char* filename, int byteSwap){
 static void byte_swap(char* buffer, unsigned int length){
 	if(ROM_byte_swap == BYTE_SWAP_NONE || ROM_byte_swap == BYTE_SWAP_BAD)
 		return;
-	
-	int i, temp;
+	int i;
 	if(ROM_byte_swap == BYTE_SWAP_HALF){
-		for(i=0; i<length/2; i+=2){
-			temp                  = ((short*)buffer)[i];
-			((short*)buffer)[i]   = ((short*)buffer)[i+1];
-			((short*)buffer)[i+1] = temp;
+		for(i=0; i<(length/2); i+=2){
+			unsigned short temp  = 0;
+			temp 			= buffer[i];               
+			buffer[i]   	= buffer[i+1];
+			buffer[i+1] 	= temp;
 		}
 	} else if(ROM_byte_swap == BYTE_SWAP_BYTE){
-		for(i=0; i<length/4; i+=4){
-			temp        = buffer[i];
-			buffer[i]   = buffer[i+3];
-			buffer[i+3] = temp;
+		for(i=0; i<(length/4); i+=4){
+			unsigned char temp = 0;
+			temp        	= buffer[i];
+			buffer[i]   	= buffer[i+2];
+			buffer[i+2] 	= temp;
 			
-			temp        = buffer[i+1];
-			buffer[i+1] = buffer[i+2];
-			buffer[i+2] = temp;
+			temp       		= buffer[i+3];
+			buffer[i+3] 	= buffer[i+4];
+			buffer[i+4] 	= temp;
 		}
 	}
 }

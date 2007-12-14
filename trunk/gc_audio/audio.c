@@ -19,6 +19,7 @@
 
 #include "AudioPlugin.h"
 #include "Audio_#1.1.h"
+#include "../gui/DEBUG.h"
 
 AUDIO_INFO AudioInfo;
 
@@ -50,8 +51,10 @@ AiDacrateChanged( int SystemType )
 		AUDIO_SetStreamSampleRate(AI_SAMPLERATE_32KHZ);
 	else if ( f == 48000 )
 		AUDIO_SetStreamSampleRate(AI_SAMPLERATE_48KHZ);
-	else 
-		printf("error initializing frequency: %d\n", f);
+	else {
+		 sprintf(txtbuffer,"error initializing frequency: %d", f);
+	   	 DEBUG_print(txtbuffer,DBG_AUDIOINFO); 
+	}
 		
 	// FIXME: Trying to force 48khz
 	AUDIO_SetStreamSampleRate(AI_SAMPLERATE_48KHZ);
