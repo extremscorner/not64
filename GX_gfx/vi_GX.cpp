@@ -156,22 +156,19 @@ void VI_GX::updateDEBUG()
 {
 	updateDEBUGflag = true;
 }
-
+extern char text[DEBUG_TEXT_HEIGHT][DEBUG_TEXT_WIDTH];
 void VI_GX::showDEBUG()
 {
 	if (updateDEBUGflag)
 	{
-		int i = 1;
-		char** temp_textptrs;
+		int i = 0;
 		GXColor fontColor = {150, 255, 150, 255};
-
-		DEBUG_update();
-		temp_textptrs = DEBUG_get_text();
+		
 		write_font_init_GX(fontColor);
-		for (i=0;i<DEBUG_TEXT_HEIGHT;i++)
-			if (temp_textptrs[i]!=NULL)
-				write_font(10,(10*i+30),temp_textptrs[i], 0.5); 
-
+		for (i=0;i<DEBUG_TEXT_HEIGHT;i++){
+				write_font(10,(10*i+50),text[i], 0.5); 
+		}
+		
 	   //reset swap table from GUI/DEBUG
 		GX_SetTevSwapModeTable(GX_TEV_SWAP0, GX_CH_RED, GX_CH_GREEN, GX_CH_BLUE, GX_CH_ALPHA);
 		GX_SetTevSwapMode(GX_TEVSTAGE0, GX_TEV_SWAP0, GX_TEV_SWAP0);

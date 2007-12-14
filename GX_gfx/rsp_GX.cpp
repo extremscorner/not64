@@ -92,7 +92,7 @@ RSP::RSP(GFX_INFO info) : gfxInfo(info), error(false), end(false)
    //rdp = new RDP(info);
       tx = new TX(info);
 
-   DEBUG_print("Executing DList...\n");
+   DEBUG_print("Executing DList...",DBG_DLIST);
    executeDList();
 }
 
@@ -141,14 +141,16 @@ void RSP::DL()
 	currentCommand = (unsigned long*)(gfxInfo.RDRAM + addr) - 2;
 	break;
       default:
-	printf("unknown DL: push=%x\n", push);
+         sprintf(txtbuffer,"rsp:unknown DL: push=%x", push);
+	   	 DEBUG_print(txtbuffer,DBG_RSPINFO); 
 	error = true;
      }
 }
 
 void RSP::NI()
 {
-   printf("NI:%x\n", (int)(*currentCommand>>24));
+   sprintf(txtbuffer,"RSP: NI:%x", (int)(*currentCommand>>24));
+   DEBUG_print(txtbuffer,DBG_RSPINFO); 
    //if (!error) getchar();
    error = true;
 }
@@ -214,7 +216,8 @@ void RSP::MTX()
 	  }
 	break;
       default:
-	printf("RSP: unknown MTX:%d\n", op);
+        sprintf(txtbuffer,"RSP: unknown MTX:%d", op);
+   		DEBUG_print(txtbuffer,DBG_RSPINFO); 
 	error = true;
      }
    MP = modelView * projection;
@@ -263,7 +266,9 @@ void RSP::MTX()
 	  }
       GX_LoadPosMtxImm(GXmodelView, GX_PNMTX0);
 	  if(guMtxInverse(GXmodelView, GXnormal) == 0)	// normal matrix is the inverse transpose of the modelview matrix
-		  printf("Normal matrix is singular\n");
+	  {
+   		  DEBUG_print("Normal matrix is singular",DBG_RSPINFO);
+	  }
 	  guMtxTranspose(GXnormal, GXnormal);
       GX_LoadNrmMtxImm(GXnormal, GX_PNMTX0);
 //	  printf("Send Normal Matrix to GX\n");
@@ -365,7 +370,8 @@ void RSP::MOVEMEM()
 	  }
 	break;
       default:
-	printf("unknown MOVEMEM:%x\n", dest);
+      	  sprintf(txtbuffer,"unknown MOVEMEM:%x", dest);
+   		  DEBUG_print(txtbuffer,DBG_RSPINFO);
 	error=true;
      }
 }
@@ -454,13 +460,15 @@ void RSP::SPRITE2D()
    
    float ulx = PScreenX;
    float lrx = ulx + SubImageWidth - 1;
-   
-   printf("Sprite2D call\n");
+    
+   DEBUG_print("Sprite2D call",DBG_RSPINFO);
 
-   if (SourceImageBitSize == 0)
-     printf("RSP:SPRITE2D image type=%d bitsize=%d\n", SourceImageType, SourceImageBitSize);
+   if (SourceImageBitSize == 0) {
+	 sprintf(txtbuffer,"RSP:SPRITE2D image type=%d bitsize=%d", SourceImageType, SourceImageBitSize);
+   	 DEBUG_print(txtbuffer,DBG_RSPINFO1);
+	}
    if (FlipTextureX || FlipTextureY)
-     printf("RSP:SPRITE2D flip\n");
+     DEBUG_print("RSP:SPRITE2D flip",DBG_RSPINFO1);
    
    if (SourceImageType == 2)
      {
@@ -554,8 +562,10 @@ void RSP::SETGEOMETRYMODE()
 	   GX_SetZMode(GX_ENABLE,GX_GEQUAL,GX_TRUE);
    }
    
-   if (mode & ~0x72205)
-     printf("unknown SETGEOMETRYMODE:%x\n", mode & ~0x72205);
+   if (mode & ~0x72205) {
+	 sprintf(txtbuffer,"rsp unknown SETGEOMETRYMODE:%x", mode & ~0x72205);
+   	 DEBUG_print(txtbuffer,DBG_RSPINFO);
+	}
    geometryMode = 
      zbuffer                  | 
      shade              << 2  |
@@ -669,7 +679,9 @@ void RSP::SETOTHERMODE_L()
 */
 	break;
       default:
-	printf("RDP: unknown setOtherMode_l:%d\n", mode);
+     sprintf(txtbuffer,"RDP: unknown setOtherMode_l:%d", mode);
+   	 DEBUG_print(txtbuffer,DBG_RSPINFO);
+
      }
 
 }
@@ -721,7 +733,9 @@ void RSP::SETOTHERMODE_H()
 	// ignoring pipeline mode
 	break;
       default:
-	printf("RDP: unknown setOtherMode_h:%d\n", mode);
+      sprintf(txtbuffer,"RDP: unknown setOtherMode_h:%d", mode);
+   	 DEBUG_print(txtbuffer,DBG_RSPINFO);
+
      }
 }
 
@@ -762,7 +776,8 @@ void RSP::MOVEWORD()
 	fo = (short)(*(currentCommand+1) & 0xFFFF);
 	break;
       default:
-	printf("unknown MOVEWORD:%x\n", index);
+     sprintf(txtbuffer,"unknown MOVEWORD:%x", index);
+   	 DEBUG_print(txtbuffer,DBG_RSPINFO);
 	error=true;
      }
 //   printf("Moveword\n");
@@ -785,7 +800,7 @@ void RSP::POPMTX()
 	  }
       GX_LoadPosMtxImm(GXmodelView, GX_PNMTX0);
 	  if(guMtxInverse(GXmodelView, GXnormal) == 0)
-		  printf("Normal matrix is singular\n");
+		  DEBUG_print("Normal matrix is singular",DBG_RSPINFO);
 	  guMtxTranspose(GXnormal, GXnormal);
       GX_LoadNrmMtxImm(GXnormal, GX_PNMTX0);
 //	  printf("Send Normal Matrix to GX\n");
@@ -1518,8 +1533,10 @@ void RSP::TEXRECT()
 //		  Color32 t = rdp->tx->getTexel(ps, pt, tile, NULL);
 //		  rdp->bl->copyModeDraw(j,i,t);
      }
-   else printf("RS:unknown cycle type in texRect:%d\n", cycleType);
-
+   else {
+	   sprintf(txtbuffer,"RS:unknown cycle type in texRect:%d", cycleType);
+   	   DEBUG_print(txtbuffer,DBG_RSPINFO);
+	   }
    currentCommand += 4;
 //   printf("trying to send textrec\n");
 }
@@ -1728,7 +1745,10 @@ void RSP::FILLRECT()
 		//TODO: Implement this case
 //		 printf("fillRect cycleType 0: NI\n");
      }
-   else printf("rs:fillRect not fill mode ? %d\n", cycleType);
+   else {
+	   	   sprintf(txtbuffer,"rs:fillRect not fill mode ? %d", cycleType);
+   	   DEBUG_print(txtbuffer,DBG_RSPINFO);
+	}
 
 }
 

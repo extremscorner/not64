@@ -33,6 +33,7 @@
 
 #include "tx_GX.h"
 #include "global.h"
+#include "../gui/DEBUG.h"
 
 TX::TX(GFX_INFO info) : gfxInfo(info)
 {
@@ -105,7 +106,8 @@ void TX::setTile(int f, int s, int l, int t, int tile, int p,
 		 descriptor[tile].N64texfmt = 1;
 	     break;
 	   default:
-	     printf("TX:unknown setTile RGBA size : %d\n", descriptor[tile].size);
+	   		sprintf(txtbuffer,"TX:unknown setTile RGBA size : %d", descriptor[tile].size);
+	   		DEBUG_print(txtbuffer,DBG_TXINFO);
 	  }
 	break;
       case 2: // CI
@@ -115,11 +117,15 @@ void TX::setTile(int f, int s, int l, int t, int tile, int p,
 	     if (textureLUT == 2)
 //	       unpackTexel[tile] = &TX::unpack_CI8_RGBA16;
 		   descriptor[tile].N64texfmt = 2;
-	     else
-	       printf("TX:unknoqn setTile CI8 LUT format:%d\n", textureLUT);
+	     else{
+	     	sprintf(txtbuffer,"TX:unknown setTile CI8 LUT format:%d", textureLUT);
+	   		DEBUG_print(txtbuffer,DBG_TXINFO); 
+   		}
+
 	     break;
 	   default:
-	     printf("TX:unknown setTile CI size : %d\n", descriptor[tile].size);
+	   	  	sprintf(txtbuffer,"TX:unknown setTile CI size : %d", descriptor[tile].size);
+	   		DEBUG_print(txtbuffer,DBG_TXINFO); 
 	  }
 	break;
       case 3: // IA
@@ -138,17 +144,19 @@ void TX::setTile(int f, int s, int l, int t, int tile, int p,
 		 descriptor[tile].N64texfmt = 5;
 	     break;
 	   default:
-	     printf("TX:unknown setTile IA size : %d\n", descriptor[tile].size);
+	   	 sprintf(txtbuffer,"TX:unknown setTile IA size : %d", descriptor[tile].size);
+	   	 DEBUG_print(txtbuffer,DBG_TXINFO); 
 	  }
 	break;
       default:
-	printf("TX:unknown setTile format : %d\n", descriptor[tile].format);
+      	 sprintf(txtbuffer,"TX:unknown setTile format : %d", descriptor[tile].format);
+	   	 DEBUG_print(txtbuffer,DBG_TXINFO); 
      }
 }
 
 void TX::loadBlock(float uls, float ult, int tile, float lrs, int dxt)
 {
-   if ((int)uls != 0 || (int)ult != 0) printf("tx:unknown loadBlock\n");
+   if ((int)uls != 0 || (int)ult != 0) DEBUG_print("tx:unknown loadBlock",DBG_TXINFO);
 //   for (int i=0; i<((int)lrs+1)*8; i++)
 //     tmem[descriptor[tile].tmem*8+i] = ((unsigned char*)tImg)[i];
 
@@ -166,7 +174,7 @@ void TX::loadTile(int tile, float uls, float ult, float lrs, float lrt)
    int count = 0;
    unsigned char *p = (unsigned char*)tImg;
    short *p16 = (short*)tImg;
-   if (!size) printf("loadtile tries to load a 4 bit texture\n");
+   if (!size) DEBUG_print("loadtile tries to load a 4 bit texture",DBG_TXINFO);
 /*   for (int i=(int)ult; i<=(int)lrt; i++)
 	{
 	   for (int j=(int)uls*size; j<=(int)lrs*size; j++)
@@ -190,7 +198,7 @@ void TX::loadTile(int tile, float uls, float ult, float lrs, float lrt)
 	else wrap_t = GX_REPEAT;
 	//TODO: Check on s & t wrap modes and mipmap modes
 
-//	if (descriptor[tile].N64texfmt != 2) printf("Unimplemented N64 tex: %d\n",descriptor[tile].N64texfmt);
+//	if (descriptor[tile].N64texfmt != 2) printf("Unimplemented N64 tex: %d",descriptor[tile].N64texfmt);
 
 	//Convert texture to GC format
 	switch (descriptor[tile].N64texfmt)
@@ -323,7 +331,7 @@ void TX::loadTile(int tile, float uls, float ult, float lrs, float lrt)
 		   descriptor[tile].GXtexfmt = GX_TF_IA8;
 		   break;
 	   default:
-		   printf("loadTile: Unkown texture format. No texture loaded");
+		   DEBUG_print("loadTile: Unkown texture format. No texture loaded",DBG_TXINFO);
 		   return;
    }
 
@@ -344,7 +352,8 @@ void TX::loadTLUT(int tile, int count)
 
    if(count>256) 
    {
-	   printf("loadTLUT: Unkown TLUT format. count = %d",count);
+	   sprintf(txtbuffer,"loadTLUT: Unkown TLUT format. count = %d",count);
+	   DEBUG_print(txtbuffer,DBG_TXINFO); 
 	   return;
    }
    // Let GX finish with all previous commands before loading the new tex
