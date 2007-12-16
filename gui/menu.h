@@ -13,7 +13,7 @@ typedef struct menu_item_t {
 			unsigned int        num_items;
 			struct menu_item_t* items;
 		} subMenu;
-		void (*func)(void);
+		void (*func)();
 	};
 } menu_item;
 
