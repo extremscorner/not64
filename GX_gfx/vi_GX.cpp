@@ -163,7 +163,7 @@ void VI_GX::showDEBUG()
 	{
 		int i = 0;
 		GXColor fontColor = {150, 255, 150, 255};
-		
+		DEBUG_update();
 		write_font_init_GX(fontColor);
 		for (i=0;i<DEBUG_TEXT_HEIGHT;i++){
 				write_font(10,(10*i+50),text[i], 0.5); 
