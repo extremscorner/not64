@@ -33,7 +33,7 @@
 #include "../r4300/r4300.h"
 #include "memory.h"
 #include "../main/guifuncs.h"
-
+#include "../gui/DEBUG.h"
 #include <sdcard.h>
 #include <ogc/card.h>
 #include "Saves.h"
@@ -232,10 +232,12 @@ void dma_read_flashram()
    switch(mode)
      {
       case STATUS_MODE:
+      DEBUG_print("Get Status FlashRAM",DBG_SAVEINFO);
 	rdram[pi_register.pi_dram_addr_reg/4] = (unsigned long)(status >> 32);
 	rdram[pi_register.pi_dram_addr_reg/4+1] = (unsigned long)(status);
 	break;
       case READ_MODE:
+      DEBUG_print("Read FlashRAM",DBG_SAVEINFO);
 
 	for (i=0; i<(pi_register.pi_wr_len_reg & 0x0FFFFFF)+1; i++)
 	  ((unsigned char*)rdram)[(pi_register.pi_dram_addr_reg+i)^S8]=
@@ -252,6 +254,7 @@ void dma_write_flashram()
    switch(mode)
      {
       case WRITE_MODE:
+      DEBUG_print("Write FlashRAM",DBG_SAVEINFO);
 	write_pointer = pi_register.pi_dram_addr_reg;
 	break;
       default:

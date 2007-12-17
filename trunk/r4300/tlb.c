@@ -32,6 +32,7 @@
 #include "ops.h"
 #include "recomph.h"
 #include "interupt.h"
+#include "Invalid_Code.h"
 #include "../main/md5.h"
 #include "../gc_memory/memory.h"
 #include "../gc_memory/TLB-Cache.h"

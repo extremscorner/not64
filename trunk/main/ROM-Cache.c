@@ -11,7 +11,7 @@
 #include "gc_dvd.h"
 #include "../gc_memory/ARAM.h"
 #include "ROM-Cache.h"
-
+#include "../gui/DEBUG.h"
 #ifdef USE_GUI
 #include "../gui/GUI.h"
 #define PRINT GUI_print
@@ -49,6 +49,8 @@ void ROMCache_deinit(){
 }
 
 static void inline ROMCache_load_block(char* block, int rom_offset){
+	sprintf(txtbuffer,"ROMCache Load rom_offset: %08X",rom_offset);
+	DEBUG_print(txtbuffer,DBG_CACHEINFO);
 	if(isFromDVD) {
 		unsigned int tempDVDOffset = rom_offsetDVD+rom_offset;
 		//printf("Loading ROM block %08x from DVD with offset %08x\n", block, rom_offset);

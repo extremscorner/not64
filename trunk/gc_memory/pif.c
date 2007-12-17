@@ -57,7 +57,7 @@
 #else
 #define PRINT printf
 #endif
-
+#include "../gui/DEBUG.h"
 static unsigned char eeprom[0x800] __attribute__((aligned(32)));
 static unsigned char mempack[4][0x8000] __attribute__((aligned(32)));
 static BOOL eepromWritten = FALSE;
@@ -355,15 +355,17 @@ void internal_ReadController(int Control, BYTE *Command)
       case 2: // read controller pack
 	if (Controls[Control].Present)
 	  {
+	   	DEBUG_print("Read Controller Pack",DBG_SAVEINFO);
 	     if (Controls[Control].Plugin == PLUGIN_RAW)
-	       if (controllerCommand) readController(Control, Command);
+	       if (controllerCommand != NULL) readController(Control, Command);
 	  }
 	break;
       case 3: // write controller pack
 	if (Controls[Control].Present)
 	  {
+		  DEBUG_print("Write Controller Pack",DBG_SAVEINFO);
 	     if (Controls[Control].Plugin == PLUGIN_RAW)
-	       if (controllerCommand) readController(Control, Command);
+	       if (controllerCommand != NULL) readController(Control, Command);
 	  }
 	break;
      }
@@ -430,7 +432,7 @@ void internal_ControllerCommand(int Control, BYTE *Command)
 		    }
 		  break;
 		case PLUGIN_RAW:
-		  if (controllerCommand) controllerCommand(Control, Command);
+		  if (controllerCommand != NULL) controllerCommand(Control, Command);
 		  break;
 		default:
 		  memset(&Command[5], 0, 0x20);
@@ -462,7 +464,7 @@ void internal_ControllerCommand(int Control, BYTE *Command)
 		    }
 		  break;
 		case PLUGIN_RAW:
-		  if (controllerCommand) controllerCommand(Control, Command);
+		  if (controllerCommand != NULL) controllerCommand(Control, Command);
 		  break;
 		default:
 		  Command[0x25] = mempack_crc(&Command[5]);

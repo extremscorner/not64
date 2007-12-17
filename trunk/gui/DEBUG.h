@@ -12,6 +12,8 @@
 #define DBG_TXINFO 4
 #define DBG_TXINFO1 5
 #define DBG_AUDIOINFO 6
+#define DBG_SAVEINFO 7
+#define DBG_CACHEINFO 8
 static char txtbuffer[1024];
 // Amount of time each string will be held onto
 #define DEBUG_STRING_LIFE 3000

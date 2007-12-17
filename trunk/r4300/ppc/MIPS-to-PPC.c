@@ -30,7 +30,7 @@ static int hi_instr_count, lo_instr_count;
 // Instructions to execute
 static PowerPC_instr hi_instr[4], lo_instr[4];
 // If rd is used in instruction, shift it this amount (if > 0)
-static char hi_shift[4][2], lo_shift[4][2];
+static signed char hi_shift[4][2], lo_shift[4][2];
 // Booleans: Do the addresses in the respective registers
 //             refer to recompiled code or N64 addresses
 static char isGCAddr[32];
