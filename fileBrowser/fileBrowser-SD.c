@@ -27,7 +27,7 @@ int fileBrowser_SD_readDir(fileBrowser_file* file, fileBrowser_file** dir){
 	int num_entries = SDCARD_readDir(&file->name, &sddir);
 	
 	// If it was not successful, just return the error
-	if(num_entries <= 0) return num_entries
+	if(num_entries <= 0) return num_entries;
 	
 	// Convert the SDCARD data to fileBrowser_files
 	*dir = malloc( num_entries * sizeof(fileBrowser_file) );
@@ -52,9 +52,11 @@ int fileBrowser_SD_readFile(fileBrowser_file* file, void* buffer, unsigned int l
 	if(!f) return -1;
 	
 	SDCARD_SeekFile(f, file->offset, SDCARD_SEEK_SET);
-	file->offset += SDCARD_ReadFile(f, buffer, length);
+	int bytes_read = SDCARD_ReadFile(f, buffer, length);
+	if(bytes_read > 0) file->offset += bytes_read;
 	
 	SDCARD_CloseFile(f);
+	return bytes_read;
 }
 
 int fileBrowser_SD_writeFile(fileBrowser_file* file, void* buffer, unsigned int length){
@@ -63,8 +65,10 @@ int fileBrowser_SD_writeFile(fileBrowser_file* file, void* buffer, unsigned int 
 	if(!f) return -1;
 	
 	SDCARD_SeekFile(f, file->offset, SDCARD_SEEK_SET);
-	file->offset += SDCARD_WriteFile(f, buffer, length);
+	int bytes_read = SDCARD_WriteFile(f, buffer, length);
+	if(bytes_read > 0) file->offset += bytes_read;
 	
 	SDCARD_CloseFile(f);
+	return bytes_read;
 }
 
