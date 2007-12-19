@@ -5,7 +5,14 @@
 #ifndef GC_DVD_H
 #define GC_DVD_H
 
+//Used in ISO9660 Parsing
+#define NO_FILES -1
+#define NO_ISO9660_DISC -2
+#define FATAL_ERROR -3
+
 void dvd_motor_off();
+unsigned int dvd_get_error(void);
+int dvd_read_directoryentries(unsigned int offset, int size);
 void read_directory(int sector, int len);
 int read_safe(void* dst, int offset, int len);
 int read_direntry(unsigned char* direntry);
