@@ -21,7 +21,7 @@ fileBrowser_file topLevel_SD_SlotB =
 	  FILE_BROWSER_ATTR_DIR
 	 };
 
-int fileBrowser_SD_readDir(fileBrowser* file, fileBrowser** dir){
+int fileBrowser_SD_readDir(fileBrowser_file* file, fileBrowser_file** dir){
 	DIR* sddir = NULL;
 	// Call the corresponding SDCARD function
 	int num_entries = SDCARD_readDir(&file->name, &sddir);
@@ -40,13 +40,13 @@ int fileBrowser_SD_readDir(fileBrowser* file, fileBrowser** dir){
 	}
 }
 
-int fileBrowser_SD_seekFile(fileBrowser* file, unsigned int where, unsigned int type){
+int fileBrowser_SD_seekFile(fileBrowser_file* file, unsigned int where, unsigned int type){
 	if(type == FILE_BROWSER_SEEK_SET) file->offset = where;
 	else if(type == FILE_BROWSER_SEEK_CUR) file->offset += where;
 	else file->offset = file->size + where;
 }
 
-int fileBrowser_SD_readFile(fileBrowser* file, void* buffer, unsigned int length){
+int fileBrowser_SD_readFile(fileBrowser_file* file, void* buffer, unsigned int length){
 	sd_file* f;
 	f = SDCARD_OpenFile( &file->name, "rb");
 	if(!f) return -1;
@@ -57,7 +57,7 @@ int fileBrowser_SD_readFile(fileBrowser* file, void* buffer, unsigned int length
 	SDCARD_CloseFile(f);
 }
 
-int fileBrowser_SD_writeFile(fileBrowser* file, void* buffer, unsigned int length){
+int fileBrowser_SD_writeFile(fileBrowser_file* file, void* buffer, unsigned int length){
 	sd_file* f;
 	f = SDCARD_OpenFile( &file->name, "wb");
 	if(!f) return -1;
