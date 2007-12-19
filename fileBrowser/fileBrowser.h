@@ -15,7 +15,7 @@
 
 typedef struct {
 	char         name[FILE_BROWSER_MAX_PATH_LEN];
-	unsigned int sector; // Probably only necessary for DVD
+	unsigned int discoffset; // Only necessary for DVD
 	unsigned int offset; // Keep track of our offset in the file
 	unsigned int size;
 	unsigned int attr;

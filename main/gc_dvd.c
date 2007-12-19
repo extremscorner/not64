@@ -3,8 +3,19 @@
 #include <string.h>
 #include <gccore.h>
 #include "gc_dvd.h"
+
+
 int last_current_dir = -1;
 volatile unsigned long* dvd = (volatile long*)0xCC006000;
+
+unsigned int dvd_get_error(void)
+{
+	dvd[2] = 0xE0000000;
+	dvd[8] = 0;
+	dvd[7] = 1;
+	while (dvd[7] & 1);
+	return dvd[8];
+}
 
 void dvd_motor_off()
 {
@@ -176,6 +187,71 @@ void read_directory(int sector, int len)
 			ptr = 0;
 		}
 	}
+}
+
+int dvd_read_directoryentries(unsigned int offset, int size) {
+	int sector = 16;
+	static unsigned char bufferDVD[2048] __attribute__((aligned(32)));
+	
+	struct pvd_s* pvd = 0;
+	struct pvd_s* svd = 0;
+	while (sector < 32)
+	{
+		if (read_sector(bufferDVD, sector))
+			return FATAL_ERROR;
+		if (!memcmp(((struct pvd_s *)bufferDVD)->id, "\2CD001\1", 8))
+		{
+			svd = (void*)bufferDVD;
+			break;
+		}
+		++sector;
+	}
+
+	if (!svd)
+	{
+		sector = 16;
+		while (sector < 32)
+		{
+			if (read_sector(bufferDVD, sector))
+				return FATAL_ERROR;
+
+			if (!memcmp(((struct pvd_s *)bufferDVD)->id, "\1CD001\1", 8))
+			{
+				pvd = (void*)bufferDVD;
+				break;
+			}
+			++sector;
+		}
+	}
+
+	if ((!pvd) && (!svd))
+	{
+		return NO_ISO9660_DISC;
+	}
+
+	files = 0;
+	if (svd)
+	{
+		is_unicode = 1;	
+		read_direntry(svd->root_direntry);
+	}
+	else
+	{
+		is_unicode = 0;
+		read_direntry(pvd->root_direntry);
+	}
+	if((size + offset) == 0) {
+		// enter root
+		read_directory(file[0].sector, file[0].size);
+	}
+	else 
+		read_directory((offset/2048), size);
+		
+
+	
+	if(files>0)
+		return files;
+	return NO_FILES;
 }
 
 unsigned int dvd_read_id()
