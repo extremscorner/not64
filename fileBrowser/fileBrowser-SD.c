@@ -38,12 +38,16 @@ int fileBrowser_SD_readDir(fileBrowser_file* file, fileBrowser_file** dir){
 		(*dir)[i].size   = sddir[i].fsize;
 		(*dir)[i].attr   = sddir[i].fattr;
 	}
+	
+	return num_entries;
 }
 
 int fileBrowser_SD_seekFile(fileBrowser_file* file, unsigned int where, unsigned int type){
 	if(type == FILE_BROWSER_SEEK_SET) file->offset = where;
 	else if(type == FILE_BROWSER_SEEK_CUR) file->offset += where;
 	else file->offset = file->size + where;
+	
+	return 0;
 }
 
 int fileBrowser_SD_readFile(fileBrowser_file* file, void* buffer, unsigned int length){

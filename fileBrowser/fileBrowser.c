@@ -2,7 +2,7 @@
    by Mike Slegeir for Mupen64-GC
  */
 
-#include "fileBrowser.c"
+#include "fileBrowser.h"
 
 fileBrowser_file* romFile_topLevel;
 
