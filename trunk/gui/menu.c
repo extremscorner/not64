@@ -4,8 +4,10 @@
 
 #include "menu.h"
 #include "GUI.h"
-
-
+#include "../fileBrowser/fileBrowser.h"
+#include "../fileBrowser/fileBrowser-SD.h"
+#include "../fileBrowser/fileBrowser-DVD.h"
+#include "menuFileBrowser.h"
 
 // -- ACTUAL MENU LAYOUT --
 
@@ -87,14 +89,25 @@ static char toggleAudio_strings[2][30]  =
 #include "../main/rom.h"
 char* textFileBrowser(char*);
 char* textFileBrowserDVD();
+static inline void menuStack_push(menu_item*);
 
 	static void loadROMSD_func(){
-		char* romfile = textFileBrowser("dev0:\\N64ROMS");
-		rom_read(romfile);
-		free(romfile);
+		// First change all the romFile pointers
+		romFile_topLevel = &topLevel_SD_SlotA;
+		romFile_readDir  = fileBrowser_SD_readDir;
+		romFile_readFile = fileBrowser_SD_readFile;
+		romFile_seekFile = fileBrowser_SD_seekFile;
+		// Then push the file browser onto the menu
+		menuStack_push( menuFileBrowser(romFile_topLevel) );
 	}
 	static void loadROMDVD_func(){
-		rom_read( textFileBrowserDVD() );
+		// First change all the romFile pointers
+		romFile_topLevel = &topLevel_DVD;
+		romFile_readDir  = fileBrowser_DVD_readDir;
+		romFile_readFile = fileBrowser_DVD_readFile;
+		romFile_seekFile = fileBrowser_DVD_seekFile;
+		// Then push the file browser onto the menu
+		menuStack_push( menuFileBrowser(romFile_topLevel) );
 	}
 	
 static menu_item loadROM_submenu[2] =
@@ -201,6 +214,7 @@ void menuSelect(){
 	} else {
 		// Otherwise, run the menu item's function
 		curr->subMenu.items[selected_i].func(selected_i);
+		selected_i = 0;
 	}
 }
 
