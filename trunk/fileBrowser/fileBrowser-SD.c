@@ -6,18 +6,18 @@
 #include "fileBrowser.h"
 
 fileBrowser_file topLevel_SD_SlotA =
-	{ "dev0:\\", // file name
-	  0,         // sector
-	  0,         // offset
-	  0,         // size
+	{ "dev0:\\N64ROMS", // file name
+	  0, // sector
+	  0, // offset
+	  0, // size
 	  FILE_BROWSER_ATTR_DIR
 	 };
 
 fileBrowser_file topLevel_SD_SlotB =
-	{ "dev1:\\", // file name
-	  0,         // sector
-	  0,         // offset
-	  0,         // size
+	{ "dev1:\\N64ROMS", // file name
+	  0, // sector
+	  0, // offset
+	  0, // size
 	  FILE_BROWSER_ATTR_DIR
 	 };
 
@@ -33,7 +33,7 @@ int fileBrowser_SD_readDir(fileBrowser_file* file, fileBrowser_file** dir){
 	*dir = malloc( num_entries * sizeof(fileBrowser_file) );
 	int i;
 	for(i=0; i<num_entries; ++i){
-		strcpy( (*dir)[i].name, sddir[i].fname );
+		sprintf((*dir)[i].name, "%s\\%s", file->name, sddir[i].fname);
 		(*dir)[i].offset = 0;
 		(*dir)[i].size   = sddir[i].fsize;
 		(*dir)[i].attr   = sddir[i].fattr;
