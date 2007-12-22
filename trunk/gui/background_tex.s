@@ -14,3 +14,11 @@
    .globl BGtextureCI_length
    BGtextureCI_length:
    .long (BGtextureCI_length - BGtextureCI)
+
+   .globl LOGOtexture
+   .balign 32
+   LOGOtexture:
+   .incbin	"./gui/logo.tex"
+   .globl LOGOtexture_length
+   LOGOtexture_length:
+   .long (LOGOtexture_length - LOGOtexture)

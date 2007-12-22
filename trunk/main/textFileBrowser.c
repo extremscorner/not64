@@ -14,7 +14,7 @@ extern unsigned int isWii;
 #include <string.h>
 #ifdef USE_GUI
 #include "../gui/GUI.h"
-#define MAXLINES 17
+#define MAXLINES 16
 #define PRINT GUI_print
 #else
 #define MAXLINES 30
@@ -40,8 +40,12 @@ char* textFileBrowser(char* directory){
 		CLEAR();
 		sprintf(buffer, "browsing %s:\n\n", directory);
 		PRINT(buffer);
-		int i = MIN(MAX(0,currentSelection-floor((MAXLINES-0.5)/2)),MAX(0,entries_found-(MAXLINES-2)));
-		int max = MIN(entries_found, MAX(currentSelection+ceil((MAXLINES)/2)-1,MAXLINES-2));
+		int i = MIN(MAX(0,currentSelection-7),MAX(0,entries_found-14));
+		int max = MIN(entries_found, MAX(currentSelection+7,14));
+//		int i = MIN(MAX(0,currentSelection-floor((MAXLINES-0.5)/2)),MAX(0,entries_found-(MAXLINES-2)));
+//		int max = MIN(entries_found, MAX(currentSelection+ceil((MAXLINES)/2)-1,MAXLINES-2));
+//		sprintf(buffer,"entr=%d;curr=%d;i=%d;max=%d",entries_found,currentSelection,i,max);
+//		PRINT(buffer);
 		for(; i<max; ++i){
 			if(i == currentSelection)
 				sprintf(buffer, "*");
@@ -180,8 +184,10 @@ char *textFileBrowserDVD(){
 		entries_found = files;
 		CLEAR();
 		PRINT("browsing DVD:\n\n"); 
-		int i = MIN(MAX(0,currentSelection-floor((MAXLINES-0.5)/2)),MAX(0,entries_found-(MAXLINES-2)));
-		int max = MIN(entries_found, MAX(currentSelection+ceil((MAXLINES)/2)-1,MAXLINES-2));
+		int i = MIN(MAX(0,currentSelection-7),MAX(0,entries_found-14));
+		int max = MIN(entries_found, MAX(currentSelection+7,14));
+//		int i = MIN(MAX(0,currentSelection-floor((MAXLINES-0.5)/2)),MAX(0,entries_found-(MAXLINES-2)));
+//		int max = MIN(entries_found, MAX(currentSelection+ceil((MAXLINES)/2)-1,MAXLINES-2));
 
 		for(; i<max; ++i){
 			if(i == currentSelection)

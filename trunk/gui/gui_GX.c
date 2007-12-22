@@ -92,13 +92,17 @@ static lwp_t GUIthread;
 lwp_t GXthread;
 GXTexObj BGtex;
 GXTlutObj BGtlut;
+GXTexObj LOGOtex;
 
 extern  u8 BGtexture[];
 extern  u16 BGtextureCI[];
+extern  u16 LOGOtexture[];
 extern long BGtexture_length;
 extern long BGtextureCI_length;
+extern long LOGOtexture_length;
 
 void draw_quad (u8, u8, u8, u8, u8);
+void GUI_splashScreen();
 
 void GUI_setFB(unsigned int* fb1, unsigned int* fb2){
 	GUI.xfb[0] = fb1;
@@ -116,6 +120,7 @@ void GUI_init(){
 	//load BG texture from SD card and initialize
 	GUI_loadBGtex();
 
+//	GUI_splashScreen();
 	//TODO: init spinning cube display list
 
 	GUI_on = 1;
@@ -159,11 +164,11 @@ void GUI_main()
 {
 	Mtx44 GXprojection2D;
 	Mtx GXmodelView2D;
-	int i;
+//	int i;
 
 	while(1) {
 
-	if(GXtoggleFlag = 1) {
+	if(GXtoggleFlag == 1) {
 //		GXthread = GX_SetCurrentGXThread();
 		GXtoggleFlag = 0;
 	}
@@ -212,6 +217,7 @@ void GUI_main()
 
 	GUI_displayText();
 
+	GUI_drawWiiN64();
 	GUI_drawLogo();
 
 	GX_DrawDone ();
@@ -237,7 +243,7 @@ void GUI_displayText(){
 	{
 		write_font_color(&fontColorPtr[i]);
 //		GX_SetTevColor(GX_TEVREG1,fontColorPtr[i]);
-		write_font(60,(20*i+85),temp_textptrs[i], 1.0); 
+		write_font(60,(20*i+105),temp_textptrs[i], 1.0); 
 	}
 
    //reset swap table from GUI/DEBUG
@@ -291,22 +297,76 @@ int GUI_loadBGtex(){
 	GX_InitTlutObj(&BGtlut, BGtextureCI,(u8) 0x01,(u16) 256/16); //GX_TL_RGB565 is missing in gx.h
 	DCFlushRange(BGtextureCI, 256*2);
 	GX_InvalidateTexAll();
-	GX_LoadTlut(&BGtlut, GX_TLUT0);	// use GX_TLUT0 or (u32) tile??
+	GX_LoadTlut(&BGtlut, GX_TLUT0);	
 
 //	GX_InitTexObj(&BGtex, BGtexture, (u16) 640, (u16) 480, GX_TF_RGB565, GX_CLAMP, GX_CLAMP, GX_FALSE); 
 //	DCFlushRange(BGtexture, 640*480*2);
 	GX_InitTexObjCI(&BGtex, BGtexture, (u16) 640, (u16) 480, GX_TF_CI8, GX_CLAMP, GX_CLAMP, GX_FALSE, GX_TLUT0); 
 	DCFlushRange(BGtexture, 640*480);
-	GX_LoadTexObj(&BGtex, GX_TEXMAP0); // should set to (u8) tile or GX_TEXMAP0
+	GX_LoadTexObj(&BGtex, GX_TEXMAP0); 
 
-	printf("Loaded Texture into TMEM.\n");
+	GX_InitTexObj(&LOGOtex, LOGOtexture, (u16) 216, (u16) 84, GX_TF_RGB5A3, GX_CLAMP, GX_CLAMP, GX_FALSE); 
+	DCFlushRange(LOGOtexture, 216*84*2);
+	GX_LoadTexObj(&LOGOtex, GX_TEXMAP2); 
+
+//	printf("Loaded Texture into TMEM.\n");
 
 	return 1;
 }
 
+void GUI_drawWiiN64(){
+
+	Mtx44 GXprojection2D;
+	Mtx GXmodelView2D;
+
+	guMtxIdentity(GXmodelView2D);
+	GX_LoadTexMtxImm(GXmodelView2D,GX_TEXMTX0,GX_MTX2x4);
+	guMtxTransApply (GXmodelView2D, GXmodelView2D, 0.0F, 0.0F, -20.0F);
+	GX_LoadPosMtxImm(GXmodelView2D,GX_PNMTX0);
+	guOrtho(GXprojection2D, 0, 479, 0, 639, 0, 100);
+	GX_LoadProjectionMtx(GXprojection2D, GX_ORTHOGRAPHIC);
+
+	GX_SetZMode(GX_ENABLE,GX_GEQUAL,GX_TRUE);
+
+	GX_ClearVtxDesc();
+	GX_SetVtxDesc(GX_VA_PTNMTXIDX, GX_PNMTX0);
+	GX_SetVtxDesc(GX_VA_TEX0MTXIDX, GX_TEXMTX0);
+	GX_SetVtxDesc(GX_VA_POS, GX_DIRECT);
+	GX_SetVtxDesc(GX_VA_TEX0, GX_DIRECT);
+	//set vertex attribute formats here
+	GX_SetVtxAttrFmt(GX_VTXFMT1, GX_VA_POS, GX_POS_XY, GX_F32, 0);
+	GX_SetVtxAttrFmt(GX_VTXFMT1, GX_VA_TEX0, GX_TEX_ST, GX_F32, 0);
+
+	//enable textures
+	GX_SetNumChans (1);
+	GX_SetNumTexGens (1);
+	GX_SetTevOrder (GX_TEVSTAGE0, GX_TEXCOORD0, GX_TEXMAP2, GX_COLOR0A0);
+	GX_SetTevOp (GX_TEVSTAGE0, GX_REPLACE);
+	//set blend mode
+	GX_SetBlendMode(GX_BM_BLEND, GX_BL_SRCALPHA, GX_BL_INVSRCALPHA, GX_LO_CLEAR); //Fix src alpha
+	GX_SetColorUpdate(GX_ENABLE);
+	GX_SetAlphaUpdate(GX_DISABLE);
+	GX_SetDstAlpha(GX_DISABLE, 0xFF);
+	//set cull mode
+	GX_SetCullMode (GX_CULL_NONE);
+
+	GX_Begin(GX_QUADS, GX_VTXFMT1, 4);
+	GX_Position2f32(212, 25);
+	GX_TexCoord2f32(0,0);
+	GX_Position2f32(427, 25);
+	GX_TexCoord2f32(1,0);
+	GX_Position2f32(427, 108);
+	GX_TexCoord2f32(1,1);
+	GX_Position2f32(212, 108);
+	GX_TexCoord2f32(0,1);
+	GX_End();
+
+}
+
 void GUI_drawLogo(){
 
-  Mtx v, m, mv, p, tmp;            // view, model, modelview, and perspective matrices
+  Mtx v, m, mv, tmp;            // view, model, modelview, and perspective matrices
+//  Mtx p;
   Vector cam = { 0.0F, 0.0F, 0.0F }, 
 		 up = {0.0F, 1.0F, 0.0F}, 
 		 look = {0.0F, 0.0F, -1.0F},
@@ -316,7 +376,7 @@ void GUI_drawLogo(){
 			   rotatebyX = 0,
 			   rotatebyY = 0;
   s8 stickX,stickY;
-  int i, j;
+//  int i, j;
 
 
   guLookAt (v, &cam, &up, &look);
@@ -423,4 +483,16 @@ void draw_quad (u8 v0, u8 v1, u8 v2, u8 v3, u8 c)
   GX_Color1x8 (c);
   GX_Position1x8 (v3);
   GX_Color1x8 (c);
+}
+
+void GUI_splashScreen()
+{
+	//Fade in WiiN64 logo
+
+	//Drop large N64 cube from top
+
+	//Bounce/spin N64 cube for a couple seconds
+
+	//shrink/translate cube & logo to correct places on screen
+
 }
