@@ -9,7 +9,7 @@
 
 // Dimensions of array returned by get_text
 #define GUI_TEXT_WIDTH  35
-#define GUI_TEXT_HEIGHT 17
+#define GUI_TEXT_HEIGHT 16
 
 // Some defined colors to make things easier
 extern GXColor GUI_color_default;

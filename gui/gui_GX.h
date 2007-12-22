@@ -23,6 +23,7 @@ void GUI_toggle();
 void GUI_main();
 void GUI_displayText();
 int GUI_loadBGtex();
+void GUI_drawWiiN64();
 void GUI_drawLogo();
    
 #endif

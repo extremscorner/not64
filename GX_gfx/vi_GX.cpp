@@ -166,7 +166,7 @@ void VI_GX::showDEBUG()
 		DEBUG_update();
 		write_font_init_GX(fontColor);
 		for (i=0;i<DEBUG_TEXT_HEIGHT;i++){
-				write_font(10,(10*i+50),text[i], 0.5); 
+				write_font(10,(6*i+50),text[i], 0.5); 
 		}
 		
 	   //reset swap table from GUI/DEBUG
