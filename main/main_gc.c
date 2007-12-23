@@ -420,7 +420,8 @@ Initialise (void)
   GX_Init (gp_fifo, DEFAULT_FIFO_SIZE);
  
   // clears the bg to color and clears the z buffer
-  GX_SetCopyClear ((GXColor){64,64,64,255}, 0x00000000);
+//  GX_SetCopyClear ((GXColor){64,64,64,255}, 0x00000000);
+  GX_SetCopyClear ((GXColor){0,0,0,255}, 0x00000000);
   // init viewport
   GX_SetViewport (0, 0, vmode->fbWidth, vmode->efbHeight, 0, 1);
   // Set the correct y scaling for efb->xfb copy operation
