@@ -84,12 +84,13 @@ int main(){
 		// Display everything
 		/* DISPLAY BACKGROUND */
 		menuDisplay();
-		GUI_update();
-		GUI_displayText();
-		GUI_drawLogo();
+		GUI_draw();
+//		GUI_update();
+//		GUI_displayText();
+//		GUI_drawLogo();
 		/* COPY TO FRAME BUFFER */
 		
-		VIDEO_WaitVSync();
+//		VIDEO_WaitVSync();
 	}
 	
 	/* DEINITIALIZE */
