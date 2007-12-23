@@ -158,7 +158,7 @@ endif
 
 #PLUGINS		=plugins/mupen64_input.so plugins/blight_input.so plugins/mupen64_hle_rsp_azimer.so plugins/dummyaudio.so plugins/mupen64_audio.so plugins/jttl_audio.so plugins/mupen64_soft_gfx.so plugins/mupen64_GX_gfx.so plugins/glN64.so
 
-all:	mupen64_gc
+all:	mupen64_gc.elf
 
 r4300/interupt.o:	r4300/interupt.c
 			$(CC) $(CFLAGS) -c -o $@ $<
@@ -233,7 +233,7 @@ r4300/ppc/Wrappers.o:		r4300/ppc/Wrappers.s
 				$(CC) $(CFLAGS) -c -o $@ $<
 
 
-mupen64_gc:	$(OBJ) $(OBJ_PPC) $(OBJ_INPUT) $(OBJ_GX_GFX) $(OBJ_AUDIO) $(OBJ_RSPHLE) main/main_gc.o
+mupen64_gc.elf:	$(OBJ) $(OBJ_PPC) $(OBJ_INPUT) $(OBJ_GX_GFX) $(OBJ_AUDIO) $(OBJ_RSPHLE) main/main_gc.o
 		$(LD) $^ $(LDFLAGS) $(LDFLAGS) $(LIB) -Wl -o $@
 		#strip --strip-all $@
 		powerpc-gekko-objcopy -O binary $@ mupen64.dol
