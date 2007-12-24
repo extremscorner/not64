@@ -32,6 +32,7 @@ OBJ		=main/rom_gc.o \
 		main/textFileBrowser.o \
 		fileBrowser/fileBrowser-SD.o \
 		fileBrowser/fileBrowser-DVD.o \
+		fileBrowser/fileBrowser-CARD.o \
 		fileBrowser/fileBrowser.o \
 		gui/background_tex.o \
 		gui/gui_GX.o \

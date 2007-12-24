@@ -86,8 +86,8 @@ int fileBrowser_CARD_writeFile(fileBrowser_file* file, void* buffer, unsigned in
 	if(status == CARD_ERROR_NOFILE)
 		status = CARD_Create(slot, &file->name, memcardLength, &CardFile);
 	
-	if(status == CARD_READY) {
-		if(CARD_Write(&CardFile, buffer, length, 0) == CARD_READY) {
+	if(status == CARD_ERROR_READY) {
+		if(CARD_Write(&CardFile, buffer, length, 0) == CARD_ERROR_READY) {
 			file->offset += length;
 			CARD_Close(&CardFile);
 			return length;
