@@ -97,3 +97,16 @@ int fileBrowser_CARD_writeFile(fileBrowser_file* file, void* buffer, unsigned in
 	return -1;
 }
 
+int fileBrowser_CARD_init(void) {
+	CARD_Init("N64E", "OS");
+	//if(CARD_Mount(,SysArea, card_removed_cb) < 0)
+	//	return -1;
+	
+	return 0;
+}
+
+int fileBrowser_CARD_deinit(void) {
+	//Card_Unmount(slot);
+	return 0;
+}
+
