@@ -9,12 +9,15 @@
 
 #define FILE_BROWSER_ATTR_DIR     0x10
 
+#define FILE_BROWSER_ERROR         -1
+#define FILE_BROWSER_ERROR_NO_FILE -2
+
 #define FILE_BROWSER_SEEK_SET 1
 #define FILE_BROWSER_SEEK_CUR 2
 #define FILE_BROWSER_SEEK_END 3
 
 typedef struct {
-	char         name[FILE_BROWSER_MAX_PATH_LEN];
+	char         name[FILE_BROWSER_MAX_PATH_LEN];fileBrowser_file*
 	unsigned int discoffset; // Only necessary for DVD
 	unsigned int offset; // Keep track of our offset in the file
 	unsigned int size;
@@ -29,7 +32,7 @@ extern fileBrowser_file* saveFile_dir;
 
 // -- romFile function pointers --
 /* Must be called before any using other functions */
-extern int (*romFile_init)(void);
+extern int (*romFile_init)(fileBrowser_file*);
 
 /* readDir functions should return the number of directory entries
      or an error of the given file pointer and fill out the file array */
@@ -44,19 +47,19 @@ extern int (*romFile_readFile)(fileBrowser_file*, void*, unsigned int);
 extern int (*romFile_seekFile)(fileBrowser_file*, unsigned int, unsigned int);
 
 /* Should be called after done using other functions */
-extern int (*romFile_deinit)(void);
+extern int (*romFile_deinit)(fileBrowser_file*);
 
 // -- saveFile function pointers --
-extern int (*saveFile_init)(void);
+extern int (*saveFile_init)(fileBrowser_file*);
 
 /* Checks whether the file exists, and fills out any inconsistent info */
-extern int (*saveFile_exists)(fileBrowser_file*);
+//extern int (*saveFile_exists)(fileBrowser_file*);
 
 extern int (*saveFile_readFile)(fileBrowser_file*, void*, unsigned int);
 
 extern int (*saveFile_writeFile)(fileBrowser_file*, void*, unsigned int);
 
-extern int (*saveFile_deinit)(void);
+extern int (*saveFile_deinit)(fileBrowser_file*);
 
 #endif
 
