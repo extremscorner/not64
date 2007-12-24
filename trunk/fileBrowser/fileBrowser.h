@@ -17,7 +17,7 @@
 #define FILE_BROWSER_SEEK_END 3
 
 typedef struct {
-	char         name[FILE_BROWSER_MAX_PATH_LEN];fileBrowser_file*
+	char         name[FILE_BROWSER_MAX_PATH_LEN];
 	unsigned int discoffset; // Only necessary for DVD
 	unsigned int offset; // Keep track of our offset in the file
 	unsigned int size;

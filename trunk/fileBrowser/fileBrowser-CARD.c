@@ -1,9 +1,14 @@
 /* fileBrowser-CARD.c - fileBrowser CARD module
    by emu_kidid for Mupen64-GC
  */
-
+#include <stdio.h>
+#include <string.h>
+#include <gccore.h>
 #include <ogc/card.h>
 #include "fileBrowser.h"
+
+unsigned char SysArea[CARD_WORKAREA] ATTRIBUTE_ALIGN (32);
+void card_removed_cb(s32 chn, s32 result){ CARD_Unmount(chn); }
 
 fileBrowser_file topLevel_CARD_SlotA =
 	{ "\0", // file name
@@ -97,16 +102,18 @@ int fileBrowser_CARD_writeFile(fileBrowser_file* file, void* buffer, unsigned in
 	return -1;
 }
 
-int fileBrowser_CARD_init(void) {
+int fileBrowser_CARD_init(fileBrowser_file* file) {
+	int slot = file->discoffset; 
 	CARD_Init("N64E", "OS");
-	//if(CARD_Mount(,SysArea, card_removed_cb) < 0)
-	//	return -1;
+	if(CARD_Mount(slot,SysArea, card_removed_cb) < 0)
+		return -1;
 	
 	return 0;
 }
 
-int fileBrowser_CARD_deinit(void) {
-	//Card_Unmount(slot);
+int fileBrowser_CARD_deinit(fileBrowser_file* file) {
+	int slot = file->discoffset; 
+	CARD_Unmount(slot);
 	return 0;
 }
 
