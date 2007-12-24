@@ -41,6 +41,7 @@ int fileBrowser_CARD_readDir(fileBrowser_file* file, fileBrowser_file** dir){
 	
 	return num_entries;
 	*/
+	return 0;
 }
 
 int fileBrowser_CARD_seekFile(fileBrowser_file* file, unsigned int where, unsigned int type){
@@ -55,7 +56,7 @@ int fileBrowser_CARD_readFile(fileBrowser_file* file, void* buffer, unsigned int
 	card_file CardFile;
 	int slot = file->discoffset;
 	
-	if(CARD_Open(slot, &file->name, &CardFile) != CARD_ERROR_NOFILE){
+	if(CARD_Open(slot, &file->name[0], &CardFile) != CARD_ERROR_NOFILE){
 		if(CARD_Read(&CardFile, buffer, length, file->offset) == 0)
 			file->offset += length;
 		else 
@@ -65,7 +66,7 @@ int fileBrowser_CARD_readFile(fileBrowser_file* file, void* buffer, unsigned int
 		}
 		return length;
    }
-	else 
+
 	return -1;
 }
 
@@ -82,9 +83,9 @@ int fileBrowser_CARD_writeFile(fileBrowser_file* file, void* buffer, unsigned in
 	if(memcardLength)
 		memcardLength = (((length/SectorSize)*SectorSize) + SectorSize);
 	
-	status = CARD_Open(slot, &file->name, &CardFile);
+	status = CARD_Open(slot, &file->name[0], &CardFile);
 	if(status == CARD_ERROR_NOFILE)
-		status = CARD_Create(slot, &file->name, memcardLength, &CardFile);
+		status = CARD_Create(slot, &file->name[0], memcardLength, &CardFile);
 	
 	if(status == CARD_ERROR_READY) {
 		if(CARD_Write(&CardFile, buffer, length, 0) == CARD_ERROR_READY) {
@@ -93,8 +94,6 @@ int fileBrowser_CARD_writeFile(fileBrowser_file* file, void* buffer, unsigned in
 			return length;
 		}
 	}
-	else
-		return -1;
-
+	return -1;
 }
 
