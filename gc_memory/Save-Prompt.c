@@ -27,8 +27,8 @@ int  savetype;
 char savepath[MAX_SAVE_PATH];
 
 // Used for Memory card working area
-static u8 SysArea[CARD_WORKAREA] ATTRIBUTE_ALIGN (32);
-void card_removed_cb(s32 chn, s32 result){ CARD_Unmount(chn); }
+extern unsigned char SysArea[CARD_WORKAREA] ATTRIBUTE_ALIGN (32);
+extern void card_removed_cb(s32 chn, s32 result);
 
 // This should be called when the game begins
 // or when the user wants to save somewhere else

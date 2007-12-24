@@ -63,7 +63,7 @@ int fileBrowser_DVD_readFile(fileBrowser_file* file, void* buffer, unsigned int 
 	return bytesread;
 }
 
-int fileBrowser_DVD_init(void) {
+int fileBrowser_DVD_init(fileBrowser_file* file) {
 	DVD_Init();
 	if(!isWii)
 		DVD_Mount ();
@@ -76,7 +76,7 @@ int fileBrowser_DVD_init(void) {
 	return dvd_get_error();
 }
 
-int fileBrowser_DVD_deinit(void) {
+int fileBrowser_DVD_deinit(fileBrowser_file* file) {
 	dvd_motor_off();
 	return 0;
 }
