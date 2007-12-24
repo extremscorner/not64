@@ -73,6 +73,7 @@ int fileBrowser_CARD_writeFile(fileBrowser_file* file, void* buffer, unsigned in
 	
 	card_file CardFile;
 	int slot = file->discoffset;
+	int status = 0;
 	
 	//sectorsize stuff to keep memcard filesizes and writes happy
 	unsigned int SectorSize = 0;
@@ -80,16 +81,20 @@ int fileBrowser_CARD_writeFile(fileBrowser_file* file, void* buffer, unsigned in
 	int memcardLength = length % SectorSize;
 	if(memcardLength)
 		memcardLength = (((length/SectorSize)*SectorSize) + SectorSize);
-		
-	if(CARD_Open(slot, &file->name, &CardFile) == CARD_ERROR_NOFILE){
-		if(CARD_Create(slot, &file->name, memcardLength, &CardFile)!=0)
-			return -1;
-		if(CARD_Write(&CardFile, buffer, length, 0)==0)
+	
+	status = CARD_Open(slot, &file->name, &CardFile);
+	if(status == CARD_ERROR_NOFILE)
+		status = CARD_Create(slot, &file->name, memcardLength, &CardFile);
+	
+	if(status == CARD_READY) {
+		if(CARD_Write(&CardFile, buffer, length, 0) == CARD_READY) {
 			file->offset += length;
-		CARD_Close(&CardFile);
-		return length;
+			CARD_Close(&CardFile);
+			return length;
+		}
 	}
-	return -1;
+	else
+		return -1;
 
 }
 
