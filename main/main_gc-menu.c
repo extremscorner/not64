@@ -46,63 +46,75 @@ static RSP_INFO     rsp_info;
 
 extern char audioEnabled;
        char saveEnabled;
+unsigned int isWii;
 // -- End plugin data --
 
 // Framebuffers
 static u32* xfb[2] = { NULL, NULL };
+
+// Dummy functions
+static void dummy_func(){ }
+void (*fBRead)(DWORD addr) = NULL;
+void (*fBWrite)(DWORD addr, DWORD size) = NULL;
+void (*fBGetFrameBufferInfo)(void *p) = NULL;
+void new_frame(){ }
+void new_vi(){ }
 
 int main(){
 	/* INITIALIZE */
 	Initialise(); // Stock OGC initialization
 	SDCARD_Init();
 	DVD_Init();
+	menuInit();
 	
 	// Default Settings
 	audioEnabled = 0; // No audio
 	saveEnabled  = 0; // Don't save game
 	dynacore     = 2; // Pure Interpreter
 	
+	// 'Page flip' PADStatus so we know when it released
+	int which_pad = 0;
+	PADStatus pad[2][4];
 	/* MAIN LOOP */
-	PADStatus padStatus;
 	while(TRUE){
 		// First read the pads
-		PAD_Read( &padStatus );
+		PAD_Read( &pad[which_pad] );
+	
+// Check whether button is pressed and make sure it wasn't registered last time	
+#define PAD_PRESSED(butt0n) ( pad[which_pad][0].button & butt0n && \
+                               !(pad[which_pad^1][0].button & butt0n) )
 		
 		// Navigate the menu accordingly
-		if( padStatus.button & PAD_BUTTON_UP )
+		if( PAD_PRESSED( PAD_BUTTON_UP ) )
 			menuNavigate(-1);
-		else if( padStatus.button & PAD_BUTTON_DOWN )
+		else if( PAD_PRESSED( PAD_BUTTON_DOWN ) )
 			menuNavigate(1);
 		
-		if( padStatus.button & PAD_BUTTON_A )
+		if( PAD_PRESSED( PAD_BUTTON_A ) )
 			menuSelect();
-		else if( padStatus.button & PAD_BUTTON_B )
+		else if( PAD_PRESSED( PAD_BUTTON_B ) )
 			menuBack();
 		
 		// TODO: Analog stick
 		
+		// 'Flip' PADStatus
+		which_pad ^= 1;
+		
 		// Display everything
-		/* DISPLAY BACKGROUND */
 		menuDisplay();
 		GUI_draw();
-//		GUI_update();
-//		GUI_displayText();
-//		GUI_drawLogo();
-		/* COPY TO FRAME BUFFER */
-		
-//		VIDEO_WaitVSync();
 	}
-	
-	/* DEINITIALIZE */
 	
 	return 0;
 }
 
 static BOOL hasLoadedROM = FALSE;
-void loadROM(fileBrowser* rom){
+void loadROM(fileBrowser_file* rom){
 	// First, if there's already a loaded ROM
 	if(hasLoadedROM){
 		// Unload it, and deinit everything
+		cpu_deinit();
+		
 		romClosed_RSP();
 		romClosed_input();
 		romClosed_audio();
@@ -136,7 +148,7 @@ void loadROM(fileBrowser* rom){
 	romOpen_audio();
 	romOpen_input();
 	
-	/* CPU Init */
+	cpu_init();
 }
 
 static void gfx_info_init(void){
