@@ -33,7 +33,7 @@
 #include "../r4300/r4300.h"
 #include "memory.h"
 #include "../main/guifuncs.h"
-#include "../gui/DEBUG.h"
+
 #include <sdcard.h>
 #include <ogc/card.h>
 #include "Saves.h"
@@ -63,70 +63,33 @@ static unsigned long erase_offset, write_pointer;
 
 static BOOL flashramWritten = FALSE;
 
-void loadFlashram(void){
+void loadFlashram(fileBrowser_file* savepath){
 	int i; 
-	char* filename = malloc(strlen(savepath)+
-	                        strlen(ROM_SETTINGS.goodname)+4+1);
-	strcpy(filename, savepath);
-	strcat(filename, ROM_SETTINGS.goodname);
-	strcat(filename, ".fla");
+	fileBrowser_file saveFile;
+	memcpy(&saveFile, savepath, sizeof(fileBrowser_file));
+	strcat(&saveFile.name, ROM_SETTINGS.goodname);
+	strcat(&saveFile.name, ".fla");
 	
-	if(savetype & SELECTION_TYPE_SD){
-		DIR* sddir = NULL;
-		sd_file *f;
-		
-		if (SDCARD_ReadDir(filename, &sddir) > 0){
-			PRINT("Loading flashram, please be patient...\n");
-			f = SDCARD_OpenFile(filename, "rb");
-			SDCARD_ReadFile (f, flashram, 0x20000);
-			SDCARD_CloseFile(f);
-			PRINT("OK\n");
-		} else for (i=0; i<0x20000; i++) flashram[i] = 0xff;
-		
-		if(sddir) free(sddir);
-	} else {
-		card_file CardFile;
-		int slot = (savetype & SELECTION_SLOT_B) ? CARD_SLOTB : CARD_SLOTA;
-		
-		if(CARD_Open(slot, filename, &CardFile) != CARD_ERROR_NOFILE){
-			PRINT("Loading flashram, please be patient...\n");			
-			CARD_Read (&CardFile, flashram, 0x20000, 0);
-			CARD_Close(&CardFile);
-			PRINT("OK\n");
-		} else for (i=0; i<0x20000; i++) flashram[i] = 0xff;
-	}
+	if( !(saveFile_readFile(&saveFile, &i, 4) & FILE_BROWSER_ERROR) ){
+		PRINT("Loading flashram, please be patient...\n");
+		saveFile_readFile(&saveFile, flashram, 0x20000);
+		PRINT("OK\n");
+	} else for (i=0; i<0x20000; i++) flashram[i] = 0xff;
 	
-	free(filename);
 	flashramWritten = FALSE;
 }
 
-void saveFlashram(void){
+void saveFlashram(fileBrowser_file* savepath){
 	if(!flashramWritten) return;
-	PRINT("Please wait, saving flashram,\n do NOT turn off the console...\n");
+	PRINT("Saving flashram, do not turn off the console...\n");
 	
-	char* filename = malloc(strlen(savepath)+
-	                        strlen(ROM_SETTINGS.goodname)+4+1);
-	strcpy(filename, savepath);
-	strcat(filename, ROM_SETTINGS.goodname);
-	strcat(filename, ".fla");
+	fileBrowser_file saveFile;
+	memcpy(&saveFile, savepath, sizeof(fileBrowser_file));
+	strcat(&saveFile.name, ROM_SETTINGS.goodname);
+	strcat(&saveFile.name, ".fla");
 	
-	if(savetype & SELECTION_TYPE_SD){
-		sd_file* f;
-		
-		f = SDCARD_OpenFile(filename, "wb");
-		SDCARD_WriteFile(f, flashram, 0x20000);
-		SDCARD_CloseFile(f);
-	} else {
-		card_file CardFile;
-		int slot = (savetype & SELECTION_SLOT_B) ? CARD_SLOTB : CARD_SLOTA;
-		
-		if(CARD_Open(slot, filename, &CardFile) == CARD_ERROR_NOFILE)
-			CARD_Create(slot, filename, 0x20000, &CardFile);
-		CARD_Write(&CardFile, flashram, 0x20000, 0);
-		CARD_Close(&CardFile);
-	}
+	saveFile_writeFile(&saveFile, flashram, 0x20000);
 	
-	free(filename);
 	PRINT("OK\n");
 }
 
@@ -232,12 +195,10 @@ void dma_read_flashram()
    switch(mode)
      {
       case STATUS_MODE:
-      DEBUG_print("Get Status FlashRAM",DBG_SAVEINFO);
 	rdram[pi_register.pi_dram_addr_reg/4] = (unsigned long)(status >> 32);
 	rdram[pi_register.pi_dram_addr_reg/4+1] = (unsigned long)(status);
 	break;
       case READ_MODE:
-      DEBUG_print("Read FlashRAM",DBG_SAVEINFO);
 
 	for (i=0; i<(pi_register.pi_wr_len_reg & 0x0FFFFFF)+1; i++)
 	  ((unsigned char*)rdram)[(pi_register.pi_dram_addr_reg+i)^S8]=
@@ -254,7 +215,6 @@ void dma_write_flashram()
    switch(mode)
      {
       case WRITE_MODE:
-      DEBUG_print("Write FlashRAM",DBG_SAVEINFO);
 	write_pointer = pi_register.pi_dram_addr_reg;
 	break;
       default:

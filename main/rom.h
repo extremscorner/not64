@@ -30,9 +30,11 @@
 #ifndef ROM_H
 #define ROM_H
 
-int rom_read(const char *argv);
-int fill_header(const char *argv);
-void calculateMD5(const char *argv, unsigned char digest[16]);
+#include "../fileBrowser/fileBrowser.h"
+
+int rom_read(fileBrowser_file*);
+int fill_header(fileBrowser_file*);
+void calculateMD5(fileBrowser_file*, unsigned char digest[16]);
 extern unsigned char *rom;
 #ifndef __PPC__
 extern int taille_rom;

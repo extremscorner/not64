@@ -7,21 +7,18 @@
 #include "../fileBrowser/fileBrowser.h"
 #include "../fileBrowser/fileBrowser-SD.h"
 #include "../fileBrowser/fileBrowser-DVD.h"
+#include "../fileBrowser/fileBrowser-CARD.h"
 #include "menuFileBrowser.h"
 
 // -- ACTUAL MENU LAYOUT --
 
-#define MAIN_MENU_SIZE 4
+#define MAIN_MENU_SIZE 7
 
 /* Example - "Play Game" */
 
-static void playGame_func(){
-	/* Start up all the plugins and run go? */
-	// FIXME: If we are resuming play of the current game (if possible)
-	//          we shouldn't be resetting everything; however, we need to
-	//          modify go just a little to accomidate this behaivor
-	go();
-}
+	static void playGame_func(){
+		go();
+	}
 
 #define PLAY_GAME_INDEX MAIN_MENU_SIZE - 1 /* We want it to be the last item */
 #define PLAY_GAME_ITEM \
@@ -56,7 +53,7 @@ static void playGame_func(){
 		  }
 		 };
 
-#define SELECT_CPU_INDEX 1
+#define SELECT_CPU_INDEX 3
 #define SELECT_CPU_ITEM \
 	{ "Select CPU Core", /* caption */ \
 	  1, /* hasSubmenu */ \
@@ -70,13 +67,13 @@ static void playGame_func(){
 
 /* "Toggle Audio" menu item */
 
-extern char audioEnabled;
-static void toggleAudio_func();
-static char toggleAudio_strings[2][30]  = 
-	{ "Toggle Audio (currently off)",
-	  "Toggle Audio (currently on)"};
+	extern char audioEnabled;
+	static void toggleAudio_func();
+	static char toggleAudio_strings[2][30]  = 
+		{ "Toggle Audio (currently off)",
+		  "Toggle Audio (currently on)"};
 
-#define TOGGLE_AUDIO_INDEX MAIN_MENU_SIZE - 2
+#define TOGGLE_AUDIO_INDEX MAIN_MENU_SIZE - 3
 #define TOGGLE_AUDIO_ITEM \
 	{ &toggleAudio_strings[0][0], \
 	  0, \
@@ -86,13 +83,13 @@ static char toggleAudio_strings[2][30]  =
 /* End of "Toggle Audio" item */
 
 /* "Load ROM" menu item */
-#include "../main/rom.h"
-char* textFileBrowser(char*);
-char* textFileBrowserDVD();
-static inline void menuStack_push(menu_item*);
+	#include "../main/rom.h"
+	char* textFileBrowser(char*);
+	char* textFileBrowserDVD();
+	static inline void menuStack_push(menu_item*);
 
 	static void loadROMSD_func(){
-		// First change all the romFile pointers
+		// Change all the romFile pointers
 		romFile_topLevel = &topLevel_SD_SlotA;
 		romFile_readDir  = fileBrowser_SD_readDir;
 		romFile_readFile = fileBrowser_SD_readFile;
@@ -101,7 +98,7 @@ static inline void menuStack_push(menu_item*);
 		menuStack_push( menuFileBrowser(romFile_topLevel) );
 	}
 	static void loadROMDVD_func(){
-		// First change all the romFile pointers
+		// Change all the romFile pointers
 		romFile_topLevel = &topLevel_DVD;
 		romFile_readDir  = fileBrowser_DVD_readDir;
 		romFile_readFile = fileBrowser_DVD_readFile;
@@ -110,16 +107,16 @@ static inline void menuStack_push(menu_item*);
 		menuStack_push( menuFileBrowser(romFile_topLevel) );
 	}
 	
-static menu_item loadROM_submenu[2] =
-	{{ "Load from SD",
-	   0,
-	   { .func = loadROMSD_func }
-	  },
-	 { "Load from DVD",
-	   0,
-	   { .func = loadROMDVD_func }
-	  }
-	 };
+	static menu_item loadROM_submenu[2] =
+		{{ "Load from SD",
+		   0,
+		   { .func = loadROMSD_func }
+		  },
+		 { "Load from DVD",
+		   0,
+		   { .func = loadROMDVD_func }
+		  }
+		 };
 
 #define LOAD_ROM_INDEX 0
 #define LOAD_ROM_ITEM \
@@ -131,11 +128,157 @@ static menu_item loadROM_submenu[2] =
 	 }
 
 /* End of "Load ROM" item */
+
+/* "Load Save File" item */
+#include "../gc_memory/Saves.h"
+	// NOTE: I assume an even item # = Slot A, OW = B
+	static void loadSaveSD_func(int item_num){
+		// Adjust saveFile pointers
+		saveFile_dir = (item_num%2) ? &saveDir_SD_SlotB : &saveDir_SD_SlotA;
+		saveFile_readFile  = fileBrowser_SD_readFile;
+		saveFile_writeFile = fileBrowser_SD_writeFile;
+		saveFile_init      = 0;
+		saveFile_deinit    = 0;
+		
+		// Try loading everything
+		loadEeprom(saveFile_dir);
+		loadSram(saveFile_dir);
+		loadMempak(saveFile_dir);
+		loadFlashram(saveFile_dir);
+	}
+	static void loadSaveCARD_func(int item_num){
+		// Adjust saveFile pointers
+		saveFile_dir = (item_num%2) ? &saveDir_CARD_SlotB : &saveDir_CARD_SlotA;
+		saveFile_readFile  = fileBrowser_CARD_readFile;
+		saveFile_writeFile = fileBrowser_CARD_writeFile;
+		saveFile_init      = fileBrowser_CARD_init;
+		saveFile_deinit    = fileBrowser_CARD_deinit;
+		
+		// Try loading everything
+		saveFile_init(saveFile_dir);
+		loadEeprom(saveFile_dir);
+		loadSram(saveFile_dir);
+		loadMempak(saveFile_dir);
+		loadFlashram(saveFile_dir);
+		saveFile_deinit(saveFile_dir);
+	}
+
+	static menu_item loadSave_submenu[4] =
+		{{ "SD in Slot A",
+		   0,
+		   { .func = loadSaveSD_func }
+		  },
+		 { "SD in Slot B",
+		   0,
+		   { .func = loadSaveSD_func }
+		  },
+		 { "Memory Card in Slot A",
+		   0,
+		   { .func = loadSaveCARD_func }
+		  },
+		 { "Memory Card in Slot B",
+		   0,
+		   { .func = loadSaveCARD_func }
+		  },
+		 };
+
+#define LOAD_SAVE_INDEX 1
+#define LOAD_SAVE_ITEM \
+	{ "Load Save File", \
+	  1, \
+	  { 4, \
+	    &loadSave_submenu[0] \
+	   } \
+	 }
+
+/* End of "Load Save File" item */
+
+/* "Save Game" item */
+
+	// NOTE: I assume an even item # = Slot A, OW = B
+	static void saveGameSD_func(int item_num){
+		// Adjust saveFile pointers
+		saveFile_dir = (item_num%2) ? &saveDir_SD_SlotB : &saveDir_SD_SlotA;
+		saveFile_readFile  = fileBrowser_SD_readFile;
+		saveFile_writeFile = fileBrowser_SD_writeFile;
+		saveFile_init      = 0;
+		saveFile_deinit    = 0;
+		
+		// Try loading everything
+		saveEeprom(saveFile_dir);
+		saveSram(saveFile_dir);
+		saveMempak(saveFile_dir);
+		saveFlashram(saveFile_dir);
+	}
+	static void saveGameCARD_func(int item_num){
+		// Adjust saveFile pointers
+		saveFile_dir = (item_num%2) ? &saveDir_CARD_SlotB : &saveDir_CARD_SlotA;
+		saveFile_readFile  = fileBrowser_CARD_readFile;
+		saveFile_writeFile = fileBrowser_CARD_writeFile;
+		saveFile_init      = fileBrowser_CARD_init;
+		saveFile_deinit    = fileBrowser_CARD_deinit;
+		
+		// Try loading everything
+		saveFile_init(saveFile_dir);
+		saveEeprom(saveFile_dir);
+		saveSram(saveFile_dir);
+		saveMempak(saveFile_dir);
+		saveFlashram(saveFile_dir);
+		saveFile_deinit(saveFile_dir);
+	}
+
+	static menu_item saveGame_submenu[4] =
+		{{ "SD in Slot A",
+		   0,
+		   { .func = saveGameSD_func }
+		  },
+		 { "SD in Slot B",
+		   0,
+		   { .func = saveGameSD_func }
+		  },
+		 { "Memory Card in Slot A",
+		   0,
+		   { .func = saveGameCARD_func }
+		  },
+		 { "Memory Card in Slot B",
+		   0,
+		   { .func = saveGameCARD_func }
+		  },
+		 };
+
+#define SAVE_GAME_INDEX 2
+#define SAVE_GAME_ITEM \
+	{ "Save Game", \
+	  1, \
+	  { 4, \
+	    &saveGame_submenu[0] \
+	   } \
+	 }
+
+/* End of "Save Game" item */
+
+/* "Exit to SDLOAD" item */
+
+	static void reload(){
+		void (*rld)() = (void (*)()) 0x80001800;
+		rld();
+	}
+#define EXIT_INDEX MAIN_MENU_SIZE -2
+#define EXIT_ITEM \
+	{ "Exit to SDLOAD", \
+	  0, \
+	  { .func = reload } \
+	 }
+
+/* End of "Exit to SDLOAD" item */
 	
 static menu_item main_menu[MAIN_MENU_SIZE] = 
 	{ LOAD_ROM_ITEM,
+	  LOAD_SAVE_ITEM,
+	  SAVE_GAME_ITEM,
 	  SELECT_CPU_ITEM,
 	  TOGGLE_AUDIO_ITEM,
+	  EXIT_ITEM,
 	  PLAY_GAME_ITEM
 	 };
 

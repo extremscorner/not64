@@ -9,6 +9,8 @@
 
 extern fileBrowser_file topLevel_CARD_SlotA;
 extern fileBrowser_file topLevel_CARD_SlotB;
+#define saveDir_CARD_SlotA topLevel_CARD_SlotA
+#define saveDir_CARD_SlotB topLevel_CARD_SlotB
 
 int fileBrowser_CARD_readDir(fileBrowser_file*, fileBrowser_file**);
 int fileBrowser_CARD_readFile(fileBrowser_file*, void*, unsigned int);

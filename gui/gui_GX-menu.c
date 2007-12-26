@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <sdcard.h>
 #include <gccore.h>
-#include "gui_GX.h"
+#include "gui_GX-menu.h"
 #include "font.h"
 
 #define X1 30
@@ -229,6 +229,7 @@ void GUI_displayText(){
 	GXColor fontColor = {255, 255, 255, 255};
 	GXColor* fontColorPtr;
 
+	GUI_update();
 	temp_textptrs = GUI_get_text();
 	fontColorPtr = GUI_get_colors();
 	write_font_init_GX(fontColor);

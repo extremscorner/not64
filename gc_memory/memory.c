@@ -28,7 +28,7 @@
 **/
 
 #include "../config.h"
-#include "../r4300/Invalid_Code.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #ifndef __WIN32__
@@ -138,10 +138,10 @@ int init_memory()
    //for (i=0; i<(taille_rom/4); i++) roml[i] = sl(roml[i]);
    
    //TLBCache_init();
-   loadEeprom();
+   /*loadEeprom();
    loadMempak();
    loadSram();
-   loadFlashram();
+   loadFlashram();*/
    
    //init hash tables
    for (i=0; i<(0x10000); i++)
@@ -1014,16 +1014,16 @@ int init_memory()
    fast_memory = 1;
    firstFrameBufferSetting = 1;
    
-   printf("memory initialized\n");
+   //printf("memory initialized\n");
    return 0;
 }
 
 void free_memory()
 {
-	saveEeprom();
+	/*saveEeprom();
 	saveMempak();
 	saveSram();
-	saveFlashram();
+	saveFlashram();*/
 	TLBCache_deinit();
 }
 

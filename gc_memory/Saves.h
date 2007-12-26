@@ -5,25 +5,29 @@
 #ifndef SAVES_H
 #define SAVES_H
 
+#include "../fileBrowser/fileBrowser.h"
+
+/*
+extern char saveEnabled;
 extern int  savetype;
 extern char savepath[];
 
 #define SELECTION_SLOT_A    0
 #define SELECTION_SLOT_B    1
 #define SELECTION_TYPE_SD   2
-#define SELECTION_TYPE_MEM  0
+#define SELECTION_TYPE_MEM  0*/
 
-void loadEeprom(void);
-void saveEeprom(void);
+void loadEeprom(fileBrowser_file* savepath);
+void saveEeprom(fileBrowser_file* savepath);
 
-void loadMempak(void);
-void saveMempak(void);
+void loadMempak(fileBrowser_file* savepath);
+void saveMempak(fileBrowser_file* savepath);
 
-void loadSram(void);
-void saveSram(void);
+void loadSram(fileBrowser_file* savepath);
+void saveSram(fileBrowser_file* savepath);
 
-void loadFlashram(void);
-void saveFlashram(void);
+void loadFlashram(fileBrowser_file* savepath);
+void saveFlashram(fileBrowser_file* savepath);
 
 #endif
 

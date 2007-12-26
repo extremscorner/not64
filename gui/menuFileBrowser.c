@@ -20,6 +20,7 @@ static menu_item  currentDirMenu =
 static menu_item*        menu_items;
 static fileBrowser_file* dir_entries;
 
+void loadROM(fileBrowser_file*);
 static void recurseOrSelect(int i){
 	if(dir_entries[i].attr & FILE_BROWSER_ATTR_DIR){
 		// Here we are 'recursing' into a subdirectory
@@ -31,9 +32,9 @@ static void recurseOrSelect(int i){
 	} else {
 		// We must select this file
 		// TODO: Probably some sort of feedback via GUI if possible
-		// FIXME: I've 'hardwired' rom_read into this function
+		// FIXME: I've 'hardwired' loadROM into this function
 		//          but it'd be relatively simple to adapt
-		rom_read( dir_entries[i] );
+		loadROM( &dir_entries[i] );
 		// And a simple hack to get back out of the file browser
 		menuBack();
 	}

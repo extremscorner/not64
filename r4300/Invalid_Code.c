@@ -4,7 +4,7 @@
 
 #include "Invalid_Code.h"
 
-static char invalid_code[0x100000/8];
+static unsigned char invalid_code[0x100000/8];
 
 int inline invalid_code_get(int block_num){
 	return invalid_code[block_num>>3] & (1<<(block_num&0x7));

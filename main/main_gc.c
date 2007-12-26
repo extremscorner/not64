@@ -40,6 +40,7 @@
 int p_noask;
 
 extern char audioEnabled;
+       char saveEnabled;
 
 CONTROL Controls[4];
 
@@ -131,6 +132,13 @@ static void check_heap_space(void){
 unsigned int isWii = 0; //this will come in handly later (used for DVD now)
 #define mfpvr()   ({unsigned int rval; \
       asm volatile("mfpvr %0" : "=r" (rval)); rval;})
+
+// Initialize all the values that are set by the user
+static void setDefaults(void){
+	audioEnabled = 0; // No audio
+	dynacore = 2; // Pure Interpreter
+	saveEnabled = 0; // Don't save game
+}
       
 int main(){
 	char* romfile = NULL;		//SD

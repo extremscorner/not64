@@ -21,8 +21,9 @@
 #include "ROM-Cache.h"
 
 #include <gccore.h>
-#include "../gui/gui_GX.h"
+#include "../gui/gui_GX-menu.h"
 #include "../gui/GUI.h"
+#include "../gui/menu.h"
 
 /* NECESSARY FUNCTIONS AND VARIABLES */
 
@@ -74,15 +75,18 @@ int main(){
 	
 	// 'Page flip' PADStatus so we know when it released
 	int which_pad = 0;
-	PADStatus pad[2][4];
+	//PADStatus pad[2][4];
+	u16 buttons[2];
 	/* MAIN LOOP */
 	while(TRUE){
 		// First read the pads
-		PAD_Read( &pad[which_pad] );
-	
+		//PAD_Read( &pad[which_pad] );
+		buttons[which_pad] = PAD_ButtonsDown(0);
+		
 // Check whether button is pressed and make sure it wasn't registered last time	
-#define PAD_PRESSED(butt0n) ( pad[which_pad][0].button & butt0n && \
-                               !(pad[which_pad^1][0].button & butt0n) )
+/*#define PAD_PRESSED(butt0n) ( pad[which_pad][0].button & butt0n && \
+                               !(pad[which_pad^1][0].button & butt0n) )*/
+#define PAD_PRESSED(butt0n) ( buttons[which_pad] & butt0n && !(buttons[which_pad] & butt0n) )
 		
 		// Navigate the menu accordingly
 		if( PAD_PRESSED( PAD_BUTTON_UP ) )

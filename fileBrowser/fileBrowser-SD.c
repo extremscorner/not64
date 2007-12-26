@@ -6,7 +6,7 @@
 #include "fileBrowser.h"
 
 fileBrowser_file topLevel_SD_SlotA =
-	{ "dev0:\\N64ROMS", // file name
+	{ "dev0:\\N64ROMS\\", // file name
 	  0, // sector
 	  0, // offset
 	  0, // size
@@ -14,17 +14,33 @@ fileBrowser_file topLevel_SD_SlotA =
 	 };
 
 fileBrowser_file topLevel_SD_SlotB =
-	{ "dev1:\\N64ROMS", // file name
+	{ "dev1:\\N64ROMS\\", // file name
 	  0, // sector
 	  0, // offset
 	  0, // size
 	  FILE_BROWSER_ATTR_DIR
 	 };
 
+fileBrowser_file saveDir_SD_SlotA =
+	{ "dev0:\\N64SAVES\\",
+	  0,
+	  0,
+	  0,
+	  FILE_BROWSER_ATTR_DIR
+	 };
+
+fileBrowser_file saveDir_SD_SlotB =
+	{ "dev1:\\N64SAVES\\",
+	  0,
+	  0,
+	  0,
+	  FILE_BROWSER_ATTR_DIR
+	 };
+
 int fileBrowser_SD_readDir(fileBrowser_file* file, fileBrowser_file** dir){
 	DIR* sddir = NULL;
 	// Call the corresponding SDCARD function
-	int num_entries = SDCARD_readDir(&file->name, &sddir);
+	int num_entries = SDCARD_ReadDir(&file->name, &sddir);
 	
 	// If it was not successful, just return the error
 	if(num_entries <= 0) return num_entries;
@@ -53,7 +69,7 @@ int fileBrowser_SD_seekFile(fileBrowser_file* file, unsigned int where, unsigned
 int fileBrowser_SD_readFile(fileBrowser_file* file, void* buffer, unsigned int length){
 	sd_file* f;
 	f = SDCARD_OpenFile( &file->name, "rb");
-	if(!f) return -1;
+	if(!f) return FILE_BROWSER_ERROR;
 	
 	SDCARD_SeekFile(f, file->offset, SDCARD_SEEK_SET);
 	int bytes_read = SDCARD_ReadFile(f, buffer, length);
@@ -66,7 +82,7 @@ int fileBrowser_SD_readFile(fileBrowser_file* file, void* buffer, unsigned int l
 int fileBrowser_SD_writeFile(fileBrowser_file* file, void* buffer, unsigned int length){
 	sd_file* f;
 	f = SDCARD_OpenFile( &file->name, "wb");
-	if(!f) return -1;
+	if(!f) return FILE_BROWSER_ERROR;
 	
 	SDCARD_SeekFile(f, file->offset, SDCARD_SEEK_SET);
 	int bytes_read = SDCARD_WriteFile(f, buffer, length);

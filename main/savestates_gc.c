@@ -64,6 +64,7 @@ void savestates_select_filename(unsigned char *fn)
 
 void savestates_save()
 {
+#if 0
    char *filename, buf[1024];
 //   gzFile f;
 //   int len, i;
@@ -141,10 +142,12 @@ void savestates_save()
    gzwrite(f, buf, len);
    
    gzclose(f);*/
+#endif
 }
 
 void savestates_load()
 {
+#if 0
    char *filename, buf[1024];
    gzFile f = NULL;
 //   int len, i;
@@ -245,4 +248,5 @@ void savestates_load()
      last_addr = interp_addr;
    else
      last_addr = PC->addr;
+#endif
 }
