@@ -26,16 +26,17 @@ CXXFLAGS	=$(CFLAGS)
 #GL_PATH		=-I/usr/X11R6/include
 
 OBJ		=main/rom_gc.o \
-		main/main_gc.o \
+		main/main_gc-menu.o \
 		main/gc_dvd.o \
 		main/ROM-Cache.o \
-		main/textFileBrowser.o \
 		fileBrowser/fileBrowser-SD.o \
 		fileBrowser/fileBrowser-DVD.o \
 		fileBrowser/fileBrowser-CARD.o \
 		fileBrowser/fileBrowser.o \
+		gui/menu.o \
+		gui/menuFileBrowser.o \
 		gui/background_tex.o \
-		gui/gui_GX.o \
+		gui/gui_GX-menu.o \
 		gui/GUI.o \
 		gui/DEBUG.o \
 		gui/TEXT.o \
@@ -64,7 +65,6 @@ OBJ		=main/rom_gc.o \
 		r4300/pure_interp.o \
 		r4300/compare_core.o \
 		gc_memory/flashram.o \
-		gc_memory/Save-Prompt.o \
 		main/md5.o \
 		main/savestates_gc.o \
 		r4300/profile.o \
@@ -149,7 +149,7 @@ HEADER		=main/rom.h \
 		r4300/recomp.h \
 		gc_memory/pif.h
 
-LIB		=	-logc -lm -lz -logcsys -lsdcard
+LIB		=	-logc -lm -logcsys -lsdcard
 
 ifeq ($(strip mupen64_GX_gfx/main.cpp),)
 	export LD	:=	$(CC)
@@ -234,7 +234,7 @@ r4300/ppc/Wrappers.o:		r4300/ppc/Wrappers.s
 				$(CC) $(CFLAGS) -c -o $@ $<
 
 
-mupen64_gc.elf:	$(OBJ) $(OBJ_PPC) $(OBJ_INPUT) $(OBJ_GX_GFX) $(OBJ_AUDIO) $(OBJ_RSPHLE) main/main_gc.o
+mupen64_gc.elf:	$(OBJ) $(OBJ_PPC) $(OBJ_INPUT) $(OBJ_GX_GFX) $(OBJ_AUDIO) $(OBJ_RSPHLE) main/main_gc-menu.o
 		$(LD) $^ $(LDFLAGS) $(LDFLAGS) $(LIB) -Wl -o $@
 		#strip --strip-all $@
 		powerpc-gekko-objcopy -O binary $@ mupen64.dol

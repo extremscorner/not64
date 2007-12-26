@@ -1,5 +1,15 @@
 /* TLB-Cache-hash.c - This is how the TLB LUT should be accessed, using a hash map
    by Mike Slegeir for Mupen64-GC
+   ----------------------------------------------------
+   FIXME: This should be profiled to determine the best size,
+            currently, the linked lists' length can be up to ~16,000
+   ----------------------------------------------------
+   MEMORY USAGE:
+     STATIC:
+     	TLB LUT r: NUM_SLOTS * 4 (currently 256 bytes)
+     	TLB LUT w: NUM_SLOTS * 4 (currently 256 bytes)
+     HEAP:
+     	TLB hash nodes: 2 (r/w) * 12 bytes * O( 2^20 ) entries
  */
 
 #include <stdlib.h>

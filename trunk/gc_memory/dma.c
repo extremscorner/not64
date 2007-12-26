@@ -26,7 +26,7 @@
  * USA.
  *
 **/
-#include "../r4300/Invalid_Code.h"
+
 #include <sdcard.h>
 #include <ogc/card.h>
 #include "dma.h"
@@ -55,14 +55,22 @@ static unsigned char sram[0x8000] __attribute__((aligned(32)));
 
 static BOOL sramWritten = FALSE;
 
-void loadSram(void){
+void loadSram(fileBrowser_file* savepath){
 	int i;
-	char* filename = malloc(strlen(savepath)+
-	                        strlen(ROM_SETTINGS.goodname)+4+1);
-	strcpy(filename, savepath);
-	strcat(filename, ROM_SETTINGS.goodname);
-	strcat(filename, ".sra");
-
+	fileBrowser_file saveFile;
+	memcpy(&saveFile, savepath, sizeof(fileBrowser_file));
+	strcat(&saveFile.name, ROM_SETTINGS.goodname);
+	strcat(&saveFile.name, ".sra");
+	
+	if( !(saveFile_readFile(&saveFile, &i, 4) & FILE_BROWSER_ERROR) ){
+		PRINT("Loading SRAM, please be patient...\n");
+		saveFile_readFile(&saveFile, sram, 0x8000);
+		PRINT("OK\n");
+	} else for (i=0; i<0x8000; i++) sram[i] = 0;
+	
+	sramWritten = FALSE;
+	
+#if 0	
 	if(savetype & SELECTION_TYPE_SD){
 		sd_file *f;
 		DIR* sddir = NULL;
@@ -87,38 +95,21 @@ void loadSram(void){
 			PRINT("OK\n");
 	        } else for (i=0; i<0x8000; i++) sram[i] = 0;
 	}
+#endif
 	
-	free(filename);
-	sramWritten = FALSE;
 }
 
-void saveSram(void){
+void saveSram(fileBrowser_file* savepath){
 	if(!sramWritten) return;
-	PRINT("Please wait, saving SRAM,\n do NOT turn off the console...\n");
+	PRINT("Saving SRAM, do not turn off the console...\n");
 	
-	char* filename = malloc(strlen(savepath)+
-	                        strlen(ROM_SETTINGS.goodname)+4+1);
-	strcpy(filename, savepath);
-	strcat(filename, ROM_SETTINGS.goodname);
-	strcat(filename, ".sra");
+	fileBrowser_file saveFile;
+	memcpy(&saveFile, savepath, sizeof(fileBrowser_file));
+	strcat(&saveFile.name, ROM_SETTINGS.goodname);
+	strcat(&saveFile.name, ".sra");
 	
-	if(savetype & SELECTION_TYPE_SD){
-		sd_file* f;
-		
-		f = SDCARD_OpenFile(filename, "wb");
-	  	SDCARD_WriteFile(f, sram, 0x8000);
-	  	SDCARD_CloseFile(f);
-        } else {
-        	card_file CardFile;
-		int slot = (savetype & SELECTION_SLOT_B) ? CARD_SLOTB : CARD_SLOTA;
+	saveFile_writeFile(&saveFile, sram, 0x8000);
 	
-		if(CARD_Open(slot, filename, &CardFile) == CARD_ERROR_NOFILE)
-			CARD_Create(slot, filename, 0x8000, &CardFile);
-		CARD_Write(&CardFile, sram, 0x8000, 0);
-		CARD_Close(&CardFile);
-	}
-	
-	free(filename);
 	PRINT("OK\n");
 }
 
@@ -131,29 +122,6 @@ void dma_pi_read()
      {
 	if (use_flashram != 1)
 	  {
-	     /*char *filename;
-	     sd_file *f;
-             card_file CardFile;
-             int slot = (savetype & SELECTION_SLOT_B) ? CARD_SLOTB : CARD_SLOTA;
-	     filename = malloc(strlen(savepath)+
-			       strlen(ROM_SETTINGS.goodname)+4+1);
-	     strcpy(filename, savepath);
-	     strcat(filename, ROM_SETTINGS.goodname);
-	     strcat(filename, ".sra");
-	     
-	     if(savetype & SELECTION_TYPE_SD){
-			DIR* sddir;
-			if (SDCARD_ReadDir(filename, &sddir)){
-				f = SDCARD_OpenFile(filename, "rb");
-		  		SDCARD_ReadFile (f, sram, 0x8000);
-		  		SDCARD_CloseFile(f);
-		  	} else for (i=0; i<0x8000; i++) sram[i] = 0;
-             } else {
-                  	if(CARD_Open(slot, filename, &CardFile) != CARD_ERROR_NOFILE){			
-				CARD_Read (&CardFile, sram, 0x8000, 0);
-				CARD_Close(&CardFile);
-                  	} else for (i=0; i<0x8000; i++) sram[i] = 0;
-             }*/
 	     
 	     sramWritten = TRUE;
 	     
@@ -161,18 +129,6 @@ void dma_pi_read()
 	       sram[((pi_register.pi_cart_addr_reg-0x08000000)+i)^S8]=
 	       ((unsigned char*)rdram)[(pi_register.pi_dram_addr_reg+i)^S8];
 	     
-	     /*if(savetype & SELECTION_TYPE_SD){
-                  	f = SDCARD_OpenFile(filename, "wb");
-		  	SDCARD_WriteFile(f, sram, 0x8000);
-		  	SDCARD_CloseFile(f);
-             } else {
-                  	if(CARD_Open(slot, filename, &CardFile) == CARD_ERROR_NOFILE)
-                  		CARD_Create(slot, filename, 0x8000, &CardFile);
-			CARD_Write(&CardFile, sram, 0x8000, 0);
-			CARD_Close(&CardFile);
-	     }
-	     
-	     free(filename);*/
 	     use_flashram = -1;
 	  }
 	else
@@ -198,32 +154,7 @@ void dma_pi_write()
 	  {
 	     if (use_flashram != 1)
 	       {
-		  /*char *filename;
-		  sd_file *f;
-                  card_file CardFile;
-                  int slot = (savetype & SELECTION_SLOT_B) ? CARD_SLOTB : CARD_SLOTA;
-		  int i;
-		  filename = malloc(strlen(savepath)+
-				    strlen(ROM_SETTINGS.goodname)+4+1);
-		  strcpy(filename, savepath);
-		  strcat(filename, ROM_SETTINGS.goodname);
-		  strcat(filename, ".sra");
 		  
-		  if(savetype & SELECTION_TYPE_SD){
-				DIR* sddir;
-				if (SDCARD_ReadDir(filename, &sddir)){
-					f = SDCARD_OpenFile(filename, "rb");
-			  		SDCARD_ReadFile (f, sram, 0x8000);
-			  		SDCARD_CloseFile(f);
-			  	} else for (i=0; i<0x8000; i++) sram[i] = 0;
-	             } else {
-	                  	if(CARD_Open(slot, filename, &CardFile) != CARD_ERROR_NOFILE){
-					CARD_Read (&CardFile, sram, 0x8000, 0);
-					CARD_Close(&CardFile);
-	                  	} else for (i=0; i<0x8000; i++) sram[i] = 0;
-	             }
-		  
-		  free(filename);*/
 		  for (i=0; i<(pi_register.pi_wr_len_reg & 0xFFFFFF)+1; i++)
 		    ((unsigned char*)rdram)[(pi_register.pi_dram_addr_reg+i)^S8]=
 		    sram[(((pi_register.pi_cart_addr_reg-0x08000000)&0xFFFF)+i)^S8];

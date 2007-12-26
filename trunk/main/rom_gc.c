@@ -36,7 +36,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#include <sdcard.h>
 
 #include "rom.h"
 #include "gc_dvd.h"
@@ -44,25 +43,32 @@
 #include "../gc_memory/memory.h"
 #include "md5.h"
 
+#include "../fileBrowser/fileBrowser.h"
+
 #ifdef USE_GUI
 #include "../gui/GUI.h"
 #define PRINT GUI_print
+#define CLEAR()
 #else
 #define PRINT printf
+#define CLEAR() GUI_clear()
 #endif
 
-static sd_file *rom_file;
+static fileBrowser_file* rom_file;
 //static int i, tmp, z;
  
 int rom_length;
-unsigned char *rom;
-rom_header *ROM_HEADER;
+unsigned char* rom;
+rom_header* ROM_HEADER = NULL;
 rom_settings ROM_SETTINGS;
+/*
 //DVD
 extern int isFromDVD;
 extern int rom_sizeDVD;
 extern unsigned int rom_offsetDVD;
+*/
 
+/*
 static void findsize(){
 	SDSTAT s;
 	SDCARD_GetStats(rom_file, &s);
@@ -73,15 +79,15 @@ static void findsize(){
 		rom_length, rom_length/1024/1024, rom_length/1024/1024*8);
 	PRINT(buffer);
 }
+*/
 
-static int detectByteSwapping(char* filename){
-	rom_file = SDCARD_OpenFile(filename, "rb");
+static int detectByteSwapping(void){
 	if(!rom_file) return -1;
 	
-	char magicWord[4];
+	unsigned char magicWord[4];
 	
-	SDCARD_ReadFile(rom_file, magicWord, 4);
-	SDCARD_CloseFile(rom_file);
+	romFile_seekFile(rom_file, 0, FILE_BROWSER_SEEK_SET);
+	romFile_readFile(rom_file, magicWord, 4);
 	
 	switch(magicWord[0]){
 	case 0x37:
@@ -95,7 +101,7 @@ static int detectByteSwapping(char* filename){
 	}
 }
 
-static int detectByteSwappingDVD(){
+/*static int detectByteSwappingDVD(){
 
 	char magicWord[4];
 	read_safe(magicWord, rom_offsetDVD, 4);
@@ -110,16 +116,20 @@ static int detectByteSwappingDVD(){
 	default:
 		return BYTE_SWAP_BAD;
 	}
-}
+}*/
 
-int rom_read(const char *argv){
+//int rom_read(const char *argv){
+int rom_read(fileBrowser_file* file){
 //   md5_state_t state;
 //  md5_byte_t digest[16];
    //mupenEntry *entry;
    char arg[1024];
-   strncpy(arg, argv, 1000);
+   //strncpy(arg, argv, 1000);
    char buffer[1024];
-   
+   rom_file = file;
+   rom_length = file->size;
+
+#if 0 
    if(!isFromDVD) {
 	   rom_file = SDCARD_OpenFile(argv, "rb");
 	   if(rom_file) PRINT("file found\n");
@@ -141,12 +151,22 @@ int rom_read(const char *argv){
    	   	ROMCache_init(rom_length);
    	   	ROMCache_load_DVD(arg, detectByteSwappingDVD());
 	}
-
-   PRINT("rom loaded succesfully\n");
+#endif
+   
+   CLEAR();
+   sprintf(buffer, "Loading ROM: %s, please be patient...\n", file->name);
+   PRINT(buffer);
+   ROMCache_init(rom_length);
+   ROMCache_load(rom_file, detectByteSwapping());
+   CLEAR();
   
-   if (!ROM_HEADER) ROM_HEADER = malloc(sizeof(rom_header));
+   if(!ROM_HEADER) ROM_HEADER = malloc(sizeof(rom_header));
    ROMCache_read(ROM_HEADER, 0, sizeof(rom_header));
+   
    //display_loading_progress(100);
+   sprintf(buffer, "ROM (%s) loaded succesfully\n", ROM_HEADER->nom);
+   PRINT(buffer);
+#if 0
    sprintf(buffer, "%x %x %x %x\n", ROM_HEADER->init_PI_BSB_DOM1_LAT_REG,
 	   ROM_HEADER->init_PI_BSB_DOM1_PGS_REG,
 	   ROM_HEADER->init_PI_BSB_DOM1_PWD_REG,
@@ -194,7 +214,7 @@ int rom_read(const char *argv){
    PRINT(buffer);
    sprintf(buffer, "PC= %x\n", sl((unsigned int)ROM_HEADER->PC));
    PRINT(buffer);
-   
+#endif   
    // FIXME: ROM_SETTINGS.goodname needs to be filled out
    strcpy(ROM_SETTINGS.goodname, ROM_HEADER->nom);
    
@@ -404,3 +424,4 @@ void calculateMD5(const char *argv, unsigned char digest[16])
    rom = NULL;
 }
 */
+

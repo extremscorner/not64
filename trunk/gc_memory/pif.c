@@ -28,7 +28,7 @@
 **/
 
 #include "../config.h"
-#include <malloc.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 #ifndef __WIN32__
@@ -57,7 +57,7 @@
 #else
 #define PRINT printf
 #endif
-#include "../gui/DEBUG.h"
+
 static unsigned char eeprom[0x800] __attribute__((aligned(32)));
 static unsigned char mempack[4][0x8000] __attribute__((aligned(32)));
 static BOOL eepromWritten = FALSE;
@@ -66,14 +66,22 @@ static BOOL mempakWritten = FALSE;
 
 void check_input_sync(unsigned char *value);
 
-void loadEeprom(void){
+// TODO: Support memory card header stuff
+void loadEeprom(fileBrowser_file* savepath){
 	int i;
-	char* filename = malloc(strlen(savepath)+
-	                        strlen(ROM_SETTINGS.goodname)+4+1);
-	strcpy(filename, savepath);
-	strcat(filename, ROM_SETTINGS.goodname);
-	strcat(filename, ".eep");
-
+	fileBrowser_file saveFile;
+	memcpy(&saveFile, savepath, sizeof(fileBrowser_file));
+	strcat(&saveFile.name, ROM_SETTINGS.goodname);
+	strcat(&saveFile.name, ".eep");
+	
+	if( !(saveFile_readFile(&saveFile, &i, 4) & FILE_BROWSER_ERROR) ){
+		PRINT("Loading EEPROM, please be patient...\n");
+		saveFile_readFile(&saveFile, eeprom, 0x800);
+		PRINT("OK\n");
+	} else for (i=0; i<0x800; i++) eeprom[i] = 0;
+	
+	eepromWritten = FALSE;
+#if 0
 	if(savetype & SELECTION_TYPE_SD){
 		sd_file *f;
 		DIR* sddir = NULL;
@@ -101,15 +109,24 @@ void loadEeprom(void){
 	}
 
 	free(filename);
-	eepromWritten = FALSE;
+#endif
 }
 
 extern long long gettime();
 // Note: must be called after load
-void saveEeprom(void){
+void saveEeprom(fileBrowser_file* savepath){
 	if(!eepromWritten) return;
-	PRINT("Please wait, saving EEPROM,\n do NOT turn off the console...\n");
+	PRINT("Saving EEPROM, please do not turn off console...\n");
 	
+	fileBrowser_file saveFile;
+	memcpy(&saveFile, savepath, sizeof(fileBrowser_file));
+	strcat(&saveFile.name, ROM_SETTINGS.goodname);
+	strcat(&saveFile.name, ".eep");
+	
+	saveFile_writeFile(&saveFile, eeprom, 0x800);
+	
+	PRINT("OK\n");
+#if 0	
 	char* filename = malloc(strlen(savepath)+
 	                        strlen(ROM_SETTINGS.goodname)+4+1);
 	strcpy(filename, savepath);
@@ -150,6 +167,7 @@ void saveEeprom(void){
 		free(buffer);
 	}
 	free(filename);
+#endif
 }
 
 //#define DEBUG_PIF
@@ -255,13 +273,21 @@ unsigned char mempack_crc(unsigned char *data)
    return CRC;
 }
 
-void loadMempak(void){
-	char* filename = malloc(strlen(savepath)+
-	                        strlen(ROM_SETTINGS.goodname)+4+1);
-	strcpy(filename, savepath);
-	strcat(filename, ROM_SETTINGS.goodname);
-	strcat(filename, ".mpk");
-
+void loadMempak(fileBrowser_file* savepath){
+	fileBrowser_file saveFile;
+	memcpy(&saveFile, savepath, sizeof(fileBrowser_file));
+	strcat(&saveFile.name, ROM_SETTINGS.goodname);
+	strcat(&saveFile.name, ".mpk");
+	
+	int dummy;
+	if( !(saveFile_readFile(&saveFile, &dummy, 4) & FILE_BROWSER_ERROR) ){
+		PRINT("Loading mempak, please be patient...\n");
+		saveFile_readFile(&saveFile, mempack, 0x8000 * 4);
+		PRINT("OK\n");
+	} else format_mempacks();
+	
+	mempakWritten = FALSE;
+#if 0
 	if(savetype & SELECTION_TYPE_SD){
 		sd_file *f;
 		DIR* sddir = NULL;
@@ -294,19 +320,21 @@ void loadMempak(void){
 	}
 
 	free(filename);
-	mempakWritten = FALSE;
+#endif
 }
 
-void saveMempak(void){
+void saveMempak(fileBrowser_file* savepath){
 	if(!mempakWritten) return;
-	PRINT("Please wait, saving mempak,\n do NOT turn off the console...\n");
+	PRINT("Saving mempak, please do not turn off console...\n");
 
-	char* filename = malloc(strlen(savepath)+
-	                        strlen(ROM_SETTINGS.goodname)+4+1);
-	strcpy(filename, savepath);
-	strcat(filename, ROM_SETTINGS.goodname);
-	strcat(filename, ".mpk");
+	fileBrowser_file saveFile;
+	memcpy(&saveFile, savepath, sizeof(fileBrowser_file));
+	strcat(&saveFile.name, ROM_SETTINGS.goodname);
+	strcat(&saveFile.name, ".mpk");
 	
+	saveFile_writeFile(&saveFile, mempack, 0x8000 * 4);
+	
+#if 0	
 	if(savetype & SELECTION_TYPE_SD){
 		sd_file *f;
 		
@@ -330,6 +358,7 @@ void saveMempak(void){
 	}
 	
 	free(filename);
+#endif
 	PRINT("OK\n");
 }
 
@@ -355,17 +384,15 @@ void internal_ReadController(int Control, BYTE *Command)
       case 2: // read controller pack
 	if (Controls[Control].Present)
 	  {
-	   	DEBUG_print("Read Controller Pack",DBG_SAVEINFO);
 	     if (Controls[Control].Plugin == PLUGIN_RAW)
-	       if (controllerCommand != NULL) readController(Control, Command);
+	       if (controllerCommand) readController(Control, Command);
 	  }
 	break;
       case 3: // write controller pack
 	if (Controls[Control].Present)
 	  {
-		  DEBUG_print("Write Controller Pack",DBG_SAVEINFO);
 	     if (Controls[Control].Plugin == PLUGIN_RAW)
-	       if (controllerCommand != NULL) readController(Control, Command);
+	       if (controllerCommand) readController(Control, Command);
 	  }
 	break;
      }
@@ -432,7 +459,7 @@ void internal_ControllerCommand(int Control, BYTE *Command)
 		    }
 		  break;
 		case PLUGIN_RAW:
-		  if (controllerCommand != NULL) controllerCommand(Control, Command);
+		  if (controllerCommand) controllerCommand(Control, Command);
 		  break;
 		default:
 		  memset(&Command[5], 0, 0x20);
@@ -464,7 +491,7 @@ void internal_ControllerCommand(int Control, BYTE *Command)
 		    }
 		  break;
 		case PLUGIN_RAW:
-		  if (controllerCommand != NULL) controllerCommand(Control, Command);
+		  if (controllerCommand) controllerCommand(Control, Command);
 		  break;
 		default:
 		  Command[0x25] = mempack_crc(&Command[5]);

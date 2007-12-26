@@ -9,6 +9,8 @@
 
 extern fileBrowser_file topLevel_SD_SlotA;
 extern fileBrowser_file topLevel_SD_SlotB;
+extern fileBrowser_file saveDir_SD_SlotA;
+extern fileBrowser_file saveDir_SD_SlotB;
 
 int fileBrowser_SD_readDir(fileBrowser_file*, fileBrowser_file**);
 int fileBrowser_SD_readFile(fileBrowser_file*, void*, unsigned int);
