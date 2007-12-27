@@ -21,7 +21,7 @@ static menu_item*        menu_items;
 static fileBrowser_file* dir_entries;
 
 void loadROM(fileBrowser_file*);
-static void recurseOrSelect(int i){
+static char* recurseOrSelect(int i){
 	if(dir_entries[i].attr & FILE_BROWSER_ATTR_DIR){
 		// Here we are 'recursing' into a subdirectory
 		// We have to do a little dance here to avoid a dangling pointer
@@ -29,6 +29,7 @@ static void recurseOrSelect(int i){
 		memcpy(dir, dir_entries+i, sizeof(fileBrowser_file));
 		menuFileBrowser(dir);
 		free(dir);
+		return NULL;
 	} else {
 		// We must select this file
 		// TODO: Probably some sort of feedback via GUI if possible
@@ -37,6 +38,7 @@ static void recurseOrSelect(int i){
 		loadROM( &dir_entries[i] );
 		// And a simple hack to get back out of the file browser
 		menuBack();
+		return &dir_entries[i].name;
 	}
 }
 
@@ -73,7 +75,7 @@ menu_item* menuFileBrowser(fileBrowser_file* dir){
 	
 	// Read the directories and return on error
 	int num_entries = romFile_readDir(dir, &dir_entries);
-	if(num_entries <= 0){ if(dir_entries) free(dir_entries); return; }
+	if(num_entries <= 0){ if(dir_entries) free(dir_entries); return NULL; }
 	
 	// Allocate and fill the entries
 	menu_items = malloc(num_entries * sizeof(menu_item));
