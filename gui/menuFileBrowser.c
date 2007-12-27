@@ -55,7 +55,7 @@ static void inline fillItems(int num_entries, fileBrowser_file* entries){
 		// Now, just move it back to the last '/' or the start
 		//   of the string
 		while( menu_items[i].caption != entries[i].name &&
-		       *(menu_items[i].caption-1) != '/')
+		       *(menu_items[i].caption-1) != '\\')
 			--menu_items[i].caption;
 		
 		menu_items[i].hasSubmenu = 0;

@@ -82,7 +82,7 @@ static void findsize(){
 */
 
 static int detectByteSwapping(void){
-	if(!rom_file) return -1;
+	if(!rom_file) return BYTE_SWAP_BAD;
 	
 	unsigned char magicWord[4];
 	
