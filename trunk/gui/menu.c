@@ -94,6 +94,8 @@
 		romFile_readDir  = fileBrowser_SD_readDir;
 		romFile_readFile = fileBrowser_SD_readFile;
 		romFile_seekFile = fileBrowser_SD_seekFile;
+		romFile_init     = fileBrowser_SD_init;
+		romFile_deinit   = fileBrowser_SD_deinit;
 		// Then push the file browser onto the menu
 		menuStack_push( menuFileBrowser(romFile_topLevel) );
 	}
@@ -103,6 +105,8 @@
 		romFile_readDir  = fileBrowser_DVD_readDir;
 		romFile_readFile = fileBrowser_DVD_readFile;
 		romFile_seekFile = fileBrowser_DVD_seekFile;
+		romFile_init     = fileBrowser_DVD_init;
+		romFile_deinit   = fileBrowser_DVD_deinit;
 		// Then push the file browser onto the menu
 		menuStack_push( menuFileBrowser(romFile_topLevel) );
 	}
@@ -330,11 +334,10 @@ void menuInit(void){
 }
 
 static void subMenuDisplay(unsigned int num_items, menu_item* itemz){
-	// FIXME: I should probably fix max size to display,
-	//          and center around the selected if too big
 	GUI_clear();
-	int i;
-	for(i=0; i<num_items; ++i)
+	int i     = MAX( 0, MIN(num_items - GUI_TEXT_HEIGHT, selected_i - GUI_TEXT_HEIGHT/2) );
+	int limit = MIN( num_items, MAX(GUI_TEXT_HEIGHT, selected_i + GUI_TEXT_HEIGHT/2) );
+	for(; i<limit; ++i)
 		GUI_print_color( itemz[i].caption, (i == selected_i) ?
 		                   GUI_color_highlighted : GUI_color_default );
 }

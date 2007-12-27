@@ -6,7 +6,7 @@
 #include "fileBrowser.h"
 
 fileBrowser_file topLevel_SD_SlotA =
-	{ "dev0:\\N64ROMS\\", // file name
+	{ "dev0:\\N64ROMS", // file name
 	  0, // sector
 	  0, // offset
 	  0, // size
@@ -14,7 +14,7 @@ fileBrowser_file topLevel_SD_SlotA =
 	 };
 
 fileBrowser_file topLevel_SD_SlotB =
-	{ "dev1:\\N64ROMS\\", // file name
+	{ "dev1:\\N64ROMS", // file name
 	  0, // sector
 	  0, // offset
 	  0, // size
@@ -91,4 +91,8 @@ int fileBrowser_SD_writeFile(fileBrowser_file* file, void* buffer, unsigned int 
 	SDCARD_CloseFile(f);
 	return bytes_read;
 }
+
+int fileBrowser_SD_init(fileBrowser_file* f){ }
+
+int fileBrowser_SD_deinit(fileBrowser_file* f){ }
 

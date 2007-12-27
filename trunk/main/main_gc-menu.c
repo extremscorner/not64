@@ -73,20 +73,16 @@ int main(){
 	saveEnabled  = 0; // Don't save game
 	dynacore     = 2; // Pure Interpreter
 	
-	// 'Page flip' PADStatus so we know when it released
+	// 'Page flip' buttons so we know when it released
 	int which_pad = 0;
-	//PADStatus pad[2][4];
 	u16 buttons[2];
 	/* MAIN LOOP */
 	while(TRUE){
 		// First read the pads
-		//PAD_Read( &pad[which_pad] );
-		buttons[which_pad] = PAD_ButtonsDown(0);
+		buttons[which_pad] = PAD_ButtonsHeld(0);
 		
 // Check whether button is pressed and make sure it wasn't registered last time	
-/*#define PAD_PRESSED(butt0n) ( pad[which_pad][0].button & butt0n && \
-                               !(pad[which_pad^1][0].button & butt0n) )*/
-#define PAD_PRESSED(butt0n) ( buttons[which_pad] & butt0n && !(buttons[which_pad] & butt0n) )
+#define PAD_PRESSED(butt0n) ( buttons[which_pad] & butt0n && !(buttons[which_pad^1] & butt0n) )
 		
 		// Navigate the menu accordingly
 		if( PAD_PRESSED( PAD_BUTTON_UP ) )
@@ -101,7 +97,7 @@ int main(){
 		
 		// TODO: Analog stick
 		
-		// 'Flip' PADStatus
+		// 'Flip' buttons
 		which_pad ^= 1;
 		
 		// Display everything

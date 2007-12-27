@@ -33,7 +33,7 @@ void ROMCache_init(u32 romSize){
 	ARQ_Init();
 	ROM_too_big = romSize > (ARAM_block_available_contiguous() * BLOCK_SIZE);
 	ROM_size = romSize;
-	romFile_init();
+	romFile_init( romFile_topLevel );
 }
 
 void ROMCache_deinit(){
@@ -44,7 +44,7 @@ void ROMCache_deinit(){
 				ARAM_block_free(&ROM_blocks[i]);
 	} else
 		if(ROM) ARAM_block_free_contiguous(&ROM, ROM_size / BLOCK_SIZE);
-	romFile_deinit();
+	romFile_deinit( romFile_topLevel );
 }
 
 static void inline ROMCache_load_block(char* block, int rom_offset){
