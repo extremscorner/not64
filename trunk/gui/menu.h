@@ -13,7 +13,7 @@ typedef struct menu_item_t {
 			unsigned int        num_items;
 			struct menu_item_t* items;
 		} subMenu;
-		void (*func)();
+		char* (*func)(); // Returns a feedback string
 	};
 } menu_item;
 

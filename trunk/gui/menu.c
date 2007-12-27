@@ -14,10 +14,33 @@
 
 #define MAIN_MENU_SIZE 7
 
+
+/* Message menu_item: used for feedback, set the caption to what you want it to say */
+
+static menu_item _message_item =
+	{ NULL,
+	  0,
+	  { .func = menuBack }
+	 };
+
+static menu_item message_item = 
+	{ NULL, // caption
+	  1,  // hasSubmenu
+	 { 1, // num_items
+	   &_message_item
+	  }
+	 };
+static void setMessage( char* msg ){
+	_message_item.caption = msg;
+}	
+
+/* End of Message menu_item */
+
 /* Example - "Play Game" */
 
-	static void playGame_func(){
+	static char* playGame_func(){
 		go();
+		return NULL;
 	}
 
 #define PLAY_GAME_INDEX MAIN_MENU_SIZE - 1 /* We want it to be the last item */
@@ -32,9 +55,18 @@
 /* "Select CPU Mode" menu item */
 
 	extern unsigned long dynacore;
-	static void choose_PureInterpreter(){ dynacore = 2; }
-	static void choose_Dynarec(){ dynacore = 1; }
-	static void choose_Interpreter(){ dynacore = 0; }
+	static char* choose_PureInterpreter(){
+		dynacore = 2;
+		return "Running Pure Interpreter Mode";
+	}
+	static char* choose_Dynarec(){
+		dynacore = 1;
+		return "Running Dynarec Mode";
+	}
+	static char* choose_Interpreter(){
+		dynacore = 0;
+		return "Running Interpreter Mode";
+	}
 	
 	static menu_item selectCPU_subMenu[3] =
 		{{ "Pure Interpreter",
@@ -67,9 +99,9 @@
 
 /* "Toggle Audio" menu item */
 
-	extern char audioEnabled;
-	static void toggleAudio_func();
-	static char toggleAudio_strings[2][30]  = 
+	extern char  audioEnabled;
+	static char* toggleAudio_func();
+	static char  toggleAudio_strings[2][30]  = 
 		{ "Toggle Audio (currently off)",
 		  "Toggle Audio (currently on)"};
 
@@ -88,7 +120,7 @@
 	char* textFileBrowserDVD();
 	static inline void menuStack_push(menu_item*);
 
-	static void loadROMSD_func(){
+	static char* loadROMSD_func(){
 		// Change all the romFile pointers
 		romFile_topLevel = &topLevel_SD_SlotA;
 		romFile_readDir  = fileBrowser_SD_readDir;
@@ -98,8 +130,10 @@
 		romFile_deinit   = fileBrowser_SD_deinit;
 		// Then push the file browser onto the menu
 		menuStack_push( menuFileBrowser(romFile_topLevel) );
+		
+		return NULL;
 	}
-	static void loadROMDVD_func(){
+	static char* loadROMDVD_func(){
 		// Change all the romFile pointers
 		romFile_topLevel = &topLevel_DVD;
 		romFile_readDir  = fileBrowser_DVD_readDir;
@@ -109,6 +143,8 @@
 		romFile_deinit   = fileBrowser_DVD_deinit;
 		// Then push the file browser onto the menu
 		menuStack_push( menuFileBrowser(romFile_topLevel) );
+		
+		return NULL;
 	}
 	
 	static menu_item loadROM_submenu[2] =
@@ -136,7 +172,7 @@
 /* "Load Save File" item */
 #include "../gc_memory/Saves.h"
 	// NOTE: I assume an even item # = Slot A, OW = B
-	static void loadSaveSD_func(int item_num){
+	static char* loadSaveSD_func(int item_num){
 		// Adjust saveFile pointers
 		saveFile_dir = (item_num%2) ? &saveDir_SD_SlotB : &saveDir_SD_SlotA;
 		saveFile_readFile  = fileBrowser_SD_readFile;
@@ -149,8 +185,10 @@
 		loadSram(saveFile_dir);
 		loadMempak(saveFile_dir);
 		loadFlashram(saveFile_dir);
+		
+		return "Loaded save from SD card";
 	}
-	static void loadSaveCARD_func(int item_num){
+	static char* loadSaveCARD_func(int item_num){
 		// Adjust saveFile pointers
 		saveFile_dir = (item_num%2) ? &saveDir_CARD_SlotB : &saveDir_CARD_SlotA;
 		saveFile_readFile  = fileBrowser_CARD_readFile;
@@ -165,6 +203,8 @@
 		loadMempak(saveFile_dir);
 		loadFlashram(saveFile_dir);
 		saveFile_deinit(saveFile_dir);
+		
+		return "Loaded save from memcard";
 	}
 
 	static menu_item loadSave_submenu[4] =
@@ -200,21 +240,23 @@
 /* "Save Game" item */
 
 	// NOTE: I assume an even item # = Slot A, OW = B
-	static void saveGameSD_func(int item_num){
+	static char* saveGameSD_func(int item_num){
 		// Adjust saveFile pointers
 		saveFile_dir = (item_num%2) ? &saveDir_SD_SlotB : &saveDir_SD_SlotA;
 		saveFile_readFile  = fileBrowser_SD_readFile;
 		saveFile_writeFile = fileBrowser_SD_writeFile;
-		saveFile_init      = 0;
-		saveFile_deinit    = 0;
+		saveFile_init      = fileBrowser_SD_init;
+		saveFile_deinit    = fileBrowser_SD_deinit;
 		
 		// Try loading everything
 		saveEeprom(saveFile_dir);
 		saveSram(saveFile_dir);
 		saveMempak(saveFile_dir);
 		saveFlashram(saveFile_dir);
+		
+		return "Saved game to SD card";
 	}
-	static void saveGameCARD_func(int item_num){
+	static char* saveGameCARD_func(int item_num){
 		// Adjust saveFile pointers
 		saveFile_dir = (item_num%2) ? &saveDir_CARD_SlotB : &saveDir_CARD_SlotA;
 		saveFile_readFile  = fileBrowser_CARD_readFile;
@@ -229,6 +271,8 @@
 		saveMempak(saveFile_dir);
 		saveFlashram(saveFile_dir);
 		saveFile_deinit(saveFile_dir);
+		
+		return "Saved game to memcard";
 	}
 
 	static menu_item saveGame_submenu[4] =
@@ -288,10 +332,10 @@ static menu_item main_menu[MAIN_MENU_SIZE] =
 
 
 // Unfortunately, this has to be down here
-static void toggleAudio_func(){
+static char* toggleAudio_func(){
 	audioEnabled ^= 1;
-	//toggleAudio_item.caption = &toggleAudio_strings[audioEnabled][0];
 	main_menu[TOGGLE_AUDIO_INDEX].caption = &toggleAudio_strings[audioEnabled][0];
+	return NULL;
 }
 
 // -- END MENU --
@@ -335,9 +379,10 @@ void menuInit(void){
 
 static void subMenuDisplay(unsigned int num_items, menu_item* itemz){
 	GUI_clear();
-	int i     = MAX( 0, MIN(num_items - GUI_TEXT_HEIGHT, selected_i - GUI_TEXT_HEIGHT/2) );
-	int limit = MIN( num_items, MAX(GUI_TEXT_HEIGHT, selected_i + GUI_TEXT_HEIGHT/2) );
-	for(; i<limit; ++i)
+	//int i     = MAX( 0, MIN(num_items - GUI_TEXT_HEIGHT, selected_i - GUI_TEXT_HEIGHT/2) );
+	//int limit = MIN( num_items, MAX(GUI_TEXT_HEIGHT, selected_i + GUI_TEXT_HEIGHT/2) );
+	int i=0;
+	for(; i<num_items; ++i)
 		GUI_print_color( itemz[i].caption, (i == selected_i) ?
 		                   GUI_color_highlighted : GUI_color_default );
 }
@@ -359,8 +404,11 @@ void menuSelect(){
 		selected_i = 0;
 	} else {
 		// Otherwise, run the menu item's function
-		curr->subMenu.items[selected_i].func(selected_i);
-		selected_i = 0;
+		setMessage( curr->subMenu.items[selected_i].func(selected_i) );
+		if(_message_item.caption){
+			menuBack();
+			menuStack_push( &message_item );
+		}
 	}
 }
 
