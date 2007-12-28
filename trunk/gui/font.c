@@ -253,3 +253,17 @@ void write_font(int x, int y, char *string, float scale)
 		string++;
 	}
 }
+
+void write_font_centered(int y, char *string, float scale)
+{
+	int x0, x = 0;
+	char* string_work = string;
+	while(*string_work && (x < back_framewidth))
+	{
+		unsigned char c = *string_work;
+		x += (int) fontChars.font_size[c] * scale;
+		string_work++;
+	}
+	x0 = (int) MAX(0, (back_framewidth - x)/2);
+	write_font(x0,y,string,scale);
+}
