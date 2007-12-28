@@ -377,12 +377,12 @@ void menuInit(void){
 	selected_i = 0;
 }
 
-static void subMenuDisplay(unsigned int num_items, menu_item* itemz){
+static void subMenuDisplay(int num_items, menu_item* itemz){
 	GUI_clear();
-	//int i     = MAX( 0, MIN(num_items - GUI_TEXT_HEIGHT, selected_i - GUI_TEXT_HEIGHT/2) );
-	//int limit = MIN( num_items, MAX(GUI_TEXT_HEIGHT, selected_i + GUI_TEXT_HEIGHT/2) );
-	int i=0;
-	for(; i<num_items; ++i)
+	int i     = MAX( 0, MIN(num_items - GUI_TEXT_HEIGHT, (int)selected_i - GUI_TEXT_HEIGHT/2) );
+	int limit = MIN( num_items, MAX(GUI_TEXT_HEIGHT, (int)selected_i + GUI_TEXT_HEIGHT/2) );
+	
+	for(; i<limit; ++i)
 		GUI_print_color( itemz[i].caption, (i == selected_i) ?
 		                   GUI_color_highlighted : GUI_color_default );
 }
