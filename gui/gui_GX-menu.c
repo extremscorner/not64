@@ -86,6 +86,7 @@ u8 colors[] ATTRIBUTE_ALIGN (32) =
 };
 
 static GUIinfo GUI;
+static bool GUI_centered = true;
 //static int GUI_on = 0;
 //static int GXtoggleFlag = 1;
 //static lwp_t GUIthread;
@@ -113,7 +114,7 @@ void GUI_setFB(unsigned int* fb1, unsigned int* fb2){
 }
 
 void GUI_init(){
-	s32 stat;
+//	s32 stat;
 
 	init_font();
 //	SDCARD_Init(); //for future functionality to load alternate background from SD card
@@ -226,6 +227,11 @@ void GUI_draw()
 	VIDEO_WaitVSync();
 }
 
+void GUI_centerText(bool flag)
+{
+	GUI_centered = flag;
+}
+
 void GUI_displayText(){
 	int i = 1;
 	char** temp_textptrs;
@@ -240,7 +246,8 @@ void GUI_displayText(){
 	{
 		write_font_color(&fontColorPtr[i]);
 //		GX_SetTevColor(GX_TEVREG1,fontColorPtr[i]);
-		write_font(60,(20*i+105),temp_textptrs[i], 1.0); 
+		if(GUI_centered) write_font_centered((20*i+105),temp_textptrs[i], 1.0); 
+		else write_font(60,(20*i+105),temp_textptrs[i], 1.0); 
 	}
 
    //reset swap table from GUI/DEBUG

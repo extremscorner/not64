@@ -25,5 +25,6 @@ void GUI_displayText();
 int GUI_loadBGtex();
 void GUI_drawWiiN64(float, float, float, float);
 void GUI_drawLogo(float, float, float);
+void GUI_centerText(bool);
    
 #endif
