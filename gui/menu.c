@@ -14,7 +14,6 @@
 
 #define MAIN_MENU_SIZE 7
 
-
 /* Message menu_item: used for feedback, set the caption to what you want it to say */
 
 static menu_item _message_item =
@@ -393,7 +392,8 @@ void menuDisplay(void){
 }
 
 void menuNavigate(int d){
-	selected_i = (selected_i + d) % menuStack_top()->subMenu.num_items;
+	selected_i = (selected_i + menuStack_top()->subMenu.num_items + d) %
+	                menuStack_top()->subMenu.num_items;
 }
 
 void menuSelect(){
