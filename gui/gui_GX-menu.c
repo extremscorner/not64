@@ -103,6 +103,8 @@ extern long LOGOtexture_length;
 
 void draw_quad (u8, u8, u8, u8, u8);
 void GUI_splashScreen();
+void draw_rect(GXColor, float, float, float, float, float);
+void draw_background();
 
 void GUI_setFB(unsigned int* fb1, unsigned int* fb2){
 	GUI.xfb[0] = fb1;
@@ -120,7 +122,7 @@ void GUI_init(){
 	//load BG texture from SD card and initialize
 	GUI_loadBGtex();
 
-//	GUI_splashScreen();
+	GUI_splashScreen();
 	//TODO: init spinning cube display list
 
 //	GUI_on = 1;
@@ -128,7 +130,6 @@ void GUI_init(){
 //	stat = LWP_CreateThread(&GUIthread, &GUI_main, NULL, NULL, 0, 80);
 //	if (stat<0)
 //		GUI_print("Error creating GUIthread.\n");
-
 
 }
 
@@ -166,6 +167,8 @@ void GUI_draw()
 {
 	Mtx44 GXprojection2D;
 	Mtx GXmodelView2D;
+
+	GUI_loadBGtex();
 
 	guMtxIdentity(GXmodelView2D);
 	GX_LoadTexMtxImm(GXmodelView2D,GX_TEXMTX0,GX_MTX2x4);
@@ -211,8 +214,8 @@ void GUI_draw()
 
 	GUI_displayText();
 
-	GUI_drawWiiN64();
-	GUI_drawLogo();
+	GUI_drawWiiN64(319.5,66.5,-20.0,1);
+	GUI_drawLogo(580.0, 70.0, -50.0);
 
 	GX_DrawDone ();
 	GX_CopyDisp (GUI.xfb[GUI.which_fb], GX_FALSE);
@@ -308,14 +311,20 @@ int GUI_loadBGtex(){
 	return 1;
 }
 
-void GUI_drawWiiN64(){
+void GUI_drawWiiN64(float x0, float y0, float z, float scale){
 
 	Mtx44 GXprojection2D;
 	Mtx GXmodelView2D;
+	float ulx, uly, lrx, lry;
+
+	ulx = x0 - scale*108;
+	lrx = x0 + scale*108;
+	uly = y0 - scale*42;
+	lry = y0 + scale*42;
 
 	guMtxIdentity(GXmodelView2D);
 	GX_LoadTexMtxImm(GXmodelView2D,GX_TEXMTX0,GX_MTX2x4);
-	guMtxTransApply (GXmodelView2D, GXmodelView2D, 0.0F, 0.0F, -20.0F);
+	guMtxTransApply (GXmodelView2D, GXmodelView2D, 0.0F, 0.0F, z);
 	GX_LoadPosMtxImm(GXmodelView2D,GX_PNMTX0);
 	guOrtho(GXprojection2D, 0, 479, 0, 639, 0, 100);
 	GX_LoadProjectionMtx(GXprojection2D, GX_ORTHOGRAPHIC);
@@ -345,19 +354,19 @@ void GUI_drawWiiN64(){
 	GX_SetCullMode (GX_CULL_NONE);
 
 	GX_Begin(GX_QUADS, GX_VTXFMT1, 4);
-	GX_Position2f32(212, 25);
+	GX_Position2f32(ulx, uly);
 	GX_TexCoord2f32(0,0);
-	GX_Position2f32(427, 25);
+	GX_Position2f32(lrx, uly);
 	GX_TexCoord2f32(1,0);
-	GX_Position2f32(427, 108);
+	GX_Position2f32(lrx, lry);
 	GX_TexCoord2f32(1,1);
-	GX_Position2f32(212, 108);
+	GX_Position2f32(ulx, lry);
 	GX_TexCoord2f32(0,1);
 	GX_End();
 
 }
 
-void GUI_drawLogo(){
+void GUI_drawLogo(float x0, float y0, float z0){
 
   Mtx v, m, mv, tmp;            // view, model, modelview, and perspective matrices
 //  Mtx p;
@@ -391,7 +400,7 @@ void GUI_drawLogo(){
   guMtxConcat (m, tmp, m);
   guMtxRotAxisDeg (tmp, &axisY, rotateby);		//slowly rotate logo
   guMtxConcat (m, tmp, m);
-  guMtxTransApply (m, m, 580.0F, 70.0F, -50.0F);
+  guMtxTransApply (m, m, x0, y0, z0);
   guMtxConcat (v, m, mv);
   // load the modelview matrix into matrix memory
   GX_LoadPosMtxImm (mv, GX_PNMTX0);
@@ -479,14 +488,182 @@ void draw_quad (u8 v0, u8 v1, u8 v2, u8 v3, u8 c)
   GX_Color1x8 (c);
 }
 
+#define SPLASH_FADE 100
+#define SPLASH_CUBE_DROP 50
+#define SPLASH_CUBE_SPIN 200
+#define SPLASH_CUBE_TRANSLATE 50
+
 void GUI_splashScreen()
 {
-	//Fade in WiiN64 logo
+	int i = 0, splash_step = 1;
+	float x0, y0, xstart = 0, ystart = 0, scale;
+	GXColor rectColor = {0,0,0,255};
+	bool button_down = false;
 
-	//Drop large N64 cube from top
+	while(1) {
+	switch(splash_step) 
+	{
+		case 1: //Fade in WiiN64 logo
+			draw_rect((GXColor){0,0,0,255},0,0,639,479,-1);
+			GUI_drawWiiN64(319.5,300,-20.0,2);
+			rectColor.a = (u8) ((float)(SPLASH_FADE - i)/SPLASH_FADE * 255);
+			draw_rect(rectColor,0,0,639,479,-25);
+			if (i>=SPLASH_FADE) {
+				i = 0;
+				splash_step++;
+			}
+			i++;
+			break;
+		case 2: //Drop large N64 cube from top
+			draw_rect((GXColor){0,0,0,255},0,0,639,479,-1);
+			GUI_drawWiiN64(319.5,300,-20.0,2);
+			y0 = -100 + 250*i/SPLASH_CUBE_DROP;
+			GUI_drawLogo(320, y0, -50.0);
+			if (i>=SPLASH_CUBE_DROP) {
+				i = 0;
+				splash_step++;
+			}
+			i++;
+			break;
+		case 3: //Bounce/spin N64 cube for a couple seconds
+			draw_rect((GXColor){0,0,0,255},0,0,639,479,-1);
+			GUI_drawWiiN64(319.5,300,-20.0,2);
+			x0 = 320 + PAD_StickX(0)*0.6;
+			y0 = 150 - PAD_StickY(0)*0.5;
+			GUI_drawLogo(x0, y0, -50.0);
+			if (i>=SPLASH_CUBE_SPIN) {
+				i = 0;
+				splash_step++;
+				xstart = x0;
+				ystart = y0;
+			}
+			i++;
+			break;
+		case 4: //shrink/translate cube & logo to correct places on screen
+			//final logo position = (580.0F, 70.0F, -50.0F)
+			//final WiiN64 position = (319.5,66.5,-20.0,1)
+			draw_background();
+			rectColor.a = (u8) ((float)(SPLASH_CUBE_TRANSLATE - i)/SPLASH_CUBE_TRANSLATE * 255);
+			draw_rect(rectColor,0,0,639,479,-6);
+			y0 = 300 + (66.5 - 300)*i/SPLASH_CUBE_TRANSLATE;
+			scale = 2.0 + (1.0 - 2.0)*i/SPLASH_CUBE_TRANSLATE;
+			GUI_drawWiiN64(319.5,y0,-20.0,scale);
+			x0 = xstart + (580 - xstart)*i/SPLASH_CUBE_TRANSLATE;
+			y0 = ystart + (70 - ystart)*i/SPLASH_CUBE_TRANSLATE;
+			GUI_drawLogo(x0, y0, -50.0);
+			if (i>=SPLASH_CUBE_TRANSLATE)
+				return;
+			i++;
+			break;
+	}
 
-	//Bounce/spin N64 cube for a couple seconds
+	GX_DrawDone ();
+	GX_CopyDisp (GUI.xfb[GUI.which_fb], GX_TRUE);
+	GX_Flush ();
+	VIDEO_SetNextFramebuffer(GUI.xfb[GUI.which_fb]);
+	VIDEO_Flush();
+	GUI.which_fb ^= 1;
+	VIDEO_WaitVSync();
 
-	//shrink/translate cube & logo to correct places on screen
+	if(PAD_ButtonsHeld(0) & PAD_BUTTON_A) 
+		button_down = true;
+	if(!(PAD_ButtonsHeld(0) & PAD_BUTTON_A) && (button_down == true))
+		return;
+	}
+	return;
+}
 
+void draw_rect(GXColor rectColor, float ulx, float uly, float lrx, float lry, float z) 
+{
+	Mtx44 GXprojection2D;
+	Mtx GXmodelView2D;
+
+	GX_SetTevColor(GX_TEVREG1,rectColor);
+
+	guMtxIdentity(GXmodelView2D);
+	GX_LoadTexMtxImm(GXmodelView2D,GX_TEXMTX0,GX_MTX2x4);
+	guMtxTransApply (GXmodelView2D, GXmodelView2D, 0.0F, 0.0F, z);
+	GX_LoadPosMtxImm(GXmodelView2D,GX_PNMTX0);
+	guOrtho(GXprojection2D, 0, 479, 0, 639, 0, 100);
+	GX_LoadProjectionMtx(GXprojection2D, GX_ORTHOGRAPHIC);
+
+	GX_SetZMode(GX_ENABLE,GX_GEQUAL,GX_TRUE);
+
+	GX_ClearVtxDesc();
+	GX_SetVtxDesc(GX_VA_PTNMTXIDX, GX_PNMTX0);
+	GX_SetVtxDesc(GX_VA_POS, GX_DIRECT);
+	//set vertex attribute formats here
+	GX_SetVtxAttrFmt(GX_VTXFMT1, GX_VA_POS, GX_POS_XY, GX_F32, 0);
+
+	//enable textures
+	GX_SetNumChans (1);
+	GX_SetNumTexGens (0);
+	GX_SetTevOrder (GX_TEVSTAGE0, GX_TEXCOORDNULL, GX_TEXMAP_NULL, GX_COLOR0A0);
+//	GX_SetTevOp (GX_TEVSTAGE0, GX_REPLACE);
+	GX_SetTevColorIn (GX_TEVSTAGE0, GX_CC_ZERO, GX_CC_ZERO, GX_CC_ZERO, GX_CC_C1);
+	GX_SetTevColorOp (GX_TEVSTAGE0, GX_TEV_ADD, GX_TB_ZERO, GX_CS_SCALE_1, GX_ENABLE, GX_TEVPREV);
+	GX_SetTevAlphaIn (GX_TEVSTAGE0, GX_CA_ZERO, GX_CA_ZERO, GX_CA_ZERO, GX_CA_A1);
+	GX_SetTevAlphaOp (GX_TEVSTAGE0, GX_TEV_ADD, GX_TB_ZERO, GX_CS_SCALE_1, GX_ENABLE, GX_TEVPREV);
+	//set blend mode
+	GX_SetBlendMode(GX_BM_BLEND, GX_BL_SRCALPHA, GX_BL_INVSRCALPHA, GX_LO_CLEAR); //Fix src alpha
+	GX_SetColorUpdate(GX_ENABLE);
+	GX_SetAlphaUpdate(GX_DISABLE);
+	GX_SetDstAlpha(GX_DISABLE, 0xFF);
+	//set cull mode
+	GX_SetCullMode (GX_CULL_NONE);
+
+	GX_Begin(GX_QUADS, GX_VTXFMT1, 4);
+	GX_Position2f32(ulx, uly);
+	GX_Position2f32(lrx, uly);
+	GX_Position2f32(lrx, lry);
+	GX_Position2f32(ulx, lry);
+	GX_End();
+}
+
+void draw_background() 
+{
+	Mtx44 GXprojection2D;
+	Mtx GXmodelView2D;
+
+	guMtxIdentity(GXmodelView2D);
+	GX_LoadTexMtxImm(GXmodelView2D,GX_TEXMTX0,GX_MTX2x4);
+	guMtxTransApply (GXmodelView2D, GXmodelView2D, 0.0F, 0.0F, -5.0F);
+	GX_LoadPosMtxImm(GXmodelView2D,GX_PNMTX0);
+	guOrtho(GXprojection2D, 0, 479, 0, 639, 0, 100);
+	GX_LoadProjectionMtx(GXprojection2D, GX_ORTHOGRAPHIC);
+
+	GX_SetZMode(GX_ENABLE,GX_ALWAYS,GX_TRUE);
+
+	GX_ClearVtxDesc();
+	GX_SetVtxDesc(GX_VA_PTNMTXIDX, GX_PNMTX0);
+	GX_SetVtxDesc(GX_VA_TEX0MTXIDX, GX_TEXMTX0);
+	GX_SetVtxDesc(GX_VA_POS, GX_DIRECT);
+	GX_SetVtxDesc(GX_VA_TEX0, GX_DIRECT);
+	//set vertex attribute formats here
+	GX_SetVtxAttrFmt(GX_VTXFMT1, GX_VA_POS, GX_POS_XY, GX_F32, 0);
+	GX_SetVtxAttrFmt(GX_VTXFMT1, GX_VA_TEX0, GX_TEX_ST, GX_F32, 0);
+
+	//enable textures
+	GX_SetNumChans (1);
+	GX_SetNumTexGens (1);
+	GX_SetTevOrder (GX_TEVSTAGE0, GX_TEXCOORD0, GX_TEXMAP0, GX_COLOR0A0); // change to (u8) tile later
+	GX_SetTevOp (GX_TEVSTAGE0, GX_REPLACE);
+	//set blend mode
+	GX_SetBlendMode(GX_BM_NONE, GX_BL_ONE, GX_BL_ZERO, GX_LO_CLEAR); //Fix src alpha
+	GX_SetColorUpdate(GX_ENABLE);
+	GX_SetAlphaUpdate(GX_ENABLE);
+	GX_SetDstAlpha(GX_DISABLE, 0xFF);
+	//set cull mode
+	GX_SetCullMode (GX_CULL_NONE);
+
+	GX_Begin(GX_QUADS, GX_VTXFMT1, 4);
+	GX_Position2f32(0, 0);
+	GX_TexCoord2f32(0,0);
+	GX_Position2f32(639, 0);
+	GX_TexCoord2f32(1,0);
+	GX_Position2f32(639, 479);
+	GX_TexCoord2f32(1,1);
+	GX_Position2f32(0, 479);
+	GX_TexCoord2f32(0,1);
+	GX_End();
 }
