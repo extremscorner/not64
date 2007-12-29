@@ -18,19 +18,26 @@ fileBrowser_file topLevel_DVD =
 	  FILE_BROWSER_ATTR_DIR
 	 };
 
-int fileBrowser_DVD_readDir(fileBrowser_file* ffile, fileBrowser_file** dir){	
-	//Lets execute a normal command
-	dvd_read_id();
-	//If it failed, we must mount the drive again
-	if(dvd_get_error() != 0) {
-		if(!isWii)
-			DVD_Mount ();
-		if(isWii) {
-			DVD_Reset(DVD_RESETHARD);
-			dvd_read_id();
+int DVD_check_state() {
+	if(dvd_get_error() == 0)
+		return 0;
+	else {
+		while(dvd_get_error()) {
+			if(!isWii)
+				DVD_Mount ();	
+			if(isWii) {
+				DVD_Reset(DVD_RESETHARD);
+				dvd_read_id();
+			}
 		}
 	}
-
+}
+		 
+	 
+int fileBrowser_DVD_readDir(fileBrowser_file* ffile, fileBrowser_file** dir){	
+	
+	DVD_check_state();
+	
 	// Call the corresponding DVD function
 	int num_entries = dvd_read_directoryentries(ffile->discoffset,ffile->size);
 	
@@ -45,8 +52,13 @@ int fileBrowser_DVD_readDir(fileBrowser_file* ffile, fileBrowser_file** dir){
 		(*dir)[i].discoffset = ((file[i].sector)*2048);
 		(*dir)[i].offset = 0;
 		(*dir)[i].size   = file[i].size;
-		(*dir)[i].attr   = file[i].flags; //2 is a dir
+		(*dir)[i].attr	 = 0;
+		if(file[i].flags == 2)//on DVD, 2 is a dir
+			(*dir)[i].attr   = FILE_BROWSER_ATTR_DIR; 
 	}
+	if(strlen((*dir)[0].name) == 0)
+		strcpy( (*dir)[0].name, ".." );
+	
 	return num_entries;
 }
 
@@ -58,13 +70,16 @@ int fileBrowser_DVD_seekFile(fileBrowser_file* file, unsigned int where, unsigne
 }
 
 int fileBrowser_DVD_readFile(fileBrowser_file* file, void* buffer, unsigned int length){
-	int bytesread = read_safe(buffer,file->discoffset,length);
+	DVD_check_state();
+	int bytesread = read_safe(buffer,file->discoffset+file->offset,length);
 	file->offset += bytesread;
 	return bytesread;
 }
 
 int fileBrowser_DVD_init(fileBrowser_file* file) {
-	DVD_Init();
+	dvd_read_id();
+	if(dvd_get_error() == 0)
+		return 0;
 	if(!isWii)
 		DVD_Mount ();
 	if(isWii) {
@@ -77,7 +92,7 @@ int fileBrowser_DVD_init(fileBrowser_file* file) {
 }
 
 int fileBrowser_DVD_deinit(fileBrowser_file* file) {
-	dvd_motor_off();
+	//dvd_motor_off(); //this should be made into its own menu option to swap DVD..
 	return 0;
 }
 
