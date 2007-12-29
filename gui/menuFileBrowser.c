@@ -76,7 +76,7 @@ menu_item* menuFileBrowser(fileBrowser_file* dir){
 	// Read the directories and return on error
 	int num_entries = romFile_readDir(dir, &dir_entries);
 	if(num_entries <= 0){ if(dir_entries) free(dir_entries); return NULL; }
-	
+
 	// Allocate and fill the entries
 	menu_items = malloc(num_entries * sizeof(menu_item));
 	fillItems(num_entries, dir_entries);
