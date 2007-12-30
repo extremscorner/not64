@@ -5,9 +5,14 @@
 #ifndef MENU_H
 #define MENU_H
 
+#define MENU_ATTR_NONE       0
+#define MENU_ATTR_HASSUBMENU 1 /* Whether this item has a submenu */
+#define MENU_ATTR_SPECIAL    2 /* Displays in a different color */
+#define MENU_ATTR_LEFTALIGN  4 /* Text aligned to left instead of center */
+
 typedef struct menu_item_t {
-	char* caption;
-	char  hasSubmenu; // TODO: Change this to attr: HAS_SUBMENU, SPECIAL, CENTERED
+	char*        caption;
+	unsigned int attr;
 	union {
 		struct {
 			unsigned int        num_items;

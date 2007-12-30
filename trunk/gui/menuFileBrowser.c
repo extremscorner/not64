@@ -11,7 +11,8 @@
 
 static menu_item  currentDirMenu =
 	{ NULL, // caption
-	  1,    // hasSubmenu
+	  MENU_ATTR_HASSUBMENU |
+	   MENU_ATTR_LEFTALIGN, // attr
 	  // subMenu
 	  { 0,    // num_items
 	    NULL  // items
@@ -60,8 +61,9 @@ static void inline fillItems(int num_entries, fileBrowser_file* entries){
 		       *(menu_items[i].caption-1) != '\\')
 			--menu_items[i].caption;
 		
-		menu_items[i].hasSubmenu = 0;
-		menu_items[i].func       = recurseOrSelect;
+		menu_items[i].attr = (entries[i].attr & FILE_BROWSER_ATTR_DIR) ?
+		                        MENU_ATTR_SPECIAL : MENU_ATTR_NONE;
+		menu_items[i].func = recurseOrSelect;
 	}
 	
 	currentDirMenu.subMenu.num_items = num_entries;

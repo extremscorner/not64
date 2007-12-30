@@ -18,13 +18,13 @@
 
 static menu_item _message_item =
 	{ NULL,
-	  0,
+	  MENU_ATTR_NONE,
 	  { .func = menuBack }
 	 };
 
 static menu_item message_item = 
 	{ NULL, // caption
-	  1,  // hasSubmenu
+	  MENU_ATTR_HASSUBMENU,  // attr
 	 { 1, // num_items
 	   &_message_item
 	  }
@@ -36,8 +36,10 @@ static void setMessage( char* msg ){
 /* End of Message menu_item */
 
 /* Example - "Play Game" */
-
+extern BOOL hasLoadedROM;
 	static char* playGame_func(){
+		if(!hasLoadedROM) return "Please load a ROM first";
+		
 		GUI_toggle();
 		go();
 		GUI_toggle();
@@ -47,7 +49,7 @@ static void setMessage( char* msg ){
 #define PLAY_GAME_INDEX MAIN_MENU_SIZE - 1 /* We want it to be the last item */
 #define PLAY_GAME_ITEM \
 	{ "Play Game", /* caption */ \
-	  0,           /* hasSubmenu */ \
+	  MENU_ATTR_SPECIAL, /* attr */ \
 	  { .func = playGame_func } /* func */ \
 	 }
 
@@ -71,17 +73,17 @@ static void setMessage( char* msg ){
 	
 	static menu_item selectCPU_subMenu[3] =
 		{{ "Pure Interpreter",
-		   0,
+		   MENU_ATTR_SPECIAL,
 		   { .func = choose_PureInterpreter }
 		  },
 		  
 		 { "Dynamic Recompiler",
-		   0,
+		   MENU_ATTR_NONE,
 		   { .func = choose_Dynarec }
 		  },
 		 
 		 { "Interpreter",
-		   0,
+		   MENU_ATTR_NONE,
 		   { .func = choose_Interpreter }
 		  }
 		 };
@@ -89,7 +91,7 @@ static void setMessage( char* msg ){
 #define SELECT_CPU_INDEX 3
 #define SELECT_CPU_ITEM \
 	{ "Select CPU Core", /* caption */ \
-	  1, /* hasSubmenu */ \
+	  MENU_ATTR_HASSUBMENU, /* attr */ \
 	  /* subMenu */ \
 	  { 3, /* num_items */ \
 	    &selectCPU_subMenu[0] /* items */ \
@@ -109,7 +111,7 @@ static void setMessage( char* msg ){
 #define TOGGLE_AUDIO_INDEX MAIN_MENU_SIZE - 3
 #define TOGGLE_AUDIO_ITEM \
 	{ &toggleAudio_strings[0][0], \
-	  0, \
+	  MENU_ATTR_NONE, \
 	  { .func = toggleAudio_func } \
 	 }
 
@@ -150,11 +152,11 @@ static void setMessage( char* msg ){
 	
 	static menu_item loadROM_submenu[2] =
 		{{ "Load from SD",
-		   0,
+		   MENU_ATTR_NONE,
 		   { .func = loadROMSD_func }
 		  },
 		 { "Load from DVD",
-		   0,
+		   MENU_ATTR_NONE,
 		   { .func = loadROMDVD_func }
 		  }
 		 };
@@ -162,7 +164,7 @@ static void setMessage( char* msg ){
 #define LOAD_ROM_INDEX 0
 #define LOAD_ROM_ITEM \
 	{ "Load ROM", \
-	  1, \
+	  MENU_ATTR_HASSUBMENU, \
 	  { 2, \
 	    &loadROM_submenu[0] \
 	   } \
@@ -172,7 +174,7 @@ static void setMessage( char* msg ){
 
 /* "Load Save File" item */
 #include "../gc_memory/Saves.h"
-extern BOOL hasLoadedROM;
+
 	// NOTE: I assume an even item # = Slot A, OW = B
 	static char* loadSaveSD_func(int item_num){
 		if(!hasLoadedROM) return "Please load a ROM first";
@@ -215,19 +217,19 @@ extern BOOL hasLoadedROM;
 
 	static menu_item loadSave_submenu[4] =
 		{{ "SD in Slot A",
-		   0,
+		   MENU_ATTR_NONE,
 		   { .func = loadSaveSD_func }
 		  },
 		 { "SD in Slot B",
-		   0,
+		   MENU_ATTR_NONE,
 		   { .func = loadSaveSD_func }
 		  },
 		 { "Memory Card in Slot A",
-		   0,
+		   MENU_ATTR_NONE,
 		   { .func = loadSaveCARD_func }
 		  },
 		 { "Memory Card in Slot B",
-		   0,
+		   MENU_ATTR_NONE,
 		   { .func = loadSaveCARD_func }
 		  },
 		 };
@@ -235,7 +237,7 @@ extern BOOL hasLoadedROM;
 #define LOAD_SAVE_INDEX 1
 #define LOAD_SAVE_ITEM \
 	{ "Load Save File", \
-	  1, \
+	  MENU_ATTR_HASSUBMENU, \
 	  { 4, \
 	    &loadSave_submenu[0] \
 	   } \
@@ -285,19 +287,19 @@ extern BOOL hasLoadedROM;
 
 	static menu_item saveGame_submenu[4] =
 		{{ "SD in Slot A",
-		   0,
+		   MENU_ATTR_NONE,
 		   { .func = saveGameSD_func }
 		  },
 		 { "SD in Slot B",
-		   0,
+		   MENU_ATTR_NONE,
 		   { .func = saveGameSD_func }
 		  },
 		 { "Memory Card in Slot A",
-		   0,
+		   MENU_ATTR_NONE,
 		   { .func = saveGameCARD_func }
 		  },
 		 { "Memory Card in Slot B",
-		   0,
+		   MENU_ATTR_NONE,
 		   { .func = saveGameCARD_func }
 		  },
 		 };
@@ -305,7 +307,7 @@ extern BOOL hasLoadedROM;
 #define SAVE_GAME_INDEX 2
 #define SAVE_GAME_ITEM \
 	{ "Save Game", \
-	  1, \
+	  MENU_ATTR_HASSUBMENU, \
 	  { 4, \
 	    &saveGame_submenu[0] \
 	   } \
@@ -322,7 +324,7 @@ extern BOOL hasLoadedROM;
 #define EXIT_INDEX MAIN_MENU_SIZE -2
 #define EXIT_ITEM \
 	{ "Exit to SDLOAD", \
-	  0, \
+	  MENU_ATTR_NONE, \
 	  { .func = reload } \
 	 }
 
@@ -369,7 +371,7 @@ static inline unsigned int menuStack_size(){ return stack_top_i+1; }
 
 static menu_item top_level =
 	{ 0, // caption
-	  1, // hasSubmenu
+	  MENU_ATTR_HASSUBMENU, // attr
 	  // subMenu
 	  { MAIN_MENU_SIZE, // num_items
 	    &main_menu[0]   // items
@@ -392,11 +394,13 @@ static void subMenuDisplay(int num_items, menu_item* itemz){
 	
 	for(; i<limit; ++i)
 		GUI_print_color( itemz[i].caption, (i == selected_i) ?
-		                   GUI_color_highlighted : GUI_color_default );
+		                   GUI_color_highlighted : (itemz[i].attr & MENU_ATTR_SPECIAL) ?
+		                     GUI_color_special : GUI_color_default );
 }
 
 void menuDisplay(void){
 	menu_item* curr = menuStack_top();
+	GUI_centerText( !(curr->attr & MENU_ATTR_LEFTALIGN) );
 	subMenuDisplay(curr->subMenu.num_items, curr->subMenu.items);
 }
 
@@ -407,7 +411,7 @@ void menuNavigate(int d){
 
 void menuSelect(){
 	menu_item* curr = menuStack_top();
-	if(curr->subMenu.items[selected_i].hasSubmenu){
+	if(curr->subMenu.items[selected_i].attr & MENU_ATTR_HASSUBMENU){
 		// We're moving to a new submenu, push it on our stack
 		menuStack_push( &curr->subMenu.items[selected_i] );
 		selected_i = 0;
