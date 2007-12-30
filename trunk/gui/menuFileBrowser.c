@@ -21,6 +21,20 @@ static menu_item  currentDirMenu =
 static menu_item*        menu_items;
 static fileBrowser_file* dir_entries;
 
+static char* filenameFromAbsPath(char* absPath){
+	char* filename = absPath;
+	// Here we want to extract from the absolute path
+	//   just the filename
+	// First we move the pointer all the way to the end
+	//   of the the string so we can work our way back
+	while( *filename ) ++filename;
+	// Now, just move it back to the last '/' or the start
+	//   of the string
+	while( filename != absPath && *(filename-1) != '\\')
+		--filename;
+	return filename;
+}
+
 void loadROM(fileBrowser_file*);
 static char* recurseOrSelect(int i){
 	if(dir_entries[i].attr & FILE_BROWSER_ATTR_DIR){
@@ -39,16 +53,17 @@ static char* recurseOrSelect(int i){
 		loadROM( &dir_entries[i] );
 		// And a simple hack to get back out of the file browser
 		menuBack();
-		return &dir_entries[i].name;
+		
+		static char feedback_string[36];
+		strcpy(&feedback_string, "Loaded ");
+		strncat(&feedback_string, filenameFromAbsPath(dir_entries[i].name), 36-7);
 	}
 }
 
 static void inline fillItems(int num_entries, fileBrowser_file* entries){
 	int i;
 	for(i=0; i<num_entries; ++i){
-		// FIXME: The caption should reflect if its a DIR
-		//          or it needs some sort of marker
-		menu_items[i].caption = entries[i].name;
+		menu_items[i].caption = filenameFromAbsPath(entries[i].name);/*entries[i].name;
 		
 		// Here we want to extract from the absolute path
 		//   just the filename
@@ -59,7 +74,7 @@ static void inline fillItems(int num_entries, fileBrowser_file* entries){
 		//   of the string
 		while( menu_items[i].caption != entries[i].name &&
 		       *(menu_items[i].caption-1) != '\\')
-			--menu_items[i].caption;
+			--menu_items[i].caption;*/
 		
 		menu_items[i].attr = (entries[i].attr & FILE_BROWSER_ATTR_DIR) ?
 		                        MENU_ATTR_SPECIAL : MENU_ATTR_NONE;
