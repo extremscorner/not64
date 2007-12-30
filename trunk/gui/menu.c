@@ -170,8 +170,10 @@ static void setMessage( char* msg ){
 
 /* "Load Save File" item */
 #include "../gc_memory/Saves.h"
+extern BOOL hasLoadedROM;
 	// NOTE: I assume an even item # = Slot A, OW = B
 	static char* loadSaveSD_func(int item_num){
+		if(!hasLoadedROM) return "Please load a ROM first";
 		// Adjust saveFile pointers
 		saveFile_dir = (item_num%2) ? &saveDir_SD_SlotB : &saveDir_SD_SlotA;
 		saveFile_readFile  = fileBrowser_SD_readFile;
@@ -188,6 +190,7 @@ static void setMessage( char* msg ){
 		return "Loaded save from SD card";
 	}
 	static char* loadSaveCARD_func(int item_num){
+		if(!hasLoadedROM) return "Please load a ROM first";
 		// Adjust saveFile pointers
 		saveFile_dir = (item_num%2) ? &saveDir_CARD_SlotB : &saveDir_CARD_SlotA;
 		saveFile_readFile  = fileBrowser_CARD_readFile;
@@ -409,6 +412,7 @@ void menuSelect(){
 			menuBack();
 			menuStack_push( &message_item );
 		}
+		selected_i = 0;
 	}
 }
 
