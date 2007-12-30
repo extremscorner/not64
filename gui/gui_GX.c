@@ -296,7 +296,7 @@ int GUI_loadBGtex(){
 
 	//GX_TL_RGB5A3 == 0x02? 
 	//GX_TL_RGB565 == 0x01? 0x05?
-	GX_InitTlutObj(&BGtlut, BGtextureCI,(u8) 0x01,(u16) 256/16); //GX_TL_RGB565 is missing in gx.h
+	GX_InitTlutObj(&BGtlut, BGtextureCI,(u8) GX_TL_RGB565,(u16) 256/16); //GX_TL_RGB565 = 0x01 is missing in gx.h
 	DCFlushRange(BGtextureCI, 256*2);
 	GX_InvalidateTexAll();
 	GX_LoadTlut(&BGtlut, GX_TLUT0);	

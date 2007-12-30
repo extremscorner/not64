@@ -199,9 +199,14 @@ void write_font_init_GX(GXColor fontColor)
 	GX_LoadTexObj(&fontTexObj, GX_TEXMAP1);
 
 	GX_SetTevColor(GX_TEVREG1,fontColor);
+//	GX_SetTevKColor(GX_TEVKREG0,fontColor);
+//	GX_SetTevKColorSel(GX_TEVSTAGE0,GX_TEV_KCSEL_K0);
+//	GX_SetTevKAlphaSel(GX_TEVSTAGE0,GX_TEV_KCSEL_K0_A);
+
 	GX_SetNumTevStages (1);
 	GX_SetTevOrder (GX_TEVSTAGE0, GX_TEXCOORD0, GX_TEXMAP1, GX_COLOR0A0); // change to (u8) tile later
 	GX_SetTevColorIn (GX_TEVSTAGE0, GX_CC_C1, GX_CC_ZERO, GX_CC_ZERO, GX_CC_ZERO);
+//	GX_SetTevColorIn (GX_TEVSTAGE0, GX_CC_KONST, GX_CC_ZERO, GX_CC_ZERO, GX_CC_ZERO);
 	GX_SetTevColorOp (GX_TEVSTAGE0, GX_TEV_ADD, GX_TB_ZERO, GX_CS_SCALE_1, GX_ENABLE, GX_TEVPREV);
 	GX_SetTevAlphaIn (GX_TEVSTAGE0, GX_CA_TEXA, GX_CA_ZERO, GX_CA_ZERO, GX_CA_ZERO);
 	GX_SetTevAlphaOp (GX_TEVSTAGE0, GX_TEV_ADD, GX_TB_ZERO, GX_CS_SCALE_1, GX_ENABLE, GX_TEVPREV);
@@ -222,6 +227,7 @@ void write_font_init_GX(GXColor fontColor)
 void write_font_color(GXColor* fontColorPtr)
 {
 	GX_SetTevColor(GX_TEVREG1, *fontColorPtr);
+//	GX_SetTevKColor(GX_TEVKREG0, *fontColorPtr);
 }
 
 void write_font(int x, int y, char *string, float scale)

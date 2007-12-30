@@ -87,7 +87,8 @@ u8 colors[] ATTRIBUTE_ALIGN (32) =
 
 static GUIinfo GUI;
 static bool GUI_centered = true;
-//static int GUI_on = 0;
+static float GUI_loadProg = -1;
+static int GUI_on = 0;
 //static int GXtoggleFlag = 1;
 //static lwp_t GUIthread;
 //lwp_t GXthread;
@@ -104,7 +105,7 @@ extern long LOGOtexture_length;
 
 void draw_quad (u8, u8, u8, u8, u8);
 void GUI_splashScreen();
-void draw_rect(GXColor, float, float, float, float, float);
+void draw_rect(GXColor, float, float, float, float, float, bool);
 void draw_background();
 
 void GUI_setFB(unsigned int* fb1, unsigned int* fb2){
@@ -114,7 +115,6 @@ void GUI_setFB(unsigned int* fb1, unsigned int* fb2){
 }
 
 void GUI_init(){
-//	s32 stat;
 
 	init_font();
 //	SDCARD_Init(); //for future functionality to load alternate background from SD card
@@ -126,21 +126,12 @@ void GUI_init(){
 	GUI_splashScreen();
 	//TODO: init spinning cube display list
 
-//	GUI_on = 1;
-
-//	stat = LWP_CreateThread(&GUIthread, &GUI_main, NULL, NULL, 0, 80);
-//	if (stat<0)
-//		GUI_print("Error creating GUIthread.\n");
-
+	GUI_on = 1;
 }
 
-/*void GUI_toggle()
+void GUI_toggle()
 {
-	s32 stat;
-
 	if (GUI_on == 1) {
-		stat = LWP_SuspendThread(GUIthread);
-//		GXthread = GX_SetCurrentGXThread();
 		GX_CopyDisp (GUI.xfb[GUI.which_fb], GX_TRUE); // This clears the efb
 		GX_CopyDisp (GUI.xfb[GUI.which_fb], GX_TRUE); // This clears the xfb
 		GX_Flush ();
@@ -150,20 +141,11 @@ void GUI_init(){
 	}
 	else {
 		GUI_clear();
-		GX_DrawDone();
-		GUI_loadBGtex();
-//		GX_CopyDisp (GUI.xfb[GUI.which_fb], GX_TRUE);
-
-		GXtoggleFlag = 1;
-		stat = LWP_ResumeThread(GUIthread);
+//		GUI_draw()
 	}
-	if (stat<0)
-		GUI_print("Error toggling GUIthread.");
-
 	GUI_on ^= 1;
-}*/
+}
 
-//void GUI_main()
 void GUI_draw()
 {
 	Mtx44 GXprojection2D;
@@ -217,6 +199,7 @@ void GUI_draw()
 
 	GUI_drawWiiN64(319.5,66.5,-20.0,1);
 	GUI_drawLogo(580.0, 70.0, -50.0);
+	GUI_drawLoadProg();
 
 	GX_DrawDone ();
 	GX_CopyDisp (GUI.xfb[GUI.which_fb], GX_FALSE);
@@ -298,7 +281,8 @@ int GUI_loadBGtex(){
 
 	//GX_TL_RGB5A3 == 0x02? 
 	//GX_TL_RGB565 == 0x01? 0x05?
-	GX_InitTlutObj(&BGtlut, BGtextureCI,(u8) 0x01,(u16) 256/16); //GX_TL_RGB565 is missing in gx.h
+	GX_InitTlutObj(&BGtlut, BGtextureCI,(u8) 0x01,(u16) 256/16); //GX_TL_RGB565 = 0x01 is missing in gx.h
+//	GX_InitTlutObj(&BGtlut, BGtextureCI,(u8) GX_TL_RGB565,(u16) 256/16); //GX_TL_RGB565 = 0x01 is missing in gx.h
 	DCFlushRange(BGtextureCI, 256*2);
 	GX_InvalidateTexAll();
 	GX_LoadTlut(&BGtlut, GX_TLUT0);	
@@ -511,10 +495,10 @@ void GUI_splashScreen()
 	switch(splash_step) 
 	{
 		case 1: //Fade in WiiN64 logo
-			draw_rect((GXColor){0,0,0,255},0,0,639,479,-1);
+			draw_rect((GXColor){0,0,0,255},0,0,639,479,-1,true);
 			GUI_drawWiiN64(319.5,300,-20.0,2);
 			rectColor.a = (u8) ((float)(SPLASH_FADE - i)/SPLASH_FADE * 255);
-			draw_rect(rectColor,0,0,639,479,-25);
+			draw_rect(rectColor,0,0,639,479,-25,true);
 			if (i>=SPLASH_FADE) {
 				i = 0;
 				splash_step++;
@@ -522,7 +506,7 @@ void GUI_splashScreen()
 			i++;
 			break;
 		case 2: //Drop large N64 cube from top
-			draw_rect((GXColor){0,0,0,255},0,0,639,479,-1);
+			draw_rect((GXColor){0,0,0,255},0,0,639,479,-1,true);
 			GUI_drawWiiN64(319.5,300,-20.0,2);
 			y0 = -100 + 250*i/SPLASH_CUBE_DROP;
 			GUI_drawLogo(320, y0, -50.0);
@@ -533,7 +517,7 @@ void GUI_splashScreen()
 			i++;
 			break;
 		case 3: //Bounce/spin N64 cube for a couple seconds
-			draw_rect((GXColor){0,0,0,255},0,0,639,479,-1);
+			draw_rect((GXColor){0,0,0,255},0,0,639,479,-1,true);
 			GUI_drawWiiN64(319.5,300,-20.0,2);
 			x0 = 320 + PAD_StickX(0)*0.6;
 			y0 = 150 - PAD_StickY(0)*0.5;
@@ -551,7 +535,7 @@ void GUI_splashScreen()
 			//final WiiN64 position = (319.5,66.5,-20.0,1)
 			draw_background();
 			rectColor.a = (u8) ((float)(SPLASH_CUBE_TRANSLATE - i)/SPLASH_CUBE_TRANSLATE * 255);
-			draw_rect(rectColor,0,0,639,479,-6);
+			draw_rect(rectColor,0,0,639,479,-6,true);
 			y0 = 300 + (66.5 - 300)*i/SPLASH_CUBE_TRANSLATE;
 			scale = 2.0 + (1.0 - 2.0)*i/SPLASH_CUBE_TRANSLATE;
 			GUI_drawWiiN64(319.5,y0,-20.0,scale);
@@ -580,7 +564,7 @@ void GUI_splashScreen()
 	return;
 }
 
-void draw_rect(GXColor rectColor, float ulx, float uly, float lrx, float lry, float z) 
+void draw_rect(GXColor rectColor, float ulx, float uly, float lrx, float lry, float z, bool Zmode) 
 {
 	Mtx44 GXprojection2D;
 	Mtx GXmodelView2D;
@@ -594,7 +578,10 @@ void draw_rect(GXColor rectColor, float ulx, float uly, float lrx, float lry, fl
 	guOrtho(GXprojection2D, 0, 479, 0, 639, 0, 100);
 	GX_LoadProjectionMtx(GXprojection2D, GX_ORTHOGRAPHIC);
 
-	GX_SetZMode(GX_ENABLE,GX_GEQUAL,GX_TRUE);
+	if(Zmode)
+		GX_SetZMode(GX_ENABLE,GX_GEQUAL,GX_TRUE);
+	else
+		GX_SetZMode(GX_DISABLE,GX_GEQUAL,GX_TRUE);
 
 	GX_ClearVtxDesc();
 	GX_SetVtxDesc(GX_VA_PTNMTXIDX, GX_PNMTX0);
@@ -673,4 +660,29 @@ void draw_background()
 	GX_Position2f32(0, 479);
 	GX_TexCoord2f32(0,1);
 	GX_End();
+}
+
+void GUI_setLoadProg(float percent)
+{
+	if(percent > 1)
+		GUI_loadProg = 1;
+	else
+		GUI_loadProg = percent;
+}
+
+void GUI_drawLoadProg() 
+{
+	GXColor GXcol1 = {0,128,255,255};
+	GXColor GXcol2 = {0,64,128,255};
+	float xbar[3] = {68,68,190};
+	float ybar[2] = {68,83};
+	float zbar = -20;
+
+	if(GUI_loadProg < 0) 
+		return;
+
+	xbar[1] = xbar[0] + (xbar[2]-xbar[0])*GUI_loadProg;
+
+	draw_rect(GXcol2,xbar[0],ybar[0],xbar[2],ybar[1],zbar,true);
+	draw_rect(GXcol1,xbar[0],ybar[0],xbar[1],ybar[1],zbar,true);
 }
