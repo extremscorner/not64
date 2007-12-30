@@ -46,13 +46,13 @@ void ARAM_manager_init(void){
 	alloced_blocks = 0;
 	initialized = 1;
 	
-	char buffer[96];
+	/*char buffer[96];
 	sprintf(buffer, "Initialized ARAM with %d blocks:", max_blocks);
 	for(i=0; i<max_blocks; ++i){
 		if(i%4 == 0){ PRINT(buffer); buffer[0] = 0; }
 		sprintf(buffer, "%s %d: 0x%08x", buffer, i, ARAM_blocks[i].addr);
 	}
-	PRINT(buffer);
+	PRINT(buffer);*/
 }
 
 void ARAM_manager_deinit(void){
@@ -99,7 +99,7 @@ char* ARAM_block_alloc(unsigned char** ptr, unsigned char owner){
 }
 
 char* ARAM_block_alloc_contiguous(unsigned char** ptr, unsigned char owner, unsigned int num_blocks){
-	PRINT("ARAM_block_alloc_contiguous:\n");
+	//PRINT("ARAM_block_alloc_contiguous:\n");
 	if(!initialized || alloced_blocks+num_blocks > max_blocks) return NULL;
 	
 	int count = 0, block = 0, i;

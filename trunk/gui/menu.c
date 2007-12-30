@@ -38,7 +38,9 @@ static void setMessage( char* msg ){
 /* Example - "Play Game" */
 
 	static char* playGame_func(){
+		GUI_toggle();
 		go();
+		GUI_toggle();
 		return NULL;
 	}
 
