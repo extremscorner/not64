@@ -123,7 +123,7 @@ int rom_read(fileBrowser_file* file){
 //   md5_state_t state;
 //  md5_byte_t digest[16];
    //mupenEntry *entry;
-   char arg[1024];
+   //char arg[1024];
    //strncpy(arg, argv, 1000);
    char buffer[1024];
    rom_file = file;

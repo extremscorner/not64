@@ -63,8 +63,8 @@ static unsigned long erase_offset, write_pointer;
 
 static BOOL flashramWritten = FALSE;
 
-void loadFlashram(fileBrowser_file* savepath){
-	int i; 
+int loadFlashram(fileBrowser_file* savepath){
+	int i, result = 0; 
 	fileBrowser_file saveFile;
 	memcpy(&saveFile, savepath, sizeof(fileBrowser_file));
 	//strcat(&saveFile.name, ROM_SETTINGS.goodname);
@@ -81,13 +81,16 @@ void loadFlashram(fileBrowser_file* savepath){
 		PRINT("Loading flashram, please be patient...\n");
 		saveFile_readFile(&saveFile, flashram, 0x20000);
 		PRINT("OK\n");
+		result = 1;
 	} else for (i=0; i<0x20000; i++) flashram[i] = 0xff;
 	
 	flashramWritten = FALSE;
+	
+	return result;
 }
 
-void saveFlashram(fileBrowser_file* savepath){
-	if(!flashramWritten) return;
+int saveFlashram(fileBrowser_file* savepath){
+	if(!flashramWritten) return 0;
 	PRINT("Saving flashram, do not turn off the console...\n");
 	
 	fileBrowser_file saveFile;
@@ -106,6 +109,8 @@ void saveFlashram(fileBrowser_file* savepath){
 	saveFile_writeFile(&saveFile, flashram, 0x20000);
 	
 	PRINT("OK\n");
+	
+	return 1;
 }
 
 void save_flashram_infos(char *buf)

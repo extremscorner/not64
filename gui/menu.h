@@ -7,7 +7,7 @@
 
 typedef struct menu_item_t {
 	char* caption;
-	char  hasSubmenu;
+	char  hasSubmenu; // TODO: Change this to attr: HAS_SUBMENU, SPECIAL, CENTERED
 	union {
 		struct {
 			unsigned int        num_items;

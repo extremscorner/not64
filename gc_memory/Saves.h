@@ -17,17 +17,19 @@ extern char savepath[];
 #define SELECTION_TYPE_SD   2
 #define SELECTION_TYPE_MEM  0*/
 
-void loadEeprom(fileBrowser_file* savepath);
-void saveEeprom(fileBrowser_file* savepath);
+// Return 0 if load/save fails, 1 otherwise
 
-void loadMempak(fileBrowser_file* savepath);
-void saveMempak(fileBrowser_file* savepath);
+int loadEeprom(fileBrowser_file* savepath);
+int saveEeprom(fileBrowser_file* savepath);
 
-void loadSram(fileBrowser_file* savepath);
-void saveSram(fileBrowser_file* savepath);
+int loadMempak(fileBrowser_file* savepath);
+int saveMempak(fileBrowser_file* savepath);
 
-void loadFlashram(fileBrowser_file* savepath);
-void saveFlashram(fileBrowser_file* savepath);
+int loadSram(fileBrowser_file* savepath);
+int saveSram(fileBrowser_file* savepath);
+
+int loadFlashram(fileBrowser_file* savepath);
+int saveFlashram(fileBrowser_file* savepath);
 
 #endif
 

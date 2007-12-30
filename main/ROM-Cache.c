@@ -115,11 +115,10 @@ static void inline ROMCache_load_block(char* block, int rom_offset){
 		                block + offset, buffer, bytes_read);
 		offset += bytes_read;
 		
-		if(!loads_til_update){
+		if(!loads_til_update--){
 			showLoadProgress( (float)offset/BLOCK_SIZE );
 			loads_til_update = 16;
 		}
-		--loads_til_update;
 		
 	} while(offset != BLOCK_SIZE && bytes_read == bytes_to_read);
 	free(buffer);
@@ -223,6 +222,7 @@ void ROMCache_load(fileBrowser_file* file, int byteSwap){
 			//sprintf(txt, "ROM_blocks[%d] = 0x%08x\n", i, block);
 			//PRINT(txt);
 			int bytes_read, offset=0;
+			int loads_til_update = 0;
 			do {
 				bytes_read = romFile_readFile(ROM_file, buffer, bytes_to_read);
 				byte_swap(buffer, bytes_read);
@@ -230,6 +230,12 @@ void ROMCache_load(fileBrowser_file* file, int byteSwap){
 				ARQ_PostRequest(&ARQ_request, 0x10AD, AR_MRAMTOARAM, ARQ_PRIO_HI,
 				                block + offset, buffer, bytes_read);
 				offset += bytes_read;
+				
+				if(!loads_til_update--){
+					//showLoadProgress( (float)offset/BLOCK_SIZE );
+					loads_til_update = 16;
+				}
+				
 			} while(offset != BLOCK_SIZE);
 		}
 	} else {
@@ -237,6 +243,7 @@ void ROMCache_load(fileBrowser_file* file, int byteSwap){
 		//sprintf(txt, "ROM = 0x%08x using %d blocks\n", ROM, ROM_size/BLOCK_SIZE);
 		//PRINT(txt);
 		int bytes_read, offset=0;
+		int loads_til_update = 0;
 		do {
 			bytes_read = romFile_readFile(ROM_file, buffer, bytes_to_read);
 			byte_swap(buffer, bytes_read);
@@ -244,6 +251,12 @@ void ROMCache_load(fileBrowser_file* file, int byteSwap){
 			ARQ_PostRequest(&ARQ_request, 0x10AD, AR_MRAMTOARAM, ARQ_PRIO_HI,
 			                ROM + offset, buffer, bytes_read);
 			offset += bytes_read;
+			
+			if(!loads_til_update--){
+				//showLoadProgress( (float)offset/ROM_size );
+				loads_til_update = 16;
+			}
+			
 		} while(bytes_read == bytes_to_read && offset != ROM_size);
 	}
 	free(buffer);
