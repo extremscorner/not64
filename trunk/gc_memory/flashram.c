@@ -70,7 +70,7 @@ void loadFlashram(fileBrowser_file* savepath){
 	//strcat(&saveFile.name, ROM_SETTINGS.goodname);
 	for(i = strlen(ROM_SETTINGS.goodname); i>0; i--)
 	{
-		if(ROM_SETTINGS.goodname[i-1] != 0x20) {
+		if(ROM_SETTINGS.goodname[i-1] != ' ') {
 			strncat(&saveFile.name, ROM_SETTINGS.goodname,i);
 			break;
 		}
@@ -96,7 +96,7 @@ void saveFlashram(fileBrowser_file* savepath){
 	int i;
 	for(i = strlen(ROM_SETTINGS.goodname); i>0; i--)
 	{
-		if(ROM_SETTINGS.goodname[i-1] != 0x20) {
+		if(ROM_SETTINGS.goodname[i-1] != ' ') {
 			strncat(&saveFile.name, ROM_SETTINGS.goodname,i);
 			break;
 		}
