@@ -210,6 +210,10 @@ void ROMCache_load(fileBrowser_file* file, int byteSwap){
 	PRINT(txt);
 	*/
 	
+	GUI_clear();
+	sprintf(txt, "Loading ROM %s into ARAM.\n Please be patient...\n", ROM_too_big ? "partially" : "fully");
+	PRINT(txt);
+	
 	ROM_file = file;
 	romFile_seekFile(ROM_file, 0, FILE_BROWSER_SEEK_SET);
 
@@ -232,11 +236,13 @@ void ROMCache_load(fileBrowser_file* file, int byteSwap){
 				offset += bytes_read;
 				
 				if(!loads_til_update--){
-					//showLoadProgress( (float)offset/BLOCK_SIZE );
-					loads_til_update = 16;
+					GUI_setLoadProg( (float)offset/BLOCK_SIZE );
+					GUI_draw();
+					loads_til_update = 32;
 				}
 				
 			} while(offset != BLOCK_SIZE);
+			GUI_setLoadProg( -1.0f );
 		}
 	} else {
 		ARAM_block_alloc_contiguous(&ROM, 'R', ROM_size / BLOCK_SIZE);
@@ -253,11 +259,13 @@ void ROMCache_load(fileBrowser_file* file, int byteSwap){
 			offset += bytes_read;
 			
 			if(!loads_til_update--){
-				//showLoadProgress( (float)offset/ROM_size );
-				loads_til_update = 16;
+				GUI_setLoadProg( (float)offset/ROM_size );
+				GUI_draw();
+				loads_til_update = 32;
 			}
 			
 		} while(bytes_read == bytes_to_read && offset != ROM_size);
+		GUI_setLoadProg( -1.0f );
 	}
 	free(buffer);
 }
