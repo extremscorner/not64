@@ -47,7 +47,10 @@ static RSP_INFO     rsp_info;
 
 extern char audioEnabled;
        char saveEnabled;
-unsigned int isWii;
+unsigned int isWii = 0;
+#define WII_CPU_VERSION 0x87102
+#define mfpvr()   ({unsigned int rval; \
+      asm volatile("mfpvr %0" : "=r" (rval)); rval;})
 // -- End plugin data --
 
 // Framebuffers
@@ -307,5 +310,10 @@ static void Initialise (void){
   GUI_setFB(xfb[0], xfb[1]);
   GUI_init();
 #endif
+	isWii = mfpvr();
+	if(isWii == WII_CPU_VERSION)
+		isWii = 1;
+	else
+		isWii = 0;
 }
 

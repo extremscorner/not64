@@ -67,7 +67,14 @@ void loadFlashram(fileBrowser_file* savepath){
 	int i; 
 	fileBrowser_file saveFile;
 	memcpy(&saveFile, savepath, sizeof(fileBrowser_file));
-	strcat(&saveFile.name, ROM_SETTINGS.goodname);
+	//strcat(&saveFile.name, ROM_SETTINGS.goodname);
+	for(i = strlen(ROM_SETTINGS.goodname); i>0; i--)
+	{
+		if(ROM_SETTINGS.goodname[i-1] != 0x20) {
+			strncat(&saveFile.name, ROM_SETTINGS.goodname,i);
+			break;
+		}
+	}
 	strcat(&saveFile.name, ".fla");
 	
 	if( !(saveFile_readFile(&saveFile, &i, 4) & FILE_BROWSER_ERROR) ){
@@ -85,7 +92,15 @@ void saveFlashram(fileBrowser_file* savepath){
 	
 	fileBrowser_file saveFile;
 	memcpy(&saveFile, savepath, sizeof(fileBrowser_file));
-	strcat(&saveFile.name, ROM_SETTINGS.goodname);
+	//strcat(&saveFile.name, ROM_SETTINGS.goodname);
+	int i;
+	for(i = strlen(ROM_SETTINGS.goodname); i>0; i--)
+	{
+		if(ROM_SETTINGS.goodname[i-1] != 0x20) {
+			strncat(&saveFile.name, ROM_SETTINGS.goodname,i);
+			break;
+		}
+	}
 	strcat(&saveFile.name, ".fla");
 	
 	saveFile_writeFile(&saveFile, flashram, 0x20000);

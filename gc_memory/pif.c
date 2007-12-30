@@ -71,7 +71,14 @@ void loadEeprom(fileBrowser_file* savepath){
 	int i;
 	fileBrowser_file saveFile;
 	memcpy(&saveFile, savepath, sizeof(fileBrowser_file));
-	strcat(&saveFile.name, ROM_SETTINGS.goodname);
+	//strcat(&saveFile.name, ROM_SETTINGS.goodname);
+	for(i = strlen(ROM_SETTINGS.goodname); i>0; i--)
+	{
+		if(ROM_SETTINGS.goodname[i-1] != 0x20) {
+			strncat(&saveFile.name, ROM_SETTINGS.goodname,i);
+			break;
+		}
+	}
 	strcat(&saveFile.name, ".eep");
 	
 	if( !(saveFile_readFile(&saveFile, &i, 4) & FILE_BROWSER_ERROR) ){
@@ -120,7 +127,15 @@ void saveEeprom(fileBrowser_file* savepath){
 	
 	fileBrowser_file saveFile;
 	memcpy(&saveFile, savepath, sizeof(fileBrowser_file));
-	strcat(&saveFile.name, ROM_SETTINGS.goodname);
+	//strcat(&saveFile.name, ROM_SETTINGS.goodname);
+	int i;
+	for(i = strlen(ROM_SETTINGS.goodname); i>0; i--)
+	{
+		if(ROM_SETTINGS.goodname[i-1] != 0x20) {
+			strncat(&saveFile.name, ROM_SETTINGS.goodname,i);
+			break;
+		}
+	}
 	strcat(&saveFile.name, ".eep");
 	
 	saveFile_writeFile(&saveFile, eeprom, 0x800);
@@ -276,7 +291,15 @@ unsigned char mempack_crc(unsigned char *data)
 void loadMempak(fileBrowser_file* savepath){
 	fileBrowser_file saveFile;
 	memcpy(&saveFile, savepath, sizeof(fileBrowser_file));
-	strcat(&saveFile.name, ROM_SETTINGS.goodname);
+//	strcat(&saveFile.name, ROM_SETTINGS.goodname);
+	int i;
+	for(i = strlen(ROM_SETTINGS.goodname); i>0; i--)
+	{
+		if(ROM_SETTINGS.goodname[i-1] != 0x20) {
+			strncat(&saveFile.name, ROM_SETTINGS.goodname,i);
+			break;
+		}
+	}
 	strcat(&saveFile.name, ".mpk");
 	
 	int dummy;
@@ -329,7 +352,15 @@ void saveMempak(fileBrowser_file* savepath){
 
 	fileBrowser_file saveFile;
 	memcpy(&saveFile, savepath, sizeof(fileBrowser_file));
-	strcat(&saveFile.name, ROM_SETTINGS.goodname);
+//	strcat(&saveFile.name, ROM_SETTINGS.goodname);
+	int i;
+	for(i = strlen(ROM_SETTINGS.goodname); i>0; i--)
+	{
+		if(ROM_SETTINGS.goodname[i-1] != 0x20) {
+			strncat(&saveFile.name, ROM_SETTINGS.goodname,i);
+			break;
+		}
+	}
 	strcat(&saveFile.name, ".mpk");
 	
 	saveFile_writeFile(&saveFile, mempack, 0x8000 * 4);
