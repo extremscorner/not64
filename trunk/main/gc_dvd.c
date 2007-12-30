@@ -4,7 +4,7 @@
 #include <gccore.h>
 #include "gc_dvd.h"
 
-
+extern unsigned int isWii;
 int last_current_dir = -1;
 volatile unsigned long* dvd = (volatile long*)0xCC006000;
 
