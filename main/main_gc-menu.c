@@ -111,7 +111,7 @@ int main(){
 	return 0;
 }
 
-static BOOL hasLoadedROM = FALSE;
+BOOL hasLoadedROM = FALSE;
 void loadROM(fileBrowser_file* rom){
 	// First, if there's already a loaded ROM
 	if(hasLoadedROM){
