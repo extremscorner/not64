@@ -55,8 +55,8 @@ static unsigned char sram[0x8000] __attribute__((aligned(32)));
 
 static BOOL sramWritten = FALSE;
 
-void loadSram(fileBrowser_file* savepath){
-	int i;
+int loadSram(fileBrowser_file* savepath){
+	int i, result = 0;
 	fileBrowser_file saveFile;
 	memcpy(&saveFile, savepath, sizeof(fileBrowser_file));
 	//strcat(&saveFile.name, ROM_SETTINGS.goodname);
@@ -73,10 +73,12 @@ void loadSram(fileBrowser_file* savepath){
 		PRINT("Loading SRAM, please be patient...\n");
 		saveFile_readFile(&saveFile, sram, 0x8000);
 		PRINT("OK\n");
+		result = 1;
 	} else for (i=0; i<0x8000; i++) sram[i] = 0;
 	
 	sramWritten = FALSE;
 	
+	return result;
 #if 0	
 	if(savetype & SELECTION_TYPE_SD){
 		sd_file *f;
@@ -106,8 +108,8 @@ void loadSram(fileBrowser_file* savepath){
 	
 }
 
-void saveSram(fileBrowser_file* savepath){
-	if(!sramWritten) return;
+int saveSram(fileBrowser_file* savepath){
+	if(!sramWritten) return 0;
 	PRINT("Saving SRAM, do not turn off the console...\n");
 	int i;
 	fileBrowser_file saveFile;
@@ -125,6 +127,8 @@ void saveSram(fileBrowser_file* savepath){
 	saveFile_writeFile(&saveFile, sram, 0x8000);
 	
 	PRINT("OK\n");
+	
+	return 1;
 }
 
 void dma_pi_read()

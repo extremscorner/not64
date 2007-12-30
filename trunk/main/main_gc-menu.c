@@ -111,6 +111,7 @@ int main(){
 	return 0;
 }
 
+// TODO: I have to split loading and unloading in case user changes source
 BOOL hasLoadedROM = FALSE;
 void loadROM(fileBrowser_file* rom){
 	// First, if there's already a loaded ROM

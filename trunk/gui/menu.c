@@ -182,12 +182,13 @@ extern BOOL hasLoadedROM;
 		saveFile_deinit    = 0;
 		
 		// Try loading everything
-		loadEeprom(saveFile_dir);
-		loadSram(saveFile_dir);
-		loadMempak(saveFile_dir);
-		loadFlashram(saveFile_dir);
+		int result = 0;
+		result += loadEeprom(saveFile_dir);
+		result += loadSram(saveFile_dir);
+		result += loadMempak(saveFile_dir);
+		result += loadFlashram(saveFile_dir);
 		
-		return "Loaded save from SD card";
+		return result ? "Loaded save from SD card" : "No saves found on SD card";
 	}
 	static char* loadSaveCARD_func(int item_num){
 		if(!hasLoadedROM) return "Please load a ROM first";
@@ -199,14 +200,15 @@ extern BOOL hasLoadedROM;
 		saveFile_deinit    = fileBrowser_CARD_deinit;
 		
 		// Try loading everything
+		int result = 0;
 		saveFile_init(saveFile_dir);
-		loadEeprom(saveFile_dir);
-		loadSram(saveFile_dir);
-		loadMempak(saveFile_dir);
-		loadFlashram(saveFile_dir);
+		result += loadEeprom(saveFile_dir);
+		result += loadSram(saveFile_dir);
+		result += loadMempak(saveFile_dir);
+		result += loadFlashram(saveFile_dir);
 		saveFile_deinit(saveFile_dir);
 		
-		return "Loaded save from memcard";
+		return result ? "Loaded save from memcard" : "No saves found on memcard";
 	}
 
 	static menu_item loadSave_submenu[4] =
@@ -251,12 +253,13 @@ extern BOOL hasLoadedROM;
 		saveFile_deinit    = fileBrowser_SD_deinit;
 		
 		// Try loading everything
-		saveEeprom(saveFile_dir);
-		saveSram(saveFile_dir);
-		saveMempak(saveFile_dir);
-		saveFlashram(saveFile_dir);
+		int result = 0;
+		result += saveEeprom(saveFile_dir);
+		result += saveSram(saveFile_dir);
+		result += saveMempak(saveFile_dir);
+		result += saveFlashram(saveFile_dir);
 		
-		return "Saved game to SD card";
+		return result ? "Saved game to SD card" : "Nothing to save";
 	}
 	static char* saveGameCARD_func(int item_num){
 		// Adjust saveFile pointers
@@ -267,14 +270,15 @@ extern BOOL hasLoadedROM;
 		saveFile_deinit    = fileBrowser_CARD_deinit;
 		
 		// Try loading everything
+		int result = 0;
 		saveFile_init(saveFile_dir);
-		saveEeprom(saveFile_dir);
-		saveSram(saveFile_dir);
-		saveMempak(saveFile_dir);
-		saveFlashram(saveFile_dir);
+		result += saveEeprom(saveFile_dir);
+		result += saveSram(saveFile_dir);
+		result += saveMempak(saveFile_dir);
+		result += saveFlashram(saveFile_dir);
 		saveFile_deinit(saveFile_dir);
 		
-		return "Saved game to memcard";
+		return result ? "Saved game to memcard" : "Nothing to save";
 	}
 
 	static menu_item saveGame_submenu[4] =
