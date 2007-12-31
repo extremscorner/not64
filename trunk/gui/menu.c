@@ -43,6 +43,7 @@ extern BOOL hasLoadedROM;
 		GUI_toggle();
 		go();
 		GUI_toggle();
+		AUDIO_StopDMA();
 		return NULL;
 	}
 
