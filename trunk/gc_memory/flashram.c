@@ -61,7 +61,7 @@ static unsigned long long status;
 static unsigned char flashram[0x20000] __attribute__((aligned(32)));
 static unsigned long erase_offset, write_pointer;
 
-static BOOL flashramWritten = FALSE;
+BOOL flashramWritten = FALSE;
 
 int loadFlashram(fileBrowser_file* savepath){
 	int i, result = 0; 

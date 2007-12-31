@@ -53,7 +53,7 @@
 
 static unsigned char sram[0x8000] __attribute__((aligned(32)));
 
-static BOOL sramWritten = FALSE;
+BOOL sramWritten = FALSE;
 
 int loadSram(fileBrowser_file* savepath){
 	int i, result = 0;

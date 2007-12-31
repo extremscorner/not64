@@ -110,7 +110,10 @@ int main(){
 	
 	return 0;
 }
-
+extern BOOL eepromWritten;
+extern BOOL mempakWritten;
+extern BOOL sramWritten;
+extern BOOL flashramWritten;
 // TODO: I have to split loading and unloading in case user changes source
 BOOL hasLoadedROM = FALSE;
 void loadROM(fileBrowser_file* rom){
@@ -119,7 +122,10 @@ void loadROM(fileBrowser_file* rom){
 		romFile_deinit(rom);
 		// Unload it, and deinit everything
 		cpu_deinit();
-		
+		eepromWritten = FALSE;
+		mempakWritten = FALSE;
+		sramWritten = FALSE;
+		flashramWritten = FALSE;
 		romClosed_RSP();
 		romClosed_input();
 		romClosed_audio();
