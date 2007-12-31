@@ -128,10 +128,10 @@ extern BOOL hasLoadedROM;
 		// Change all the romFile pointers
 		romFile_topLevel = &topLevel_SD_SlotA;
 		romFile_readDir  = fileBrowser_SD_readDir;
-		romFile_readFile = fileBrowser_SD_readFile;
+		romFile_readFile = fileBrowser_SDROM_readFile;
 		romFile_seekFile = fileBrowser_SD_seekFile;
 		romFile_init     = fileBrowser_SD_init;
-		romFile_deinit   = fileBrowser_SD_deinit;
+		romFile_deinit   = fileBrowser_SDROM_deinit;
 		// Then push the file browser onto the menu
 		menuStack_push( menuFileBrowser(romFile_topLevel) );
 		

@@ -116,6 +116,7 @@ BOOL hasLoadedROM = FALSE;
 void loadROM(fileBrowser_file* rom){
 	// First, if there's already a loaded ROM
 	if(hasLoadedROM){
+		romFile_deinit(rom);
 		// Unload it, and deinit everything
 		cpu_deinit();
 		
@@ -136,7 +137,7 @@ void loadROM(fileBrowser_file* rom){
 	
 	ARAM_manager_init();
 	TLBCache_init();
-	
+	romFile_init(rom);
 	rom_read(rom);
 	
 	// Init everything for this ROM

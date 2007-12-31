@@ -96,3 +96,24 @@ int fileBrowser_SD_init(fileBrowser_file* f){ }
 
 int fileBrowser_SD_deinit(fileBrowser_file* f){ }
 
+
+/* Special for ROM loading only */
+static sd_file* fd;
+
+int fileBrowser_SDROM_deinit(fileBrowser_file* f){
+	if(fd)
+		SDCARD_CloseFile(fd);
+	fd = NULL;
+	return 0;
+}
+	
+int fileBrowser_SDROM_readFile(fileBrowser_file* file, void* buffer, unsigned int length){
+	if(!fd)
+	fd = SDCARD_OpenFile( &file->name, "rb");
+	SDCARD_SeekFile(fd, file->offset, SDCARD_SEEK_SET);
+	int bytes_read = SDCARD_ReadFile(fd, buffer, length);
+	if(bytes_read > 0) file->offset += bytes_read;
+
+	return bytes_read;
+}
+
