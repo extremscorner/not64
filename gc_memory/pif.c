@@ -88,6 +88,7 @@ int loadEeprom(fileBrowser_file* savepath){
 		PRINT("OK\n");
 		result = 1;
 		eepromWritten = 1;
+		return result;
 	} else for (i=0; i<0x800; i++) eeprom[i] = 0;
 	
 	eepromWritten = FALSE;
@@ -316,6 +317,7 @@ int loadMempak(fileBrowser_file* savepath){
 		PRINT("OK\n");
 		result = 1;
 		mempakWritten = 1;
+		return result;
 	} else format_mempacks();
 	
 	mempakWritten = FALSE;
