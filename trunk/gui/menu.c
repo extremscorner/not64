@@ -12,7 +12,7 @@
 
 // -- ACTUAL MENU LAYOUT --
 
-#define MAIN_MENU_SIZE 7
+#define MAIN_MENU_SIZE 8
 
 /* Message menu_item: used for feedback, set the caption to what you want it to say */
 
@@ -100,6 +100,24 @@ extern BOOL hasLoadedROM;
 	 }	
 
 /* End of "Select CPU" item */
+
+
+/* "Show Credits" menu item */
+
+	extern char creditsScrolling;
+	static char* creditsStart_func(){
+		creditsScrolling = 1;
+		return "Credits should be scrolling";
+	}
+
+#define SHOW_CREDITS_INDEX 4
+#define SHOW_CREDITS_ITEM \
+	{ "Show Credits", \
+	  MENU_ATTR_NONE, \
+	  { .func = creditsStart_func } \
+	 }
+
+/* End of "Show Credits" item */
 
 /* "Toggle Audio" menu item */
 
@@ -336,6 +354,7 @@ static menu_item main_menu[MAIN_MENU_SIZE] =
 	  LOAD_SAVE_ITEM,
 	  SAVE_GAME_ITEM,
 	  SELECT_CPU_ITEM,
+	  SHOW_CREDITS_ITEM,
 	  TOGGLE_AUDIO_ITEM,
 	  EXIT_ITEM,
 	  PLAY_GAME_ITEM
@@ -433,6 +452,7 @@ void menuBack(){
 	// Otherwise, just pop
 	menuStack_pop();
 	selected_i = 0;
+	creditsScrolling = 0;
 }
 
 // -- END MENU IMPLEMENTATION --
