@@ -173,7 +173,7 @@ void write_font_init_GX(GXColor fontColor)
 	GX_LoadTexMtxImm(GXmodelView2D,GX_TEXMTX0,GX_MTX2x4);
 //	guMtxTransApply (GXmodelView2D, GXmodelView2D, 0.0F, 0.0F, -5.0F);
 	GX_LoadPosMtxImm(GXmodelView2D,GX_PNMTX0);
-	guOrtho(GXprojection2D, 0, 479, 0, 639, 0, 100);
+	guOrtho(GXprojection2D, 0, 479, 0, 639, 0, 700);
 	GX_LoadProjectionMtx(GXprojection2D, GX_ORTHOGRAPHIC);
 
 	GX_SetZMode(GX_DISABLE,GX_ALWAYS,GX_TRUE);
@@ -234,7 +234,8 @@ void write_font(int x, int y, char *string, float scale)
 {
 	int ox = x;
 	
-	while (*string && (x < (ox + back_framewidth)))
+//	while (*string && (x < (ox + back_framewidth)))
+	while (*string)
 	{
 		//blit_char(axfb,whichfb,x, y, *string, norm_blit ? blit_lookup_norm : blit_lookup);
 		unsigned char c = *string;
@@ -264,12 +265,29 @@ void write_font_centered(int y, char *string, float scale)
 {
 	int x0, x = 0;
 	char* string_work = string;
-	while(*string_work && (x < back_framewidth))
+//	while(*string_work && (x < back_framewidth))
+	while(*string_work)
 	{
 		unsigned char c = *string_work;
 		x += (int) fontChars.font_size[c] * scale;
 		string_work++;
 	}
-	x0 = (int) MAX(0, (back_framewidth - x)/2);
+//	x0 = (int) MAX(0, (back_framewidth - x)/2);
+	x0 = (int) (back_framewidth - x)/2;
 	write_font(x0,y,string,scale);
+}
+
+void write_font_origin(char *string, float scale)
+{
+	int x0, y0, x = 0;
+	char* string_work = string;
+	while(*string_work)
+	{
+		unsigned char c = *string_work;
+		x += (int) fontChars.font_size[c] * scale;
+		string_work++;
+	}
+	x0 = (int) -x/2;
+	y0 = (int) -fontChars.fheight*scale/2;
+	write_font(x0,y0,string,scale);
 }
