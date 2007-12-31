@@ -47,6 +47,7 @@ static RSP_INFO     rsp_info;
 
 extern char audioEnabled;
        char saveEnabled;
+       char creditsScrolling;
 unsigned int isWii = 0;
 #define WII_CPU_VERSION 0x87102
 #define mfpvr()   ({unsigned int rval; \
@@ -72,9 +73,10 @@ int main(){
 	menuInit();
 	
 	// Default Settings
-	audioEnabled = 0; // No audio
-	saveEnabled  = 0; // Don't save game
-	dynacore     = 2; // Pure Interpreter
+	audioEnabled     = 0; // No audio
+	saveEnabled      = 0; // Don't save game
+	creditsScrolling = 0; // Normal menu for now
+	dynacore         = 2; // Pure Interpreter
 	
 	// 'Page flip' buttons so we know when it released
 	int which_pad = 0;
@@ -105,7 +107,8 @@ int main(){
 		
 		// Display everything
 		menuDisplay();
-		GUI_draw();
+		if(creditsScrolling) GUI_creditScreen();
+		else GUI_draw();
 	}
 	
 	return 0;
