@@ -9,6 +9,10 @@
 #include <ogc/dvd.h>
 
 extern unsigned int isWii;
+/* Worked out manually from my original Disc */
+#define OOT_OFFSET 0x54FBEEF4
+#define MQ_OFFSET  0x52CCC5FC
+#define ZELDA_SIZE 0x2000000
 
 fileBrowser_file topLevel_DVD =
 	{ "\\", // file name
@@ -23,23 +27,45 @@ int DVD_check_state() {
 		return 0;
 	else {
 		while(dvd_get_error()) {
-			if(!isWii)
+			if(!isWii){
 				DVD_Mount ();	
+				if(dvd_get_error())
+					DVD_Reset(DVD_RESETHARD);
+			}
 			if(isWii) {
 				DVD_Reset(DVD_RESETHARD);
 				dvd_read_id();
 			}
 		}
 	}
+	return -1;
 }
 		 
 	 
 int fileBrowser_DVD_readDir(fileBrowser_file* ffile, fileBrowser_file** dir){	
 	
 	DVD_check_state();
+	dvd_read_id();
+	int num_entries = 0;
+	
+	if (!memcmp((void*)0x80000000, "D43U01", 6)) { //OoT bonus disc support.
+		num_entries = 2;
+		*dir = malloc( num_entries * sizeof(fileBrowser_file) );
+		strcpy( (*dir)[0].name, "Zelda - Ocarina of Time");
+		(*dir)[0].discoffset = OOT_OFFSET;
+		(*dir)[0].offset = 0;
+		(*dir)[0].size   = ZELDA_SIZE;
+		(*dir)[0].attr	 = 0;
+		strcpy( (*dir)[1].name, "Zelda - Ocarina of Time MQ" );
+		(*dir)[1].discoffset = MQ_OFFSET;
+		(*dir)[1].offset = 0;
+		(*dir)[1].size   = ZELDA_SIZE;
+		(*dir)[1].attr	 = 0;
+		return num_entries;
+	}
 	
 	// Call the corresponding DVD function
-	int num_entries = dvd_read_directoryentries(ffile->discoffset,ffile->size);
+	num_entries = dvd_read_directoryentries(ffile->discoffset,ffile->size);
 	
 	// If it was not successful, just return the error
 	if(num_entries <= 0) return num_entries;
