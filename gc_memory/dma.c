@@ -69,7 +69,7 @@ int loadSram(fileBrowser_file* savepath){
 	}
 	strcat(&saveFile.name, ".sra");
 	
-	if( !(saveFile_readFile(&saveFile, &i, 4) & FILE_BROWSER_ERROR) ){
+	if( !(saveFile_readFile(&saveFile, &i, 4) <= 0) ){
 		PRINT("Loading SRAM, please be patient...\n");
 		saveFile_readFile(&saveFile, sram, 0x8000);
 		PRINT("OK\n");
