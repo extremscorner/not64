@@ -83,6 +83,7 @@ int loadFlashram(fileBrowser_file* savepath){
 		saveFile_readFile(&saveFile, flashram, 0x20000);
 		PRINT("OK\n");
 		result = 1;
+		flashramWritten = 1;
 	} else for (i=0; i<0x20000; i++) flashram[i] = 0xff;
 	
 	flashramWritten = FALSE;
