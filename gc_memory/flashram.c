@@ -79,6 +79,7 @@ int loadFlashram(fileBrowser_file* savepath){
 	
 	if( !(saveFile_readFile(&saveFile, &i, 4) <= 0) ){
 		PRINT("Loading flashram, please be patient...\n");
+		saveFile.offset = 0;
 		saveFile_readFile(&saveFile, flashram, 0x20000);
 		PRINT("OK\n");
 		result = 1;
