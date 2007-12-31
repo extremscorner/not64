@@ -71,6 +71,7 @@ int loadSram(fileBrowser_file* savepath){
 	
 	if( !(saveFile_readFile(&saveFile, &i, 4) <= 0) ){
 		PRINT("Loading SRAM, please be patient...\n");
+		saveFile.offset = 0;
 		saveFile_readFile(&saveFile, sram, 0x8000);
 		PRINT("OK\n");
 		result = 1;

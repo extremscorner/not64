@@ -83,6 +83,7 @@ int loadEeprom(fileBrowser_file* savepath){
 	
 	if( !(saveFile_readFile(&saveFile, &i, 4) <= 0) ){
 		PRINT("Loading EEPROM, please be patient...\n");
+		saveFile.offset = 0;
 		saveFile_readFile(&saveFile, eeprom, 0x800);
 		PRINT("OK\n");
 		result = 1;
@@ -309,6 +310,7 @@ int loadMempak(fileBrowser_file* savepath){
 	
 	if( !(saveFile_readFile(&saveFile, &i, 4) <= 0) ){
 		PRINT("Loading mempak, please be patient...\n");
+		saveFile.offset = 0;
 		saveFile_readFile(&saveFile, mempack, 0x8000 * 4);
 		PRINT("OK\n");
 		result = 1;
