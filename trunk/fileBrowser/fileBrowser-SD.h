@@ -19,5 +19,7 @@ int fileBrowser_SD_seekFile(fileBrowser_file*, unsigned int, unsigned int);
 int fileBrowser_SD_init(fileBrowser_file* f);
 int fileBrowser_SD_deinit(fileBrowser_file* f);
 
+int fileBrowser_SDROM_readFile(fileBrowser_file*, void*, unsigned int);
+int fileBrowser_SDROM_deinit(fileBrowser_file* f);
 #endif
 
