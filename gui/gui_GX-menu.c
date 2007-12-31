@@ -3,6 +3,7 @@
  */
 
 #include <stdio.h>
+#include <string.h>
 #include <sdcard.h>
 #include <gccore.h>
 #include "gui_GX-menu.h"
@@ -151,13 +152,19 @@ void GUI_draw()
 	Mtx44 GXprojection2D;
 	Mtx GXmodelView2D;
 
+/*	if(true)
+	{
+		GUI_creditScreen();
+		return;
+	}*/
+
 	GUI_loadBGtex();
 
 	guMtxIdentity(GXmodelView2D);
 	GX_LoadTexMtxImm(GXmodelView2D,GX_TEXMTX0,GX_MTX2x4);
 	guMtxTransApply (GXmodelView2D, GXmodelView2D, 0.0F, 0.0F, -5.0F);
 	GX_LoadPosMtxImm(GXmodelView2D,GX_PNMTX0);
-	guOrtho(GXprojection2D, 0, 479, 0, 639, 0, 100);
+	guOrtho(GXprojection2D, 0, 479, 0, 639, 0, 700);
 	GX_LoadProjectionMtx(GXprojection2D, GX_ORTHOGRAPHIC);
 
 	GX_SetZMode(GX_ENABLE,GX_ALWAYS,GX_TRUE);
@@ -317,7 +324,7 @@ void GUI_drawWiiN64(float x0, float y0, float z, float scale){
 	GX_LoadTexMtxImm(GXmodelView2D,GX_TEXMTX0,GX_MTX2x4);
 	guMtxTransApply (GXmodelView2D, GXmodelView2D, 0.0F, 0.0F, z);
 	GX_LoadPosMtxImm(GXmodelView2D,GX_PNMTX0);
-	guOrtho(GXprojection2D, 0, 479, 0, 639, 0, 100);
+	guOrtho(GXprojection2D, 0, 479, 0, 639, 0, 700);
 	GX_LoadProjectionMtx(GXprojection2D, GX_ORTHOGRAPHIC);
 
 	GX_SetZMode(GX_ENABLE,GX_GEQUAL,GX_TRUE);
@@ -575,7 +582,7 @@ void draw_rect(GXColor rectColor, float ulx, float uly, float lrx, float lry, fl
 	GX_LoadTexMtxImm(GXmodelView2D,GX_TEXMTX0,GX_MTX2x4);
 	guMtxTransApply (GXmodelView2D, GXmodelView2D, 0.0F, 0.0F, z);
 	GX_LoadPosMtxImm(GXmodelView2D,GX_PNMTX0);
-	guOrtho(GXprojection2D, 0, 479, 0, 639, 0, 100);
+	guOrtho(GXprojection2D, 0, 479, 0, 639, 0, 700);
 	GX_LoadProjectionMtx(GXprojection2D, GX_ORTHOGRAPHIC);
 
 	if(Zmode)
@@ -623,7 +630,7 @@ void draw_background()
 	GX_LoadTexMtxImm(GXmodelView2D,GX_TEXMTX0,GX_MTX2x4);
 	guMtxTransApply (GXmodelView2D, GXmodelView2D, 0.0F, 0.0F, -5.0F);
 	GX_LoadPosMtxImm(GXmodelView2D,GX_PNMTX0);
-	guOrtho(GXprojection2D, 0, 479, 0, 639, 0, 100);
+	guOrtho(GXprojection2D, 0, 479, 0, 639, 0, 700);
 	GX_LoadProjectionMtx(GXprojection2D, GX_ORTHOGRAPHIC);
 
 	GX_SetZMode(GX_ENABLE,GX_ALWAYS,GX_TRUE);
@@ -685,4 +692,176 @@ void GUI_drawLoadProg()
 
 	draw_rect(GXcol2,xbar[0],ybar[0],xbar[2],ybar[1],zbar,true);
 	draw_rect(GXcol1,xbar[0],ybar[0],xbar[1],ybar[1],zbar,true);
+}
+
+void GUI_creditScreen()
+{
+	GXColor fontColor = {255, 255, 255, 255};
+	char* string = "";
+	static int rotateby = 0;
+
+/*	int i = 0, splash_step = 1;
+	float x0, y0, xstart = 0, ystart = 0, scale;
+	GXColor rectColor = {0,0,0,255};
+	bool button_down = false;
+
+	draw_background();
+
+	while(1) {
+	switch(splash_step) 
+	{
+		case 1: //Fade in WiiN64 logo
+			draw_rect((GXColor){0,0,0,255},0,0,639,479,-1);
+			GUI_drawWiiN64(319.5,300,-20.0,2);
+			rectColor.a = (u8) ((float)(SPLASH_FADE - i)/SPLASH_FADE * 255);
+			draw_rect(rectColor,0,0,639,479,-25);
+			if (i>=SPLASH_FADE) {
+				i = 0;
+				splash_step++;
+			}
+			i++;
+			break;
+		case 2: //Drop large N64 cube from top
+			draw_rect((GXColor){0,0,0,255},0,0,639,479,-1);
+			GUI_drawWiiN64(319.5,300,-20.0,2);
+			y0 = -100 + 250*i/SPLASH_CUBE_DROP;
+			GUI_drawLogo(320, y0, -50.0);
+			if (i>=SPLASH_CUBE_DROP) {
+				i = 0;
+				splash_step++;
+			}
+			i++;
+			break;
+		case 3: //Bounce/spin N64 cube for a couple seconds
+			draw_rect((GXColor){0,0,0,255},0,0,639,479,-1);
+			GUI_drawWiiN64(319.5,300,-20.0,2);
+			x0 = 320 + PAD_StickX(0)*0.6;
+			y0 = 150 - PAD_StickY(0)*0.5;
+			GUI_drawLogo(x0, y0, -50.0);
+			if (i>=SPLASH_CUBE_SPIN) {
+				i = 0;
+				splash_step++;
+				xstart = x0;
+				ystart = y0;
+			}
+			i++;
+			break;
+		case 4: //shrink/translate cube & logo to correct places on screen
+			//final logo position = (580.0F, 70.0F, -50.0F)
+			//final WiiN64 position = (319.5,66.5,-20.0,1)
+			draw_background();
+			rectColor.a = (u8) ((float)(SPLASH_CUBE_TRANSLATE - i)/SPLASH_CUBE_TRANSLATE * 255);
+			draw_rect(rectColor,0,0,639,479,-6);
+			y0 = 300 + (66.5 - 300)*i/SPLASH_CUBE_TRANSLATE;
+			scale = 2.0 + (1.0 - 2.0)*i/SPLASH_CUBE_TRANSLATE;
+			GUI_drawWiiN64(319.5,y0,-20.0,scale);
+			x0 = xstart + (580 - xstart)*i/SPLASH_CUBE_TRANSLATE;
+			y0 = ystart + (70 - ystart)*i/SPLASH_CUBE_TRANSLATE;
+			GUI_drawLogo(x0, y0, -50.0);
+			if (i>=SPLASH_CUBE_TRANSLATE)
+				return;
+			i++;
+			break;
+	}
+
+	GX_DrawDone ();
+	GX_CopyDisp (GUI.xfb[GUI.which_fb], GX_TRUE);
+	GX_Flush ();
+	VIDEO_SetNextFramebuffer(GUI.xfb[GUI.which_fb]);
+	VIDEO_Flush();
+	GUI.which_fb ^= 1;
+	VIDEO_WaitVSync();
+
+	if(PAD_ButtonsHeld(0) & PAD_BUTTON_A) 
+		button_down = true;
+	if(!(PAD_ButtonsHeld(0) & PAD_BUTTON_A) && (button_down == true))
+		return;
+	}
+	return;*/
+
+	draw_background();
+	GUI_drawWiiN64(319.5,66.5,-20.0,1);
+	GUI_drawLogo(580.0, 70.0, -50.0);
+
+	//write font init
+	write_font_init_GX(fontColor);
+
+	fontColor = (GXColor) {69,31,133,255}; //purplish
+	strcpy(string,"New Year's Edition!!");
+	GUI_writeString(319.5F, 130.0F, -250.0, 0.0F, rotateby-90, 0.0F, fontColor, string, 1.5);
+
+	fontColor = (GXColor) {206,0,0,255}; //dark red
+	strcpy(string,"core coding");
+	GUI_writeString(340.0F, 200.0F, -50.0, 0.0F, 0.0F, 0.0F, fontColor, string, 0.6);
+	strcpy(string,"tehpola");
+	GUI_writeString(319.5F, 185.0F, -50.0, rotateby, 0.0F, 0.0F, fontColor, string, 1.5);
+
+	fontColor = (GXColor) {16,133,31,255}; //dark green
+	strcpy(string,"coding");
+	GUI_writeString(130.0F, 230.0F, -50.0, 0.0F, 0.0F, 0.0F, fontColor, string, 0.6);
+	strcpy(string,"emu_kidid");
+	GUI_writeString(160.0F, 260.0F, -50.0, 0.0F, 0.0F, -rotateby, fontColor, string, 1.3);
+
+	fontColor = (GXColor) {37,64,112,255}; //bluish
+	strcpy(string,"graphics coding");
+	GUI_writeString(500.0F, 245.0F, -50.0, 0.0F, 0.0F, 0.0F, fontColor, string, 0.6);
+	strcpy(string,"sepp256");
+	GUI_writeString(480.0F, 285.0F, -50.0, 0.0F, 0.0F, rotateby+45, fontColor, string, 1.3);
+
+	fontColor = (GXColor) {130,31,19,255}; //subdued red
+	strcpy(string,"artwork");
+	GUI_writeString(260.0F, 350.0F, -50.0, 0.0F, 0.0F, 30.0F, fontColor, string, 0.6);
+	strcpy(string,"brakk3n");
+	GUI_writeString(300.0F, 330.0F, -50.0, rotateby, rotateby/2, 30.0F, fontColor, string, 1.5);
+
+	fontColor = (GXColor) {128,121,18,255}; //dim yellow
+	strcpy(string,"libOGC - www.tehskeen.com");
+	GUI_writeString(319.5F, 410.0F, -50.0, 0.0F, 0.0F, 0.0F, fontColor, string, 1.0);
+
+	rotateby++;
+
+	//reset swap table from GUI/DEBUG
+	GX_SetTevSwapModeTable(GX_TEV_SWAP0, GX_CH_RED, GX_CH_GREEN, GX_CH_BLUE, GX_CH_ALPHA);
+	GX_SetTevSwapMode(GX_TEVSTAGE0, GX_TEV_SWAP0, GX_TEV_SWAP0);
+
+	GX_DrawDone ();
+	GX_CopyDisp (GUI.xfb[GUI.which_fb], GX_FALSE);
+    GX_Flush ();
+	VIDEO_SetNextFramebuffer(GUI.xfb[GUI.which_fb]);
+	VIDEO_Flush();
+	GUI.which_fb ^= 1;
+	VIDEO_WaitVSync();
+}
+
+void GUI_writeString(float xpos, float ypos, float zpos, float xrot, float yrot, float zrot, GXColor fontColor, char *string, float scale)
+{
+  Mtx v, m, mv, tmp;            // view, model, and modelview matrices
+  Vector cam = { 0.0F, 0.0F, 0.0F }, 
+		 up = {0.0F, 1.0F, 0.0F}, 
+		 look = {0.0F, 0.0F, -1.0F},
+		 axisX = {1.0F, 0.0F, 0.0F},
+		 axisY = {0.0F, 1.0F, 0.0F},
+		 axisZ = {0.0F, 0.0F, 1.0F};
+
+  guLookAt (v, &cam, &up, &look);
+
+  // move the logo out in front of us and rotate it
+  guMtxIdentity (m);
+  guMtxRotAxisDeg (tmp, &axisX, -xrot);
+  guMtxConcat (m, tmp, m);
+  guMtxRotAxisDeg (tmp, &axisY, -yrot);
+  guMtxConcat (m, tmp, m);
+  guMtxRotAxisDeg (tmp, &axisZ, -zrot);
+  guMtxConcat (m, tmp, m);
+  guMtxTransApply (m, m, xpos, ypos, zpos);
+  guMtxConcat (v, m, mv);
+  // load the modelview matrix into matrix memory
+  GX_LoadPosMtxImm (mv, GX_PNMTX0);
+
+  GX_SetCullMode (GX_CULL_NONE); // show only the outside facing quads
+  GX_SetZMode(GX_DISABLE,GX_GEQUAL,GX_FALSE);
+
+  write_font_color(&fontColor);
+  write_font_origin(string, scale);
+
 }

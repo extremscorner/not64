@@ -28,5 +28,7 @@ void GUI_drawLogo(float, float, float);
 void GUI_centerText(bool);
 void GUI_setLoadProg(float percent);
 void GUI_drawLoadProg();
-   
+void GUI_creditScreen();
+void GUI_writeString(float xpos, float ypos, float zpos, float xrot, float yrot, float zrot, GXColor fontColor, char *string, float scale);
+
 #endif
