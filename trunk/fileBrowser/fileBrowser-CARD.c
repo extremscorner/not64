@@ -25,27 +25,23 @@ fileBrowser_file topLevel_CARD_SlotB =
 	  0, // size
 	  FILE_BROWSER_ATTR_DIR
 	 };
+	 
+int mount_card(int slot) {
+	/*** Pass company identifier and number ***/
+    CARD_Init ("N64E", "OS");
+	
+    int Slot_error = CARD_Mount (slot, SysArea, card_removed_cb);
+ 
+    
+    if (Slot_error < 0) {
+    	int i = 0;
+    	for(i = 0; i<50; i++)
+    		Slot_error = CARD_Mount (slot, SysArea, card_removed_cb);
+	}
+	return Slot_error;
+}
 
 int fileBrowser_CARD_readDir(fileBrowser_file* file, fileBrowser_file** dir){
-/*	DIR* sddir = NULL;
-	// Call the corresponding SDCARD function
-	int num_entries = SDCARD_readDir(&file->name, &sddir);
-	
-	// If it was not successful, just return the error
-	if(num_entries <= 0) return num_entries;
-	
-	// Convert the SDCARD data to fileBrowser_files
-	*dir = malloc( num_entries * sizeof(fileBrowser_file) );
-	int i;
-	for(i=0; i<num_entries; ++i){
-		sprintf((*dir)[i].name, "%s\\%s", file->name, sddir[i].fname);
-		(*dir)[i].offset = 0;
-		(*dir)[i].size   = sddir[i].fsize;
-		(*dir)[i].attr   = sddir[i].fattr;
-	}
-	
-	return num_entries;
-	*/
 	return 0;
 }
 
@@ -58,12 +54,21 @@ int fileBrowser_CARD_seekFile(fileBrowser_file* file, unsigned int where, unsign
 }
 
 int fileBrowser_CARD_readFile(fileBrowser_file* file, void* buffer, unsigned int length){
+	char *tbuffer;
 	card_file CardFile;
 	int slot = file->discoffset;
-	
-	if(CARD_Open(slot, &file->name[0], &CardFile) != CARD_ERROR_NOFILE){
-		if(CARD_Read(&CardFile, buffer, length, file->offset) == 0)
+	unsigned int SectorSize = 0;
+    CARD_GetSectorSize (slot, &SectorSize);
+    
+	if(CARD_Open(slot, &file->name, &CardFile) != CARD_ERROR_NOFILE){
+		int size = length;
+	    if((size % SectorSize) != 0)
+	      	size = ((length/SectorSize)+1) * SectorSize;
+	    tbuffer = memalign(32,size);
+		if(CARD_Read(&CardFile,tbuffer, size, file->offset) == 0){
 			file->offset += length;
+			memcpy(buffer,tbuffer,length);
+		}
 		else 
 		{
 			CARD_Close(&CardFile);
@@ -71,7 +76,6 @@ int fileBrowser_CARD_readFile(fileBrowser_file* file, void* buffer, unsigned int
 		}
 		return length;
    }
-
 	return -1;
 }
 
@@ -87,10 +91,12 @@ int fileBrowser_CARD_writeFile(fileBrowser_file* file, void* buffer, unsigned in
 	int memcardLength = length % SectorSize;
 	if(memcardLength)
 		memcardLength = (((length/SectorSize)*SectorSize) + SectorSize);
-	
-	status = CARD_Open(slot, &file->name[0], &CardFile);
-	if(status == CARD_ERROR_NOFILE)
-		status = CARD_Create(slot, &file->name[0], memcardLength, &CardFile);
+	else
+		memcardLength = length;
+	status = CARD_Open(slot, &file->name, &CardFile);
+	if(status == CARD_ERROR_NOFILE){
+		status = CARD_Create(slot, &file->name, memcardLength, &CardFile);
+	}
 	
 	if(status == CARD_ERROR_READY) {
 		if(CARD_Write(&CardFile, buffer, length, 0) == CARD_ERROR_READY) {
@@ -103,17 +109,13 @@ int fileBrowser_CARD_writeFile(fileBrowser_file* file, void* buffer, unsigned in
 }
 
 int fileBrowser_CARD_init(fileBrowser_file* file) {
-	int slot = file->discoffset; 
-	CARD_Init("N64E", "OS");
-	if(CARD_Mount(slot,SysArea, card_removed_cb) < 0)
-		return -1;
-	
-	return 0;
+	int slot = file->discoffset;
+	return mount_card(slot); //mount via slot number
 }
 
 int fileBrowser_CARD_deinit(fileBrowser_file* file) {
-	int slot = file->discoffset; 
-	CARD_Unmount(slot);
+	int slot = file->discoffset;
+	CARD_Unmount(slot); //unmount via slot number
 	return 0;
 }
 
