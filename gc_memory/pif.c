@@ -80,7 +80,7 @@ int loadEeprom(fileBrowser_file* savepath){
 		}
 	}
 	strcat(&saveFile.name, ".eep");
-	
+
 	if( !(saveFile_readFile(&saveFile, &i, 4) <= 0) ){
 		PRINT("Loading EEPROM, please be patient...\n");
 		saveFile.offset = 0;
