@@ -60,8 +60,8 @@
 
 static unsigned char eeprom[0x800] __attribute__((aligned(32)));
 static unsigned char mempack[4][0x8000] __attribute__((aligned(32)));
-static BOOL eepromWritten = FALSE;
-static BOOL mempakWritten = FALSE;
+BOOL eepromWritten = FALSE;
+BOOL mempakWritten = FALSE;
 #define EEP_MC_OFFSET 0x1000
 
 void check_input_sync(unsigned char *value);
