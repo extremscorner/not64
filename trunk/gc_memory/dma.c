@@ -76,6 +76,7 @@ int loadSram(fileBrowser_file* savepath){
 		PRINT("OK\n");
 		result = 1;
 		sramWritten = 1;
+		return result;
 	} else for (i=0; i<0x8000; i++) sram[i] = 0;
 	
 	sramWritten = FALSE;
