@@ -3217,9 +3217,9 @@ void prefetch()
 
 void pure_interpreter()
 {
-   interp_addr = 0xa4000040;
+   //interp_addr = 0xa4000040;
    stop=0;
-   PC = malloc(sizeof(precomp_instr));
+   //PC = malloc(sizeof(precomp_instr));
    last_addr = interp_addr;
    while (!stop)
      {

@@ -2131,6 +2131,12 @@ void cpu_init(void){
    next_interupt = 624999;
    init_interupt();
    interpcore = 0;
+   
+   // I'm adding this from pure_interpreter()
+   interp_addr = 0xa4000040;
+   // FIXME: I'm making an assumption:
+   //          worst case is probably this will leak mem
+   PC = malloc(sizeof(precomp_instr));
 }
 
 void cpu_deinit(void){
@@ -2158,6 +2164,7 @@ void cpu_deinit(void){
 	     blocks[i] = NULL;
 	  }
      }
-   if (!dynacore && interpcore) free(PC);
+   // tehpola: modified condition from !dynacore && interpcore
+   if (dynacore != 1) free(PC);
 }
 
