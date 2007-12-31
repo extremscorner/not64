@@ -81,7 +81,7 @@ int loadEeprom(fileBrowser_file* savepath){
 	}
 	strcat(&saveFile.name, ".eep");
 	
-	if( !(saveFile_readFile(&saveFile, &i, 4) & FILE_BROWSER_ERROR) ){
+	if( !(saveFile_readFile(&saveFile, &i, 4) <= 0) ){
 		PRINT("Loading EEPROM, please be patient...\n");
 		saveFile_readFile(&saveFile, eeprom, 0x800);
 		PRINT("OK\n");
@@ -307,8 +307,7 @@ int loadMempak(fileBrowser_file* savepath){
 	}
 	strcat(&saveFile.name, ".mpk");
 	
-	int dummy;
-	if( !(saveFile_readFile(&saveFile, &dummy, 4) & FILE_BROWSER_ERROR) ){
+	if( !(saveFile_readFile(&saveFile, &i, 4) <= 0) ){
 		PRINT("Loading mempak, please be patient...\n");
 		saveFile_readFile(&saveFile, mempack, 0x8000 * 4);
 		PRINT("OK\n");

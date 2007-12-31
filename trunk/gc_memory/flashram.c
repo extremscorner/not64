@@ -77,7 +77,7 @@ int loadFlashram(fileBrowser_file* savepath){
 	}
 	strcat(&saveFile.name, ".fla");
 	
-	if( !(saveFile_readFile(&saveFile, &i, 4) & FILE_BROWSER_ERROR) ){
+	if( !(saveFile_readFile(&saveFile, &i, 4) <= 0) ){
 		PRINT("Loading flashram, please be patient...\n");
 		saveFile_readFile(&saveFile, flashram, 0x20000);
 		PRINT("OK\n");
