@@ -6,7 +6,7 @@
 #include <ogc/system.h>
 #include <ogc/video.h>
 #include "vi_GX.h"
-#include "font.h"
+#include "font.h" //This file is outdated
 
 VI_GX::VI_GX(GFX_INFO info) : VI(info), width(0), height(0), which_fb(1){
 	init_font();
@@ -37,7 +37,7 @@ void* VI_GX::getScreenPointer(){ return xfb[which_fb]; }
 
 void VI_GX::blit(){
 	//printf("Should be blitting.");
-	showFPS();
+//	showFPS(); //Doesn't work with the GX font setup
 	VIDEO_SetNextFramebuffer(xfb[which_fb]);
 	VIDEO_Flush();
 	which_fb ^= 1;
