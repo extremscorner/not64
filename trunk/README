@@ -1,5 +1,5 @@
 README : WiiN64 / mupen64gc
-Alpha - r195
+Alpha - r197
 
 USAGE:
  * ROMs must be z64 (big-endian) or v64 (little endian) and < 15 MB
@@ -18,6 +18,7 @@ USAGE:
 COMPATIBILITY LIST:
  Please visit http://code.google.com/p/mupen64gc/wiki/CompatibilityList to see what runs
    and to post your results (in the form of a comment)
+ Report any issues to http://code.google.com/p/mupen64gc/issues/list
 
 CREDITS:
  * Core Coder: tehpola
@@ -30,7 +31,7 @@ CREDITS:
  * Visit us on http://code.google.com/p/mupen64gc and www.tehskeen.com
 
 CHANGE LOG:
- r195:
+ r197:
    * Replaced GUI
      + Menu system
      + Menu file browser
@@ -42,10 +43,12 @@ CHANGE LOG:
    * Fixed software graphics support
    + Working audio (choppy)
    + Partial support for little-endian ROMs
+   + Rumble pak support
  r46:
    + DVD loading
  r43:
    + GX graphics
+   - Software graphics
  r40:
    * Any size ROM support from SD card
    * Pure Interpreter support only for now

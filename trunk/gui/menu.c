@@ -12,7 +12,7 @@
 
 // -- ACTUAL MENU LAYOUT --
 
-#define MAIN_MENU_SIZE 8
+#define MAIN_MENU_SIZE 9
 
 /* Message menu_item: used for feedback, set the caption to what you want it to say */
 
@@ -119,6 +119,80 @@ extern BOOL hasLoadedROM;
 
 /* End of "Show Credits" item */
 
+/* "Controller Paks" menu item */
+
+#include "../main/plugin.h"
+static inline void menuStack_push(menu_item*);
+	static char controllerPak_strings[12][26] =
+		{ "Controller 1: Unavailable",
+		  "Controller 2: Unavailable",
+		  "Controller 3: Unavailable",
+		  "Controller 4: Unavailable",
+		  "Controller 1: Mempak",
+		  "Controller 2: Mempak",
+		  "Controller 3: Mempak",
+		  "Controller 4: Mempak",
+		  "Controller 1: Rumblepak",
+		  "Controller 2: Rumblepak",
+		  "Controller 3: Rumblepak",
+		  "Controller 4: Rumblepak"};
+	static char* controllerPakPlugIn_func(){
+		return "Controller must be plugged in";
+	}
+	static menu_item controllerPakControllers_items[4] =
+		{{ controllerPak_strings[0], MENU_ATTR_NONE, { .func = controllerPakPlugIn_func }},
+		 { controllerPak_strings[1], MENU_ATTR_NONE, { .func = controllerPakPlugIn_func }},
+		 { controllerPak_strings[2], MENU_ATTR_NONE, { .func = controllerPakPlugIn_func }},
+		 { controllerPak_strings[3], MENU_ATTR_NONE, { .func = controllerPakPlugIn_func }}};
+	static char* controllerPakToggle_func(int i){
+		if(Controls[i].Plugin == PLUGIN_MEMPAK)
+			Controls[i].Plugin = PLUGIN_RAW;
+		else	Controls[i].Plugin = PLUGIN_MEMPAK;
+		
+		if(Controls[i].Plugin == PLUGIN_MEMPAK)
+			controllerPakControllers_items[i].caption =
+			  controllerPak_strings[i+4];
+		else	controllerPakControllers_items[i].caption =
+			  controllerPak_strings[i+8];
+	}
+	static menu_item controllerPak_item =
+		{ NULL,
+		  MENU_ATTR_HASSUBMENU,
+		  { 4,
+		    &controllerPakControllers_items[0]
+		   }
+		 };
+	
+	static char* controllerPak_func(){
+		int i;
+		for(i=0; i<4; ++i)
+			if(Controls[i].Present){
+				if(Controls[i].Plugin == PLUGIN_MEMPAK)
+					controllerPakControllers_items[i].caption =
+					  controllerPak_strings[i+4];
+				else	controllerPakControllers_items[i].caption =
+					  controllerPak_strings[i+8];
+				controllerPakControllers_items[i].func =
+				  controllerPakToggle_func;
+			} else {
+				controllerPakControllers_items[i].caption =
+				  controllerPak_strings[i];
+				controllerPakControllers_items[i].func =
+				  controllerPakPlugIn_func;
+			}
+		menuStack_push( &controllerPak_item );
+		return NULL;
+	}
+
+#define CONTROLLER_PAKS_INDEX MAIN_MENU_SIZE - 4
+#define CONTROLLER_PAKS_ITEM \
+	{ "Controller Paks", \
+	  MENU_ATTR_NONE, \
+	  { .func = controllerPak_func } \
+	 }
+
+/* End of "Controller Paks" item */
+
 /* "Toggle Audio" menu item */
 
 	extern char  audioEnabled;
@@ -140,7 +214,6 @@ extern BOOL hasLoadedROM;
 	#include "../main/rom.h"
 	char* textFileBrowser(char*);
 	char* textFileBrowserDVD();
-	static inline void menuStack_push(menu_item*);
 
 	static char* loadROMSD_func(){
 		// Change all the romFile pointers
@@ -180,7 +253,7 @@ extern BOOL hasLoadedROM;
 		  }
 		 };
 
-#define LOAD_ROM_INDEX 0
+#define LOAD_ROM_INDEX 0static inline void menuStack_push(menu_item*);
 #define LOAD_ROM_ITEM \
 	{ "Load ROM", \
 	  MENU_ATTR_HASSUBMENU, \
@@ -355,6 +428,7 @@ static menu_item main_menu[MAIN_MENU_SIZE] =
 	  SAVE_GAME_ITEM,
 	  SELECT_CPU_ITEM,
 	  SHOW_CREDITS_ITEM,
+	  CONTROLLER_PAKS_ITEM,
 	  TOGGLE_AUDIO_ITEM,
 	  EXIT_ITEM,
 	  PLAY_GAME_ITEM

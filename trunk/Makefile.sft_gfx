@@ -236,9 +236,9 @@ r4300/ppc/Wrappers.o:		r4300/ppc/Wrappers.s
 mupen64_gc.elf:	$(OBJ) $(OBJ_PPC) $(OBJ_INPUT) $(OBJ_SOFT_GFX) $(OBJ_AUDIO) $(OBJ_RSPHLE) main/main_gc-menu.o
 		$(LD) $^ $(LDFLAGS) $(LDFLAGS) $(LIB) -Wl -o $@
 		#strip --strip-all $@
-		powerpc-gekko-objcopy -O binary $@ mupen64.dol
+		powerpc-gekko-objcopy -O binary $@ mupen64-sft.dol
 #		~/GCos/dollz3 mupen64.dol mupen64-lz.dol
-		dollz3 mupen64.dol mupen6z.dol
+#		dollz3 mupen64.dol mupen6z.dol
 
 
 
