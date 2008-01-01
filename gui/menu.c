@@ -9,10 +9,13 @@
 #include "../fileBrowser/fileBrowser-DVD.h"
 #include "../fileBrowser/fileBrowser-CARD.h"
 #include "menuFileBrowser.h"
+#include <ogc/dvd.h>
+#include "../main/gc_dvd.h"
 
 // -- ACTUAL MENU LAYOUT --
 
-#define MAIN_MENU_SIZE 9
+#define MAIN_MENU_SIZE 11
+
 
 /* Message menu_item: used for feedback, set the caption to what you want it to say */
 
@@ -119,6 +122,53 @@ extern BOOL hasLoadedROM;
 
 /* End of "Show Credits" item */
 
+
+/* "Stop DVD" menu item */
+	extern int rom_length;
+	extern int dvdInitialized;
+	static char* dvd_stop_func(){
+		if((hasLoadedROM) && (dvdInitialized)){
+			dvdInitialized = 0;
+			if (rom_length<15728640){
+				dvd_motor_off();
+				dvd_read_id();
+				return "Motor stopped";
+			}
+			else 
+				return "Game still needs DVD";
+		}
+		dvd_motor_off();
+		dvd_read_id();
+		dvdInitialized = 0;
+		return "Motor Stopped";
+	}
+
+#define STOP_DVD_INDEX 5
+#define STOP_DVD_ITEM \
+	{ "Stop DVD", \
+	  MENU_ATTR_NONE, \
+	  { .func = dvd_stop_func } \
+	 }
+
+/* End of "Stop DVD" item */
+
+/* "Swap DVD" menu item */
+	static char* dvd_swap_func(){
+		dvd_motor_off();
+		dvd_read_id();
+		return "Swap disc now";
+	}
+
+#define SWAP_DVD_INDEX 6
+#define SWAP_DVD_ITEM \
+	{ "Swap DVD", \
+	  MENU_ATTR_NONE, \
+	  { .func = dvd_swap_func } \
+	 }
+
+/* End of "Swap DVD" item */
+
+
 /* "Controller Paks" menu item */
 
 #include "../main/plugin.h"
@@ -192,6 +242,7 @@ static inline void menuStack_push(menu_item*);
 	 }
 
 /* End of "Controller Paks" item */
+
 
 /* "Toggle Audio" menu item */
 
@@ -424,13 +475,21 @@ static inline void menuStack_push(menu_item*);
 	
 static menu_item main_menu[MAIN_MENU_SIZE] = 
 	{ LOAD_ROM_ITEM,
+	
 	  LOAD_SAVE_ITEM,
 	  SAVE_GAME_ITEM,
+	  
 	  SELECT_CPU_ITEM,
+	  
 	  SHOW_CREDITS_ITEM,
+	  
+	  STOP_DVD_ITEM,
+	  SWAP_DVD_ITEM,
+	 
 	  CONTROLLER_PAKS_ITEM,
 	  TOGGLE_AUDIO_ITEM,
 	  EXIT_ITEM,
+	  
 	  PLAY_GAME_ITEM
 	 };
 
