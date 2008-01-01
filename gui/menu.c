@@ -14,7 +14,7 @@
 
 // -- ACTUAL MENU LAYOUT --
 
-#define MAIN_MENU_SIZE 11
+#define MAIN_MENU_SIZE 12
 
 
 /* Message menu_item: used for feedback, set the caption to what you want it to say */
@@ -234,7 +234,7 @@ static inline void menuStack_push(menu_item*);
 		return NULL;
 	}
 
-#define CONTROLLER_PAKS_INDEX MAIN_MENU_SIZE - 4
+#define CONTROLLER_PAKS_INDEX MAIN_MENU_SIZE - 5
 #define CONTROLLER_PAKS_ITEM \
 	{ "Controller Paks", \
 	  MENU_ATTR_NONE, \
@@ -252,7 +252,7 @@ static inline void menuStack_push(menu_item*);
 		{ "Toggle Audio (currently off)",
 		  "Toggle Audio (currently on)"};
 
-#define TOGGLE_AUDIO_INDEX MAIN_MENU_SIZE - 3
+#define TOGGLE_AUDIO_INDEX MAIN_MENU_SIZE - 4
 #define TOGGLE_AUDIO_ITEM \
 	{ &toggleAudio_strings[0][0], \
 	  MENU_ATTR_NONE, \
@@ -304,7 +304,7 @@ static inline void menuStack_push(menu_item*);
 		  }
 		 };
 
-#define LOAD_ROM_INDEX 0static inline void menuStack_push(menu_item*);
+#define LOAD_ROM_INDEX 0
 #define LOAD_ROM_ITEM \
 	{ "Load ROM", \
 	  MENU_ATTR_HASSUBMENU, \
@@ -464,7 +464,7 @@ static inline void menuStack_push(menu_item*);
 		void (*rld)() = (void (*)()) 0x80001800;
 		rld();
 	}
-#define EXIT_INDEX MAIN_MENU_SIZE -2
+#define EXIT_INDEX MAIN_MENU_SIZE - 3
 #define EXIT_ITEM \
 	{ "Exit to SDLOAD", \
 	  MENU_ATTR_NONE, \
@@ -472,6 +472,24 @@ static inline void menuStack_push(menu_item*);
 	 }
 
 /* End of "Exit to SDLOAD" item */
+
+/* "Restart Game" menu item */
+
+	void cpu_init();
+	static char* restartGame_func(){
+		if(hasLoadedROM){
+			cpu_init();
+			return "Game restarted";
+		} else	return "Please load a ROM first";
+	}
+#define RESTART_GAME_INDEX MAIN_MENU_SIZE - 2
+#define RESTART_GAME_ITEM \
+	{ "Restart Game", \
+	  MENU_ATTR_NONE, \
+	  { .func = restartGame_func } \
+	 }
+
+/* End of "Restart Game" item */
 	
 static menu_item main_menu[MAIN_MENU_SIZE] = 
 	{ LOAD_ROM_ITEM,
@@ -490,6 +508,7 @@ static menu_item main_menu[MAIN_MENU_SIZE] =
 	  TOGGLE_AUDIO_ITEM,
 	  EXIT_ITEM,
 	  
+	  RESTART_GAME_ITEM,
 	  PLAY_GAME_ITEM
 	 };
 

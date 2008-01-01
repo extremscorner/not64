@@ -1,5 +1,5 @@
 README : WiiN64 / mupen64gc
-Alpha - r197
+Alpha - r199
 
 USAGE:
  * ROMs must be z64 (big-endian) or v64 (little endian) and < 15 MB
@@ -31,7 +31,7 @@ CREDITS:
  * Visit us on http://code.google.com/p/mupen64gc and www.tehskeen.com
 
 CHANGE LOG:
- r197:
+ r199:
    * Replaced GUI
      + Menu system
      + Menu file browser
