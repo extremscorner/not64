@@ -1,0 +1,57 @@
+README : WiiN64 / mupen64gc
+Alpha - r195
+
+USAGE:
+ * ROMs must be z64 (big-endian) or v64 (little endian) and < 15 MB
+ * For SDCARD: Put ROMs in a directory named N64ROMS in the root directory,
+               Create a directory for named N64SAVES in the root directory
+ * For DVD: ROMs may be anywhere on the disc  
+ * Load mupen64.dol (for GX graphics) or mupen64-sft.dol (for software graphics: slow, but more support)
+   Select 'Load ROM' and choose to load from SD or DVD and select the ROM to load
+     (Note: to go up a directory select '..', B will exit the file browser)
+   If there are any saves to load choose 'Load Save File' and select SD or memory card
+   Select 'Play Game' to play
+   The game can be exited any time by pressing X and Y together or the reset button
+     (Note: this must be done to save your game; it will not be done automatically)
+   Save your progress by choosing 'Save Game' and selecting the source
+
+COMPATIBILITY LIST:
+ Please visit http://code.google.com/p/mupen64gc/wiki/CompatibilityList to see what runs
+   and to post your results (in the form of a comment)
+
+CREDITS:
+ * Core Coder: tehpola
+ * Graphics Coder: sepp256
+ * General Coder: emu_kidid
+ * Original mupen64: Hactarux
+ * Artwork: brakk3n
+ * Compiled using devKitPro r12 ( http://sourceforge.net/projects/devkitpro )
+     with libOGC ( http://tehwii.tehskeen.com )
+ * Visit us on http://code.google.com/p/mupen64gc and www.tehskeen.com
+
+CHANGE LOG:
+ r195:
+   * Replaced GUI
+     + Menu system
+     + Menu file browser
+   * Replaced file handling system
+     + Modular file read/writes
+   * Gameplay resumable after exiting to menu
+   * Multiple ROMs may be loaded without crashing/freezing
+   + Fancy splash screen and credits
+   * Fixed software graphics support
+   + Working audio (choppy)
+   + Partial support for little-endian ROMs
+ r46:
+   + DVD loading
+ r43:
+   + GX graphics
+ r40:
+   * Any size ROM support from SD card
+   * Pure Interpreter support only for now
+   * Software GFX
+   * Controller/Mempak support
+   * Saving to SD card
+   * Text UI
+   * 4 MB RAM support (no expansion pack)
+
