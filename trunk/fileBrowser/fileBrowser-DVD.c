@@ -9,6 +9,7 @@
 #include <ogc/dvd.h>
 
 extern unsigned int isWii;
+int dvdInitialized;
 /* Worked out manually from my original Disc */
 #define OOT_OFFSET 0x54FBEEF4
 #define MQ_OFFSET  0x52CCC5FC
@@ -23,8 +24,10 @@ fileBrowser_file topLevel_DVD =
 	 };
 
 int DVD_check_state() {
-	if(dvd_get_error() == 0)
+	if(dvd_get_error() == 0){
+		dvdInitialized = 1;
 		return 0;
+	}
 	else {
 		while(dvd_get_error()) {
 			if(!isWii){
@@ -38,14 +41,16 @@ int DVD_check_state() {
 			}
 		}
 	}
-	return -1;
+	dvdInitialized = 1;
+	return 0;
 }
 		 
 	 
 int fileBrowser_DVD_readDir(fileBrowser_file* ffile, fileBrowser_file** dir){	
 	
-	DVD_check_state();
 	dvd_read_id();
+	DVD_check_state();
+	
 	int num_entries = 0;
 	
 	if (!memcmp((void*)0x80000000, "D43U01", 6)) { //OoT bonus disc support.
