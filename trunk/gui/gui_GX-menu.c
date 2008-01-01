@@ -698,6 +698,11 @@ void GUI_creditScreen()
 {
 	GXColor fontColor = {255, 255, 255, 255};
 	char* string = "";
+	Vector	pos   = {0.0F, 0.0F, 0.0F},
+			axis1 = {1.0F, 0.0F, 0.0F}, 
+			axis2 = {1.0F, 0.0F, 0.0F},
+			axis3 = {1.0F, 0.0F, 0.0F},
+			rot   = {0.0F, 0.0F, 0.0F};
 	static int rotateby = 0;
 
 	draw_background();
@@ -709,35 +714,79 @@ void GUI_creditScreen()
 
 	fontColor = (GXColor) {69,31,133,255}; //purplish
 	strcpy(string,"New Year's Edition!!");
-	GUI_writeString(319.5F, 130.0F, -250.0, 0.0F, rotateby-90, 0.0F, fontColor, string, 1.5);
+	pos = (Vector) {319.5F, 130.0F, -250.0};
+	axis1 = (Vector) {0.0F, 1.0F, 0.0F};
+	rot = (Vector) {rotateby-90, 0.0F, 0.0F};
+	GUI_writeString(pos, axis1, axis2, axis3, rot, fontColor, string, 1.5);
 
 	fontColor = (GXColor) {206,0,0,255}; //dark red
 	strcpy(string,"core coding");
-	GUI_writeString(340.0F, 200.0F, -50.0, 0.0F, 0.0F, 0.0F, fontColor, string, 0.6);
+	pos = (Vector) {340.0F, 202.0F, -50.0};
+	rot = (Vector) {0.0F, 0.0F, 0.0F};
+	GUI_writeString(pos, axis1, axis2, axis3, rot, fontColor, string, 0.6);
 	strcpy(string,"tehpola");
-	GUI_writeString(319.5F, 185.0F, -50.0, rotateby, 0.0F, 0.0F, fontColor, string, 1.5);
+	pos = (Vector) {319.5F, 185.0F, -50.0};
+	axis1 = (Vector) {1.0F, 0.0F, 0.0F};
+	rot = (Vector) {rotateby, 0.0F, 0.0F};
+	GUI_writeString(pos, axis1, axis2, axis3, rot, fontColor, string, 1.5);
 
 	fontColor = (GXColor) {16,133,31,255}; //dark green
 	strcpy(string,"coding");
-	GUI_writeString(130.0F, 230.0F, -50.0, 0.0F, 0.0F, 0.0F, fontColor, string, 0.6);
+	pos = (Vector) {125.0F, 210.0F, -50.0};
+	rot = (Vector) {0.0F, 0.0F, 0.0F};
+	GUI_writeString(pos, axis1, axis2, axis3, rot, fontColor, string, 0.6);
 	strcpy(string,"emu_kidid");
-	GUI_writeString(160.0F, 260.0F, -50.0, 0.0F, 0.0F, -rotateby, fontColor, string, 1.3);
+	pos = (Vector) {155.0F, 240.0F, -50.0};
+	axis1 = (Vector) {0.0F, 0.0F, 1.0F};
+	rot = (Vector) {-rotateby, 0.0F, 0.0F};
+	GUI_writeString(pos, axis1, axis2, axis3, rot, fontColor, string, 1.3);
 
 	fontColor = (GXColor) {37,64,112,255}; //bluish
 	strcpy(string,"graphics coding");
-	GUI_writeString(500.0F, 245.0F, -50.0, 0.0F, 0.0F, 0.0F, fontColor, string, 0.6);
+	pos = (Vector) {500.0F, 210.0F, -50.0};
+	rot = (Vector) {0.0F, 0.0F, 0.0F};
+	GUI_writeString(pos, axis1, axis2, axis3, rot, fontColor, string, 0.6);
 	strcpy(string,"sepp256");
-	GUI_writeString(480.0F, 285.0F, -50.0, 0.0F, 0.0F, rotateby+45, fontColor, string, 1.3);
+	pos = (Vector) {480.0F, 240.0F, -50.0};
+	axis1 = (Vector) {0.0F, 0.0F, 1.0F};
+	rot = (Vector) {rotateby+45, 0.0F, 0.0F};
+	GUI_writeString(pos, axis1, axis2, axis3, rot, fontColor, string, 1.3);
 
 	fontColor = (GXColor) {130,31,19,255}; //subdued red
 	strcpy(string,"artwork");
-	GUI_writeString(260.0F, 350.0F, -50.0, 0.0F, 0.0F, 30.0F, fontColor, string, 0.6);
+	pos = (Vector) {220.0F, 350.0F, -50.0};
+	axis1 = (Vector) {0.0F, 0.0F, 1.0F};
+	rot = (Vector) {30.0F, 0.0F, 0.0F};
+	GUI_writeString(pos, axis1, axis2, axis3, rot, fontColor, string, 0.6);
 	strcpy(string,"brakk3n");
-	GUI_writeString(300.0F, 330.0F, -50.0, rotateby, rotateby/2, 30.0F, fontColor, string, 1.5);
+	pos = (Vector) {260.0F, 330.0F, -50.0};
+	axis1 = (Vector) {1.0F, 0.0F, 0.0F};
+	axis2 = (Vector) {0.0F, 1.0F, 0.0F};
+	axis3 = (Vector) {0.0F, 0.0F, 1.0F};
+	rot = (Vector) {rotateby, rotateby/2, 30.0F};
+	GUI_writeString(pos, axis1, axis2, axis3, rot, fontColor, string, 1.5);
+
+	fontColor = (GXColor) {0,100,0,255}; //darker green
+	strcpy(string,"special thanks");
+	pos = (Vector) {445.0F, 315.0F, -50.0};
+	rot = (Vector) {0.0F, 0.0F, 0.0F};
+	GUI_writeString(pos, axis1, axis2, axis3, rot, fontColor, string, 0.6);
+	strcpy(string,"for mupen64");
+	pos = (Vector) {385.0F, 360.0F, -50.0};
+	rot = (Vector) {0.0F, 0.0F, 0.0F};
+	GUI_writeString(pos, axis1, axis2, axis3, rot, fontColor, string, 0.6);
+	strcpy(string,"Hacktarux");
+	pos = (Vector) {410.0F, 340.0F, -150.0};
+	axis1 = (Vector) {0.0F, 0.0F, 1.0F};
+	axis2 = (Vector) {0.0F, 1.0F, 0.0F};
+	rot = (Vector) {45.0F, rotateby-90, 0.0F};
+	GUI_writeString(pos, axis1, axis2, axis3, rot, fontColor, string, 1.2);
 
 	fontColor = (GXColor) {128,121,18,255}; //dim yellow
 	strcpy(string,"libOGC - www.tehskeen.com");
-	GUI_writeString(319.5F, 410.0F, -50.0, 0.0F, 0.0F, 0.0F, fontColor, string, 1.0);
+	pos = (Vector) {319.5F, 410.0F, -50.0};
+	rot = (Vector) {0.0F, 0.0F, 0.0F};
+	GUI_writeString(pos, axis1, axis2, axis3, rot, fontColor, string, 1.0);
 
 	rotateby++;
 
@@ -754,27 +803,27 @@ void GUI_creditScreen()
 	VIDEO_WaitVSync();
 }
 
-void GUI_writeString(float xpos, float ypos, float zpos, float xrot, float yrot, float zrot, GXColor fontColor, char *string, float scale)
+void GUI_writeString(Vector pos, Vector axis1, Vector axis2, Vector axis3, Vector rot, GXColor fontColor, char *string, float scale)
 {
   Mtx v, m, mv, tmp;            // view, model, and modelview matrices
   Vector cam = { 0.0F, 0.0F, 0.0F }, 
 		 up = {0.0F, 1.0F, 0.0F}, 
-		 look = {0.0F, 0.0F, -1.0F},
-		 axisX = {1.0F, 0.0F, 0.0F},
-		 axisY = {0.0F, 1.0F, 0.0F},
-		 axisZ = {0.0F, 0.0F, 1.0F};
+		 look = {0.0F, 0.0F, -1.0F};
+//		 axisX = {1.0F, 0.0F, 0.0F},
+//		 axisY = {0.0F, 1.0F, 0.0F},
+//		 axisZ = {0.0F, 0.0F, 1.0F};
 
   guLookAt (v, &cam, &up, &look);
 
   // move the logo out in front of us and rotate it
   guMtxIdentity (m);
-  guMtxRotAxisDeg (tmp, &axisX, -xrot);
+  guMtxRotAxisDeg (tmp, &axis1, -rot.x);
   guMtxConcat (m, tmp, m);
-  guMtxRotAxisDeg (tmp, &axisY, -yrot);
+  guMtxRotAxisDeg (tmp, &axis2, -rot.y);
   guMtxConcat (m, tmp, m);
-  guMtxRotAxisDeg (tmp, &axisZ, -zrot);
+  guMtxRotAxisDeg (tmp, &axis3, -rot.z);
   guMtxConcat (m, tmp, m);
-  guMtxTransApply (m, m, xpos, ypos, zpos);
+  guMtxTransApply (m, m, pos.x, pos.y, pos.z);
   guMtxConcat (v, m, mv);
   // load the modelview matrix into matrix memory
   GX_LoadPosMtxImm (mv, GX_PNMTX0);
