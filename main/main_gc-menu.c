@@ -269,7 +269,11 @@ static void Initialise (void){
   switch (VIDEO_GetCurrentTvMode ())
     {
     case VI_NTSC:
+#if defined(PROGRESSIVE_DISPLAY) && defined(NTSC_PROGRESSIVE_SUPPORT)
+      vmode = &TVNtsc480Prog;
+#else
       vmode = &TVNtsc480IntDf;
+#endif
       break;
  
     case VI_PAL:
