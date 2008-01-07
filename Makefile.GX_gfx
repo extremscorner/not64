@@ -133,9 +133,10 @@ OBJ_AUDIO	=gc_audio/main.o
 OBJ_GX_GFX	=GX_gfx/main.o \
 		GX_gfx/rsp_GX.o \
 		GX_gfx/tx_GX.o \
+		GX_gfx/cc_GX.o \
+		GX_gfx/bl_GX.o \
 		GX_gfx/vi_GX.o \
 		GX_gfx/vi.o 
-#		GX_gfx/font.o
 
 HEADER		=main/rom.h \
 		r4300/r4300.h \
@@ -238,7 +239,7 @@ mupen64_gc.elf:	$(OBJ) $(OBJ_PPC) $(OBJ_INPUT) $(OBJ_GX_GFX) $(OBJ_AUDIO) $(OBJ_
 		$(LD) $^ $(LDFLAGS) $(LDFLAGS) $(LIB) -Wl -o $@
 		#strip --strip-all $@
 		powerpc-gekko-objcopy -O binary $@ mupen64.dol
-#		~/GCos/dollz3 mupen64.dol mupen64-lz.dol
+		dollz3 mupen64.dol mupen6z.dol
 
 
 

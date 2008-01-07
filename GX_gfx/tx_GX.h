@@ -76,6 +76,7 @@ class TX
    int tile_width;
 
    bool new_load_block;
+   int currentSetTile;
    
    // GX variables
    GXTexObj	GXtex;

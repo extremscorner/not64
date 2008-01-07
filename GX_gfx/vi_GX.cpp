@@ -8,7 +8,7 @@
 #include <ogc/gx.h>
 #include <ogc/gu.h>
 #include "vi_GX.h"
-#include "font.h"
+#include "../gui/font.h"
 #include "../gui/DEBUG.h"
 
 VI_GX::VI_GX(GFX_INFO info) : VI(info), width(0), height(0), which_fb(1){
@@ -37,7 +37,7 @@ void VI_GX::switchFullScreenMode(){ }
 
 void VI_GX::switchWindowMode(){ }
 
-void* VI_GX::getScreenPointer(){ return xfb[which_fb]; }
+unsigned int* VI_GX::getScreenPointer(){ return xfb[which_fb]; }
 
 void VI_GX::blit(){
 	//printf("Should be blitting.");
@@ -78,7 +78,7 @@ void VI_GX::showFPS(){
 	{
 		GXColor fontColor = {150,255,150,255};
 		write_font_init_GX(fontColor);
-		write_font(10,15,caption, 1.0);
+		write_font(10,35,caption, 1.0);
 		//write_font(10,10,caption,xfb,which_fb);
 
 		//reset swap table from GUI/DEBUG
@@ -166,7 +166,7 @@ void VI_GX::showDEBUG()
 		DEBUG_update();
 		write_font_init_GX(fontColor);
 		for (i=0;i<DEBUG_TEXT_HEIGHT;i++){
-				write_font(10,(6*i+50),text[i], 0.5); 
+				write_font(10,(6*i+60),text[i], 0.5); 
 		}
 		
 	   //reset swap table from GUI/DEBUG

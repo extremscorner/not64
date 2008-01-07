@@ -28,10 +28,10 @@ class VI_GX : public VI
    VI_GX(GFX_INFO);
    virtual ~VI_GX();
    
-   virtual void* getScreenPointer();
    virtual void switchFullScreenMode();
    virtual void switchWindowMode();
    virtual void setGamma(float gamma);
+   unsigned int* getScreenPointer();
    void showLoadProg(float);
    void updateDEBUG();
 };

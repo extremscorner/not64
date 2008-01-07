@@ -20,6 +20,8 @@ RSP::RSP(GFX_INFO info) : gfxInfo(info), error(false), end(false)
    commands[0x04]=&RSP::VTX;
    commands[0x06]=&RSP::DL;
    commands[0x09]=&RSP::SPRITE2D;
+   commands[0xb2]=&RSP::RDPHALF_CONT;
+   commands[0xb3]=&RSP::RDPHALF_2;
    commands[0xb4]=&RSP::RDPHALF_1;
    commands[0xb6]=&RSP::CLEARGEOMETRYMODE;
    commands[0xb7]=&RSP::SETGEOMETRYMODE;
@@ -32,6 +34,7 @@ RSP::RSP(GFX_INFO info) : gfxInfo(info), error(false), end(false)
    commands[0xbf]=&RSP::TRI1;
    commands[0xc0]=&RSP::SPNOOP;
    commands[0xe4]=&RSP::TEXRECT;
+//   commands[0xe4]=&RSP::SPNOOP;
    commands[0xe6]=&RSP::RDPLOADSYNC;
    commands[0xe7]=&RSP::RDPPIPESYNC;
    commands[0xe8]=&RSP::RDPTILESYNC;
@@ -43,6 +46,7 @@ RSP::RSP(GFX_INFO info) : gfxInfo(info), error(false), end(false)
    commands[0xf4]=&RSP::LOADTILE;
    commands[0xf5]=&RSP::SETTILE;
    commands[0xf6]=&RSP::FILLRECT;
+//   commands[0xf6]=&RSP::SPNOOP;
    commands[0xf7]=&RSP::SETFILLCOLOR;
    commands[0xf8]=&RSP::SETFOGCOLOR;
    commands[0xf9]=&RSP::SETBLENDCOLOR;
@@ -66,31 +70,30 @@ RSP::RSP(GFX_INFO info) : gfxInfo(info), error(false), end(false)
    //TODO: Set these flags in GX, too?
    GX_SetCullMode (GX_CULL_NONE); // default in rsp init
 
-   light_mask = GX_LIGHTNULL;
-   GX_SetChanCtrl(GX_COLOR0A0,GX_DISABLE,GX_SRC_REG,GX_SRC_VTX,light_mask,GX_DF_CLAMP,GX_AF_NONE);
+//   light_mask = GX_LIGHTNULL;
+//   GX_SetChanCtrl(GX_COLOR0A0,GX_DISABLE,GX_SRC_REG,GX_SRC_VTX,light_mask,GX_DF_CLAMP,GX_AF_NONE);
    GX_SetZMode(GX_DISABLE,GX_GEQUAL,GX_TRUE);
 
    GXfillColor = (GXColor){0,0,0,0};
 
    //initialize matrices for 2D gfx rendering
    guMtxIdentity(GXmodelView2D);
-   guMtxIdentity(GXnormal2D);
-//   GX_LoadPosMtxImm(GXmodelView2D,GX_PNMTX2);
-//   GX_LoadNrmMtxImm(GXnormal2D,GX_PNMTX2);
-   GX_LoadPosMtxImm(GXmodelView2D,GX_PNMTX0);
-   GX_LoadNrmMtxImm(GXnormal2D,GX_PNMTX0);
+//   guMtxIdentity(GXnormal2D);
+   GX_LoadPosMtxImm(GXmodelView2D,GX_PNMTX1);
+//   GX_LoadNrmMtxImm(GXnormal2D,GX_PNMTX0);
 
-   //reset swap table from GUI/DEBUG
+      //reset swap table from GUI/DEBUG
 	GX_SetTevSwapModeTable(GX_TEV_SWAP0, GX_CH_RED, GX_CH_GREEN, GX_CH_BLUE, GX_CH_ALPHA);
 	GX_SetTevSwapMode(GX_TEVSTAGE0, GX_TEV_SWAP0, GX_TEV_SWAP0);
-
 
 //	guOrtho(GXprojection2D, 0, 239, 0, 319, 0, 1021);
 
    TXblock.newblock = 0;
 
    //rdp = new RDP(info);
-      tx = new TX(info);
+	tx = new TX(info);
+	bl = new BL(info);
+	cc = new CC();
 
    DEBUG_print("Executing DList...",DBG_DLIST);
    executeDList();
@@ -100,6 +103,8 @@ RSP::~RSP()
 {
    //delete rdp;
    delete tx;
+   delete bl;
+   delete cc;
 }
 
 unsigned long RSP::seg2phys(unsigned long seg)
@@ -233,12 +238,20 @@ void RSP::MTX()
 //			printf("p[%i][%i] = %f\n",j,i,projection(j,i));
          }
 	  }
-	  int j = 2;
-	  for (int i=2; i<4; i++)	//N64 Z clip space is backwards, so change p accordingly
+	  //Mario64 does something weird with the projection matrix during opening.
+	  //Still investigating how to solve this:
+	  if((GXprojection[3][2] == -1) && (GXprojection[3][3] > 0))
 	  {
-		  GXprojection[j][i] = -GXprojection[j][i];// /2;
+		  GXprojection[0][3] = GXprojection[0][3]/GXprojection[3][3];
+		  GXprojection[1][3] = GXprojection[1][3]/GXprojection[3][3];
+		  GXprojection[2][3] = GXprojection[2][3]/GXprojection[3][3];
+		  GXprojection[3][3] = GXprojection[3][3]/GXprojection[3][3];
 	  }
-//      GXprojection[2][2] = -GXprojection[2][2];
+	  //N64 Z clip space is backwards, so mult z components by -1
+	  //N64 Z [-1,1] whereas GC Z [-1,0], so mult by 0.5 and shift by -0.5
+	  GXprojection[2][2] = -0.5*GXprojection[2][2] - 0.5*GXprojection[3][2];
+	  GXprojection[2][3] = -0.5*GXprojection[2][3] - 0.5;
+
 	  if(GXprojection[3][2] == -1) 
 	  {
 		  GX_LoadProjectionMtx(GXprojection, GX_PERSPECTIVE); 
@@ -266,9 +279,7 @@ void RSP::MTX()
 	  }
       GX_LoadPosMtxImm(GXmodelView, GX_PNMTX0);
 	  if(guMtxInverse(GXmodelView, GXnormal) == 0)	// normal matrix is the inverse transpose of the modelview matrix
-	  {
    		  DEBUG_print("Normal matrix is singular",DBG_RSPINFO);
-	  }
 	  guMtxTranspose(GXnormal, GXnormal);
       GX_LoadNrmMtxImm(GXnormal, GX_PNMTX0);
 //	  printf("Send Normal Matrix to GX\n");
@@ -346,15 +357,15 @@ void RSP::MOVEMEM()
 		  GXcol.g = (u8)spotLight[n].col.getG();
 		  GXcol.b = (u8)spotLight[n].col.getB();
 		  GXcol.a = (u8)spotLight[n].col.getAlpha();
-		  GX_InitLightColor(&GXlight,GXcol);
+//		  GX_InitLightColor(&GXlight,GXcol);
 		  //init light direction (normalized & transformed by modelview matrix)
-		  GX_InitLightDir(&GXlight,spotLight[n].dir[0],spotLight[n].dir[1],spotLight[n].dir[2]);
+//		  GX_InitLightDir(&GXlight,spotLight[n].dir[0],spotLight[n].dir[1],spotLight[n].dir[2]);
 		  //no light position specified
 		  //TODO: Calculate position at infinity??
 		  //update light_mask
-		  light_mask = light_mask | (GX_LIGHT0<<n);
+//		  light_mask = light_mask | (GX_LIGHT0<<n);
 		  //add this light to color channel 0
-		  GX_SetChanCtrl(GX_COLOR0A0,GX_ENABLE,GX_SRC_REG,GX_SRC_VTX,light_mask,GX_DF_CLAMP,GX_AF_NONE);
+//		  GX_SetChanCtrl(GX_COLOR0A0,GX_ENABLE,GX_SRC_REG,GX_SRC_VTX,light_mask,GX_DF_CLAMP,GX_AF_NONE);
 	       }
 	     else
 	       {
@@ -365,7 +376,7 @@ void RSP::MOVEMEM()
 		  GXcol.g = (u8)ambientLight.col.getG();
 		  GXcol.b = (u8)ambientLight.col.getB();
 		  GXcol.a = (u8)ambientLight.col.getAlpha();
-		  GX_SetChanAmbColor(GX_COLOR0A0,GXcol);
+//		  GX_SetChanAmbColor(GX_COLOR0A0,GXcol);
 	       }
 	  }
 	break;
@@ -403,11 +414,11 @@ void RSP::VTX()
 	     vtx[v0+i].n[1] = *((char*)(p + i*16 + (13^S8))) / 128.0f;
 	     vtx[v0+i].n[2] = *((char*)(p + i*16 + (14^S8))) / 128.0f;
 	     vtx[v0+i].n[3] = 0.0f;
-	     //vtx[v0+i].n = vtx[v0+i].n * modelView;
+	     vtx[v0+i].n = vtx[v0+i].n * modelView;	//<- want this?
 	     vtx[v0+i].n.normalize();
 	     
 	     // This should now be calculated by GX
-/*		 vtx[v0+i].c = ambientLight.col;
+		 vtx[v0+i].c = ambientLight.col;
 	     for (int j=0; j<numLight; j++)
 	       {
 		  float cosT = vtx[v0+i].n.scalar(spotLight[j].dir);
@@ -416,7 +427,7 @@ void RSP::VTX()
 	       }
 	     vtx[v0+i].c.clamp();
 	     vtx[v0+i].c.setAlpha(*((unsigned char*)(p + i*16 + (15^S8))));
-*/	     
+	     
 
 	     if (texture_gen)
 	       {
@@ -460,13 +471,13 @@ void RSP::SPRITE2D()
    
    float ulx = PScreenX;
    float lrx = ulx + SubImageWidth - 1;
-    
+   
    DEBUG_print("Sprite2D call",DBG_RSPINFO);
 
    if (SourceImageBitSize == 0) {
 	 sprintf(txtbuffer,"RSP:SPRITE2D image type=%d bitsize=%d", SourceImageType, SourceImageBitSize);
    	 DEBUG_print(txtbuffer,DBG_RSPINFO1);
-	}
+   }
    if (FlipTextureX || FlipTextureY)
      DEBUG_print("RSP:SPRITE2D flip",DBG_RSPINFO1);
    
@@ -517,8 +528,8 @@ void RSP::CLEARGEOMETRYMODE()
    if (mode & 0x20000) 
    {
 	   lighting = false;
-	   light_mask = GX_LIGHTNULL;
-	   GX_SetChanCtrl(GX_COLOR0A0,GX_DISABLE,GX_SRC_REG,GX_SRC_VTX,light_mask,GX_DF_CLAMP,GX_AF_NONE);
+//	   light_mask = GX_LIGHTNULL;
+//	   GX_SetChanCtrl(GX_COLOR0A0,GX_DISABLE,GX_SRC_REG,GX_SRC_VTX,light_mask,GX_DF_CLAMP,GX_AF_NONE);
    }
    if (mode & 0x10000) fog = false;
    if (mode & 0x2000) cull_back = false;
@@ -550,7 +561,7 @@ void RSP::SETGEOMETRYMODE()
    {
 	   lighting = true;
 //	   printf("lighting turned on but not in GX\n");
-	   GX_SetNumChans(1);
+//	   GX_SetNumChans(1);
    }
    if (mode & 0x10000) fog = true;
    if (mode & 0x2000) cull_back = true;
@@ -584,104 +595,39 @@ void RSP::RDPHALF_1()
 {
 }
 
+void RSP::RDPHALF_2()
+{
+}
+
+void RSP::RDPHALF_CONT()
+{
+}
+
 void RSP::SETOTHERMODE_L()
 {
    int mode = (*currentCommand >> 8) & 0xFF;
    int length = *currentCommand & 0xFF;
-   int data = (*(currentCommand+1)>>mode)&((1<<length)-1);
-//   unsigned long data = *(currentCommand+1);
+   unsigned long data = *(currentCommand+1);
    
+   int data2 = (data>>mode)&((1<<length)-1);
+
    //rdp->setOtherMode_l(mode, (data>>mode)&((1<<length)-1));
 //   printf("Setothermode_l\n");
 
       switch(mode)
      {
       case 0:
-//	bl->setAlphaCompare(data);
+	bl->setAlphaCompare(data2);
 	break;
       case 2:
-//	bl->setDepthSource(data);
-		  //not used by soft_gfx
+	bl->setDepthSource(data2);		//not used by soft_gfx
 	break;
       case 3:
-//	bl->setBlender(data<<3);
-/*	int value = (data << 3)
-   int sa1,sb1,ca1,cb1, sa2, sb2, ca2, cb2;
-   sa1 = (value >> 30) & 3;
-   sa2 = (value >> 28) & 3;
-   ca1 = (value >> 26) & 3;
-   ca2 = (value >> 24) & 3;
-   sb1 = (value >> 22) & 3;
-   sb2 = (value >> 20) & 3;
-   cb1 = (value >> 18) & 3;
-   cb2 = (value >> 16) & 3;
-
-   psa1 = getBlenderSource(sa1, 1, 1);
-   psa2 = getBlenderSource(sa2, 1, 2);
-   pca1 = getBlenderSource(ca1, 2, 1);
-   pca2 = getBlenderSource(ca2, 2, 2);
-   psb1 = getBlenderSource(sb1, 3, 1);
-   psb2 = getBlenderSource(sb2, 3, 2);
-   pcb1 = getBlenderSource(cb1, 4, 1);
-   pcb2 = getBlenderSource(cb2, 4, 2);
-   switch(src)
-     {
-      case 0:
-	if (pos == 1 || pos == 3)
-	  {
-	     if (cycle == 1)
-	       return &pixelColor;
-	     else
-	       return &blendedPixelColor;
-	  }
-	else if (pos == 2)
-	  return &pixelColor;
-	else 
-	  return &invertedAlpha;
-	break;
-      case 1:
-	if (pos == 1 || pos == 3)
-	  return &memoryColor;
-	else if (pos == 2)
-	  return &fogColor;
-	else if (pos == 4)
-	  return &memoryColor;
-	break;
-      case 2:
-	if (pos == 4)
-	  return &one;
-	else if (pos == 2)
-	  return &shadeColor;
-	printf("bl: unknown blender source:%d,%d,%d\n", src, pos, cycle);
-	break;
-      case 3:
-	if (pos == 2 || pos == 4)
-	  return &zero;
-	else if (pos == 1)
-	  return &fogColor;
-	printf("bl: unknown blender source:%d,%d,%d\n", src, pos, cycle);
-	break;
-      default:
-	printf("bl: unknown blender source:%d,%d,%d\n", src, pos, cycle);
-     }
-   return NULL;
-
-    for (int j=30; j>14; j-=2) //blend register
-	{
-		int blsa1 = (value >> j) & 3;
-	}
-
-  		//Set Cycle1ModeDraw blend modes here - save Cycle2ModeDraw for later...
-		GX_SetBlendMode(GX_BM_NONE, GX_BL_ONE, GX_BL_ZERO, GX_LO_CLEAR); //Fix src alpha
-		GX_SetColorUpdate(GX_ENABLE);
-		GX_SetAlphaUpdate(GX_ENABLE);
-		GX_SetDstAlpha(GX_DISABLE, 0xFF);
-*/
+	bl->setBlender(data2<<3);
 	break;
       default:
      sprintf(txtbuffer,"RDP: unknown setOtherMode_l:%d", mode);
    	 DEBUG_print(txtbuffer,DBG_RSPINFO);
-
      }
 
 }
@@ -690,44 +636,46 @@ void RSP::SETOTHERMODE_H()
 {
    int mode = (*currentCommand >> 8) & 0xFF;
    int length = *currentCommand & 0xFF;
-//   unsigned long data = *(currentCommand+1);
-   int data = (*(currentCommand+1)>>mode)&((1<<length)-1);
+   unsigned long data = *(currentCommand+1);
+//   int data = (*(currentCommand+1)>>mode)&((1<<length)-1);
    
+   int data2 = (data>>mode)&((1<<length)-1);
+
    //rdp->setOtherMode_h(mode, (data>>mode)&((1<<length)-1));
 //   printf("setothermode_h\n");
 
    switch(mode)
      {
       case 4:
-//	bl->setAlphaDither(data);
+	bl->setAlphaDither(data2);
 	break;
       case 6:
-//	bl->setColorDither(data);
+	bl->setColorDither(data2);
 	break;
       case 8:
-//	cc->setCombineKey(data);
+	cc->setCombineKey(data2);
 	break;
       case 9:
-//	tf->setTextureConvert(data);
+//	tf->setTextureConvert(data2);
 	break;
       case 12:
-//	tf->setTextureFilter(data);
+//	tf->setTextureFilter(data2);
 	break;
       case 14:
-//	textureLUT = data;
-	tx->setTextureLUT(data);
+//	textureLUT = data2;
+	tx->setTextureLUT(data2);
 	break;
       case 16:
-	tx->setTextureLOD(data);
+	tx->setTextureLOD(data2);
 	break;
       case 17:
-	tx->setTextureDetail(data);
+	tx->setTextureDetail(data2);
 	break;
       case 19:
-	tx->setTexturePersp(data);
+	tx->setTexturePersp(data2);
 	break;
       case 20:
-	cycleType = data;
+	cycleType = data2;
 	break;
       case 23:
 	// ignoring pipeline mode
@@ -735,7 +683,6 @@ void RSP::SETOTHERMODE_H()
       default:
       sprintf(txtbuffer,"RDP: unknown setOtherMode_h:%d", mode);
    	 DEBUG_print(txtbuffer,DBG_RSPINFO);
-
      }
 }
 
@@ -759,7 +706,7 @@ void RSP::MOVEWORD()
      {
       case 0x2: // NUMLIGHT
 	numLight = ((*(currentCommand+1)-0x80000000)/32)-1;
-	light_mask = GX_LIGHTNULL;
+//	light_mask = GX_LIGHTNULL;
 	//TODO: enable these lights in GX here??
 	break;
       case 0x4: // CLIPRATIO
@@ -1279,19 +1226,20 @@ void RSP::TRI1()
    //TODO: Maybe make use of vertex attribute format table or use GX_SetVtxDescv
    //TODO: Investigate how cycleType affects rendering
 
+	//TODO: Fog
 
    //set vertex description here
    GX_ClearVtxDesc();
    GX_SetVtxDesc(GX_VA_PTNMTXIDX, GX_PNMTX0);
    if (textureScales.enabled) GX_SetVtxDesc(GX_VA_TEX0MTXIDX, GX_IDENTITY);
    GX_SetVtxDesc(GX_VA_POS, GX_DIRECT);
-   if (lighting) GX_SetVtxDesc(GX_VA_NRM, GX_DIRECT);
+//   if (lighting) GX_SetVtxDesc(GX_VA_NRM, GX_DIRECT);
    GX_SetVtxDesc(GX_VA_CLR0, GX_DIRECT);
    if (textureScales.enabled) GX_SetVtxDesc(GX_VA_TEX0, GX_DIRECT);
 
    //set vertex attribute formats here
    GX_SetVtxAttrFmt(GX_VTXFMT0, GX_VA_POS, GX_POS_XYZ, GX_F32, 0);
-   if (lighting) GX_SetVtxAttrFmt(GX_VTXFMT0, GX_VA_NRM, GX_NRM_XYZ, GX_F32, 0);
+//   if (lighting) GX_SetVtxAttrFmt(GX_VTXFMT0, GX_VA_NRM, GX_NRM_XYZ, GX_F32, 0);
    GX_SetVtxAttrFmt(GX_VTXFMT0, GX_VA_CLR0, GX_CLR_RGBA, GX_RGBA8, 0);
    if (textureScales.enabled) GX_SetVtxAttrFmt(GX_VTXFMT0, GX_VA_TEX0, GX_TEX_ST, GX_F32, 0); // should change this to tile
 
@@ -1304,17 +1252,21 @@ void RSP::TRI1()
 			TXblock.newblock = 0;
 		}
 
-		GX_SetNumChans (1);
+/*		GX_SetNumChans (1);
 		GX_SetNumTexGens (1);
 		// GX_SetTexCoordGen TexCoord0 should be set to an identity 2x4 matrix in GXinit
 		GX_SetTevOrder (GX_TEVSTAGE0, GX_TEXCOORD0, GX_TEXMAP0, GX_COLOR0A0); // change to (u8) tile later
-		GX_SetTevOp(GX_TEVSTAGE0, GX_MODULATE);	// change this to tile as well...
-//		GX_SetTevOp (GX_TEVSTAGE0, GX_REPLACE);
-//		GX_SetTevOp (GX_TEVSTAGE0, GX_PASSCLR);
+//		GX_SetTevOp(GX_TEVSTAGE0, GX_MODULATE);	// change this to tile as well...
+		GX_SetTevOp (GX_TEVSTAGE0, GX_REPLACE);
+//		GX_SetTevOp (GX_TEVSTAGE0, GX_PASSCLR);*/
 
-		int tile = 0;	// May need to detect latest tile
-		w = (descriptor[tile].lrs) - (descriptor[tile].uls);
-		h = (descriptor[tile].lrt) - (descriptor[tile].ult);
+//		int tile = 0;	// May need to detect latest tile
+		int tile = currentTile;
+
+		if(descriptor[tile].masks) w = (1<<descriptor[tile].masks)-1;
+		else w = (descriptor[tile].lrs) - (descriptor[tile].uls);
+		if(descriptor[tile].maskt) h = (1<<descriptor[tile].maskt)-1;
+		else h = (descriptor[tile].lrt) - (descriptor[tile].ult);
 		ps0 = (vtx[v0].s - descriptor[tile].uls)/w;
 		ps1 = (vtx[v1].s - descriptor[tile].uls)/w;
 		ps2 = (vtx[v2].s - descriptor[tile].uls)/w;
@@ -1324,13 +1276,18 @@ void RSP::TRI1()
    }
    else
    {
-		GX_SetNumChans (1);
+/*		GX_SetNumChans (1);
 		GX_SetNumTexGens (0);
 		GX_SetTevOrder (GX_TEVSTAGE0, GX_TEXCOORDNULL, GX_TEXMAP_NULL, GX_COLOR0A0);
-		GX_SetTevOp (GX_TEVSTAGE0, GX_PASSCLR);
+		GX_SetTevOp (GX_TEVSTAGE0, GX_PASSCLR);*/
    }
 
-   //TODO: These blend modes need to be fixed!
+   if (cycleType == 1) DEBUG_print("TRI1: CopyModeDraw2 - Not Implemented, yet!\n",DBG_RSPINFO);
+
+   cc->combine1(textureScales.tile,textureScales.enabled);
+   bl->cycle1ModeDraw();
+
+/*   //TODO: These blend modes need to be fixed!
    if (textureScales.enabled)
    {
 	//Set CopyModeDraw blend modes here
@@ -1346,12 +1303,12 @@ void RSP::TRI1()
 	GX_SetColorUpdate(GX_ENABLE);
 	GX_SetAlphaUpdate(GX_ENABLE);
 	GX_SetDstAlpha(GX_DISABLE, 0xFF);
-   }
+   }*/
 
    GX_Begin(GX_TRIANGLES, GX_VTXFMT0, 3);
      // vert 0
      GX_Position3f32(vtx[v0].v[0], vtx[v0].v[1], vtx[v0].v[2]);
-	 if (lighting) GX_Normal3f32(vtx[v0].n[0], vtx[v0].n[1], vtx[v0].n[2]);
+//	 if (lighting) GX_Normal3f32(vtx[v0].n[0], vtx[v0].n[1], vtx[v0].n[2]);
 	 GXcol.r = (u8)vtx[v0].c.getR();
 	 GXcol.g = (u8)vtx[v0].c.getG();
 	 GXcol.b = (u8)vtx[v0].c.getB();
@@ -1361,7 +1318,7 @@ void RSP::TRI1()
 
      // vert 1
      GX_Position3f32(vtx[v1].v[0], vtx[v1].v[1], vtx[v1].v[2]);
-	 if (lighting) GX_Normal3f32(vtx[v1].n[0], vtx[v1].n[1], vtx[v1].n[2]);
+//	 if (lighting) GX_Normal3f32(vtx[v1].n[0], vtx[v1].n[1], vtx[v1].n[2]);
 	 GXcol.r = (u8)vtx[v1].c.getR();
 	 GXcol.g = (u8)vtx[v1].c.getG();
 	 GXcol.b = (u8)vtx[v1].c.getB();
@@ -1371,7 +1328,7 @@ void RSP::TRI1()
 
      // vert 2
      GX_Position3f32(vtx[v2].v[0], vtx[v2].v[1], vtx[v2].v[2]);
-	 if (lighting) GX_Normal3f32(vtx[v2].n[0], vtx[v2].n[1], vtx[v2].n[2]);
+//	 if (lighting) GX_Normal3f32(vtx[v2].n[0], vtx[v2].n[1], vtx[v2].n[2]);
 	 GXcol.r = (u8)vtx[v2].c.getR();
 	 GXcol.g = (u8)vtx[v2].c.getG();
 	 GXcol.b = (u8)vtx[v2].c.getB();
@@ -1409,8 +1366,10 @@ void RSP::TEXRECT()
 
 //   int w = (int)(descriptor[tile].lrs - descriptor[tile].uls)/dsdx;
 //   int w = TXwidth;
-   w = (descriptor[tile].lrs) - (descriptor[tile].uls);
-   h = (descriptor[tile].lrt) - (descriptor[tile].ult);
+	if(descriptor[tile].masks) w = (1<<descriptor[tile].masks)-1;
+	else w = (descriptor[tile].lrs) - (descriptor[tile].uls);
+	if(descriptor[tile].maskt) h = (1<<descriptor[tile].maskt)-1;
+	else h = (descriptor[tile].lrt) - (descriptor[tile].ult);
 //   w = ceil((descriptor[tile].lrs - descriptor[tile].uls + 1)/8)*8;
 //   h = ceil((descriptor[tile].lrt) - (descriptor[tile].ult + 1)/4)*4;
    ps1 = (s - descriptor[tile].uls)/w;
@@ -1426,12 +1385,12 @@ void RSP::TEXRECT()
 
    GX_LoadProjectionMtx(GXprojection2D, GX_ORTHOGRAPHIC); //load current 2D projection matrix
    // scissoring should be handled automatically by GX
-   if (cycleType == 0) // 1 cycle mode - not yet implemented
+   if (cycleType == 0) // 1 cycle mode
      {
 		//draw textured rectangle from ulx,uly to lrx,lry
 		GX_ClearVtxDesc();
-//		GX_SetVtxDesc(GX_VA_PTNMTXIDX, GX_PNMTX2);
-		GX_SetVtxDesc(GX_VA_PTNMTXIDX, GX_PNMTX0);
+//		GX_SetVtxDesc(GX_VA_PTNMTXIDX, GX_PNMTX1);
+		GX_SetVtxDesc(GX_VA_PTNMTXIDX, GX_IDENTITY);
 		GX_SetVtxDesc(GX_VA_TEX0MTXIDX, GX_IDENTITY);
 		GX_SetVtxDesc(GX_VA_POS, GX_DIRECT);
 //		GX_SetVtxDesc(GX_VA_CLR0, GX_DIRECT);
@@ -1442,19 +1401,22 @@ void RSP::TEXRECT()
 		GX_SetVtxAttrFmt(GX_VTXFMT0, GX_VA_TEX0, GX_TEX_ST, GX_F32, 0); // should change this to tile
 
 
-		//testing this: re-enable textures
+/*		//testing this: re-enable textures
 		GX_SetNumChans (1);
 		GX_SetNumTexGens (1);
 		// GX_SetTexCoordGen TexCoord0 should be set to an identity 2x4 matrix in GXinit
 		GX_SetTevOrder (GX_TEVSTAGE0, GX_TEXCOORD0, GX_TEXMAP0, GX_COLOR0A0); // change to (u8) tile later
 //		GX_SetTevOp(GX_TEVSTAGE0, GX_MODULATE);	// change this to tile as well...
-		GX_SetTevOp (GX_TEVSTAGE0, GX_REPLACE);
+		GX_SetTevOp (GX_TEVSTAGE0, GX_REPLACE);*/
 
-		//Set CopyModeDraw blend modes here
+		cc->combine1(tile,true);
+		bl->cycle1ModeDraw();
+
+/*		//Set CopyModeDraw blend modes here
 		GX_SetBlendMode(GX_BM_BLEND, GX_BL_SRCALPHA, GX_BL_INVSRCALPHA, GX_LO_CLEAR); //Fix src alpha
 		GX_SetColorUpdate(GX_ENABLE);
 		GX_SetAlphaUpdate(GX_ENABLE);
-		GX_SetDstAlpha(GX_DISABLE, 0xFF);
+		GX_SetDstAlpha(GX_DISABLE, 0xFF);*/
 
 
 		GX_Begin(GX_QUADS, GX_VTXFMT0, 4);
@@ -1484,8 +1446,8 @@ void RSP::TEXRECT()
      {
 		//draw textured rectangle from ulx,uly to lrx,lry
 		GX_ClearVtxDesc();
-//		GX_SetVtxDesc(GX_VA_PTNMTXIDX, GX_PNMTX2);
-		GX_SetVtxDesc(GX_VA_PTNMTXIDX, GX_PNMTX0);
+//		GX_SetVtxDesc(GX_VA_PTNMTXIDX, GX_PNMTX1);
+		GX_SetVtxDesc(GX_VA_PTNMTXIDX, GX_IDENTITY);
 		GX_SetVtxDesc(GX_VA_TEX0MTXIDX, GX_IDENTITY);
 		GX_SetVtxDesc(GX_VA_POS, GX_DIRECT);
 //		GX_SetVtxDesc(GX_VA_CLR0, GX_DIRECT);
@@ -1497,7 +1459,7 @@ void RSP::TEXRECT()
 
 
 		//testing this: re-enable textures
-		GX_SetNumChans (1);
+/*		GX_SetNumChans (1);
 		GX_SetNumTexGens (1);
 		// GX_SetTexCoordGen TexCoord0 should be set to an identity 2x4 matrix in GXinit
 		GX_SetTevOrder (GX_TEVSTAGE0, GX_TEXCOORD0, GX_TEXMAP0, GX_COLOR0A0); // change to (u8) tile later
@@ -1509,7 +1471,8 @@ void RSP::TEXRECT()
 		GX_SetBlendMode(GX_BM_BLEND, GX_BL_SRCALPHA, GX_BL_INVSRCALPHA, GX_LO_CLEAR); //Fix src alpha
 		GX_SetColorUpdate(GX_ENABLE);
 		GX_SetAlphaUpdate(GX_ENABLE);
-		GX_SetDstAlpha(GX_DISABLE, 0xFF);
+		GX_SetDstAlpha(GX_DISABLE, 0xFF);*/
+		bl->copyModeDraw();
 
 		GX_Begin(GX_QUADS, GX_VTXFMT0, 4);
 		// vert 0
@@ -1536,7 +1499,8 @@ void RSP::TEXRECT()
    else {
 	   sprintf(txtbuffer,"RS:unknown cycle type in texRect:%d", cycleType);
    	   DEBUG_print(txtbuffer,DBG_RSPINFO);
-	   }
+	}
+
    currentCommand += 4;
 //   printf("trying to send textrec\n");
 }
@@ -1596,6 +1560,7 @@ void RSP::SETTILESIZE()
    int tile = (*(currentCommand+1)>>24) & 7;
    tx->setTileSize(uls, ult, lrs, lrt, tile);
 
+	currentTile = tile;
 	descriptor[tile].uls = uls;
 	descriptor[tile].ult = ult;
 	descriptor[tile].lrs = lrs;
@@ -1648,6 +1613,18 @@ void RSP::SETTILE()
    int masks = (*(currentCommand+1) >> 4) & 0xF;
    int shifts = *(currentCommand+1) & 0xF;
    tx->setTile(format, size, line, tmem, tile, palette, cmt, maskt, shiftt, cms, masks, shifts);
+
+	descriptor[tile].format = format;
+	descriptor[tile].size = size;
+	descriptor[tile].line = line;
+	descriptor[tile].tmem = tmem;
+	descriptor[tile].palette = palette;
+	descriptor[tile].cmt = cmt;
+	descriptor[tile].maskt = maskt;
+	descriptor[tile].shiftt = shiftt;
+	descriptor[tile].cms = cms;
+	descriptor[tile].masks = masks;
+	descriptor[tile].shifts = shifts;
 }
 
 void RSP::FILLRECT()
@@ -1670,8 +1647,8 @@ void RSP::FILLRECT()
      {
 		//draw rectangle from ulx,uly to lrx,lry
 		GX_ClearVtxDesc();
-//		GX_SetVtxDesc(GX_VA_PTNMTXIDX, GX_PNMTX2);
-		GX_SetVtxDesc(GX_VA_PTNMTXIDX, GX_PNMTX0);
+//		GX_SetVtxDesc(GX_VA_PTNMTXIDX, GX_PNMTX1);
+		GX_SetVtxDesc(GX_VA_PTNMTXIDX, GX_IDENTITY);
 		GX_SetVtxDesc(GX_VA_POS, GX_DIRECT);
 		GX_SetVtxDesc(GX_VA_CLR0, GX_DIRECT);
 		//set vertex attribute formats here
@@ -1679,7 +1656,7 @@ void RSP::FILLRECT()
 		GX_SetVtxAttrFmt(GX_VTXFMT0, GX_VA_CLR0, GX_CLR_RGBA, GX_RGBA8, 0);
 
 		//testing this: disable textures
-		GX_SetNumChans (1);
+/*		GX_SetNumChans (1);
 		GX_SetNumTexGens (0);
 		GX_SetTevOrder (GX_TEVSTAGE0, GX_TEXCOORDNULL, GX_TEXMAP_NULL, GX_COLOR0A0);
 		GX_SetTevOp (GX_TEVSTAGE0, GX_PASSCLR);
@@ -1688,7 +1665,8 @@ void RSP::FILLRECT()
 		GX_SetBlendMode(GX_BM_NONE, GX_BL_ONE, GX_BL_ZERO, GX_LO_CLEAR); //Fix src alpha
 		GX_SetColorUpdate(GX_ENABLE);
 		GX_SetAlphaUpdate(GX_ENABLE);
-		GX_SetDstAlpha(GX_DISABLE, 0xFF);
+		GX_SetDstAlpha(GX_DISABLE, 0xFF);*/
+		bl->fillModeDraw();
 
 		GX_Begin(GX_QUADS, GX_VTXFMT0, 4);
 		// vert 0
@@ -1706,38 +1684,45 @@ void RSP::FILLRECT()
 		GX_Color4u8(GXfillColor.r, GXfillColor.g, GXfillColor.b, GXfillColor.a);
 		GX_End();
      }
-   else if (cycleType == 0) //use cycle1ModeDraw - Not Implemented yet.
+   else if (cycleType == 0) //use cycle1ModeDraw
      {
 		//draw rectangle from ulx,uly to lrx,lry
 		GX_ClearVtxDesc();
-//		GX_SetVtxDesc(GX_VA_PTNMTXIDX, GX_PNMTX2);
-		GX_SetVtxDesc(GX_VA_PTNMTXIDX, GX_PNMTX0);
+//		GX_SetVtxDesc(GX_VA_PTNMTXIDX, GX_PNMTX1);
+		GX_SetVtxDesc(GX_VA_PTNMTXIDX, GX_IDENTITY);
 		GX_SetVtxDesc(GX_VA_POS, GX_DIRECT);
-		GX_SetVtxDesc(GX_VA_CLR0, GX_DIRECT);
+//		GX_SetVtxDesc(GX_VA_CLR0, GX_DIRECT);
 		//set vertex attribute formats here
-		GX_SetVtxAttrFmt(GX_VTXFMT0, GX_VA_POS, GX_POS_XY, GX_F32, 0);
-		GX_SetVtxAttrFmt(GX_VTXFMT0, GX_VA_CLR0, GX_CLR_RGBA, GX_RGBA8, 0);
+//		GX_SetVtxAttrFmt(GX_VTXFMT0, GX_VA_POS, GX_POS_XY, GX_F32, 0);
+		GX_SetVtxAttrFmt(GX_VTXFMT0, GX_VA_POS, GX_POS_XYZ, GX_F32, 0);
+//		GX_SetVtxAttrFmt(GX_VTXFMT0, GX_VA_CLR0, GX_CLR_RGBA, GX_RGBA8, 0);
 
 		//testing this: disable textures
-		GX_SetNumChans (1);
+/*		GX_SetNumChans (1);
 		GX_SetNumTexGens (0);
 		GX_SetTevOrder (GX_TEVSTAGE0, GX_TEXCOORDNULL, GX_TEXMAP_NULL, GX_COLOR0A0);
-		GX_SetTevOp (GX_TEVSTAGE0, GX_PASSCLR);
+		GX_SetTevOp (GX_TEVSTAGE0, GX_PASSCLR);*/
+
+		cc->combine1(0,false);
+		bl->cycle1ModeDraw();
 
 		GX_Begin(GX_QUADS, GX_VTXFMT0, 4);
 		// vert 0
-		GX_Position2f32(ulx, uly);
-//		GX_Position3f32(ulx, uly, (f32) 0);
-		GX_Color4u8(GXfillColor.r, GXfillColor.g, GXfillColor.b, GXfillColor.a);
+//		GX_Position2f32(ulx, uly);
+		GX_Position3f32(ulx, uly, (f32) 0);
+//		GX_Color4u8(GXfillColor.r, GXfillColor.g, GXfillColor.b, GXfillColor.a);
 		// vert 1
-		GX_Position2f32(lrx, uly);
-		GX_Color4u8(GXfillColor.r, GXfillColor.g, GXfillColor.b, GXfillColor.a);
+//		GX_Position2f32(lrx, uly);
+		GX_Position3f32(lrx, uly, (f32) 0);
+//		GX_Color4u8(GXfillColor.r, GXfillColor.g, GXfillColor.b, GXfillColor.a);
 		// vert 2
-		GX_Position2f32(lrx, lry);
-		GX_Color4u8(GXfillColor.r, GXfillColor.g, GXfillColor.b, GXfillColor.a);
+//		GX_Position2f32(lrx, lry);
+		GX_Position3f32(lrx, lry, (f32) 0);
+//		GX_Color4u8(GXfillColor.r, GXfillColor.g, GXfillColor.b, GXfillColor.a);
 		// vert 3
-		GX_Position2f32(ulx, lry);
-		GX_Color4u8(GXfillColor.r, GXfillColor.g, GXfillColor.b, GXfillColor.a);
+//		GX_Position2f32(ulx, lry);
+		GX_Position3f32(ulx, lry, (f32) 0);
+//		GX_Color4u8(GXfillColor.r, GXfillColor.g, GXfillColor.b, GXfillColor.a);
 		GX_End();
 //		  Color32 c = rdp->cc->combine1(0);
 //		  rdp->bl->cycle1ModeDraw(j,i,c);
@@ -1757,24 +1742,32 @@ void RSP::SETFILLCOLOR()
    //rdp->setFillColor(*(currentCommand+1));
 //	printf("setfillcolor\n");
 
+// Note that there are 2 fill colors here because 2 pixels are written per clock cycle in FILLRECT
+// Ignoring 2nd fillcolor for now
 	fillColor = *(currentCommand+1);
-	GXfillColor.r = (u8) (fillColor >> 24) & 0xFF;
-	GXfillColor.g = (u8) (fillColor >> 16) & 0xFF;
-	GXfillColor.b = (u8) (fillColor >> 8) & 0xFF;
-	GXfillColor.a = (u8) fillColor&0xFF;
+	GXfillColor.r = (u8) (((fillColor >> 27) & 0x1F) << 3) & ((fillColor >> 29) & 0x3);
+	GXfillColor.g = (u8) (((fillColor >> 22) & 0x1F) << 3) & ((fillColor >> 24) & 0x3);
+	GXfillColor.b = (u8) (((fillColor >> 17) & 0x1F) << 3) & ((fillColor >> 19) & 0x3);
+	GXfillColor.a = (u8) ((fillColor >> 16) & 0x1) ? 255 : 0;
+
+	bl->setFillColor(fillColor);
 }
 
 void RSP::SETFOGCOLOR()
 {
    //rdp->setFogColor(*(currentCommand+1));
 //	printf("setFogColor\n");
+
+	bl->setFogColor((int) *(currentCommand+1));
 }
 
 void RSP::SETBLENDCOLOR()
 {
    //rdp->setBlendColor(*(currentCommand+1));
 //	printf("setBlendColor\n");
+
 	//not used by soft_gfx
+	bl->setBlendColor((int) *(currentCommand+1));
 }
 
 void RSP::SETPRIMCOLOR()
@@ -1784,18 +1777,24 @@ void RSP::SETPRIMCOLOR()
    lLOD = ((*currentCommand) & 0xFF) / 256.0f;
    //rdp->setPrimColor(*(currentCommand+1), mLOD, lLOD);
 //   printf("setPrimcolor\n");
+    //  cc->setPrimColor(color, mLOD, lLOD);
+	cc->setPrimColor((int) *(currentCommand+1),(float) mLOD,(float) lLOD);
 }
 
 void RSP::SETENVCOLOR()
 {
    //rdp->setEnvColor(*(currentCommand+1));
 //	printf("setEnvcolor\n");
+	//   cc->setEnvColor(color);
+	cc->setEnvColor((int) *(currentCommand+1));
 }
 
 void RSP::SETCOMBINE()
 {
    //rdp->setCombineMode(*currentCommand & 0xFFFFFF, *(currentCommand+1));
 //	printf("setcominemode\n");
+	cc->setCombineMode((int) *currentCommand & 0xFFFFFF,(int) *(currentCommand+1));
+
 }
 
 void RSP::SETTIMG()
