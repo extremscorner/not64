@@ -49,7 +49,7 @@ class VI
    VI(GFX_INFO);
    virtual ~VI();
    
-   virtual void* getScreenPointer() = 0;
+   virtual unsigned int* getScreenPointer() = 0;
    virtual void setFB(unsigned int*, unsigned int*) = 0;
    virtual void switchFullScreenMode() = 0;
    virtual void switchWindowMode() = 0;

@@ -10,6 +10,8 @@
 #include "Gfx_#1.3.h"
 //#include "rdp.h"
 #include "tx_GX.h"
+#include "bl_GX.h"
+#include "cc_GX.h"
 #include "color.h"
 #include "vektor.h"
 #include "matrix.h"
@@ -95,6 +97,22 @@ typedef struct
 
 /*typedef struct
 {
+   int format;
+   int size;
+   int line;
+   int tmem;
+   int tile;
+   int palette;
+   int cmt;
+   int maskt;
+   int shiftt;
+   int cms;
+   int masks;
+   int shifts;
+} TXSetTile;*/
+
+/*typedef struct
+{
    u8 GXtexfmt;
    int format;
    int size;
@@ -123,6 +141,8 @@ class RSP
    GFX_INFO gfxInfo;
    //RDP *rdp;
    TX *tx;
+   BL *bl;
+   CC *cc;
    bool error;
    bool end;
    unsigned long *currentCommand;
@@ -156,6 +176,8 @@ class RSP
    int TXwidth;
    Descriptor descriptor[8];
    TXBlock TXblock;
+//   TXSetTile TXsetTile;
+   int currentTile;
 
    // rsp ucode variables
    unsigned long segments[16];
@@ -198,6 +220,8 @@ class RSP
    void DL();
    void SPRITE2D();
    void RDPHALF_1();
+   void RDPHALF_2();
+   void RDPHALF_CONT();
    void CLEARGEOMETRYMODE();
    void SETGEOMETRYMODE();
    void ENDDL();

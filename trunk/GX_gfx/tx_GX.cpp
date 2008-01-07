@@ -1,31 +1,7 @@
-/**
- * Mupen64 - tx.cpp
- * Copyright (C) 2002 Hacktarux
- *
- * Mupen64 homepage: http://mupen64.emulation64.com
- * email address: hacktarux@yahoo.fr
- * 
- * If you want to contribute to the project please contact
- * me first (maybe someone is already making what you are
- * planning to do).
- *
- *
- * This program is free software; you can redistribute it and/
- * or modify it under the terms of the GNU General Public Li-
- * cence as published by the Free Software Foundation; either
- * version 2 of the Licence, or any later version.
- *
- * This program is distributed in the hope that it will be use-
- * ful, but WITHOUT ANY WARRANTY; without even the implied war-
- * ranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * See the GNU General Public Licence for more details.
- *
- * You should have received a copy of the GNU General Public
- * Licence along with this program; if not, write to the Free
- * Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139,
- * USA.
- *
-**/
+/* tx_GX.cpp - N64 GX plugin, based off Hacktarux's soft_gfx
+   by sepp256 for Mupen64-GC
+ */
+
 
 #include <malloc.h>
 #include <stdio.h>
@@ -41,6 +17,7 @@ TX::TX(GFX_INFO info) : gfxInfo(info)
 	GXtexture = (u16*) memalign(32,512*8*2*2); //size of tmem*2 + tmem*2
 	GXtextureCI = (u16*) memalign(32,256*2); //assume max 256 16b colors
 	new_load_block = false;
+	currentSetTile = 0;
 }
 
 TX::~TX()
@@ -92,6 +69,8 @@ void TX::setTile(int f, int s, int l, int t, int tile, int p,
    descriptor[tile].masks   = ms;
    descriptor[tile].shifts  = ss;
    
+   currentSetTile = tile;
+
    descriptor[tile].N64texfmt = 0;
 
    switch(descriptor[tile].format)
@@ -121,7 +100,6 @@ void TX::setTile(int f, int s, int l, int t, int tile, int p,
 	     	sprintf(txtbuffer,"TX:unknown setTile CI8 LUT format:%d", textureLUT);
 	   		DEBUG_print(txtbuffer,DBG_TXINFO); 
    		}
-
 	     break;
 	   default:
 	   	  	sprintf(txtbuffer,"TX:unknown setTile CI size : %d", descriptor[tile].size);
@@ -187,7 +165,13 @@ void TX::loadTile(int tile, float uls, float ult, float lrs, float lrt)
    // Let GX finish with all previous commands before loading the new tex
 	GX_SetDrawDone();
 
-	if (new_load_block == true) tile_width = (int) lrs-uls+1;
+	if (new_load_block == true) 
+	{
+		tile_width = (int) lrs-uls+1;
+//		tile = currentSetTile;
+//		tile = 0;
+		new_load_block == false;
+	}
 	else tile_width = width;
 
 	if (descriptor[tile].cms & 2) wrap_s = GX_CLAMP;
@@ -198,7 +182,7 @@ void TX::loadTile(int tile, float uls, float ult, float lrs, float lrt)
 	else wrap_t = GX_REPEAT;
 	//TODO: Check on s & t wrap modes and mipmap modes
 
-//	if (descriptor[tile].N64texfmt != 2) printf("Unimplemented N64 tex: %d",descriptor[tile].N64texfmt);
+//	if (descriptor[tile].N64texfmt != 2) printf("Unimplemented N64 tex: %d\n",descriptor[tile].N64texfmt);
 
 	//Convert texture to GC format
 	switch (descriptor[tile].N64texfmt)
