@@ -478,6 +478,7 @@ static inline void menuStack_push(menu_item*);
 	void cpu_init();
 	static char* restartGame_func(){
 		if(hasLoadedROM){
+			cpu_deinit();
 			cpu_init();
 			return "Game restarted";
 		} else	return "Please load a ROM first";
