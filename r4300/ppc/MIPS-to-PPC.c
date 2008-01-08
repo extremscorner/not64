@@ -225,7 +225,7 @@ int convert(void){
 		set_next_dst(ppc);
 		
 		// Only allow it to maintain it's status if it's an addi rd, rs, 0
-		isGCAddr[MIPS_GET_RT(mips)] = !MIPS_GET_IMMED(mips) && isGCAddr[MIPS_GET_RS(mips)];
+		isGCAddr[MIPS_GET_RT(mips)] = (!MIPS_GET_IMMED(mips)) && isGCAddr[MIPS_GET_RS(mips)];
 		
 		return CONVERT_SUCCESS;
 	case MIPS_OPCODE_SLTI:
@@ -262,7 +262,7 @@ int convert(void){
 		set_next_dst(ppc);
 		
 		// Only allow it to maintain it's status if it's an ori rd, rs, 0
-		isGCAddr[MIPS_GET_RS(mips)] = !MIPS_GET_IMMED(mips) && isGCAddr[MIPS_GET_RT(mips)];
+		isGCAddr[MIPS_GET_RS(mips)] = (!MIPS_GET_IMMED(mips)) && isGCAddr[MIPS_GET_RT(mips)];
 		
 		return CONVERT_SUCCESS;
 	case MIPS_OPCODE_XORI:
@@ -332,6 +332,8 @@ int convert(void){
 		// We don't have to worry about moving to the lr
 		// because this is handled in the call to the interpreter
 		genCallInterp(mips);
+		// Assuming that any load from the stack is a return address
+		isGCAddr[MIPS_GET_RT(mips)] = MIPS_GET_RS(mips) == MIPS_REG_SP;
 		return INTERPRETED;
 #else
 		PPC_SET_OPCODE(ppc, PPC_OPCODE_LWZ);
@@ -737,7 +739,7 @@ static int convert_R(MIPS_instr mips){
 			PPC_SET_FUNC  (ppc, PPC_FUNC_BCCTR);
 			PPC_SET_BO    (ppc, 0x14);
 			set_next_dst(ppc);
-			return CONVERT_WARNING; // This is a warning because the address wasn't converted
+			return CONVERT_SUCCESS;
 		}
 	case MIPS_FUNC_JALR:
 		check_delaySlot();
@@ -858,8 +860,7 @@ static int convert_R(MIPS_instr mips){
 		PPC_SET_BO    (ppc, 0x14);
 		PPC_SET_LK    (ppc, 1);
 		set_next_dst(ppc);
-		return (MIPS_GET_RS(mips)==MIPS_REG_LR)
-		       ? CONVERT_SUCCESS : CONVERT_WARNING; // Address wasn't converted
+		return CONVERT_SUCCESS;
 	case MIPS_FUNC_MOVN:
 #ifdef INTERPRET_MOVN
 		genCallInterp(mips);

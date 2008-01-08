@@ -203,8 +203,8 @@ decodeNInterpret:
 	stw	0, 4(4)		/* zero out reg[0], we don't want any confusion */
 	lis	10, interp_ops@ha
 	la	10, interp_ops@l(10)
-	rlwinm	3, 3, 5, 27, 31	/* MIPS_GET_OPCODE(instr) */
-	rlwinm	3, 3, 2, 25, 29	/* opcode * sizeof(func_ptr) */
+	rlwinm	3, 3, 6, 26, 31	/* MIPS_GET_OPCODE(instr) */
+	rlwinm	3, 3, 2, 24, 29	/* opcode * sizeof(func_ptr) */
 	add	10, 10, 3
 	lwz	10, 0(10)	/* Dereference function pointer */
 	mtctr	10
