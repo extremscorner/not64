@@ -11,6 +11,7 @@
 #include <string.h>
 #include "font.h"
 #include <ogc/color.h>
+#include <ogc/exi.h>
 
 /* Backdrop Frame Width (to avoid writing outside of the background frame) */
 u16 back_framewidth = 640;
@@ -126,14 +127,31 @@ void TF_I2toI4(unsigned char *dst, unsigned char *src, int xres, int yres)
 CHAR_INFO fontChars;
 extern void __SYS_ReadROM(void *buf,u32 len,u32 offset);
 
+void ipl_set_config(unsigned char c)
+{
+	//tmbinc/viper/ninjamod/ripper = 0xb0000000 | qoobpro/sx = 0xc0000000
+	unsigned long val, addr;
+	addr = 0xc0000000; 
+	val = c << 24;
+	EXI_Select(EXI_CHANNEL_0, EXI_DEVICE_1, EXI_SPEED8MHZ);
+	EXI_ImmEx(EXI_CHANNEL_0, &addr, 4,EXI_WRITE);
+	EXI_ImmEx(EXI_CHANNEL_0, &val, 4,EXI_WRITE);
+	EXI_Deselect(EXI_CHANNEL_0);
+}
+
 void init_font(void)
 {
 	static unsigned char fontWork[ 0x20000 ] __attribute__((aligned(32)));
 	int i;
 
 	// dont read system rom fonts because this breaks on qoob modchip
+	memset(fontFont,0,0x3000);
 	__SYS_ReadROM((unsigned char *)&fontFont,0x3000,0x1FCF00);
-	//memcpy(&fontFont, &arial, sizeof(arial));
+/*	if(!isWii) {
+		if(!fontFont)
+			ipl_set_config(6);
+	}
+*/	//memcpy(&fontFont, &arial, sizeof(arial));
 	yay0_decode((unsigned char *)&fontFont, (unsigned char *)&fontWork);
 	FONT_HEADER *fnt;
 
