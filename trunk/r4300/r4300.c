@@ -1478,6 +1478,10 @@ int check_cop1_unusable()
    return 0;
 }
 
+#ifdef __PPC__
+unsigned int instructionCount;
+#endif
+
 void update_count()
 {
    if (interpcore)
@@ -1487,12 +1491,17 @@ void update_count()
      }
    else
      {
+#ifdef __PPC__
+	// FIXME: divide by 2 or 3 instead of multiply by 1000
+	Count += instructionCount*1000;
+#else	
 	if (PC->addr < last_addr)
 	  {
 	     printf("PC->addr < last_addr\n");
 	  }
 	Count = Count + (PC->addr - last_addr)/2;
 	last_addr = PC->addr;
+#endif
      }
 #ifdef COMPARE_CORE
    if (delay_slot)
@@ -1539,7 +1548,6 @@ void init_blocks()
      update_debugger();
 #endif
 }
-
 
 void go()
 {

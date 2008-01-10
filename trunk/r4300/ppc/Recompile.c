@@ -13,11 +13,13 @@
 #include <stdio.h>
 #include "../../gc_memory/memory.h"
 #include "../Invalid_Code.h"
+#include "../interupt.h"
 #include "Recompile.h"
 #include "Wrappers.h"
 
 // Just for debugging
 #include <ogc/video.h>
+#include "../../gui/DEBUG.h"
 
 static MIPS_instr*    src;
 static PowerPC_instr* dst;
@@ -273,6 +275,13 @@ void jump_to(unsigned int address){
 	unsigned long paddr = update_invalid_addr(address);
 	if (!paddr) return;
 	
+	// Check for interrupts
+	update_count();
+	if (next_interupt <= Count) gen_interupt();
+	
+	sprintf(txtbuffer, "jump_to 0x%08x", address);
+	DEBUG_print(txtbuffer, DBG_DYNAREC_JUMP);
+	
 	if(!dst_block){
 		blocks[address>>12] = malloc(sizeof(PowerPC_block));
 		dst_block = blocks[address>>12];
@@ -296,7 +305,7 @@ void jump_to(unsigned int address){
 	// Recompute the block offset
 	int offset = 0;
 	if((address&0xFFF) > 0)
-		offset = dst_block->code_addr[address&0xFFF] - dst_block->code;
+		offset = dst_block->code_addr[(address&0xFFF)>>2] - dst_block->code;
 	
 	start(dst_block, offset);
 }
