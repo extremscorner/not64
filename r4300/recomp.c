@@ -2811,12 +2811,23 @@ void recompile_opcode()
 /**********************************************************************
  ************** decode one opcode (for the interpreter) ***************
  **********************************************************************/
+#include "../gui/DEBUG.h"
 extern unsigned long op;
 void prefetch_opcode(unsigned long instr)
 {
    dst = PC;
    src = instr;
    op = instr;
- //  printf("Interpreting %08x\n",op);
+   printf("Interpreting %08x\n",op);
    recomp_ops[((src >> 26) & 0x3F)]();
+   
+   // tehpola: dynarec hack
+   if(dynacore){
+   	sprintf(txtbuffer, "Interpreting 0x%08x", op);
+   	DEBUG_print(txtbuffer, DBG_DYNAREC_INTERP);
+   	
+   	// Check for interrupts
+	update_count();
+	if (next_interupt <= Count) gen_interupt();
+   }
 }

@@ -61,6 +61,9 @@
 
 	.extern lr_i
 	.type   lr_i, @object
+	
+	.extern instructionCount
+	.type   instructionCount, @object
 
 	.extern return_address
 	.type   return_address, @object
@@ -99,7 +102,7 @@ start: /* The block* is passed through r3 */
 	             can be fetched by the instruction cache */
 	lwz	9, 0(3)	/* lwz code(block) */
 	lwz	8, 4(3)	/* lwz length(block) */
-	srawi	8, 8, 4	/* length*(4 bytes/instr)/32 */ 
+	srawi	8, 8, 3	/* length*(4 bytes/instr)/32 */ 
 	addi	8, 8, 1 /* Make sure it runs once */
 	mtctr	8
 .DC_FLUSH_LOOP:
@@ -107,6 +110,15 @@ start: /* The block* is passed through r3 */
 	icbi	0, 9
 	addi	9, 9, 32
 	bdnz	.DC_FLUSH_LOOP
+	
+	/* Make sure the instruction counter is running */
+	mfmmcr0	9
+	ori	9, 9, 2
+	mtmmcr0	9
+	/* Store the start value for the instruction counter */
+	mfpmc2	9
+	lis	10, instructionCount@ha
+	stw	9, instructionCount@l(10)
 	
 	/* Load address to begin execution */
 	lwz	0, 0(3)	/* lwz code(block) */
@@ -148,6 +160,13 @@ return_from_code:
 	
 	PUSH_LR
 	
+	/* Read the instruction counter and store the difference */
+	mfpmc2	9
+	lis	10, instructionCount@ha
+	lwz	8, instructionCount@l(10)
+	subf	8, 8, 9
+	stw	8, instructionCount@l(10)
+	
 	/* Restore emulator regs */
 	lis	10, emu_reg@ha
 	la	10, emu_reg@l(10)
@@ -183,6 +202,13 @@ decodeNInterpret:
 	
 	PUSH_LR
 	
+	/* Read the instruction counter and store the difference */
+	mfpmc2	9
+	lis	10, instructionCount@ha
+	lwz	8, instructionCount@l(10)
+	subf	8, 8, 9
+	stw	8, instructionCount@l(10)
+	
 	/* Restore emulator regs */
 	lis	10, emu_reg@ha
 	la	10, emu_reg@l(10)
@@ -210,13 +236,19 @@ decodeNInterpret:
 	mtctr	10
 	bctrl		/* Call interp_ops[opcode]() */
 	
-	/* Restore state */
+	/* Save emulator state */
 	POP_LR
 	
 	lis	10, emu_reg@ha
 	la	10, emu_reg@l(10)
 	SAVE_REGS 0, 31
 	
+	/* Store the start value for the instruction counter */
+	mfpmc2	9
+	lis	10, instructionCount@ha
+	stw	9, instructionCount@l(10)
+	
+	/* Restore game state */
 	lis	10, reg@ha
 	la	10, reg@l(10)
 	addi	10, 10, 4

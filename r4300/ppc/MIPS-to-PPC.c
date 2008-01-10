@@ -92,7 +92,6 @@ int convert(void){
 	case MIPS_OPCODE_M:
 		return convert_M(mips);
 	case MIPS_OPCODE_JAL:
-		// FIXME: Somehow, the link bit seems to get lost
 	case MIPS_OPCODE_J:
 		check_delaySlot();
 		// temp is used for is_out
@@ -106,13 +105,14 @@ int convert(void){
 			set_next_dst(0);
 		}
 		PPC_SET_OPCODE(ppc, PPC_OPCODE_B);
-		if(MIPS_GET_OPCODE(mips == MIPS_OPCODE_JAL))
+		if(MIPS_GET_OPCODE(mips) == MIPS_OPCODE_JAL)
 			PPC_SET_LK(ppc, 1);
-		PPC_SET_LI    (ppc, add_jump(MIPS_GET_LI(mips), 1, temp));
+		PPC_SET_LI(ppc, add_jump(MIPS_GET_LI(mips), 1, temp));
 		set_next_dst(ppc);
 		// Add space to zero r0 if its not taken
 		if(temp){
-			PPC_SET_OPCODE(ppc, PPC_OPCODE_ORI);
+			ppc = NEW_PPC_INSTR();
+			PPC_SET_OPCODE(ppc, PPC_OPCODE_ANDI);
 			set_next_dst(ppc);
 		}
 		return CONVERT_SUCCESS;
@@ -1192,19 +1192,25 @@ static int convert_R(MIPS_instr mips){
 	case MIPS_FUNC_OR:
 		PPC_SET_OPCODE(ppc, PPC_OPCODE_X);
 		PPC_SET_FUNC  (ppc, PPC_FUNC_OR);
-		CONVERT_REGS  (ppc, mips);
+		PPC_SET_RA    (ppc, MIPS_GET_RD(mips));
+		PPC_SET_RD    (ppc, MIPS_GET_RS(mips));
+		PPC_SET_RB    (ppc, MIPS_GET_RT(mips));
 		set_next_dst(ppc);
 		return CONVERT_SUCCESS;
 	case MIPS_FUNC_XOR:
 		PPC_SET_OPCODE(ppc, PPC_OPCODE_X);
 		PPC_SET_FUNC  (ppc, PPC_FUNC_XOR);
-		CONVERT_REGS  (ppc, mips);
+		PPC_SET_RA    (ppc, MIPS_GET_RD(mips));
+		PPC_SET_RD    (ppc, MIPS_GET_RS(mips));
+		PPC_SET_RB    (ppc, MIPS_GET_RT(mips));
 		set_next_dst(ppc);
 		return CONVERT_SUCCESS;
 	case MIPS_FUNC_NOR:
 		PPC_SET_OPCODE(ppc, PPC_OPCODE_X);
 		PPC_SET_FUNC  (ppc, PPC_FUNC_NOR);
-		CONVERT_REGS  (ppc, mips);
+		PPC_SET_RA    (ppc, MIPS_GET_RD(mips));
+		PPC_SET_RD    (ppc, MIPS_GET_RS(mips));
+		PPC_SET_RB    (ppc, MIPS_GET_RT(mips));
 		set_next_dst(ppc);
 		return CONVERT_SUCCESS;
 	case MIPS_FUNC_SLT:
