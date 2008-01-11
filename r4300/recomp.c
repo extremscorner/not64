@@ -2818,7 +2818,7 @@ void prefetch_opcode(unsigned long instr)
    dst = PC;
    src = instr;
    op = instr;
-   printf("Interpreting %08x\n",op);
+   //printf("Interpreting %08x\n",op);
    recomp_ops[((src >> 26) & 0x3F)]();
    
    // tehpola: dynarec hack
