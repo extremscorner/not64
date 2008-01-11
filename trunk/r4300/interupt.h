@@ -27,7 +27,8 @@
  *
 **/
 
-extern unsigned int next_interupt, reg_cop0[32];
+extern unsigned int next_interupt;
+extern unsigned long reg_cop0[32];
 #define Count reg_cop0[9]
 
 void compare_interupt();
