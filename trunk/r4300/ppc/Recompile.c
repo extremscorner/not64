@@ -37,7 +37,7 @@ int lr[8]; // link register stack
 int lr_i;
 
 static void pass2(PowerPC_block* ppc_block);
-static void genRecompileBlock(PowerPC_block*);
+//static void genRecompileBlock(PowerPC_block*);
 static void genJumpPad(PowerPC_block*);
 int resizeCode(PowerPC_block* block, int newSize);
 
@@ -96,7 +96,6 @@ void recompile_block(PowerPC_block* ppc_block){
 	}
 	
 	// This simplifies jumps and branches out of the block
-	jump_pad = dst;
 	genJumpPad(ppc_block);
 	
 	// Here we recompute jumps and branches
@@ -117,6 +116,7 @@ void init_block(MIPS_instr* mips_code, PowerPC_block* ppc_block){
 	ppc_block->mips_code = mips_code;
 	
 	// TODO: We should probably point all equivalent addresses to this block as well
+	//         or point to the same code without leaving a dangling pointer
 	
 	ppc_block->length = 0;
 	// We haven't actually recompiled the block
@@ -347,6 +347,8 @@ static void genJumpPad(PowerPC_block* ppc_block){
 	
 	if(*code_length + 22 >= ppc_block->max_length)
 		resizeCode(ppc_block, ppc_block->max_length + 22);
+	
+	jump_pad = dst;
 	
 	// (dest address saved in r0):
 	PowerPC_instr ppc = NEW_PPC_INSTR();
