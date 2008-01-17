@@ -21,7 +21,7 @@ typedef struct {
 	unsigned long   adler32;       // Used for TLB
 } PowerPC_block;
 
-#define MAX_JUMPS        100
+#define MAX_JUMPS        512
 #define JUMP_TYPE_J      1   // uses a long immed & abs addr
 #define JUMP_TYPE_OUT    2   // the jump leaves the block
 typedef struct {
@@ -47,7 +47,6 @@ void recompile_block(PowerPC_block* ppc_block);
 void init_block  (MIPS_instr* mips_code, PowerPC_block* ppc_block);
 void deinit_block(PowerPC_block* ppc_block);
 
-extern char     invalid_code[0x100000];
 extern PowerPC_block* blocks[0x100000];
 
 #endif
