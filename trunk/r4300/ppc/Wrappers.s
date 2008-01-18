@@ -120,6 +120,11 @@ start: /* The block* is passed through r3 */
 	lis	10, instructionCount@ha
 	stw	9, instructionCount@l(10)
 	
+	/* Disable external interrupts in game code */
+	mfmsr	9
+	andi.	9, 9, 0x7FFF
+	mtmsr	9
+	
 	/* Load address to begin execution */
 	lwz	0, 0(3)	/* lwz code(block) */
 	mulli	4, 4, 4	/* offset *= sizeof(PowerPC_instr) */
@@ -174,6 +179,11 @@ return_from_code:
 	RESTORE_REGS 11, 31
 	lwz	10, 40(10)
 	
+	/* Enable external interrupts in emulator code */
+	mfmsr	9
+	ori	9, 9, 0x8000
+	mtmsr	9
+	
 	/* TODO: Whatever comes next - For now: b return_address */
 	lis	9, return_address@ha
 	lwz	9, return_address@l(9)
@@ -215,6 +225,11 @@ decodeNInterpret:
 	RESTORE_REGS 0,  9
 	RESTORE_REGS 11, 31
 	
+	/* Enable external interrupts in emulator code */
+	mfmsr	3
+	ori	3, 3, 0x8000
+	mtmsr	3
+	
 	/* Call functions */
 	mfctr	3	/* The instr we want to decode */
 	lis	10, prefetch_opcode@ha
@@ -247,6 +262,11 @@ decodeNInterpret:
 	mfpmc2	9
 	lis	10, instructionCount@ha
 	stw	9, instructionCount@l(10)
+	
+	/* Disable external interrupts in game code */
+	mfmsr	9
+	andi.	9, 9, 0x7FFF
+	mtmsr	9
 	
 	/* Restore game state */
 	lis	10, reg@ha

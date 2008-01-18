@@ -13,6 +13,8 @@
            we need some way to convert the register
          Maybe accesses to the stack can be recompiled
          This file is getting big, it should probably be split
+    FIXME: Likely branches will break if they branch out;
+             however, I doubt they're used or at least not often
  */
 
 #include "MIPS-to-PPC.h"
@@ -22,8 +24,8 @@
 // If this is defined true, delay slots will get moved
 #define SUPPORT_DELAY_SLOT 1
 
-// This is my do-anything variable
-static int temp;
+// These are my do-anything variables
+static int temp, temp2;
 // Support for seperated mult/div and mfhi/lo
 // Number of instructions to execute on mfhi/lo
 static int hi_instr_count, lo_instr_count;
@@ -49,15 +51,16 @@ static int inline mips_is_jump(MIPS_instr);
 //        the branch destination will be off by 1
 static inline int check_delaySlot(void){
 #if SUPPORT_DELAY_SLOT
-	if(peek_next_src() == 0) // MIPS uses 0 as a NOP
-		get_next_src();  // Get rid of the NOP
-	else {
+	if(peek_next_src() == 0){ // MIPS uses 0 as a NOP
+		get_next_src();   // Get rid of the NOP
+		return 0;
+	} else {
 		if(mips_is_jump(peek_next_src())) return CONVERT_WARNING;
 		convert(); // This just moves the delay slot instruction ahead of the branch
+		return 1;
 	}
-	return CONVERT_SUCCESS;
 #else // SUPPORT_DELAY_SLOT
-	return CONVERT_SUCCESS;
+	return 0;
 #endif
 }
 
@@ -93,7 +96,9 @@ int convert(void){
 		return convert_M(mips);
 	case MIPS_OPCODE_JAL:
 	case MIPS_OPCODE_J:
+		temp2 = get_curr_dst();
 		check_delaySlot();
+		temp2 = get_curr_dst() - temp2;
 		// temp is used for is_out
 		temp = 0;
 		if(is_j_out(MIPS_GET_LI(mips), 1)){
@@ -105,8 +110,10 @@ int convert(void){
 			set_next_dst(0);
 		}
 		PPC_SET_OPCODE(ppc, PPC_OPCODE_B);
-		if(MIPS_GET_OPCODE(mips) == MIPS_OPCODE_JAL)
+		if(MIPS_GET_OPCODE(mips) == MIPS_OPCODE_JAL){
 			PPC_SET_LK(ppc, 1);
+			isGCAddr[MIPS_REG_LR] = 1;
+		}
 		PPC_SET_LI(ppc, add_jump(MIPS_GET_LI(mips), 1, temp));
 		set_next_dst(ppc);
 		// Add space to zero r0 if its not taken
@@ -115,6 +122,17 @@ int convert(void){
 			PPC_SET_OPCODE(ppc, PPC_OPCODE_ANDI);
 			set_next_dst(ppc);
 		}
+		
+		// If there's something in the delay slot, it will also be after the branch
+		//   so we must skip over it so its not done twice if we jal
+		if(temp2 &&
+		     MIPS_GET_OPCODE(mips) == MIPS_OPCODE_JAL){
+			ppc = NEW_PPC_INSTR();
+			PPC_SET_OPCODE(ppc, PPC_OPCODE_B);
+			PPC_SET_LI    (ppc, ((temp2>>2)+1));
+			set_next_dst(ppc);
+		}
+		
 		return CONVERT_SUCCESS;
 	case MIPS_OPCODE_BEQL:
 	case MIPS_OPCODE_BNEL:
@@ -142,7 +160,9 @@ int convert(void){
 			set_next_dst(ppc);
 		}
 		// delay slot
+		temp2 = get_curr_dst();
 		check_delaySlot();
+		temp2 = get_curr_dst() - temp2;
 		// temp is used for is_out
 		temp = 0;
 		if(is_j_out(signExtend(MIPS_GET_IMMED(mips),16), 0)){
@@ -165,6 +185,18 @@ int convert(void){
 			PPC_SET_OPCODE(ppc, PPC_OPCODE_ORI);
 			set_next_dst(ppc);
 		}
+		
+		// If there's something in the delay slot, it will also be after the branch
+		//   so we must skip over it so its not done twice if don't branch
+		if(temp2){
+			unget_last_src(); // Let's still recompile the delay slot in place in case its branched to
+			
+			ppc = NEW_PPC_INSTR();
+			PPC_SET_OPCODE(ppc, PPC_OPCODE_B);
+			PPC_SET_LI    (ppc, ((temp2>>2)+1));
+			set_next_dst(ppc);
+		}
+		
 		return CONVERT_SUCCESS;
 	case MIPS_OPCODE_BLEZL:
 	case MIPS_OPCODE_BGTZL:
@@ -191,7 +223,9 @@ int convert(void){
 			set_next_dst(ppc);
 		}
 		// delay slot
+		temp2 = get_curr_dst();
 		check_delaySlot();
+		temp2 = get_curr_dst() - temp2;
 		// temp is used for is_out
 		temp = 0;
 		if(is_j_out(signExtend(MIPS_GET_IMMED(mips),16), 0)){
@@ -214,6 +248,16 @@ int convert(void){
 			PPC_SET_OPCODE(ppc, PPC_OPCODE_ORI);
 			set_next_dst(ppc);
 		}
+		
+		// If there's something in the delay slot, it will also be after the branch
+		//   so we must skip over it so its not done twice if don't branch
+		if(temp2){
+			ppc = NEW_PPC_INSTR();
+			PPC_SET_OPCODE(ppc, PPC_OPCODE_B);
+			PPC_SET_LI    (ppc, ((temp2>>2)+1));
+			set_next_dst(ppc);
+		}
+		
 		return CONVERT_SUCCESS;
 	case MIPS_OPCODE_ADDIU:
 		// Oddly, addiu uses a signed immediate
@@ -619,10 +663,12 @@ static int convert_R(MIPS_instr mips){
 	                        will need to call jump_to
 	*/
 	case MIPS_FUNC_JR:
+		temp2 = get_curr_dst();
 		check_delaySlot();
+		temp2 = get_curr_dst() - temp2;
 		
 		// Quick hack since this is never explicity set
-		isGCAddr[MIPS_REG_LR] = 1;
+		//isGCAddr[MIPS_REG_LR] = 1;
 		
 		// If this is an N64 address, we have to use jump_to
 		if(!isGCAddr[MIPS_GET_RS(mips)]){
@@ -716,6 +762,9 @@ static int convert_R(MIPS_instr mips){
 			PPC_SET_BO    (ppc, 0x14);
 			set_next_dst(ppc);
 			
+			// Allow the delay slot to be branched to
+			if(temp2) unget_last_src();
+			
 			return INTERPRETED;
 		}
 		
@@ -725,6 +774,10 @@ static int convert_R(MIPS_instr mips){
 			PPC_SET_FUNC  (ppc, PPC_FUNC_BCLR);
 			PPC_SET_BO    (ppc, 0x14);
 			set_next_dst(ppc);
+			
+			// Allow the delay slot to be branched to
+			if(temp2) unget_last_src();
+			
 			return CONVERT_SUCCESS;
 		} else {
 			// mtctr
@@ -739,13 +792,19 @@ static int convert_R(MIPS_instr mips){
 			PPC_SET_FUNC  (ppc, PPC_FUNC_BCCTR);
 			PPC_SET_BO    (ppc, 0x14);
 			set_next_dst(ppc);
+			
+			// Allow the delay slot to be branched to
+			if(temp2) unget_last_src();
+			
 			return CONVERT_SUCCESS;
 		}
 	case MIPS_FUNC_JALR:
+		temp2 = get_curr_dst();
 		check_delaySlot();
+		temp2 = get_curr_dst() - temp2;
 		
 		// Quick hack since this is never explicity set
-		isGCAddr[MIPS_REG_LR] = 1;
+		//isGCAddr[MIPS_REG_LR] = 1;
 		
 		// If this is an N64 address, we have to use jump_to
 		if(!isGCAddr[MIPS_GET_RS(mips)]){
@@ -840,6 +899,10 @@ static int convert_R(MIPS_instr mips){
 			PPC_SET_LK    (ppc, 1);
 			set_next_dst(ppc);
 			
+			isGCAddr[MIPS_REG_LR] = 1;
+			// Allow the delay slot to be branched to
+			if(temp2) unget_last_src();
+			
 			return INTERPRETED;
 		}
 		
@@ -860,6 +923,21 @@ static int convert_R(MIPS_instr mips){
 		PPC_SET_BO    (ppc, 0x14);
 		PPC_SET_LK    (ppc, 1);
 		set_next_dst(ppc);
+		
+		// If there's something in the delay slot, it will also be after the branch
+		//   so we must skip over it so its not done twice since we link
+		if(temp2){
+			// Allow the delay slot to be branched to
+			unget_last_src();
+		
+			ppc = NEW_PPC_INSTR();
+			PPC_SET_OPCODE(ppc, PPC_OPCODE_B);
+			PPC_SET_LI    (ppc, ((temp2>>2)+1));
+			set_next_dst(ppc);
+		}
+		
+		isGCAddr[MIPS_REG_LR] = 1;
+		
 		return CONVERT_SUCCESS;
 	case MIPS_FUNC_MOVN:
 #ifdef INTERPRET_MOVN
@@ -1310,7 +1388,9 @@ static int convert_B(MIPS_instr mips){
 			set_next_dst(ppc);
 		}
 		// delay slot
+		temp2 = get_curr_dst();
 		check_delaySlot();
+		temp2 = get_curr_dst() - temp2;
 		// temp is used for is_out
 		temp = 0;
 		ppc = NEW_PPC_INSTR();
@@ -1334,6 +1414,16 @@ static int convert_B(MIPS_instr mips){
 			PPC_SET_OPCODE(ppc, PPC_OPCODE_ORI);
 			set_next_dst(ppc);
 		}
+		
+		// If there's something in the delay slot, it will also be after the branch
+		//   so we must skip over it so its not done twice if don't branch
+		if(temp2){
+			ppc = NEW_PPC_INSTR();
+			PPC_SET_OPCODE(ppc, PPC_OPCODE_B);
+			PPC_SET_LI    (ppc, ((temp2>>2)+1));
+			set_next_dst(ppc);
+		}
+		
 		return CONVERT_SUCCESS;
 	case MIPS_RT_TGEI:
 	case MIPS_RT_TGEIU:
@@ -1372,7 +1462,9 @@ static int convert_B(MIPS_instr mips){
 			set_next_dst(ppc);
 		}
 		// delay slot
+		temp2 = get_curr_dst();
 		check_delaySlot();
+		temp2 = get_curr_dst() - temp2;
 		// temp is used for is_out
 		temp = 0;
 		ppc = NEW_PPC_INSTR();
@@ -1397,6 +1489,18 @@ static int convert_B(MIPS_instr mips){
 			PPC_SET_OPCODE(ppc, PPC_OPCODE_ORI);
 			set_next_dst(ppc);
 		}
+		
+		// If there's something in the delay slot, it will also be after the branch
+		//   so we must skip over it so its not done twice if don't branch
+		if(temp2){
+			ppc = NEW_PPC_INSTR();
+			PPC_SET_OPCODE(ppc, PPC_OPCODE_B);
+			PPC_SET_LI    (ppc, ((temp2>>2)+1));
+			set_next_dst(ppc);
+		}
+		
+		isGCAddr[MIPS_REG_LR] = 1;
+		
 		return CONVERT_SUCCESS;
 	default:
 		return CONVERT_ERROR;
@@ -1598,7 +1702,9 @@ static int convert_CoP(MIPS_instr mips, int z){
 				set_next_dst(ppc);
 				ppc = NEW_PPC_INSTR();
 			case 0: //bczf
+				temp2 = get_curr_dst();
 				check_delaySlot();
+				temp2 = get_curr_dst() - temp2;
 				// temp is used for is_out
 				temp = 0;
 				if(is_j_out(signExtend(MIPS_GET_IMMED(mips),16), 0)){
@@ -1619,6 +1725,16 @@ static int convert_CoP(MIPS_instr mips, int z){
 					PPC_SET_OPCODE(ppc, PPC_OPCODE_ORI);
 					set_next_dst(ppc);
 				}
+				
+				// If there's something in the delay slot, it will also be after the branch
+				//   so we must skip over it so its not done twice if don't branch
+				if(temp2){
+					ppc = NEW_PPC_INSTR();
+					PPC_SET_OPCODE(ppc, PPC_OPCODE_B);
+					PPC_SET_LI    (ppc, ((temp2>>2)+1));
+					set_next_dst(ppc);
+				}
+				
 				return CONVERT_SUCCESS;
 			case 2: //bcztl
 				// Likely branches skip the delay slot if they're not taken
@@ -1631,7 +1747,9 @@ static int convert_CoP(MIPS_instr mips, int z){
 				set_next_dst(ppc);
 				ppc = NEW_PPC_INSTR();
 			case 1: //bczt
+				temp2 = get_curr_dst();
 				check_delaySlot();
+				temp2 = get_curr_dst() - temp2;
 				// temp is used for is_out
 				temp = 0;
 				if(is_j_out(signExtend(MIPS_GET_IMMED(mips),16), 0)){
@@ -1652,6 +1770,16 @@ static int convert_CoP(MIPS_instr mips, int z){
 					PPC_SET_OPCODE(ppc, PPC_OPCODE_ORI);
 					set_next_dst(ppc);
 				}
+				
+				// If there's something in the delay slot, it will also be after the branch
+				//   so we must skip over it so its not done twice if don't branch
+				if(temp2){
+					ppc = NEW_PPC_INSTR();
+					PPC_SET_OPCODE(ppc, PPC_OPCODE_B);
+					PPC_SET_LI    (ppc, ((temp2>>2)+1));
+					set_next_dst(ppc);
+				}
+				
 				return CONVERT_SUCCESS;
 			}
 		else
