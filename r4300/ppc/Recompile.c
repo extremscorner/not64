@@ -44,6 +44,11 @@ int resizeCode(PowerPC_block* block, int newSize);
 MIPS_instr get_next_src(void) { return *(src++); }
 MIPS_instr peek_next_src(void){ return *src;     }
 int has_next_src(void){ return (src_last-src) > 0; }
+// Hacks for delay slots
+ // Undoes a get_next_src
+ void unget_last_src(void){ --src; }
+ // Used for finding how many instructions were generated
+ int get_curr_dst(void){ return dst; }
 
 void set_next_dst(PowerPC_instr i){ *(dst++) = i; ++(*code_length); }
 
@@ -82,7 +87,7 @@ void recompile_block(PowerPC_block* ppc_block){
 			printf("Error converting MIPS instruction:\n"
 			       "0x%08x   0x%08x\n",
 			        ppc_block->start_address + (int)(src-1-src_first), *(src-1));
-			int i=16; while(i--) VIDEO_WaitVSync();
+			//int i=16; while(i--) VIDEO_WaitVSync();
 		}
 #ifdef DEBUG_DYNAREC
 		// This allows us to return to the debugger every instruction
