@@ -124,7 +124,7 @@ void GUI_init(){
 	//load BG texture from SD card and initialize
 	GUI_loadBGtex();
 
-	GUI_splashScreen();
+//	GUI_splashScreen();
 	//TODO: init spinning cube display list
 
 	GUI_on = 1;
@@ -136,9 +136,10 @@ void GUI_toggle()
 		GX_CopyDisp (GUI.xfb[GUI.which_fb], GX_TRUE); // This clears the efb
 		GX_CopyDisp (GUI.xfb[GUI.which_fb], GX_TRUE); // This clears the xfb
 		GX_Flush ();
-		VIDEO_SetNextFramebuffer(GUI.xfb[GUI.which_fb]);
+		VIDEO_SetNextFramebuffer(GUI.xfb[0]);
 		VIDEO_Flush();
-		GUI.which_fb ^= 1;
+		//GUI.which_fb ^= 1;
+
 	}
 	else {
 		GUI_clear();
