@@ -18,6 +18,17 @@ static menu_item  currentDirMenu =
 	    NULL  // items
 	   }
 	 };
+
+// Return this item on errors to avoid unrecoverable exceptions
+static char* errorFunc(){ return NULL; }
+static menu_item errorItem =
+	{ NULL,
+	  MENU_ATTR_HASSUBMENU,
+	  { 1,
+	    { "An Error has occured", MENU_ATTR_NONE, errorFunc }
+	   }
+	  };
+
 static menu_item*        menu_items;
 static fileBrowser_file* dir_entries;
 
@@ -92,7 +103,7 @@ menu_item* menuFileBrowser(fileBrowser_file* dir){
 	
 	// Read the directories and return on error
 	int num_entries = romFile_readDir(dir, &dir_entries);
-	if(num_entries <= 0){ if(dir_entries) free(dir_entries); return NULL; }
+	if(num_entries <= 0){ if(dir_entries) free(dir_entries); return &errorItem; }
 
 	// Allocate and fill the entries
 	menu_items = malloc(num_entries * sizeof(menu_item));
