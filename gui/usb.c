@@ -1,154 +1,218 @@
-///////////////////////////////////////////////////////////////////////////////////////////////
-//					USB Gecko - USB library	- (c) Nuke	-  www.usbgecko.com					 //
-///////////////////////////////////////////////////////////////////////////////////////////////
+/*---------------------------------------------------------------------------------------------
+ * USB Gecko Development Kit - http://www.usbgecko.com
+ * --------------------------------------------------------------------------------------------
+ * 
+ *
+ * usb.c - V1.2 functions for the USB Gecko adapter (www.usbgecko.com).
+ * Now works for Wii Mode - use WIIMODE define in usb.h to set
+ * Copyright (c) 2008 - Nuke - <wiinuke@gmail.com>
+ * 
+ *---------------------------------------------------------------------------------------------*/
 
+
+#include <gccore.h>	// If not using libogc need types
 #include "usb.h"
 
-///////////////////////////////////////////////////////////////////////////////////////////////
-//								Function: usb_flush											 //	 
-//			Flushes the FIFO, Use at the start of your program to avoid trash				 //
-///////////////////////////////////////////////////////////////////////////////////////////////
-void usb_flush()
-{
- unsigned char tempbyte;
- while (usb_receivebyte (&tempbyte) == 1);
-}
+/*---------------------------------------------------------------------------------------------*
+    Name:           usb_sendbyte
+    Description:	Send byte to Gamecube/Wii over EXI memory card port
+*----------------------------------------------------------------------------------------------*/
 
-///////////////////////////////////////////////////////////////////////////////////////////////
-//								Function: usb_sendbyte										 //	 
-//					Send byte to Gamecube/Wii over EXI memory card port						 //
-///////////////////////////////////////////////////////////////////////////////////////////////
-unsigned int usb_sendbyte (unsigned char sendbyte)
+static int __usb_sendbyte (char sendbyte)
 {
-	unsigned int i = 0;
-	exi_chan1sr = 0x000000D0;						// Memory Card Port B (Channel 1, Device 0, Frequnecy 3 (32Mhz Clock)
+	s32 i;
+	
+	exi_chan1sr = 0x000000D0;						
 	exi_chan1data = 0xB0000000 | (sendbyte<<20);	
 	exi_chan1cr = 0x19;								
 	while((exi_chan1cr)&1);							
 	i = exi_chan1data;								
-	exi_chan1sr = 0x0;  
+	exi_chan1sr = 0;  
 	if (i&0x04000000){
-		return 1;									// Return 1 if byte was sent
+		return 1;									
 	}   
     return 0;										
 }
 
-///////////////////////////////////////////////////////////////////////////////////////////////
-//								Function: usb_receivebyte									 //	 
-//				Receive byte from Gamecube/Wii over EXI memory card port					 //
-///////////////////////////////////////////////////////////////////////////////////////////////
-unsigned int usb_receivebyte (unsigned char* receivebyte)
+/*---------------------------------------------------------------------------------------------*
+    Name:           usb_receivebyte
+    Description:	Receive byte from Gamecube/Wii over EXI memory card port
+*----------------------------------------------------------------------------------------------*/
+
+static int __usb_receivebyte (char *receivebyte)
 {
-	unsigned int i = 0;
-	exi_chan1sr = 0x000000D0;			// Memory Card Port B (Channel 1, Device 0, Frequnecy 3 (32Mhz Clock)
-	exi_chan1data = 0xA0000000;			// A - Send Read byte Command
+	s32 i = 0;
+
+	exi_chan1sr = 0x000000D0;			
+	exi_chan1data = 0xA0000000;		
 	exi_chan1cr = 0x19;					
 	while((exi_chan1cr)&1);				
 	i = exi_chan1data;					
-	exi_chan1sr = 0x0;  
+	exi_chan1sr = 0;  
 	if (i&0x08000000){
 	    *receivebyte=(i>>16)&0xff;		
-	    return 1;						// Return 1 if went ok
+	    return 1;						
 	} 
 	return 0;							
-	
 }
 
-///////////////////////////////////////////////////////////////////////////////////////////////
-//								 Function: usb_sendbuffer	 								 //	 
-//								Simple buffer send routine									 //
-///////////////////////////////////////////////////////////////////////////////////////////////
-void usb_sendbuffer (void *buffer, unsigned int size)
+/*---------------------------------------------------------------------------------------------*
+    Name:           usb_checksendstatus
+    Description:	Chesk the FIFO is ready to send
+*----------------------------------------------------------------------------------------------*/
+
+static int __usb_checksendstatus()
 {
-	unsigned char *sendbyte = (unsigned char*) buffer;
-	unsigned int bytesleft = size;		// Number of bytes left
-	unsigned int returnvalue;
+	s32 i = 0;
 
-	while (bytesleft  > 0)
-	{
-		returnvalue = usb_sendbyte(*sendbyte);		// ok send it
-		if(returnvalue == 1) {						// Was transfer valid?
-				sendbyte++;							// yes, so Increase buffer
-				bytesleft--;						// and decrease counterr
-		}
-	}
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////
-//							  Function: usb_sendbuffer	 									 //	 
-//						Simple buffer receive routine with extra check						 //
-///////////////////////////////////////////////////////////////////////////////////////////////
-void usb_receivebuffer (void *buffer, unsigned int size)
-{
-	unsigned char *receivebyte = (unsigned char*)buffer;
-	unsigned int bytesleft = size;						// Number of bytes left
-	unsigned int returnvalue;
-
-	while (bytesleft > 0)
-	{
-		if(usb_checkreceivestatus()) {
-			returnvalue = usb_receivebyte(receivebyte);	// ok grab byte off the fifo
-			if(returnvalue == 1) {						// Was transfer valid?
-				receivebyte++;							// yes, so Increase buffer
-				bytesleft--;							// and decrease counter
-			}
-		}
-	}
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////
-//								Function: usb_checksendstatus	 							 //	 
-//									Not really needed										 //
-///////////////////////////////////////////////////////////////////////////////////////////////
-unsigned int usb_checksendstatus()
-{
-	unsigned int i = 0;
-	exi_chan1sr = 0x000000D0;						// Memory Card Port B (Channel 1, Device 0, Frequnecy 3 (32Mhz Clock)
-	exi_chan1data = 0xC0000000;						// C - Check were ready to send
+	exi_chan1sr = 0x000000D0;					
+	exi_chan1data = 0xC0000000;						
 	exi_chan1cr = 0x19;								
 	while((exi_chan1cr)&1);							
 	i = exi_chan1data;									
 	exi_chan1sr = 0x0;  
 	if (i&0x04000000){
-		return 1;									// Returns 1 if adapter is ready to send
+		return 1;									
 	}   
     return 0;										
 }
 
-///////////////////////////////////////////////////////////////////////////////////////////////
-//								Function: usb_checkreceivestatus 							 //	 
-//				Required if receiving hard speed packets to stop overflow of FIFO			 //
-///////////////////////////////////////////////////////////////////////////////////////////////
-unsigned int usb_checkreceivestatus()
+/*---------------------------------------------------------------------------------------------*
+    Name:           usb_checkreceivestatus
+    Description:	Check the FIFO is ready to receive
+*----------------------------------------------------------------------------------------------*/
+
+static int __usb_checkreceivestatus()
 {
-	unsigned int i = 0;
-	exi_chan1sr = 0x000000D0;						// Memory Card Port B (Channel 1, Device 0, Frequnecy 3 (32Mhz Clock)
-	exi_chan1data = 0xD0000000;						// D - Check were ready to receive
+	s32 i = 0;
+	exi_chan1sr = 0x000000D0;						
+	exi_chan1data = 0xD0000000;						
 	exi_chan1cr = 0x19;								
 	while((exi_chan1cr)&1);							   	
 	i = exi_chan1data;								
 	exi_chan1sr = 0x0;  
 	if (i&0x04000000){
-		return 1;									// Returns 1 if adapter is ready to receive
+		return 1;								
 	}   
     return 0;										
 }
 
-///////////////////////////////////////////////////////////////////////////////////////////////
-//								Function: usb_checkgecko									 //	 
-//			Check that gecko is attached, use to detect before flushing						 //
-///////////////////////////////////////////////////////////////////////////////////////////////
-unsigned int usb_checkgecko()
+/*---------------------------------------------------------------------------------------------*
+    Name:           usb_sendbuffer
+    Description:	Simple buffer send routine
+*----------------------------------------------------------------------------------------------*/
+
+void usb_sendbuffer (const void *buffer, int size)
 {
-	unsigned int i = 0;
-	exi_chan1sr = 0x000000D0;						// Memory Card Port B (Channel 1, Device 0, Frequnecy 3 (32Mhz Clock)
-	exi_chan1data = 0x90000000;						// 9 - Check gecko is attached to PC
+	char *sendbyte = (char*) buffer;
+	s32 bytesleft = size;					
+	s32 returnvalue;
+
+	while (bytesleft  > 0)
+	{
+		returnvalue = __usb_sendbyte(*sendbyte);
+		if(returnvalue) {							
+			sendbyte++;							
+			bytesleft--;
+		}
+	}
+}
+
+/*---------------------------------------------------------------------------------------------*
+    Name:           usb_receivebuffer
+    Description:	Simple buffer receive routine
+*----------------------------------------------------------------------------------------------*/
+
+void usb_receivebuffer (void *buffer, int size)
+{
+	char *receivebyte = (char*)buffer;
+	s32 bytesleft = size;						
+	s32 returnvalue;
+
+	while (bytesleft > 0)
+	{
+		returnvalue = __usb_receivebyte(receivebyte);	
+		if(returnvalue) {							
+			receivebyte++;							
+			bytesleft--;							
+		}
+	}
+}
+
+/*---------------------------------------------------------------------------------------------*
+    Name:           usb_sendbuffersafe
+    Description:	Simple buffer send routine with fifo check (use for large transfers)
+*----------------------------------------------------------------------------------------------*/
+
+void usb_sendbuffersafe (const void *buffer, int size)
+{
+	char *sendbyte = (char*) buffer;
+	s32 bytesleft = size;					
+	s32 returnvalue;
+
+	while (bytesleft  > 0)
+	{
+		if(__usb_checksendstatus()){
+			returnvalue = __usb_sendbyte(*sendbyte);		
+			if(returnvalue) {							
+				sendbyte++;							
+				bytesleft--;						
+			}
+		}
+	}
+}
+
+/*---------------------------------------------------------------------------------------------*
+    Name:           usb_receivebuffersafe
+    Description:	Simple buffer receive routine with fifo check (use for large transfers)
+*----------------------------------------------------------------------------------------------*/
+
+void usb_receivebuffersafe (void *buffer, int size)
+{
+	char *receivebyte = (char*)buffer;
+	s32 bytesleft = size;						
+	s32 returnvalue;
+
+	while (bytesleft > 0)
+	{
+		if(__usb_checkreceivestatus()){
+			returnvalue = __usb_receivebyte(receivebyte);	
+			if(returnvalue) {							
+				receivebyte++;							
+				bytesleft--;						
+			}
+		}
+	}
+}
+
+/*---------------------------------------------------------------------------------------------*
+    Name:           usb_checkgecko
+    Description:	Chesk the Gecko is connected
+*----------------------------------------------------------------------------------------------*/
+int usb_checkgecko()
+{
+	s32 i = 0;
+
+	exi_chan1sr = 0x000000D0;						
+	exi_chan1data = 0x90000000;						
 	exi_chan1cr = 0x19;								
 	while((exi_chan1cr)&1);							
 	i = exi_chan1data;									
 	exi_chan1sr = 0x0; 
 	if (i==0x04700000){
-		return 1;									// Returns 1 if adapter is ready to receive
+		return 1;									
 	}   
-    return 0;										// Else Gecko Adapter is not plugged in
+    return 0;									
+}
+
+/*---------------------------------------------------------------------------------------------*
+    Name:           usb_flush
+    Description:	Flushes the FIFO, Use at the start of your program to avoid trash
+*----------------------------------------------------------------------------------------------*/
+
+void usb_flush()
+{
+ char tempbyte;
+
+ while (__usb_receivebyte(&tempbyte));
 }

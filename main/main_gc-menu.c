@@ -24,6 +24,7 @@
 #include "../gui/gui_GX-menu.h"
 #include "../gui/GUI.h"
 #include "../gui/menu.h"
+#include "../gui/DEBUG.h"
 
 /* NECESSARY FUNCTIONS AND VARIABLES */
 
@@ -120,6 +121,7 @@ extern BOOL flashramWritten;
 // TODO: I have to split loading and unloading in case user changes source
 BOOL hasLoadedROM = FALSE;
 void loadROM(fileBrowser_file* rom){
+	
 	// First, if there's already a loaded ROM
 	if(hasLoadedROM){
 		romFile_deinit(rom);
@@ -331,5 +333,6 @@ static void Initialise (void){
 		isWii = 1;
 	else
 		isWii = 0;
+	DEBUG_print("Welcome to Mupen64GC :)\n\0",DBG_USBGECKO);
 }
 
