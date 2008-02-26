@@ -84,9 +84,10 @@ void recompile_block(PowerPC_block* ppc_block){
 		
 		ppc_block->code_addr[src-src_first] = dst;
 		if( convert() == CONVERT_ERROR ){
-			printf("Error converting MIPS instruction:\n"
+			sprintf(txtbuffer,"Error converting MIPS instruction:\n"
 			       "0x%08x   0x%08x\n",
 			        ppc_block->start_address + (int)(src-1-src_first), *(src-1));
+			        DEBUG_print(txtbuffer, DBG_USBGECKO);
 			//int i=16; while(i--) VIDEO_WaitVSync();
 		}
 #ifdef DEBUG_DYNAREC
@@ -164,16 +165,18 @@ static void pass2(PowerPC_block* ppc_block){
 			
 			if(!(jump_table[i].type & JUMP_TYPE_OUT)){
 				jump_table[i].new_jump = ppc_block->code_addr[jump_offset] - current;
-				printf("Converting old_jump = %d, to new_jump = %d\n",
+
+				sprintf(txtbuffer,"Converting old_jump = %d, to new_jump = %d\n",
 				       jump_table[i].old_jump, jump_table[i].new_jump);
+				DEBUG_print(txtbuffer, DBG_USBGECKO);
 				
 				*current &= ~(PPC_BD_MASK << PPC_BD_SHIFT);
 				PPC_SET_BD(*current, jump_table[i].new_jump);
 				
 			} else { // jump couldn't be recalculated, should jump out
 				unsigned int dest = (jump_offset << 2) + ppc_block->start_address;
-				printf("Branching out to 0x%08x\n", dest);
-				
+				sprintf(txtbuffer,"Branching out to 0x%08x\n", dest);
+				DEBUG_print(txtbuffer, DBG_USBGECKO);
 				current -= 4;
 				// mtctr r1
 				*current = NEW_PPC_INSTR();
@@ -222,15 +225,16 @@ static void pass2(PowerPC_block* ppc_block){
 				// We're jumping within this block, find out where
 				int jump_offset = (jump_address - ppc_block->start_address) >> 2;
 				jump_table[i].new_jump = ppc_block->code_addr[jump_offset] - current;
-				printf("Jumping to 0x%08x; jump_offset = %d\n", jump_address, jump_offset);
-				
+
+				sprintf(txtbuffer,"Jumping to 0x%08x; jump_offset = %d\n", jump_address, jump_offset);
+				DEBUG_print(txtbuffer, DBG_USBGECKO);
 				*current &= ~(PPC_LI_MASK << PPC_LI_SHIFT);
 				PPC_SET_LI(*current, jump_table[i].new_jump);
 				
 			} else {
 				// We're jumping out of this block
-				printf("Jumping out to 0x%08x\n", jump_address);
-				
+				sprintf(txtbuffer,"Jumping out to 0x%08x\n", jump_address);
+				DEBUG_print(txtbuffer, DBG_USBGECKO);
 				current -= 4;
 				// mtctr r1
 				*current = NEW_PPC_INSTR();

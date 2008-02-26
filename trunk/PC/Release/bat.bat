@@ -1,0 +1,2 @@
+memdump
+pause

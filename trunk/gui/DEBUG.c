@@ -29,10 +29,20 @@ void DEBUG_update() {
 }
 #endif
 
+int flushed = 0;
+#define USB_PACKET_SIZE 0x400
 void DEBUG_print(char* string,int pos){
+	char tmpstring[USB_PACKET_SIZE];
+	memset(tmpstring,0,USB_PACKET_SIZE);
+	memcpy(tmpstring,string,strlen(string));
 	#ifdef SHOW_DEBUG
-		if(pos == DBG_USBGECKO)
-			usb_sendbuffer (string,strlen(string));
+		if(pos == DBG_USBGECKO) {
+			if(!flushed){
+				usb_flush();
+				flushed = 1;
+			}
+			usb_sendbuffer (tmpstring,USB_PACKET_SIZE);
+		}
 		else {
 			memset(text[pos],0,DEBUG_TEXT_WIDTH);
 			strncpy(text[pos], string, DEBUG_TEXT_WIDTH);

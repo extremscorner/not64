@@ -127,17 +127,9 @@ void TF_I2toI4(unsigned char *dst, unsigned char *src, int xres, int yres)
 CHAR_INFO fontChars;
 extern void __SYS_ReadROM(void *buf,u32 len,u32 offset);
 
-void ipl_set_config(unsigned char c)
-{
-	//tmbinc/viper/ninjamod/ripper = 0xb0000000 | qoobpro/sx = 0xc0000000
-	unsigned long val, addr;
-	addr = 0xc0000000; 
-	val = c << 24;
-	EXI_Select(EXI_CHANNEL_0, EXI_DEVICE_1, EXI_SPEED8MHZ);
-	EXI_ImmEx(EXI_CHANNEL_0, &addr, 4,EXI_WRITE);
-	EXI_ImmEx(EXI_CHANNEL_0, &val, 4,EXI_WRITE);
-	EXI_Deselect(EXI_CHANNEL_0);
-}
+#ifdef EMBEDDED_FONTS
+	#include "ARIAL.H"
+#endif
 
 void init_font(void)
 {
@@ -146,12 +138,11 @@ void init_font(void)
 
 	// dont read system rom fonts because this breaks on qoob modchip
 	memset(fontFont,0,0x3000);
-	__SYS_ReadROM((unsigned char *)&fontFont,0x3000,0x1FCF00);
-/*	if(!isWii) {
-		if(!fontFont)
-			ipl_set_config(6);
-	}
-*/	//memcpy(&fontFont, &arial, sizeof(arial));
+#ifdef EMBEDDED_FONTS
+	memcpy(&fontFont, &arial[0], ARIAL_LEN);
+#else
+	__SYS_ReadROM(( unsigned char *)&fontFont,0x3000,0x1FCF00);
+#endif
 	yay0_decode((unsigned char *)&fontFont, (unsigned char *)&fontWork);
 	FONT_HEADER *fnt;
 
