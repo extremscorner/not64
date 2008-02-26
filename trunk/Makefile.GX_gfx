@@ -15,7 +15,8 @@ CFLAGS  = -g -O2 -Wall $(MACHDEP) -fomit-frame-pointer \
 	  -DNOASM -DNGC -DNOASM -DPIXEL_FORMAT=RGB565  \
 	  -DM_PI=3.14159265359  \
 	  -fno-exceptions -Wno-unused-parameter -pipe \
-	   -DUSE_GUI -DSHOW_DEBUG -DEMBEDDED_FONTS
+	   -DUSE_GUI -DSHOW_DEBUG 
+	   #-DEMBEDDED_FONTS -DPRINTGECKO
 
 MACHDEP	= -DGEKKO -mcpu=750 -meabi -mhard-float 
 LDFLAGS	=	$(MACHDEP) -mogc -Wl,-Map,$(notdir $@).map -Wl,--cref
