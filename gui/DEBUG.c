@@ -37,11 +37,13 @@ void DEBUG_print(char* string,int pos){
 	memcpy(tmpstring,string,strlen(string));
 	#ifdef SHOW_DEBUG
 		if(pos == DBG_USBGECKO) {
+			#ifdef PRINTGECKO
 			if(!flushed){
 				usb_flush();
 				flushed = 1;
 			}
 			usb_sendbuffer (tmpstring,USB_PACKET_SIZE);
+			#endif
 		}
 		else {
 			memset(text[pos],0,DEBUG_TEXT_WIDTH);
