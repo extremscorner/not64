@@ -383,8 +383,7 @@ void gen_interupt()
 #else
 	updateScreen();
 #endif
-#ifndef __WIN32__
-	//SDL_PumpEvents();
+#ifdef PROFILE
 	refresh_stat();
 #endif
 	new_vi();
