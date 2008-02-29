@@ -16,9 +16,10 @@
 #define DBG_AUDIOINFO 6
 #define DBG_SAVEINFO 7
 #define DBG_CACHEINFO 8
-#define DBG_PROFILE 9
-#define DBG_DYNAREC_INTERP 11
-#define DBG_DYNAREC_JUMP 12
+#define DBG_PROFILE_GFX 9
+#define DBG_PROFILE_AUDIO 10
+#define DBG_PROFILE_TLB 11
+#define DBG_PROFILE_FP 12
 #define DBG_USBGECKO 0xFF
 static char txtbuffer[1024];
 // Amount of time each string will be held onto

@@ -1493,7 +1493,7 @@ void update_count()
      {
 #ifdef __PPC__
 	// FIXME: divide by 2 or 3 instead of multiply by 1000
-	Count += instructionCount*1000;
+	Count += instructionCount*10000;
 #else	
 	if (PC->addr < last_addr)
 	  {

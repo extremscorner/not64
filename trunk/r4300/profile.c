@@ -36,8 +36,8 @@
 extern long long gettime();
 extern unsigned int diff_sec(long long, long long);
 
-static long long time_in_section[5];
-static long long last_start[5];
+static long long time_in_section[NUM_SECTIONS+1];
+static long long last_start[NUM_SECTIONS+1];
 static long long last_refresh;
 
 void start_section(int section_type)
@@ -58,18 +58,20 @@ void refresh_stat()
      {
 	time_in_section[0] = this_tick - last_start[0];
 	
-	sprintf(txtbuffer,
-	        "gfx=%f%% - audio=%f%% - compiler=%f%%, idle=%f%%\r",
-	         100.0f * (float)time_in_section[1] / (float)time_in_section[0],
-	         100.0f * (float)time_in_section[2] / (float)time_in_section[0],
-	         100.0f * (float)time_in_section[3] / (float)time_in_section[0],
-	         100.0f * (float)time_in_section[4] / (float)time_in_section[0]);
-	DEBUG_print(txtbuffer, DBG_PROFILE);
+	sprintf(txtbuffer, "gfx=%f%%", 100.0f * (float)time_in_section[GFX_SECTION] / (float)time_in_section[0]);
+	DEBUG_print(txtbuffer, DBG_PROFILE_GFX);
 	
-	time_in_section[1] = 0;
-	time_in_section[2] = 0;
-	time_in_section[3] = 0;
-	time_in_section[4] = 0;
+	sprintf(txtbuffer, "audio=%f%%", 100.0f * (float)time_in_section[AUDIO_SECTION] / (float)time_in_section[0]);
+	DEBUG_print(txtbuffer, DBG_PROFILE_AUDIO);
+	
+	sprintf(txtbuffer, "tlb=%f%%", 100.0f * (float)time_in_section[TLB_SECTION] / (float)time_in_section[0]);
+	DEBUG_print(txtbuffer, DBG_PROFILE_TLB);
+	
+	sprintf(txtbuffer, "fp=%f%%", 100.0f * (float)time_in_section[FP_SECTION] / (float)time_in_section[0]);
+	DEBUG_print(txtbuffer, DBG_PROFILE_FP);
+	
+	int i;
+	for(i=1; i<=NUM_SECTIONS; ++i) time_in_section[i] = 0;
 	last_start[0] = this_tick;
 	last_refresh = this_tick;
      }
