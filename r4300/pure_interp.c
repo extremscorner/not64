@@ -1222,7 +1222,9 @@ static void MTC0()
 
 static void TLB()
 {
+   start_section(TLB_SECTION);
    interp_tlb[(op & 0x3F)]();
+   end_section(TLB_SECTION);
 }
 
 static void (*interp_cop0[32])(void) =
@@ -2413,7 +2415,9 @@ static void COP0()
 static void COP1()
 {
    if (check_cop1_unusable()) return;
+   start_section(FP_SECTION);
    interp_cop1[((op >> 21) & 0x1F)]();
+   end_section(FP_SECTION);
 }
 
 static void BEQL()

@@ -72,6 +72,7 @@ int main(){
 	SDCARD_Init();
 	DVD_Init();
 	menuInit();
+	//killWiimote();
 	
 	// Default Settings
 	audioEnabled     = 0; // No audio

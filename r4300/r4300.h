@@ -86,8 +86,9 @@ void jump_to(unsigned int);
 #define AUDIO_SECTION 2
 #define COMPILER_SECTION 3
 #define IDLE_SECTION 4
-
-#ifndef __WIN32__
+#define TLB_SECTION 5
+#define FP_SECTION 6
+#define NUM_SECTIONS 6
 
 //#define PROFILE
 
@@ -105,12 +106,5 @@ void refresh_stat();
 
 #endif
 
-#else
-
-#define start_section(a)
-#define end_section(a)
-#define refresh_stat()
-
 #endif
 
-#endif
