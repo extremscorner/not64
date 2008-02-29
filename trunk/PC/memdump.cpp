@@ -27,11 +27,22 @@ FILE *dol;
 #define USB_PACKET_SIZE 0x400
 int returnvalue;
 char buffer[65536];
+
+unsigned int convert_int(unsigned int in)
+{
+  unsigned int out;
+  char *p_in = (char *) &in;
+  char *p_out = (char *) &out;
+  p_out[0] = p_in[3];
+  p_out[1] = p_in[2];
+  p_out[2] = p_in[1];
+  p_out[3] = p_in[0];  
+  return out;
+}
+
 int main (int argc, char *argv[])
 {
-	unsigned int offset = 0;
 	unsigned int size = 0;
-	unsigned int dst = 0;
 
 	printf("USBBoot Mupen64GC Tools v0.1\n\n");
     printf("Connecting to USB Gecko...\n");
@@ -41,8 +52,17 @@ int main (int argc, char *argv[])
 	printf("Connected to Gamecube / Wii Console\n\n");	//Connected & Ready
 	
 	while(1) {
+		//clear packet and size of last one
+		size = 0;
 		memset(&buffer,0,USB_PACKET_SIZE);
-		gecko_readbytes(&buffer, USB_PACKET_SIZE, &RxSent);
+
+		//grab size
+		gecko_readbytes(&size, 4, &RxSent);
+		size = convert_int(size);
+		//printf("%i bytes incoming!\n",size);
+
+		//grab packet according to size
+		gecko_readbytes(&buffer, size, &RxSent);
 		printf("%s",buffer);
 	}		
 	status = FT_Close(fthandle);

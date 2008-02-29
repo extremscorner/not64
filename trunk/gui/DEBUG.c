@@ -30,11 +30,8 @@ void DEBUG_update() {
 #endif
 
 int flushed = 0;
-#define USB_PACKET_SIZE 0x400
 void DEBUG_print(char* string,int pos){
-	char tmpstring[USB_PACKET_SIZE];
-	memset(tmpstring,0,USB_PACKET_SIZE);
-	memcpy(tmpstring,string,strlen(string));
+
 	#ifdef SHOW_DEBUG
 		if(pos == DBG_USBGECKO) {
 			#ifdef PRINTGECKO
@@ -42,7 +39,9 @@ void DEBUG_print(char* string,int pos){
 				usb_flush();
 				flushed = 1;
 			}
-			usb_sendbuffer (tmpstring,USB_PACKET_SIZE);
+			int size = strlen(string);
+			usb_sendbuffer (&size,4);
+			usb_sendbuffer (string,size);
 			#endif
 		}
 		else {
