@@ -48,7 +48,7 @@ int has_next_src(void){ return (src_last-src) > 0; }
  // Undoes a get_next_src
  void unget_last_src(void){ --src; }
  // Used for finding how many instructions were generated
- int get_curr_dst(void){ return dst; }
+ PowerPC_instr* get_curr_dst(void){ return dst; }
 
 void set_next_dst(PowerPC_instr i){ *(dst++) = i; ++(*code_length); }
 
@@ -288,8 +288,8 @@ void jump_to(unsigned int address){
 	update_count();
 	if (next_interupt <= Count) gen_interupt();
 	
-	sprintf(txtbuffer, "jump_to 0x%08x", address);
-	DEBUG_print(txtbuffer, DBG_DYNAREC_JUMP);
+	sprintf(txtbuffer, "jump_to 0x%08x\n", address);
+	DEBUG_print(txtbuffer, DBG_USBGECKO);
 	
 	if(!dst_block){
 		blocks[address>>12] = malloc(sizeof(PowerPC_block));

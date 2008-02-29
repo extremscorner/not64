@@ -9,9 +9,9 @@
          If the lr is used in anything besides
            lw/sw/add(move) that should be supported
          Verify likely branches work properly
-         If jr is used for anything besides blr,
-           we need some way to convert the register
          Maybe accesses to the stack can be recompiled
+         Add a flag: FPU_in_use to let the wrappers know to save
+           and restore FPRs
          This file is getting big, it should probably be split
     FIXME: Likely branches will break if they branch out;
              however, I doubt they're used or at least not often
@@ -37,6 +37,12 @@ static signed char hi_shift[4][2], lo_shift[4][2];
 //             refer to recompiled code or N64 addresses
 static char isGCAddr[32];
 void jump_to(unsigned int);
+/* We want to avoid the overhead of saving/restoring FPRs
+     when we don't have to during the context switch
+     if we need to use the FPRs when this is false, we
+     have to restore, and they will be saved next switch
+ */
+int fpu_in_use;
 
 static int convert_R  (MIPS_instr);
 static int convert_B  (MIPS_instr);
@@ -1833,6 +1839,7 @@ static int convert_CoP(MIPS_instr mips, int z){
 	PPC_SET_RB    (ppc, MIPS_GET_FT(mips)); } while(0)
 
 static int convert_FP(MIPS_instr mips, int precision){
+	// TODO: if(!fpu_in_use){ restore_FPRs(); fpu_in_use=1; }
 	PowerPC_instr ppc = NEW_PPC_INSTR();
 	
 	// FIXME: We might have an issue if they try to do say add.w or add.l
@@ -2064,12 +2071,22 @@ static int convert_FP(MIPS_instr mips, int precision){
 		PPC_SET_RB  (ppc, MIPS_GET_FS(mips));
 		set_next_dst(ppc);
 		return CONVERT_SUCCESS;
-	// TODO: Figure this out, this link might help:
-	//         http://www.patentstorm.us/patents/4683546-description.html
+	// -- Floating Point Compare instructions --
 	// Note: The emulator uses cr bits 20-27 for cc 0-7
-	case MIPS_FUNC_C_F_:
-		return CONVERT_ERROR;
-	case MIPS_FUNC_C_UN_:
+	case MIPS_FUNC_C_SF_: // Signalling False: F F F F
+	case MIPS_FUNC_C_F_:  // False:            F F F F
+		// Always evaluate F
+		// Clear the cc bit
+		ppc = NEW_PPC_INSTR();
+		PPC_SET_OPCODE(ppc, PPC_OPCODE_XL);
+		PPC_SET_FUNC  (ppc, PPC_FUNC_CRXOR);
+		PPC_SET_RD    (ppc, (MIPS_GET_CC(mips) + 20));
+		PPC_SET_RA    (ppc, (MIPS_GET_CC(mips) + 20));
+		PPC_SET_RB    (ppc, (MIPS_GET_CC(mips) + 20));
+		set_next_dst(ppc);
+		return CONVERT_SUCCESS;
+	case MIPS_FUNC_C_NGLE_: // Not GT + LT + EQ: F F F T
+	case MIPS_FUNC_C_UN_: //   Unordered: F F F T
 		PPC_SET_FUNC(ppc, PPC_FUNC_FCMPU);
 		PPC_SET_RA  (ppc, MIPS_GET_FS(mips));
 		PPC_SET_RB  (ppc, MIPS_GET_FT(mips));
@@ -2090,11 +2107,13 @@ static int convert_FP(MIPS_instr mips, int precision){
 		PPC_SET_FUNC  (ppc, PPC_FUNC_CROR);
 		PPC_SET_RD    (ppc, (MIPS_GET_CC(mips) + 20));
 		PPC_SET_RA    (ppc, (MIPS_GET_CC(mips) + 20));
-		PPC_SET_RD    (ppc, 7); // unordered bit of CR-1
+		PPC_SET_RB    (ppc, 7); // unordered bit of CR-1
 		set_next_dst(ppc);
-		return CONVERT_SUCCESS; 
-	case MIPS_FUNC_C_EQ_:
-		PPC_SET_FUNC(ppc, PPC_FUNC_FCMPO);
+		return CONVERT_SUCCESS;
+	case MIPS_FUNC_C_NGL_: // Not GT + LT:   F F T T
+	case MIPS_FUNC_C_SEQ_: // Signalling EQ: F F T F
+	case MIPS_FUNC_C_EQ_:  // Equals:        F F T F
+		PPC_SET_FUNC(ppc, PPC_FUNC_FCMPU);
 		PPC_SET_RA  (ppc, MIPS_GET_FS(mips));
 		PPC_SET_RB  (ppc, MIPS_GET_FT(mips));
 		PPC_SET_CRF (ppc, 1);
@@ -2113,22 +2132,16 @@ static int convert_FP(MIPS_instr mips, int precision){
 		PPC_SET_OPCODE(ppc, PPC_OPCODE_XL);
 		PPC_SET_FUNC  (ppc, PPC_FUNC_CROR);
 		PPC_SET_RD    (ppc, (MIPS_GET_CC(mips) + 20));
-		PPC_SET_RA    (ppc, (MIPS_GET_CC(mips) + 20));
-		PPC_SET_RD    (ppc, 6); // EQ bit of CR-1
+		PPC_SET_RA    (ppc, (MIPS_GET_FUNC(mips) == MIPS_FUNC_C_NGL_) ?
+		                       7 : (MIPS_GET_CC(mips) + 20) ); // Check unordered for NGL
+		PPC_SET_RB    (ppc, 6); // EQ bit of CR-1
 		set_next_dst(ppc);
-		return CONVERT_SUCCESS; 
-	case MIPS_FUNC_C_OLT_: // ordered or lt
-	case MIPS_FUNC_C_ULT_:
-	case MIPS_FUNC_C_OLE_:
-	case MIPS_FUNC_C_ULE_:
-	case MIPS_FUNC_C_SF_:
-	case MIPS_FUNC_C_NGLE_:
-	case MIPS_FUNC_C_SEQ_:
-	case MIPS_FUNC_C_NGL_:
-		return CONVERT_ERROR;
-	case MIPS_FUNC_C_NGE_:
-	case MIPS_FUNC_C_LT_:
-		PPC_SET_FUNC(ppc, PPC_FUNC_FCMPO);
+		return CONVERT_SUCCESS;
+	case MIPS_FUNC_C_ULT_: // UN + LT:     T F F T
+	case MIPS_FUNC_C_NGE_: // Not GT + EQ: T F F T
+	case MIPS_FUNC_C_OLT_: // Ordered LT:  T F F F
+	case MIPS_FUNC_C_LT_:  // LT:          T F F F
+		PPC_SET_FUNC(ppc, PPC_FUNC_FCMPU);
 		PPC_SET_RA  (ppc, MIPS_GET_FS(mips));
 		PPC_SET_RB  (ppc, MIPS_GET_FT(mips));
 		PPC_SET_CRF (ppc, 1);
@@ -2147,13 +2160,17 @@ static int convert_FP(MIPS_instr mips, int precision){
 		PPC_SET_OPCODE(ppc, PPC_OPCODE_XL);
 		PPC_SET_FUNC  (ppc, PPC_FUNC_CROR);
 		PPC_SET_RD    (ppc, (MIPS_GET_CC(mips) + 20));
-		PPC_SET_RA    (ppc, (MIPS_GET_CC(mips) + 20));
-		PPC_SET_RD    (ppc, 4); // LT bit of CR-1
+		PPC_SET_RA    (ppc, (MIPS_GET_FUNC(mips) == MIPS_FUNC_C_NGE_
+		                     || MIPS_GET_FUNC(mips) == MIPS_FUNC_C_ULT_) ?
+		                       7 : (MIPS_GET_CC(mips) + 20) ); // Check unordered for NGE
+		PPC_SET_RB    (ppc, 4); // LT bit of CR-1
 		set_next_dst(ppc);
 		return CONVERT_SUCCESS; 
-	case MIPS_FUNC_C_NGT_:
-	case MIPS_FUNC_C_LE_:
-		PPC_SET_FUNC(ppc, PPC_FUNC_FCMPO);
+	case MIPS_FUNC_C_ULE_: // UN + LT + EQ: T F T T
+	case MIPS_FUNC_C_NGT_: // Not GT:       T F T T
+	case MIPS_FUNC_C_OLE_: // Unordered LE: T F T F
+	case MIPS_FUNC_C_LE_:  // LT + EQ:      T F T F
+		PPC_SET_FUNC(ppc, PPC_FUNC_FCMPU);
 		PPC_SET_RA  (ppc, MIPS_GET_FS(mips));
 		PPC_SET_RB  (ppc, MIPS_GET_FT(mips));
 		PPC_SET_CRF (ppc, 1);
@@ -2167,14 +2184,25 @@ static int convert_FP(MIPS_instr mips, int precision){
 		PPC_SET_RA    (ppc, (MIPS_GET_CC(mips) + 20));
 		PPC_SET_RB    (ppc, (MIPS_GET_CC(mips) + 20));
 		set_next_dst(ppc);
-		// Set the cc bit with the !gt bit
+		// Set the cc bit with the lt + eq bits
 		ppc = NEW_PPC_INSTR();
 		PPC_SET_OPCODE(ppc, PPC_OPCODE_XL);
-		PPC_SET_FUNC  (ppc, PPC_FUNC_CRNOR);
+		PPC_SET_FUNC  (ppc, PPC_FUNC_CROR);
 		PPC_SET_RD    (ppc, (MIPS_GET_CC(mips) + 20));
-		PPC_SET_RA    (ppc, (MIPS_GET_CC(mips) + 20));
-		PPC_SET_RD    (ppc, 5); // GT bit of CR-1
+		PPC_SET_RA    (ppc, 6); // EQ bit of CR-1
+		PPC_SET_RB    (ppc, 4); // LT bit of CR-1
 		set_next_dst(ppc);
+		if(MIPS_GET_FUNC(mips) == MIPS_FUNC_C_NGT_
+		   || MIPS_GET_FUNC(mips) == MIPS_FUNC_C_ULE_){
+			// If this is NGT, we have to check whether its unordered
+			ppc = NEW_PPC_INSTR();
+			PPC_SET_OPCODE(ppc, PPC_OPCODE_XL);
+			PPC_SET_FUNC  (ppc, PPC_FUNC_CROR);
+			PPC_SET_RD    (ppc, (MIPS_GET_CC(mips) + 20));
+			PPC_SET_RA    (ppc, (MIPS_GET_CC(mips) + 20));
+			PPC_SET_RB    (ppc, 7); // UN bit of CR-1
+			set_next_dst(ppc);
+		}
 		return CONVERT_SUCCESS; 
 	default:
 		return CONVERT_ERROR;
