@@ -156,6 +156,7 @@ class RSP
    Mtx GXmodelView2D;
    Mtx GXnormal2D;
    Matrix<float, 4> normal;
+   bool GXuseMatrix;
    GXColor GXcol;
    GXLightObj GXlight;
    u8 light_mask;
@@ -163,7 +164,10 @@ class RSP
    GXColor GXfillColor;
 //   GXTexObj	GXtex;
 //   GXTlutObj GXtlut;
-   
+   int numVector;
+   int numVectorMP;
+   int GXmtxStatus;	// 0 = invalid; 1 = 3D; 2 = 2D
+   bool GXnew2Dproj; // flag to only use load the first viewport
 
    // rdp variables
    int cycleType;

@@ -346,7 +346,8 @@ void BL::cycle1ModeDraw()
 	if(alpha_cvg_sel && cvg_x_alpha && (alphaCompare == 0))
 	{
 		GX_SetZCompLoc(GX_FALSE);	//do Z compare after texturing (GX_FALSE)
-		GX_SetAlphaCompare(GX_GREATER,0,GX_AOP_AND,GX_ALWAYS,0);
+		GX_SetAlphaCompare(GX_GREATER,128,GX_AOP_AND,GX_ALWAYS,0);
+//		GX_SetAlphaCompare(GX_GREATER,0,GX_AOP_AND,GX_ALWAYS,0);
 		//GX_SetAlphaCompare(u8 comp0,u8 ref0,u8 aop,u8 comp1,u8 ref1)
 	}
 
@@ -356,7 +357,7 @@ void BL::cycle1ModeDraw()
 	if (z_upd && !(zmode_inter && zmode_xlu)) GXzupd = GX_TRUE;
 	else GXzupd = GX_FALSE;
 
-	GX_SetZMode(GXzcmp,GX_GEQUAL,GXzupd);
+	GX_SetZMode(GXzcmp,GX_LEQUAL,GXzupd);
 
 	//Set Cycle1ModeDraw blend modes here
 	GX_SetBlendMode(GX_BM_BLEND, GXsrcfactor, GXdstfactor, GX_LO_CLEAR); 
@@ -468,7 +469,7 @@ void BL::cycle2ModeDraw(int x, int y, Color32 c, float z, Color32 shade)
 	if (z_upd && !(zmode_inter && zmode_xlu)) GXzupd = GX_TRUE;
 	else GXzupd = GX_FALSE;
 
-	GX_SetZMode(GXzcmp,GX_GEQUAL,GXzupd);*/
+	GX_SetZMode(GXzcmp,GX_LEQUAL,GXzupd);*/
 
 	//Set Cycle1ModeDraw blend modes here
 	GX_SetBlendMode(GX_BM_BLEND, GXsrcfactor, GXdstfactor, GX_LO_CLEAR); 
@@ -502,7 +503,7 @@ void BL::copyModeDraw()
 
 	GX_SetAlphaCompare(GX_GREATER,0,GX_AOP_AND,GX_ALWAYS,0);
 	GX_SetZCompLoc(GX_TRUE);	//do Z compare before texturing (GX_TRUE)
-	GX_SetZMode(GX_DISABLE,GX_GEQUAL,GX_TRUE);
+	GX_SetZMode(GX_DISABLE,GX_LEQUAL,GX_TRUE);
 
 	//Set CopyModeDraw blend modes here
 	GX_SetBlendMode(GX_BM_BLEND, GX_BL_SRCALPHA, GX_BL_INVSRCALPHA, GX_LO_CLEAR); //Fix src alpha

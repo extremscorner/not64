@@ -70,9 +70,11 @@ RSP::RSP(GFX_INFO info) : gfxInfo(info), error(false), end(false)
    //TODO: Set these flags in GX, too?
    GX_SetCullMode (GX_CULL_NONE); // default in rsp init
 
+//   GX_SetClipMode(GX_CLIP_ENABLE);
+
 //   light_mask = GX_LIGHTNULL;
 //   GX_SetChanCtrl(GX_COLOR0A0,GX_DISABLE,GX_SRC_REG,GX_SRC_VTX,light_mask,GX_DF_CLAMP,GX_AF_NONE);
-   GX_SetZMode(GX_DISABLE,GX_GEQUAL,GX_TRUE);
+   GX_SetZMode(GX_DISABLE,GX_LEQUAL,GX_TRUE);
 
    GXfillColor = (GXColor){0,0,0,0};
 
@@ -88,7 +90,13 @@ RSP::RSP(GFX_INFO info) : gfxInfo(info), error(false), end(false)
 
 //	guOrtho(GXprojection2D, 0, 239, 0, 319, 0, 1021);
 
+	GXmtxStatus = 0; //invalid Mtx status
+	GXnew2Dproj = true;
+
    TXblock.newblock = 0;
+
+	numVector = 0;
+	numVectorMP = 0;
 
    //rdp = new RDP(info);
 	tx = new TX(info);
@@ -228,30 +236,65 @@ void RSP::MTX()
    MP = modelView * projection;
 
    //Send new modelView, projection, or normal matrices to GX
-   if (updateprojection == true)
+   if (updateprojection)
    {
-      for (int j=0; j<4; j++)
-      {
-         for (int i=0; i<4; i++)
-         {
-            GXprojection[j][i] = projection(i,j);
-//			printf("p[%i][%i] = %f\n",j,i,projection(j,i));
-         }
-	  }
 	  //Mario64 does something weird with the projection matrix during opening.
 	  //Still investigating how to solve this:
-	  if((GXprojection[3][2] == -1) && (GXprojection[3][3] > 0))
+	  if((projection(2,3) == -1) && (projection(3,3) != 0))
+//	  if(true)
 	  {
-		  GXprojection[0][3] = GXprojection[0][3]/GXprojection[3][3];
-		  GXprojection[1][3] = GXprojection[1][3]/GXprojection[3][3];
-		  GXprojection[2][3] = GXprojection[2][3]/GXprojection[3][3];
-		  GXprojection[3][3] = GXprojection[3][3]/GXprojection[3][3];
+		  GXuseMatrix = false;
+   		  DEBUG_print("Projection matrix is both Persp and Ortho!",DBG_RSPINFO);
+		  guMtxIdentity(GXmodelView);
+		  guMtxIdentity(GXprojection);
+		  GXprojection[3][2] = 0;
+		  GXprojection[3][3] = 1;
+//		  GXprojection[2][2] = -GXprojection[2][2];	//test
+/*	      for (int j=0; j<3; j++)
+		  {
+			  for (int i=0; i<4; i++)
+		      {
+			    GXmodelView[j][i] = MP(i,j);
+		      }
+		  }*/
+	      GX_LoadPosMtxImm(GXmodelView, GX_PNMTX0);
+	  }
+	  else
+	  {
+		if(!GXuseMatrix)
+		{
+			for (int j=0; j<3; j++)
+			{
+				for (int i=0; i<4; i++)
+				{
+					GXmodelView[j][i] = modelView(i,j);
+				}
+			}
+			GX_LoadPosMtxImm(GXmodelView, GX_PNMTX0);
+		}
+		GXuseMatrix = true;
+		for (int j=0; j<4; j++)
+		{
+			for (int i=0; i<4; i++)
+			{
+				GXprojection[j][i] = projection(i,j);
+//				printf("p[%i][%i] = %f\n",j,i,projection(j,i));
+			}
+		}
 	  }
 	  //N64 Z clip space is backwards, so mult z components by -1
 	  //N64 Z [-1,1] whereas GC Z [-1,0], so mult by 0.5 and shift by -0.5
-	  GXprojection[2][2] = -0.5*GXprojection[2][2] - 0.5*GXprojection[3][2];
-	  GXprojection[2][3] = -0.5*GXprojection[2][3] - 0.5;
+	  GXprojection[2][2] = 0.5*GXprojection[2][2] - 0.5*GXprojection[3][2];
+	  GXprojection[2][3] = 0.5*GXprojection[2][3] - 0.5*GXprojection[3][3];
+//	  GXprojection[2][2] = 0.5;
+//	  GXprojection[2][3] = -0.5;
 
+
+//	  GXprojection[2][3] = 0.5*GXprojection[2][3] - 0.5;
+//	  GXprojection[2][2] = -0.5*GXprojection[2][2] - 0.5*GXprojection[3][2];
+//	  GXprojection[2][3] = -0.5*GXprojection[2][3] - 0.5;
+
+//	  if((GXprojection[3][2] == -1) && (GXprojection[3][3] == 0)) 
 	  if(GXprojection[3][2] == -1) 
 	  {
 		  GX_LoadProjectionMtx(GXprojection, GX_PERSPECTIVE); 
@@ -269,14 +312,20 @@ void RSP::MTX()
    }
    else
    {
+	  if(GXuseMatrix) {
       for (int j=0; j<3; j++)
       {
          for (int i=0; i<4; i++)
          {
             GXmodelView[j][i] = modelView(i,j);
+//            if(GXuseMatrix) GXmodelView[j][i] = modelView(i,j);
+//			else GXmodelView[j][i] = MP(i,j);
 //			printf("mv[%i][%i] = %f\n",j,i,modelView(j,i));
          }
 	  }
+	  }
+	  else 
+		  guMtxIdentity(GXmodelView);
       GX_LoadPosMtxImm(GXmodelView, GX_PNMTX0);
 	  if(guMtxInverse(GXmodelView, GXnormal) == 0)	// normal matrix is the inverse transpose of the modelview matrix
    		  DEBUG_print("Normal matrix is singular",DBG_RSPINFO);
@@ -287,6 +336,7 @@ void RSP::MTX()
 	  printf("\t\t%f, %f, %f, %f\n",GXmodelView[1][0],GXmodelView[1][1],GXmodelView[1][2],GXmodelView[1][3]);
 	  printf("\t\t%f, %f, %f, %f\n",GXmodelView[2][0],GXmodelView[2][1],GXmodelView[2][2],GXmodelView[2][3]);*/
    }
+   GXmtxStatus = 0; // invalid mtx state (load matrices on next 3D triangle)
 }
 
 void RSP::MOVEMEM()
@@ -308,9 +358,12 @@ void RSP::MOVEMEM()
 	viewport.vtrans[2] = (int)*((short*)(gfxInfo.RDRAM + addr) + (6^S16));
 	viewport.vtrans[3] = (int)*((short*)(gfxInfo.RDRAM + addr) + (7^S16)) / 4.0;
 	// Calculated 2D projection matrix here
-	guOrtho(GXprojection2D, viewport.vtrans[1]-viewport.vscale[1], viewport.vtrans[1]+viewport.vscale[1]-1,
-							viewport.vtrans[0]-viewport.vscale[0], viewport.vtrans[0]+viewport.vscale[0]-1,
-							viewport.vtrans[2]-viewport.vscale[2],viewport.vtrans[2]+viewport.vscale[2]-1);
+	if(GXnew2Dproj) {
+		guOrtho(GXprojection2D, viewport.vtrans[1]-viewport.vscale[1], viewport.vtrans[1]+viewport.vscale[1]-1,
+								viewport.vtrans[0]-viewport.vscale[0], viewport.vtrans[0]+viewport.vscale[0]-1,
+								viewport.vtrans[2]-viewport.vscale[2],viewport.vtrans[2]+viewport.vscale[2]-1);
+		GXnew2Dproj = false;
+	}
 
 	//TODO: Determine if viewport should be readusted here
 	//Vscale and Voffset should be calculated automatically by GX based on viewport...
@@ -401,8 +454,17 @@ void RSP::VTX()
 	vtx[v0+i].v[1] = (int)(*((short*)(p + i*16 + (2^(S16<<1)))));
 	vtx[v0+i].v[2] = (int)(*((short*)(p + i*16 + (4^(S16<<1)))));
 	vtx[v0+i].v[3] = 1;
-	//vtx[v0+i].v = vtx[v0+i].v * MP;
-	
+	if(!GXuseMatrix)
+	{
+		vtx[v0+i].v = vtx[v0+i].v * MP;
+		vtx[v0+i].v[0] = vtx[v0+i].v[0] / vtx[v0+i].v[3];
+		vtx[v0+i].v[1] = vtx[v0+i].v[1] / vtx[v0+i].v[3];
+		vtx[v0+i].v[2] = vtx[v0+i].v[2] / vtx[v0+i].v[3];
+		numVectorMP++;
+	}
+	else
+		numVector++;
+
 	vtx[v0+i].s = *((short*)(p + i*16 + (8^(S16<<1)))) / 32.0f;
 	vtx[v0+i].t = *((short*)(p + i*16 + (10^(S16<<1)))) / 32.0f;
 	vtx[v0+i].s *= textureScales.sc;
@@ -539,7 +601,7 @@ void RSP::CLEARGEOMETRYMODE()
    if (mode & 0x1) 
    {
 	   zbuffer = false;
-	   GX_SetZMode(GX_DISABLE,GX_GEQUAL,GX_TRUE);
+	   GX_SetZMode(GX_DISABLE,GX_LEQUAL,GX_TRUE);
    }
 
    
@@ -570,7 +632,7 @@ void RSP::SETGEOMETRYMODE()
    if (mode & 0x1) 
    {
 	   zbuffer = true;
-	   GX_SetZMode(GX_ENABLE,GX_GEQUAL,GX_TRUE);
+	   GX_SetZMode(GX_ENABLE,GX_LEQUAL,GX_TRUE);
    }
    
    if (mode & ~0x72205) {
@@ -588,6 +650,9 @@ void RSP::SETGEOMETRYMODE()
 
 void RSP::ENDDL()
 {
+	sprintf(txtbuffer,"RSP: vect = %d; vectMP = %d", numVector, numVectorMP);
+	DEBUG_print(txtbuffer,11);
+
    end = true;
 }
 
@@ -737,6 +802,7 @@ void RSP::POPMTX()
 //   if (type != 0) printf("POPMTX on projection matrix\n");
    modelView.pop();
    //TODO:  Also copy this to GX
+	if(GXuseMatrix) {
       for (int j=0; j<3; j++)
       {
          for (int i=0; i<4; i++)
@@ -745,12 +811,17 @@ void RSP::POPMTX()
 //			printf("mv[%i][%i] = %f\n",j,i,modelView(j,i));
          }
 	  }
-      GX_LoadPosMtxImm(GXmodelView, GX_PNMTX0);
-	  if(guMtxInverse(GXmodelView, GXnormal) == 0)
-		  DEBUG_print("Normal matrix is singular",DBG_RSPINFO);
-	  guMtxTranspose(GXnormal, GXnormal);
-      GX_LoadNrmMtxImm(GXnormal, GX_PNMTX0);
+	}
+	else 
+	  guMtxIdentity(GXmodelView);
+
+//	GX_LoadPosMtxImm(GXmodelView, GX_PNMTX0);
+	if(guMtxInverse(GXmodelView, GXnormal) == 0)
+		DEBUG_print("Normal matrix is singular",DBG_RSPINFO);
+	guMtxTranspose(GXnormal, GXnormal);
+	GX_LoadNrmMtxImm(GXnormal, GX_PNMTX0);
 //	  printf("Send Normal Matrix to GX\n");
+//   GXmtxStatus = 0; // invalid mtx state (load matrices on next 3D triangle)
 }
 
 void RSP::TRI1()
@@ -1188,7 +1259,7 @@ void RSP::TRI1()
 	switch(geometryMode)
 	  {
 	   case 0x5:   // shade | z_buffer
-	   case 0x10005: // fog | shade | z_buffer
+	   case 0x10005: // fog | shade | z_buffer	-> use vertex color from a
 		   if (textureScales.enabled) {}
 	       //rdp->tri_shade_txtr_zbuff(vx0, vx1, vx2, cache[a].c, cache[a].c, cache[a].c,
 			//		 cache[a].s, cache[a].t, cache[b].s, cache[b].t, cache[i].s, cache[i].t, textureScales.tile,
@@ -1196,7 +1267,7 @@ void RSP::TRI1()
 	     else {}
 	       //rdp->tri_shade_zbuff(vx0, vx1, vx2, cache[a].c, cache[a].c, cache[a].c, z0, z1, z2);
 	     break;
-	   case 0x204: // shading_smooth | shade
+	   case 0x204: // shading_smooth | shade	-> use per vertex color
 	     if (textureScales.enabled) {}
 	       //rdp->tri_shade_txtr(vx0, vx1, vx2, cache[a].c, cache[b].c, cache[i].c,
 			//	   cache[a].s, cache[a].t, cache[b].s, cache[b].t, cache[i].s, cache[i].t, textureScales.tile,
@@ -1205,7 +1276,7 @@ void RSP::TRI1()
 	       //rdp->tri_shade(vx0, vx1, vx2, cache[a].c, cache[b].c, cache[i].c);
 	     break;
 	   case 0x205: // shading_smooth | shade | z_buffer
-	   case 0x10205: // fog | shading_smooth | shade | z_buffer
+	   case 0x10205: // fog | shading_smooth | shade | z_buffer		-> use per vertex color
 	     if (textureScales.enabled) {}
 	       //rdp->tri_shade_txtr_zbuff(vx0, vx1, vx2, cache[a].c, cache[b].c, cache[i].c, 
 			//		 cache[a].s, cache[a].t, cache[b].s, cache[b].t, cache[i].s, cache[i].t, textureScales.tile,
@@ -1227,6 +1298,16 @@ void RSP::TRI1()
    //TODO: Investigate how cycleType affects rendering
 
 	//TODO: Fog
+	
+	if (GXmtxStatus != 1) { //need to load 3D mtx's
+		if(GXprojection[3][2] == -1) 
+			GX_LoadProjectionMtx(GXprojection, GX_PERSPECTIVE); 
+		else 
+			GX_LoadProjectionMtx(GXprojection, GX_ORTHOGRAPHIC); 
+		GX_LoadPosMtxImm(GXmodelView, GX_PNMTX0);
+		GX_LoadNrmMtxImm(GXnormal, GX_PNMTX0);
+		GXmtxStatus = 1; //3D mtx loaded
+	}
 
    //set vertex description here
    GX_ClearVtxDesc();
@@ -1309,30 +1390,54 @@ void RSP::TRI1()
      // vert 0
      GX_Position3f32(vtx[v0].v[0], vtx[v0].v[1], vtx[v0].v[2]);
 //	 if (lighting) GX_Normal3f32(vtx[v0].n[0], vtx[v0].n[1], vtx[v0].n[2]);
-	 GXcol.r = (u8)vtx[v0].c.getR();
-	 GXcol.g = (u8)vtx[v0].c.getG();
-	 GXcol.b = (u8)vtx[v0].c.getB();
-	 GXcol.a = (u8)vtx[v0].c.getAlpha();
-	 GX_Color4u8(GXcol.r, GXcol.g, GXcol.b, GXcol.a);
+	 if (shading_smooth) { //use per vertex color
+		 GXcol.r = (u8)vtx[v0].c.getR();
+		 GXcol.g = (u8)vtx[v0].c.getG();
+		 GXcol.b = (u8)vtx[v0].c.getB();
+		 GXcol.a = (u8)vtx[v0].c.getAlpha();
+	 }
+	 else {	//use volor from a (v1)
+		 GXcol.r = (u8)vtx[v1].c.getR();
+		 GXcol.g = (u8)vtx[v1].c.getG();
+		 GXcol.b = (u8)vtx[v1].c.getB();
+		 GXcol.a = (u8)vtx[v1].c.getAlpha();
+	 }
+	 GX_Color4u8(GXcol.r, GXcol.g, GXcol.b, GXcol.a); 
 	 if (textureScales.enabled) GX_TexCoord2f32(ps0,pt0);
 
      // vert 1
      GX_Position3f32(vtx[v1].v[0], vtx[v1].v[1], vtx[v1].v[2]);
 //	 if (lighting) GX_Normal3f32(vtx[v1].n[0], vtx[v1].n[1], vtx[v1].n[2]);
-	 GXcol.r = (u8)vtx[v1].c.getR();
-	 GXcol.g = (u8)vtx[v1].c.getG();
-	 GXcol.b = (u8)vtx[v1].c.getB();
-	 GXcol.a = (u8)vtx[v1].c.getAlpha();
+	 if (shading_smooth) { //use per vertex color
+		 GXcol.r = (u8)vtx[v1].c.getR();
+		 GXcol.g = (u8)vtx[v1].c.getG();
+		 GXcol.b = (u8)vtx[v1].c.getB();
+		 GXcol.a = (u8)vtx[v1].c.getAlpha();
+	 }
+	 else {	//use volor from a (v1)
+		 GXcol.r = (u8)vtx[v1].c.getR();
+		 GXcol.g = (u8)vtx[v1].c.getG();
+		 GXcol.b = (u8)vtx[v1].c.getB();
+		 GXcol.a = (u8)vtx[v1].c.getAlpha();
+	 }
 	 GX_Color4u8(GXcol.r, GXcol.g, GXcol.b, GXcol.a);
 	 if (textureScales.enabled) GX_TexCoord2f32(ps1,pt1);
 
      // vert 2
      GX_Position3f32(vtx[v2].v[0], vtx[v2].v[1], vtx[v2].v[2]);
 //	 if (lighting) GX_Normal3f32(vtx[v2].n[0], vtx[v2].n[1], vtx[v2].n[2]);
-	 GXcol.r = (u8)vtx[v2].c.getR();
-	 GXcol.g = (u8)vtx[v2].c.getG();
-	 GXcol.b = (u8)vtx[v2].c.getB();
-	 GXcol.a = (u8)vtx[v2].c.getAlpha();
+	 if (shading_smooth) { //use per vertex color
+		 GXcol.r = (u8)vtx[v2].c.getR();
+		 GXcol.g = (u8)vtx[v2].c.getG();
+		 GXcol.b = (u8)vtx[v2].c.getB();
+		 GXcol.a = (u8)vtx[v2].c.getAlpha();
+	 }
+	 else {	//use volor from a (v1)
+		 GXcol.r = (u8)vtx[v1].c.getR();
+		 GXcol.g = (u8)vtx[v1].c.getG();
+		 GXcol.b = (u8)vtx[v1].c.getB();
+		 GXcol.a = (u8)vtx[v1].c.getAlpha();
+	 }
 	 GX_Color4u8(GXcol.r, GXcol.g, GXcol.b, GXcol.a);
 	 if (textureScales.enabled) GX_TexCoord2f32(ps2,pt2);
    GX_End();
@@ -1341,8 +1446,8 @@ void RSP::TRI1()
 
 void RSP::TEXRECT()
 {
-   float ulx, uly, lrx, lry, s, t, dsdx, dtdy, s2, t2, w, h;
-   float px1, px2, py1, py2, ps1, ps2, pt1, pt2;
+   float ulx, uly, lrx, lry, s, t, dsdx, dtdy, s2, s2c, t2, w, h;
+   float px1, px2, py1, py2, ps1, ps2, ps2c, pt1, pt2;
    lrx = ((*currentCommand >> 12) & 0xFFF) / 4.0f;
    lry = (*currentCommand & 0xFFF) / 4.0f;
    int tile = (*(currentCommand+1) >> 24) & 7;
@@ -1361,20 +1466,22 @@ void RSP::TEXRECT()
    }
 
 //   s2 = (lrx - ulx) * 1 + s;
-   s2 = (lrx - ulx) * dsdx/4 + s;
+   s2 = (lrx - ulx) * dsdx + s; 
+   s2c = (lrx - ulx) * dsdx/4 + s; //divide by 4 only for copy mode!
    t2 = (lry - uly) * dtdy + t;
 
 //   int w = (int)(descriptor[tile].lrs - descriptor[tile].uls)/dsdx;
 //   int w = TXwidth;
-	if(descriptor[tile].masks) w = (1<<descriptor[tile].masks)-1;
-	else w = (descriptor[tile].lrs) - (descriptor[tile].uls);
-	if(descriptor[tile].maskt) h = (1<<descriptor[tile].maskt)-1;
-	else h = (descriptor[tile].lrt) - (descriptor[tile].ult);
+	if(descriptor[tile].masks) w = (1<<descriptor[tile].masks)-1 + 1;
+	else w = (descriptor[tile].lrs) - (descriptor[tile].uls) + 1;
+	if(descriptor[tile].maskt) h = (1<<descriptor[tile].maskt)-1 + 1;
+	else h = (descriptor[tile].lrt) - (descriptor[tile].ult) + 1;
 //   w = ceil((descriptor[tile].lrs - descriptor[tile].uls + 1)/8)*8;
 //   h = ceil((descriptor[tile].lrt) - (descriptor[tile].ult + 1)/4)*4;
    ps1 = (s - descriptor[tile].uls)/w;
    pt1 = (t - descriptor[tile].ult)/h;
    ps2 = (s2 - descriptor[tile].uls)/w;
+   ps2c = (s2c - descriptor[tile].uls)/w;
    pt2 = (t2 - descriptor[tile].ult)/h;
    px1 =  ulx;
    py1 =  uly;
@@ -1383,8 +1490,12 @@ void RSP::TEXRECT()
 //   px2 = lrx;
 //   py2 = lry;
 
-   GX_LoadProjectionMtx(GXprojection2D, GX_ORTHOGRAPHIC); //load current 2D projection matrix
-   // scissoring should be handled automatically by GX
+   	if (GXmtxStatus != 2) { //need to load 2D mtx's
+		GX_LoadProjectionMtx(GXprojection2D, GX_ORTHOGRAPHIC); //load current 2D projection matrix
+		GXmtxStatus = 2; //2D mtx loaded
+	}
+
+	// scissoring should be handled automatically by GX
    if (cycleType == 0) // 1 cycle mode
      {
 		//draw textured rectangle from ulx,uly to lrx,lry
@@ -1482,11 +1593,11 @@ void RSP::TEXRECT()
 		// vert 1
 		GX_Position2f32(px2, py1);
 //		GX_Color4u8(GXfillColor.r, GXfillColor.g, GXfillColor.b, GXfillColor.a);
-		GX_TexCoord2f32(ps2,pt1);
+		GX_TexCoord2f32(ps2c,pt1);
 		// vert 2
 		GX_Position2f32(px2, py2);
 //		GX_Color4u8(GXfillColor.r, GXfillColor.g, GXfillColor.b, GXfillColor.a);
-		GX_TexCoord2f32(ps2,pt2);
+		GX_TexCoord2f32(ps2c,pt2);
 		// vert 3
 		GX_Position2f32(px1, py2);
 //		GX_Color4u8(GXfillColor.r, GXfillColor.g, GXfillColor.b, GXfillColor.a);
@@ -1641,8 +1752,12 @@ void RSP::FILLRECT()
 //   GX_LoadPosMtxImm(GXmodelView2D,GX_PNMTX2);
 //   GX_LoadNrmMtxImm(GXnormal2D,GX_PNMTX2);
 
-   GX_LoadProjectionMtx(GXprojection2D, GX_ORTHOGRAPHIC); //load current 2D projection matrix
-   // scissoring should be handled automatically by GX
+   	if (GXmtxStatus != 2) { //need to load 2D mtx's
+		GX_LoadProjectionMtx(GXprojection2D, GX_ORTHOGRAPHIC); //load current 2D projection matrix
+		GXmtxStatus = 2; //2D mtx loaded
+	}
+
+	// scissoring should be handled automatically by GX
    if (cycleType == 3) //use fillColor
      {
 		//draw rectangle from ulx,uly to lrx,lry

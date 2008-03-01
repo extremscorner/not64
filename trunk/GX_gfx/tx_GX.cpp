@@ -141,6 +141,7 @@ void TX::loadBlock(float uls, float ult, int tile, float lrs, int dxt)
    new_load_block = true;
 
    tile = 0; //May need to detect the latest from setTile
+//   tile = currentSetTile;
    loadTile(tile, descriptor[tile].uls, descriptor[tile].ult, descriptor[tile].lrs, descriptor[tile].lrt); //problem: can't use width...
 }
 
@@ -163,14 +164,14 @@ void TX::loadTile(int tile, float uls, float ult, float lrs, float lrt)
 	}*/
 
    // Let GX finish with all previous commands before loading the new tex
-	GX_SetDrawDone();
+	GX_DrawDone();
 
-	if (new_load_block == true) 
+	if (new_load_block) 
 	{
 		tile_width = (int) lrs-uls+1;
 //		tile = currentSetTile;
 //		tile = 0;
-		new_load_block == false;
+		new_load_block = false;
 	}
 	else tile_width = width;
 
@@ -319,13 +320,14 @@ void TX::loadTile(int tile, float uls, float ult, float lrs, float lrt)
 		   return;
    }
 
+	u16	GXwidth = (u16) lrs-uls+1;
+	u16 GXheight = (u16) lrt-ult+1;
 //	if (textureLUT == 2) GX_InitTexObjCI(&GXtex, GXtexture, (u16) numtiles_s*8, (u16) numtiles_t*4, 
-	if (textureLUT == 2) GX_InitTexObjCI(&GXtex, GXtexture, (u16) lrs-uls+1, (u16) lrt-ult+1, 
+	if (textureLUT == 2) GX_InitTexObjCI(&GXtex, GXtexture, GXwidth, GXheight, 
 							descriptor[tile].GXtexfmt, wrap_s, wrap_t, GX_FALSE, GX_TLUT0);
-	else GX_InitTexObj(&GXtex, GXtexture, (u16) lrs-uls+1, (u16) lrt-ult+1, 
+	else GX_InitTexObj(&GXtex, GXtexture, GXwidth, GXheight, 
 							descriptor[tile].GXtexfmt, wrap_s, wrap_t, GX_FALSE); 
 	DCFlushRange(GXtexture, 512*8*2*2);
-	GX_WaitDrawDone();
 	GX_InvalidateTexAll();
 	GX_LoadTexObj(&GXtex, GX_TEXMAP0); // should set to (u8) tile or GX_TEXMAP0
 }
@@ -341,7 +343,8 @@ void TX::loadTLUT(int tile, int count)
 	   return;
    }
    // Let GX finish with all previous commands before loading the new tex
-	GX_SetDrawDone();
+	GX_DrawDone();
+//	GX_SetDrawDone();
 
 	for(int i=0; i<count; i++)//N64 RGBA16 -> GC GX_TF_RGB5A3
    {
@@ -353,7 +356,7 @@ void TX::loadTLUT(int tile, int count)
    //GX_TL_RGB565 == 0x01? 0x05?
    GX_InitTlutObj(&GXtlut, GXtextureCI,(u8) 0x02,(u16) count/16); //GX_TL_RGB5A3 is missing in gx.h
    DCFlushRange(GXtextureCI, 256*2);
-   GX_WaitDrawDone();
+//   GX_WaitDrawDone();
    GX_InvalidateTexAll();
    GX_LoadTlut(&GXtlut, GX_TLUT0);	// use GX_TLUT0 or (u32) tile??
 }
