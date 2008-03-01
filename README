@@ -1,8 +1,8 @@
 README : WiiN64 / mupen64gc
-Alpha - r200
+Alpha - r2xx
 
 USAGE:
- * ROMs must be z64 (big-endian) or v64 (little endian < 15 MB)
+ * ROMs must be z64 (big-endian) or v64 (little endian <= 15 MB on GC <= 32 MB on Wii)
  * For SDCARD: Put ROMs in a directory named N64ROMS in the root directory,
                Create a directory for named N64SAVES in the root directory
  * For DVD: ROMs may be anywhere on the disc  
@@ -26,11 +26,16 @@ CREDITS:
  * General Coder: emu_kidid
  * Original mupen64: Hactarux
  * Artwork: brakk3n
- * Compiled using devKitPro r12 ( http://sourceforge.net/projects/devkitpro )
-     with libOGC ( http://tehwii.tehskeen.com )
+ * Compiled using devKitPro r14 and libOGC
+     ( http://sourceforge.net/projects/devkitpro )
  * Visit us on http://code.google.com/p/mupen64gc and www.tehskeen.com
 
 CHANGE LOG:
+ r2xx:
+   + MEM2 ROM Cache for Wii (fits 32MB ROMs)
+   + Progressive video support
+   + Embedded font support for Qoob users
+   * Various GX_gfx fixes
  r200:
    * Replaced GUI
      + Menu system
