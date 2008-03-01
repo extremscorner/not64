@@ -9,6 +9,8 @@
 #include "gui_GX-menu.h"
 #include "font.h"
 
+#define GUI_TEST_PNMTX GX_PNMTX0
+
 #define X1 30
 #define X2 13
 #define Y1 30
@@ -321,17 +323,19 @@ void GUI_drawWiiN64(float x0, float y0, float z, float scale){
 	uly = y0 - scale*42;
 	lry = y0 + scale*42;
 
+
+	GX_SetCurrentMtx(GUI_TEST_PNMTX);
+	GX_DrawDone ();
 	guMtxIdentity(GXmodelView2D);
 	GX_LoadTexMtxImm(GXmodelView2D,GX_TEXMTX0,GX_MTX2x4);
 	guMtxTransApply (GXmodelView2D, GXmodelView2D, 0.0F, 0.0F, z);
-	GX_LoadPosMtxImm(GXmodelView2D,GX_PNMTX0);
+	GX_LoadPosMtxImm(GXmodelView2D,GUI_TEST_PNMTX);
 	guOrtho(GXprojection2D, 0, 479, 0, 639, 0, 700);
 	GX_LoadProjectionMtx(GXprojection2D, GX_ORTHOGRAPHIC);
 
 	GX_SetZMode(GX_ENABLE,GX_GEQUAL,GX_TRUE);
-
 	GX_ClearVtxDesc();
-	GX_SetVtxDesc(GX_VA_PTNMTXIDX, GX_PNMTX0);
+	GX_SetVtxDesc(GX_VA_PTNMTXIDX, GUI_TEST_PNMTX);
 	GX_SetVtxDesc(GX_VA_TEX0MTXIDX, GX_TEXMTX0);
 	GX_SetVtxDesc(GX_VA_POS, GX_DIRECT);
 	GX_SetVtxDesc(GX_VA_TEX0, GX_DIRECT);
@@ -362,6 +366,8 @@ void GUI_drawWiiN64(float x0, float y0, float z, float scale){
 	GX_Position2f32(ulx, lry);
 	GX_TexCoord2f32(0,1);
 	GX_End();
+	GX_SetCurrentMtx(GX_PNMTX0);
+	GX_DrawDone ();
 
 }
 
@@ -714,7 +720,7 @@ void GUI_creditScreen()
 	write_font_init_GX(fontColor);
 
 	fontColor = (GXColor) {69,31,133,255}; //purplish
-	strcpy(string,"New Year's Edition!!");
+	strcpy(string,"Liip Year 2008 Edition!!");
 	pos = (Vector) {319.5F, 130.0F, -250.0};
 	axis1 = (Vector) {0.0F, 1.0F, 0.0F};
 	rot = (Vector) {rotateby-90, 0.0F, 0.0F};

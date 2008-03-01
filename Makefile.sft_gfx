@@ -10,12 +10,12 @@ CXX		=powerpc-gekko-g++
 #CFLAGS		=-DX86 -Wall -pipe -g -DEMU64_DEBUG -DCOMPARE_CORE
 #CFLAGS		=-DX86 -Wall -pipe -g
 #CFLAGS  = -g -O2 -Wall $(MACHDEP) $(INCLUDE) -fomit-frame-pointer 
-CFLAGS  = -g -O2 -Wall $(MACHDEP) -fomit-frame-pointer \
+CFLAGS  = -g -O2 -Wall $(MACHDEP) \
 	  -DCPU_SHUTDOWN -DSPC700_SHUTDOWN -DVAR_CYCLES -DSOUND \
 	  -DNOASM -DNGC -DNOASM -DPIXEL_FORMAT=RGB565  \
 	  -DM_PI=3.14159265359  \
 	  -fno-exceptions -Wno-unused-parameter -pipe \
-	   -DUSE_GUI -DSHOW_DEBUG
+	   -DUSE_GUI -DSHOW_DEBUG #-DEMBEDDED_FONTS -DPRINTGECKO
 
 MACHDEP	= -DGEKKO -mcpu=750 -meabi -mhard-float 
 LDFLAGS	=	$(MACHDEP) -mogc -Wl,-Map,$(notdir $@).map -Wl,--cref
@@ -33,6 +33,7 @@ OBJ		=main/rom_gc.o \
 		fileBrowser/fileBrowser-DVD.o \
 		fileBrowser/fileBrowser-CARD.o \
 		fileBrowser/fileBrowser.o \
+		gui/usb.o \
 		gui/menu.o \
 		gui/menuFileBrowser.o \
 		gui/background_tex.o \
@@ -148,7 +149,7 @@ HEADER		=main/rom.h \
 		r4300/recomp.h \
 		gc_memory/pif.h
 
-LIB		=	-logc -lm -logcsys -lsdcard
+LIB		=	-logc -lm -lsdcard
 
 ifeq ($(strip mupen64_soft_gfx/main.cpp),)
 	export LD	:=	$(CC)
