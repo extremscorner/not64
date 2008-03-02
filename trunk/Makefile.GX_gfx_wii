@@ -1,15 +1,8 @@
-#Makefile MUPEN64 for Linux
+#Makefile MUPEN64GC for Wii with GX Rendered Graphics
 
 CC		=powerpc-gekko-gcc
 CXX		=powerpc-gekko-g++
 
-#CFLAGS		=-DX86 -O3 -mpentium -Wall -DEMU64_DEBUG
-#CFLAGS		=-DX86 -O3 -fexpensive-optimizations -fomit-frame-pointer -funroll-loops -ffast-math -fno-strict-aliasing -mcpu=athlon -Wall -pipe
-#CFLAGS		=-DX86 -O3 -mcpu=pentium -Wall -g -pg
-#CFLAGS		=-DX86 -Wall -pipe -g3 -DEMU64_DEBUG
-#CFLAGS		=-DX86 -Wall -pipe -g -DEMU64_DEBUG -DCOMPARE_CORE
-#CFLAGS		=-DX86 -Wall -pipe -g
-#CFLAGS  = -g -O2 -Wall $(MACHDEP) $(INCLUDE) -fomit-frame-pointer 
 CFLAGS  = -g -O2 -Wall $(MACHDEP) -fmodulo-sched \
 	  -DCPU_SHUTDOWN -DSPC700_SHUTDOWN -DVAR_CYCLES -DSOUND \
 	  -DNOASM -DNGC -DNOASM -DPIXEL_FORMAT=RGB565  \
@@ -24,8 +17,6 @@ LDFLAGS	=	$(MACHDEP) -mrvl -Wl,-Map,$(notdir $@).map -Wl,--cref
 
 CXXFLAGS	=$(CFLAGS)
 
-#GL_PATH		=-I/usr/X11R6/include
-
 OBJ		=main/rom_gc.o \
 		main/main_gc-menu.o \
 		main/gc_dvd.o \
@@ -33,7 +24,6 @@ OBJ		=main/rom_gc.o \
 		fileBrowser/fileBrowser-SD.o \
 		fileBrowser/fileBrowser-DVD.o \
 		fileBrowser/fileBrowser-CARD.o \
-		fileBrowser/fileBrowser-WiiFS.o \
 		fileBrowser/fileBrowser.o \
 		gui/usb.o \
 		gui/menu.o \
@@ -161,8 +151,6 @@ else
 	export LD	:=	$(CXX)
 endif
 
-#PLUGINS		=plugins/mupen64_input.so plugins/blight_input.so plugins/mupen64_hle_rsp_azimer.so plugins/dummyaudio.so plugins/mupen64_audio.so plugins/jttl_audio.so plugins/mupen64_soft_gfx.so plugins/mupen64_GX_gfx.so plugins/glN64.so
-
 all:	mupen64_gc.elf
 
 r4300/interupt.o:	r4300/interupt.c
@@ -228,18 +216,13 @@ GX_gfx/main.o:	GX_gfx/main.cpp
 GX_gfx/vi_GX.o:	GX_gfx/vi_GX.cpp
 				$(CXX) $(CFLAGS) -c -o $@ $<
 
-#mupen64_soft_gfx/main.o:	mupen64_soft_gfx/main.cpp
-#				$(CXX) $(CFLAGS) -c -o $@ $<
-
-#mupen64_soft_gfx/vi_GX.o:	mupen64_soft_gfx/vi_GX.cpp
-#				$(CXX) $(CFLAGS) -c -o $@ $<
-
 r4300/ppc/Wrappers.o:		r4300/ppc/Wrappers.s
 				$(CC) $(CFLAGS) -c -o $@ $<
 
 
-mupen64_gc.elf:	$(OBJ) $(OBJ_PPC) $(OBJ_INPUT) $(OBJ_GX_GFX) $(OBJ_AUDIO) $(OBJ_RSPHLE) main/main_gc-menu.o
-		$(LD) $^ $(LDFLAGS) $(LDFLAGS) $(LIB) -Wl -o $@
+mupen64_gc.elf:	$(OBJ) $(OBJ_PPC) $(OBJ_INPUT) $(OBJ_GX_GFX) \
+				$(OBJ_AUDIO) $(OBJ_RSPHLE) main/main_gc-menu.o
+				$(LD) $^ $(LDFLAGS) $(LDFLAGS) $(LIB) -Wl -o $@
 		#strip --strip-all $@
 		powerpc-gekko-objcopy -O binary $@ mupen64.dol
 		#dollz3 mupen64.dol mupen6z.dol
