@@ -86,8 +86,8 @@ void recompile_block(PowerPC_block* ppc_block){
 		if( convert() == CONVERT_ERROR ){
 			sprintf(txtbuffer,"Error converting MIPS instruction:\n"
 			       "0x%08x   0x%08x\n",
-			        ppc_block->start_address + (int)(src-1-src_first), *(src-1));
-			        DEBUG_print(txtbuffer, DBG_USBGECKO);
+			        ppc_block->start_address + (int)(src-1-src_first)*4, *(src-1));
+			DEBUG_print(txtbuffer, DBG_USBGECKO);
 			//int i=16; while(i--) VIDEO_WaitVSync();
 		}
 #ifdef DEBUG_DYNAREC

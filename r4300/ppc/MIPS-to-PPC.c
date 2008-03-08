@@ -25,7 +25,7 @@
 #define SUPPORT_DELAY_SLOT 1
 
 // These are my do-anything variables
-static int temp, temp2;
+static int temp;
 // Support for seperated mult/div and mfhi/lo
 // Number of instructions to execute on mfhi/lo
 static int hi_instr_count, lo_instr_count;
@@ -90,7 +90,7 @@ static inline int signExtend(int value, int size){
 int convert(void){
 	MIPS_instr    mips = get_next_src();
 	PowerPC_instr ppc  = NEW_PPC_INSTR();
-	int bo;
+	int bo, temp2;
 	
 	switch(MIPS_GET_OPCODE(mips)){
 	
@@ -102,9 +102,9 @@ int convert(void){
 		return convert_M(mips);
 	case MIPS_OPCODE_JAL:
 	case MIPS_OPCODE_J:
-		temp2 = get_curr_dst();
+		temp2 = (int)get_curr_dst();
 		check_delaySlot();
-		temp2 = get_curr_dst() - temp2;
+		temp2 = (int)get_curr_dst() - temp2;
 		// temp is used for is_out
 		temp = 0;
 		if(is_j_out(MIPS_GET_LI(mips), 1)){
@@ -133,6 +133,8 @@ int convert(void){
 		//   so we must skip over it so its not done twice if we jal
 		if(temp2 &&
 		     MIPS_GET_OPCODE(mips) == MIPS_OPCODE_JAL){
+			unget_last_src(); // Let's still recompile the delay slot in place in case its branched to
+			
 			ppc = NEW_PPC_INSTR();
 			PPC_SET_OPCODE(ppc, PPC_OPCODE_B);
 			PPC_SET_LI    (ppc, ((temp2>>2)+1));
@@ -166,9 +168,9 @@ int convert(void){
 			set_next_dst(ppc);
 		}
 		// delay slot
-		temp2 = get_curr_dst();
+		temp2 = (int)get_curr_dst();
 		check_delaySlot();
-		temp2 = get_curr_dst() - temp2;
+		temp2 = (int)get_curr_dst() - temp2;
 		// temp is used for is_out
 		temp = 0;
 		if(is_j_out(signExtend(MIPS_GET_IMMED(mips),16), 0)){
@@ -229,9 +231,9 @@ int convert(void){
 			set_next_dst(ppc);
 		}
 		// delay slot
-		temp2 = get_curr_dst();
+		temp2 = (int)get_curr_dst();
 		check_delaySlot();
-		temp2 = get_curr_dst() - temp2;
+		temp2 = (int)get_curr_dst() - temp2;
 		// temp is used for is_out
 		temp = 0;
 		if(is_j_out(signExtend(MIPS_GET_IMMED(mips),16), 0)){
@@ -567,7 +569,7 @@ int convert(void){
 
 static int convert_R(MIPS_instr mips){
 	PowerPC_instr ppc = NEW_PPC_INSTR();
-//	int i;
+	int temp2;
 	
 	switch(MIPS_GET_FUNC(mips)){
 	
@@ -669,9 +671,9 @@ static int convert_R(MIPS_instr mips){
 	                        will need to call jump_to
 	*/
 	case MIPS_FUNC_JR:
-		temp2 = get_curr_dst();
+		temp2 = (int)get_curr_dst();
 		check_delaySlot();
-		temp2 = get_curr_dst() - temp2;
+		temp2 = (int)get_curr_dst() - temp2;
 		
 		// Quick hack since this is never explicity set
 		//isGCAddr[MIPS_REG_LR] = 1;
@@ -805,9 +807,9 @@ static int convert_R(MIPS_instr mips){
 			return CONVERT_SUCCESS;
 		}
 	case MIPS_FUNC_JALR:
-		temp2 = get_curr_dst();
+		temp2 = (int)get_curr_dst();
 		check_delaySlot();
-		temp2 = get_curr_dst() - temp2;
+		temp2 = (int)get_curr_dst() - temp2;
 		
 		// Quick hack since this is never explicity set
 		//isGCAddr[MIPS_REG_LR] = 1;
@@ -1365,7 +1367,7 @@ static int convert_R(MIPS_instr mips){
 
 static int convert_B(MIPS_instr mips){
 	PowerPC_instr ppc = NEW_PPC_INSTR();
-	int bo;
+	int bo, temp2;
 
 	switch(MIPS_GET_RT(mips)){
 
@@ -1394,9 +1396,9 @@ static int convert_B(MIPS_instr mips){
 			set_next_dst(ppc);
 		}
 		// delay slot
-		temp2 = get_curr_dst();
+		temp2 = (int)get_curr_dst();
 		check_delaySlot();
-		temp2 = get_curr_dst() - temp2;
+		temp2 = (int)get_curr_dst() - temp2;
 		// temp is used for is_out
 		temp = 0;
 		ppc = NEW_PPC_INSTR();
@@ -1468,9 +1470,9 @@ static int convert_B(MIPS_instr mips){
 			set_next_dst(ppc);
 		}
 		// delay slot
-		temp2 = get_curr_dst();
+		temp2 = (int)get_curr_dst();
 		check_delaySlot();
-		temp2 = get_curr_dst() - temp2;
+		temp2 = (int)get_curr_dst() - temp2;
 		// temp is used for is_out
 		temp = 0;
 		ppc = NEW_PPC_INSTR();
@@ -1519,6 +1521,7 @@ static int convert_B(MIPS_instr mips){
 #define PRECISION_LONG   3
 static int convert_CoP(MIPS_instr mips, int z){
 	PowerPC_instr ppc = NEW_PPC_INSTR();
+	int temp2;
 	
 	switch(MIPS_GET_RS(mips)){
 	
@@ -1708,9 +1711,9 @@ static int convert_CoP(MIPS_instr mips, int z){
 				set_next_dst(ppc);
 				ppc = NEW_PPC_INSTR();
 			case 0: //bczf
-				temp2 = get_curr_dst();
+				temp2 = (int)get_curr_dst();
 				check_delaySlot();
-				temp2 = get_curr_dst() - temp2;
+				temp2 = (int)get_curr_dst() - temp2;
 				// temp is used for is_out
 				temp = 0;
 				if(is_j_out(signExtend(MIPS_GET_IMMED(mips),16), 0)){
@@ -1753,9 +1756,9 @@ static int convert_CoP(MIPS_instr mips, int z){
 				set_next_dst(ppc);
 				ppc = NEW_PPC_INSTR();
 			case 1: //bczt
-				temp2 = get_curr_dst();
+				temp2 = (int)get_curr_dst();
 				check_delaySlot();
-				temp2 = get_curr_dst() - temp2;
+				temp2 = (int)get_curr_dst() - temp2;
 				// temp is used for is_out
 				temp = 0;
 				if(is_j_out(signExtend(MIPS_GET_IMMED(mips),16), 0)){
