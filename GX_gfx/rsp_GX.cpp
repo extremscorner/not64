@@ -103,7 +103,7 @@ RSP::RSP(GFX_INFO info) : gfxInfo(info), error(false), end(false)
 	bl = new BL(info);
 	cc = new CC();
 
-   DEBUG_print("Executing DList...",DBG_DLIST);
+   DEBUG_print((char*)"Executing DList...",DBG_DLIST);
    executeDList();
 }
 
@@ -244,7 +244,7 @@ void RSP::MTX()
 //	  if(true)
 	  {
 		  GXuseMatrix = false;
-   		  DEBUG_print("Projection matrix is both Persp and Ortho!",DBG_RSPINFO);
+   		  DEBUG_print((char*)"Projection matrix is both Persp and Ortho!",DBG_RSPINFO);
 		  guMtxIdentity(GXmodelView);
 		  guMtxIdentity(GXprojection);
 		  GXprojection[3][2] = 0;
@@ -328,7 +328,7 @@ void RSP::MTX()
 		  guMtxIdentity(GXmodelView);
       GX_LoadPosMtxImm(GXmodelView, GX_PNMTX0);
 	  if(guMtxInverse(GXmodelView, GXnormal) == 0)	// normal matrix is the inverse transpose of the modelview matrix
-   		  DEBUG_print("Normal matrix is singular",DBG_RSPINFO);
+   		  DEBUG_print((char*)"Normal matrix is singular",DBG_RSPINFO);
 	  guMtxTranspose(GXnormal, GXnormal);
       GX_LoadNrmMtxImm(GXnormal, GX_PNMTX0);
 //	  printf("Send Normal Matrix to GX\n");
@@ -534,14 +534,14 @@ void RSP::SPRITE2D()
    float ulx = PScreenX;
    float lrx = ulx + SubImageWidth - 1;
    
-   DEBUG_print("Sprite2D call",DBG_RSPINFO);
+   DEBUG_print((char*)"Sprite2D call",DBG_RSPINFO);
 
    if (SourceImageBitSize == 0) {
 	 sprintf(txtbuffer,"RSP:SPRITE2D image type=%d bitsize=%d", SourceImageType, SourceImageBitSize);
    	 DEBUG_print(txtbuffer,DBG_RSPINFO1);
    }
    if (FlipTextureX || FlipTextureY)
-     DEBUG_print("RSP:SPRITE2D flip",DBG_RSPINFO1);
+     DEBUG_print((char*)"RSP:SPRITE2D flip",DBG_RSPINFO1);
    
    if (SourceImageType == 2)
      {
@@ -817,7 +817,7 @@ void RSP::POPMTX()
 
 //	GX_LoadPosMtxImm(GXmodelView, GX_PNMTX0);
 	if(guMtxInverse(GXmodelView, GXnormal) == 0)
-		DEBUG_print("Normal matrix is singular",DBG_RSPINFO);
+		DEBUG_print((char*)"Normal matrix is singular",DBG_RSPINFO);
 	guMtxTranspose(GXnormal, GXnormal);
 	GX_LoadNrmMtxImm(GXnormal, GX_PNMTX0);
 //	  printf("Send Normal Matrix to GX\n");
@@ -830,6 +830,9 @@ void RSP::TRI1()
    int v1 = ((*(currentCommand+1) >> 16) & 0xFF) / 10; //TODO: Verify correct vertex ordering for GX
    int v2 = ((*(currentCommand+1) >> 8) & 0xFF) / 10;
    int v0 = (*(currentCommand+1) & 0xFF) / 10;
+//   int s0, s1, s2, t0, t1, t2;
+//   bool invertedS0 = false, invertedS1 = false, invertedS2 = false;
+//   bool invertedT0 = false, invertedT1 = false, invertedT2 = false;
    
    /* All of this should be handled by GX
    Vertex cache[140];
@@ -1344,10 +1347,55 @@ void RSP::TRI1()
 //		int tile = 0;	// May need to detect latest tile
 		int tile = currentTile;
 
-		if(descriptor[tile].masks) w = (1<<descriptor[tile].masks)-1;
+		//This block attempted to properly handle masks/maskt, but it doesn't 
+/*		w = (descriptor[tile].lrs) - (descriptor[tile].uls);
+		h = (descriptor[tile].lrt) - (descriptor[tile].ult);
+
+		s0 = vtx[v0].s - descriptor[tile].uls;
+		s1 = vtx[v1].s - descriptor[tile].uls;
+		s2 = vtx[v2].s - descriptor[tile].uls;
+		t0 = vtx[v0].t - descriptor[tile].ult;
+		t1 = vtx[v1].t - descriptor[tile].ult;
+		t2 = vtx[v2].t - descriptor[tile].ult;
+
+		if (descriptor[tile].cms & 1 && s0 & (1<<descriptor[tile].masks)) invertedS0 = true;
+		if (descriptor[tile].cms & 1 && s1 & (1<<descriptor[tile].masks)) invertedS1 = true;
+		if (descriptor[tile].cms & 1 && s2 & (1<<descriptor[tile].masks)) invertedS2 = true;
+		if (descriptor[tile].cmt & 1 && t0 & (1<<descriptor[tile].maskt)) invertedT0 = true;
+		if (descriptor[tile].cmt & 1 && t1 & (1<<descriptor[tile].maskt)) invertedT1 = true;
+		if (descriptor[tile].cmt & 1 && t2 & (1<<descriptor[tile].maskt)) invertedT2 = true;
+		if (descriptor[tile].masks) {
+			s0 &= (1<<descriptor[tile].masks)-1;
+			s1 &= (1<<descriptor[tile].masks)-1;
+			s2 &= (1<<descriptor[tile].masks)-1;
+		}
+		if (descriptor[tile].maskt) {
+			t0 &= (1<<descriptor[tile].maskt)-1;
+			t1 &= (1<<descriptor[tile].maskt)-1;
+			t2 &= (1<<descriptor[tile].maskt)-1;
+		}
+		if (invertedS0) s0 = w - s0;
+		if (invertedS1) s1 = w - s1;
+		if (invertedS2) s2 = w - s2;
+		if (invertedT0) t0 = h - t0;
+		if (invertedT1) t1 = h - t1;
+		if (invertedT2) t2 = h - t2;
+		ps0 = s0/w;
+		ps1 = s1/w;
+		ps2 = s2/w;
+		pt0 = t0/w;
+		pt1 = t1/w;
+		pt2 = t2/w;*/
+
+		//This is more elegant, but it breaks when the mask is bigger than the texture width
+/*		if(descriptor[tile].masks) w = (1<<descriptor[tile].masks)-1;
 		else w = (descriptor[tile].lrs) - (descriptor[tile].uls);
 		if(descriptor[tile].maskt) h = (1<<descriptor[tile].maskt)-1;
-		else h = (descriptor[tile].lrt) - (descriptor[tile].ult);
+		else h = (descriptor[tile].lrt) - (descriptor[tile].ult);*/
+
+		w = (descriptor[tile].lrs) - (descriptor[tile].uls);
+		h = (descriptor[tile].lrt) - (descriptor[tile].ult);
+
 		ps0 = (vtx[v0].s - descriptor[tile].uls)/w;
 		ps1 = (vtx[v1].s - descriptor[tile].uls)/w;
 		ps2 = (vtx[v2].s - descriptor[tile].uls)/w;
@@ -1363,9 +1411,13 @@ void RSP::TRI1()
 		GX_SetTevOp (GX_TEVSTAGE0, GX_PASSCLR);*/
    }
 
-   if (cycleType == 1) DEBUG_print("TRI1: CopyModeDraw2 - Not Implemented, yet!\n",DBG_RSPINFO);
+   if (cycleType == 1) {
+		DEBUG_print((char*)"TRI1: CopyModeDraw2\n",DBG_RSPINFO);
+		cc->combine2(textureScales.tile,textureScales.tile+1,textureScales.enabled);
+   }
+   else
+	   cc->combine1(textureScales.tile,textureScales.enabled);
 
-   cc->combine1(textureScales.tile,textureScales.enabled);
    bl->cycle1ModeDraw();
 
 /*   //TODO: These blend modes need to be fixed!

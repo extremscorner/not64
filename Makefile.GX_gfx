@@ -15,8 +15,8 @@ CFLAGS  = -g -O2 -Wall $(MACHDEP) \
 	  -DNOASM -DNGC -DNOASM -DPIXEL_FORMAT=RGB565  \
 	  -DM_PI=3.14159265359  \
 	  -fno-exceptions -Wno-unused-parameter -pipe \
-	   -DUSE_GUI -DSHOW_DEBUG #-DEMBEDDED_FONTS -DPRINTGECKO
-	   
+	   -DUSE_GUI -DSHOW_DEBUG 
+	   #-DEMBEDDED_FONTS -DPRINTGECKO
 
 MACHDEP	= -DGEKKO -mcpu=750 -meabi -mhard-float 
 LDFLAGS	=	$(MACHDEP) -mogc -Wl,-Map,$(notdir $@).map -Wl,--cref
@@ -152,7 +152,8 @@ HEADER		=main/rom.h \
 		r4300/recomp.h \
 		gc_memory/pif.h
 
-LIB		=	-logc -lm -lsdcard
+#LIB		=	-logc -lm -logcsys -lsdcard -lpngogc -lpng -lz
+LIB		=	-logc -lm -lsdcard 
 
 ifeq ($(strip mupen64_GX_gfx/main.cpp),)
 	export LD	:=	$(CC)

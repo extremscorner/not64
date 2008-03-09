@@ -68,6 +68,7 @@ void CC::setCombineMode(int cycle1, int cycle2)
    for (int i=0;i<2;i++){
 	   for (int j=0;j<4;j++){
 		   //Set color source
+		   texSrc[i][j] = CC_TEXNULL;
 		   switch(colorSrc[i][j])
 		   {
 		   case 0: //&combined
@@ -75,9 +76,11 @@ void CC::setCombineMode(int cycle1, int cycle2)
 				break;
 		   case 1: //&texel0
 				GXtevcolorarg[i][j] = GX_CC_TEXC;
+				texSrc[i][j] = CC_TEX0;
 				break;
 		   case 2: //&texel1
 				GXtevcolorarg[i][j] = GX_CC_TEXC;
+				texSrc[i][j] = CC_TEX1;
 				break;
 		   case 3: //&primColor;
 				GXtevcolorarg[i][j] = GX_CC_C1;
@@ -98,8 +101,10 @@ void CC::setCombineMode(int cycle1, int cycle2)
 				}
 				break;
 		   case 8:
-				if (j == 2) //&texel0Alpha
+				if (j == 2) { //&texel0Alpha
 					GXtevcolorarg[i][j] = GX_CC_TEXA;
+					texSrc[i][j] = CC_TEX0;
+				}
 				else { //&zero
 					sprintf(txtbuffer,"CC:unknown color combiner source:%d,%d\n", i, j);
 					DEBUG_print(txtbuffer,DBG_CCINFO);
@@ -107,8 +112,10 @@ void CC::setCombineMode(int cycle1, int cycle2)
 				}
 				break;
 		   case 9:
-				if (j == 2) //&texel1Alpha
+				if (j == 2) { //&texel1Alpha
 					GXtevcolorarg[i][j] = GX_CC_TEXA;
+					texSrc[i][j] = CC_TEX1;
+				}
 				else  //&zero
 					GXtevcolorarg[i][j] = GX_CC_ZERO;
 				break;
@@ -159,9 +166,13 @@ void CC::setCombineMode(int cycle1, int cycle2)
 				break;
 		   case 1: //texel0.getAlphap()
 				GXtevalphaarg[i][j] = GX_CA_TEXA;
+				if (texSrc[i][j] == CC_TEX1) DEBUG_print((char*)"CC:TEX0 and TEX1 on same stage!\n",DBG_CCINFO);
+				texSrc[i][j] = CC_TEX0;
 				break;
 		   case 2: //texel1.getAlphap()
 				GXtevalphaarg[i][j] = GX_CA_TEXA;
+				if (texSrc[i][j] == CC_TEX0) DEBUG_print((char*)"CC:TEX0 and TEX1 on same stage!\n",DBG_CCINFO);
+				texSrc[i][j] = CC_TEX1;
 				break;
 		   case 3: //primColor.getAlphap()
 				GXtevalphaarg[i][j] = GX_CA_A1;
@@ -298,7 +309,7 @@ void CC::combine1(u8 tile0, bool tex_en)
 	else GX_SetTevOrder (GX_TEVSTAGE2, GX_TEXCOORDNULL, GX_TEXMAP_NULL, GX_COLOR0A0);
 	GX_SetTevColorIn (GX_TEVSTAGE2, GXclrtmp[0][3], GX_CC_ZERO, GX_CC_ZERO, GX_CC_CPREV);
 	GX_SetTevColorOp (GX_TEVSTAGE2, GX_TEV_ADD, GX_TB_ZERO, GX_CS_SCALE_1, GX_ENABLE, GX_TEVPREV);
-	GX_SetTevAlphaIn (GX_TEVSTAGE2, GXalphatmp[0][3], GX_CC_ZERO, GX_CC_ZERO, GX_CA_APREV);
+	GX_SetTevAlphaIn (GX_TEVSTAGE2, GXalphatmp[0][3], GX_CA_ZERO, GX_CA_ZERO, GX_CA_APREV);
 	GX_SetTevAlphaOp (GX_TEVSTAGE2, GX_TEV_ADD, GX_TB_ZERO, GX_CS_SCALE_1, GX_ENABLE, GX_TEVPREV);
 
 
@@ -308,7 +319,7 @@ void CC::combine1(u8 tile0, bool tex_en)
 //GXSetAlphaCompare
 }
 
-void CC::combine2(u8 tile0, u8 tile1)
+void CC::combine2(u8 tile0, u8 tile1, bool tex_en)
 {
 /*   texel0 = texela;
    texel0Alpha = Color32(texel0.getAlpha(), texel0.getAlpha(), texel0.getAlpha(), texel0.getAlpha());
@@ -332,7 +343,7 @@ void CC::combine2(u8 tile0, u8 tile1)
 //Tevstage 1 -> A-B
 //Tevstage 0 -> Tevprev*C + D
 
-   	GX_SetNumChans (1);
+/*   	GX_SetNumChans (1);
 	GX_SetNumTexGens (1); //change for 2 textures
 	GX_SetNumTevStages (4);
 //Set Tevstage 3 -> A-B
@@ -358,7 +369,110 @@ void CC::combine2(u8 tile0, u8 tile1)
 	GX_SetTevColorIn (GX_TEVSTAGE0, GX_CC_ZERO, GX_CC_CPREV, GXtevcolorarg[0][2], GXtevcolorarg[0][3]);
 	GX_SetTevColorOp (GX_TEVSTAGE0, GX_TEV_ADD, GX_TB_ZERO, GX_CS_SCALE_1, GX_ENABLE, GX_TEVPREV);
 	GX_SetTevAlphaIn (GX_TEVSTAGE0, GX_CA_ZERO, GX_CA_APREV, GXtevalphaarg[0][2], GXtevalphaarg[0][3]);
+	GX_SetTevAlphaOp (GX_TEVSTAGE0, GX_TEV_ADD, GX_TB_ZERO, GX_CS_SCALE_1, GX_ENABLE, GX_TEVPREV);*/
+
+
+// Combine2:	(A0-B0)C0+D0 -> combined
+//				(A1-B1)C1+D1 -> color/alpha
+//Tevstage 0 -> A0
+//Tevstage 1 -> Tevprev - B0
+//Tevstage 2 -> Tevprev * C0
+//Tevstage 3 -> Tevprev + D0 -> GX_TEVREG0
+//Tevstage 4 -> A1
+//Tevstage 5 -> Tevprev - B1
+//Tevstage 6 -> Tevprev * C1
+//Tevstage 7 -> Tevprev + D1
+
+	u8 GXclrtmp[2][4];
+	u8 GXalphatmp[2][4];
+
+/*	u8 GXtexcoord0 = GX_TEXCOORD0;
+	u8 GXtexcoord1 = GX_TEXCOORD1;
+	u8 GXtexmap0 = GX_TEXMAP0;
+	u8 GXtexmap1 = GX_TEXMAP1;*/
+
+	for (int i=0;i<4;i++) {
+		GXclrtmp[0][i] = GXtevcolorarg[0][i];
+		GXclrtmp[1][i] = GXtevcolorarg[1][i];
+		GXalphatmp[0][i] = GXtevalphaarg[0][i];
+		GXalphatmp[1][i] = GXtevalphaarg[1][i];
+		if (!tex_en && (GXclrtmp[0][i] == GX_CC_TEXC || GXclrtmp[0][i] == GX_CC_TEXA)) GXclrtmp[0][i] = GX_CC_ZERO;
+		if (!tex_en && (GXclrtmp[1][i] == GX_CC_TEXC || GXclrtmp[1][i] == GX_CC_TEXA)) GXclrtmp[1][i] = GX_CC_ZERO;
+		if (!tex_en && (GXalphatmp[0][i] == GX_CA_TEXA)) GXalphatmp[0][i] = GX_CC_ZERO;
+		if (!tex_en && (GXalphatmp[1][i] == GX_CA_TEXA)) GXalphatmp[1][i] = GX_CC_ZERO;
+	}
+
+	GX_SetNumChans (1);
+	if (tex_en)	GX_SetNumTexGens (2); // may need to set this according to # of active textures
+	else GX_SetNumTexGens (0);
+	GX_SetNumTevStages (8);
+//Set Tevstage 0 -> A0
+//	if (tex_en && ((colorSrc[0][0]==1)||(colorSrc[0][0]==2)) GX_SetTevOrder (GX_TEVSTAGE0, GX_TEXCOORD0, GX_TEXMAP0, GX_COLOR0A0); // change to (u8) tile later
+	if (tex_en && texSrc[0][0] == CC_TEX0) GX_SetTevOrder (GX_TEVSTAGE0, (u8) tile0, (u8) tile0, GX_COLOR0A0);
+	else if (tex_en && texSrc[0][0] == CC_TEX1) GX_SetTevOrder (GX_TEVSTAGE0, (u8) tile1, (u8) tile1, GX_COLOR0A0);
+	else GX_SetTevOrder (GX_TEVSTAGE0, GX_TEXCOORDNULL, GX_TEXMAP_NULL, GX_COLOR0A0);
+	GX_SetTevColorIn (GX_TEVSTAGE0, GX_CC_ZERO, GX_CC_ZERO, GX_CC_ZERO, GXclrtmp[0][0]);
+	GX_SetTevColorOp (GX_TEVSTAGE0, GX_TEV_ADD, GX_TB_ZERO, GX_CS_SCALE_1, GX_ENABLE, GX_TEVPREV);
+	GX_SetTevAlphaIn (GX_TEVSTAGE0, GX_CA_ZERO, GX_CA_ZERO, GX_CA_ZERO, GXalphatmp[0][0]);
 	GX_SetTevAlphaOp (GX_TEVSTAGE0, GX_TEV_ADD, GX_TB_ZERO, GX_CS_SCALE_1, GX_ENABLE, GX_TEVPREV);
+//Set Tevstage 1 -> Tevprev(inputD) - B0
+	if (tex_en && texSrc[0][1] == CC_TEX0) GX_SetTevOrder (GX_TEVSTAGE1, (u8) tile0, (u8) tile0, GX_COLOR0A0);
+	else if (tex_en && texSrc[0][1] == CC_TEX1) GX_SetTevOrder (GX_TEVSTAGE1, (u8) tile1, (u8) tile1, GX_COLOR0A0);
+	else GX_SetTevOrder (GX_TEVSTAGE1, GX_TEXCOORDNULL, GX_TEXMAP_NULL, GX_COLOR0A0);
+	GX_SetTevColorIn (GX_TEVSTAGE1, GXclrtmp[0][1], GX_CC_ZERO, GX_CC_ZERO, GX_CC_CPREV);
+	GX_SetTevColorOp (GX_TEVSTAGE1, GX_TEV_SUB, GX_TB_ZERO, GX_CS_SCALE_1, GX_DISABLE, GX_TEVPREV);
+	GX_SetTevAlphaIn (GX_TEVSTAGE1, GXalphatmp[0][1], GX_CA_ZERO, GX_CA_ZERO, GX_CA_APREV);
+	GX_SetTevAlphaOp (GX_TEVSTAGE1, GX_TEV_SUB, GX_TB_ZERO, GX_CS_SCALE_1, GX_DISABLE, GX_TEVPREV);
+//Set Tevstage 2 -> Tevprev(inputD) * C0
+	if (tex_en && texSrc[0][2] == CC_TEX0) GX_SetTevOrder (GX_TEVSTAGE2, (u8) tile0, (u8) tile0, GX_COLOR0A0);
+	else if (tex_en && texSrc[0][2] == CC_TEX1) GX_SetTevOrder (GX_TEVSTAGE2, (u8) tile1, (u8) tile1, GX_COLOR0A0);
+	else GX_SetTevOrder (GX_TEVSTAGE2, GX_TEXCOORDNULL, GX_TEXMAP_NULL, GX_COLOR0A0);
+	GX_SetTevColorIn (GX_TEVSTAGE2, GX_CC_ZERO, GX_CC_CPREV, GXclrtmp[0][2], GX_CC_ZERO);
+	GX_SetTevColorOp (GX_TEVSTAGE2, GX_TEV_ADD, GX_TB_ZERO, GX_CS_SCALE_1, GX_DISABLE, GX_TEVPREV);
+	GX_SetTevAlphaIn (GX_TEVSTAGE2, GX_CA_ZERO, GX_CA_APREV, GXalphatmp[0][2], GX_CA_ZERO);
+	GX_SetTevAlphaOp (GX_TEVSTAGE2, GX_TEV_ADD, GX_TB_ZERO, GX_CS_SCALE_1, GX_DISABLE, GX_TEVPREV);
+//Set Tevstage 3 -> Tevprev(inputD) + D0 -> GX_TEVREG0
+	if (tex_en && texSrc[0][3] == CC_TEX0) GX_SetTevOrder (GX_TEVSTAGE3, (u8) tile0, (u8) tile0, GX_COLOR0A0);
+	else if (tex_en && texSrc[0][3] == CC_TEX1) GX_SetTevOrder (GX_TEVSTAGE3, (u8) tile1, (u8) tile1, GX_COLOR0A0);
+	else GX_SetTevOrder (GX_TEVSTAGE3, GX_TEXCOORDNULL, GX_TEXMAP_NULL, GX_COLOR0A0);
+	GX_SetTevColorIn (GX_TEVSTAGE3, GXclrtmp[0][3], GX_CC_ZERO, GX_CC_ZERO, GX_CC_CPREV);
+	GX_SetTevColorOp (GX_TEVSTAGE3, GX_TEV_ADD, GX_TB_ZERO, GX_CS_SCALE_1, GX_DISABLE, GX_TEVREG0);
+	GX_SetTevAlphaIn (GX_TEVSTAGE3, GXalphatmp[0][3], GX_CA_ZERO, GX_CA_ZERO, GX_CA_APREV);
+	GX_SetTevAlphaOp (GX_TEVSTAGE3, GX_TEV_ADD, GX_TB_ZERO, GX_CS_SCALE_1, GX_DISABLE, GX_TEVREG0);
+//Set Tevstage 4 -> A1
+//	if (tex_en && ((colorSrc[0][0]==1)||(colorSrc[0][0]==2)) GX_SetTevOrder (GX_TEVSTAGE0, GX_TEXCOORD0, GX_TEXMAP0, GX_COLOR0A0); // change to (u8) tile later
+	if (tex_en && texSrc[1][0] == CC_TEX0) GX_SetTevOrder (GX_TEVSTAGE4, (u8) tile0, (u8) tile0, GX_COLOR0A0);
+	else if (tex_en && texSrc[1][0] == CC_TEX1) GX_SetTevOrder (GX_TEVSTAGE4, (u8) tile1, (u8) tile1, GX_COLOR0A0);
+	else GX_SetTevOrder (GX_TEVSTAGE4, GX_TEXCOORDNULL, GX_TEXMAP_NULL, GX_COLOR0A0);
+	GX_SetTevColorIn (GX_TEVSTAGE4, GX_CC_ZERO, GX_CC_ZERO, GX_CC_ZERO, GXclrtmp[1][0]);
+	GX_SetTevColorOp (GX_TEVSTAGE4, GX_TEV_ADD, GX_TB_ZERO, GX_CS_SCALE_1, GX_ENABLE, GX_TEVPREV);
+	GX_SetTevAlphaIn (GX_TEVSTAGE4, GX_CA_ZERO, GX_CA_ZERO, GX_CA_ZERO, GXalphatmp[1][0]);
+	GX_SetTevAlphaOp (GX_TEVSTAGE4, GX_TEV_ADD, GX_TB_ZERO, GX_CS_SCALE_1, GX_ENABLE, GX_TEVPREV);
+//Set Tevstage 5 -> Tevprev(inputD) - B1
+	if (tex_en && texSrc[1][1] == CC_TEX0) GX_SetTevOrder (GX_TEVSTAGE5, (u8) tile0, (u8) tile0, GX_COLOR0A0);
+	else if (tex_en && texSrc[1][1] == CC_TEX1) GX_SetTevOrder (GX_TEVSTAGE5, (u8) tile1, (u8) tile1, GX_COLOR0A0);
+	else GX_SetTevOrder (GX_TEVSTAGE5, GX_TEXCOORDNULL, GX_TEXMAP_NULL, GX_COLOR0A0);
+	GX_SetTevColorIn (GX_TEVSTAGE5, GXclrtmp[1][1], GX_CC_ZERO, GX_CC_ZERO, GX_CC_CPREV);
+	GX_SetTevColorOp (GX_TEVSTAGE5, GX_TEV_SUB, GX_TB_ZERO, GX_CS_SCALE_1, GX_DISABLE, GX_TEVPREV);
+	GX_SetTevAlphaIn (GX_TEVSTAGE5, GXalphatmp[1][1], GX_CA_ZERO, GX_CA_ZERO, GX_CA_APREV);
+	GX_SetTevAlphaOp (GX_TEVSTAGE5, GX_TEV_SUB, GX_TB_ZERO, GX_CS_SCALE_1, GX_DISABLE, GX_TEVPREV);
+//Set Tevstage 6 -> Tevprev(inputD) * C1
+	if (tex_en && texSrc[1][2] == CC_TEX0) GX_SetTevOrder (GX_TEVSTAGE6, (u8) tile0, (u8) tile0, GX_COLOR0A0);
+	else if (tex_en && texSrc[1][2] == CC_TEX1) GX_SetTevOrder (GX_TEVSTAGE6, (u8) tile1, (u8) tile1, GX_COLOR0A0);
+	else GX_SetTevOrder (GX_TEVSTAGE6, GX_TEXCOORDNULL, GX_TEXMAP_NULL, GX_COLOR0A0);
+	GX_SetTevColorIn (GX_TEVSTAGE6, GX_CC_ZERO, GX_CC_CPREV, GXclrtmp[1][2], GX_CC_ZERO);
+	GX_SetTevColorOp (GX_TEVSTAGE6, GX_TEV_ADD, GX_TB_ZERO, GX_CS_SCALE_1, GX_DISABLE, GX_TEVPREV);
+	GX_SetTevAlphaIn (GX_TEVSTAGE6, GX_CA_ZERO, GX_CA_APREV, GXalphatmp[1][2], GX_CA_ZERO);
+	GX_SetTevAlphaOp (GX_TEVSTAGE6, GX_TEV_ADD, GX_TB_ZERO, GX_CS_SCALE_1, GX_DISABLE, GX_TEVPREV);
+//Set Tevstage 7 -> Tevprev(inputD) + D1
+	if (tex_en && texSrc[1][3] == CC_TEX0) GX_SetTevOrder (GX_TEVSTAGE7, (u8) tile0, (u8) tile0, GX_COLOR0A0);
+	else if (tex_en && texSrc[1][3] == CC_TEX1) GX_SetTevOrder (GX_TEVSTAGE7, (u8) tile1, (u8) tile1, GX_COLOR0A0);
+	else GX_SetTevOrder (GX_TEVSTAGE7, GX_TEXCOORDNULL, GX_TEXMAP_NULL, GX_COLOR0A0);
+	GX_SetTevColorIn (GX_TEVSTAGE7, GXclrtmp[1][3], GX_CC_ZERO, GX_CC_ZERO, GX_CC_CPREV);
+	GX_SetTevColorOp (GX_TEVSTAGE7, GX_TEV_ADD, GX_TB_ZERO, GX_CS_SCALE_1, GX_ENABLE, GX_TEVPREV);
+	GX_SetTevAlphaIn (GX_TEVSTAGE7, GXalphatmp[1][3], GX_CA_ZERO, GX_CA_ZERO, GX_CA_APREV);
+	GX_SetTevAlphaOp (GX_TEVSTAGE7, GX_TEV_ADD, GX_TB_ZERO, GX_CS_SCALE_1, GX_ENABLE, GX_TEVPREV);
+
 
 //GXSetTevColor
 //GXSetTevClampMode

@@ -148,7 +148,7 @@ void BL::setBlender(int value)
    if (oldBlenderMode == (value>>16)) return;
    oldBlenderMode = value>>16;
    
-   int sa1,sb1,ca1,cb1, sa2, sb2, ca2, cb2;
+//   int sa1,sb1,ca1,cb1, sa2, sb2, ca2, cb2;
    blendSrc[0][0] = (value >> 30) & 3;	//sa1
    blendSrc[1][0] = (value >> 28) & 3;	//sa2
    blendSrc[0][1] = (value >> 26) & 3;	//ca1

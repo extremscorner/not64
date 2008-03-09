@@ -43,6 +43,7 @@ void showLoadProgress(float percent){
 *******************************************************************/ 
 EXPORT void CALL CaptureScreen ( char * Directory )
 {
+	vi->setCaptureScreen();
 }
 
 /******************************************************************
