@@ -11,6 +11,7 @@
 #define DBG_RSPINFO1 3
 #define DBG_TXINFO 4
 #define DBG_TXINFO1 5
+#define DBG_VIINFO 6
 #define DBG_CCINFO 9
 #define DBG_BLINFO 10
 #define DBG_AUDIOINFO 6

@@ -5,6 +5,10 @@
 #include "color.h"
 #include <gccore.h>
 
+#define CC_TEXNULL 0
+#define CC_TEX0 1
+#define CC_TEX1 2
+
 
 class CC
 {
@@ -17,6 +21,7 @@ class CC
    // GX parameters
    u8 GXtevcolorarg[2][4];
    u8 GXtevalphaarg[2][4];
+   int texSrc[2][4];
    int colorSrc[2][4]; //a0,b0,c0,d0,a1,b1,c1,d1
    int alphaSrc[2][4]; //Aa0,Ab0,Ac0,Ad0,Aa1,Ab1,Ac1,Ad1
    GXColor GXprimColor, GXenvColor, GXshade;
@@ -57,5 +62,5 @@ class CC
    
    void setShade(const Color32& c);
    void combine1(u8 tile0, bool tex_en);
-   void combine2(u8 tile0, u8 tile1);
+   void combine2(u8 tile0, u8 tile1, bool tex_en);
 };

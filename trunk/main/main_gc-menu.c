@@ -55,8 +55,9 @@ unsigned int isWii = 0;
       asm volatile("mfpvr %0" : "=r" (rval)); rval;})
 // -- End plugin data --
 
-// Framebuffers
-static u32* xfb[2] = { NULL, NULL };
+static u32* xfb[2] = { NULL, NULL };	/*** Framebuffers ***/
+//static GXRModeObj *vmode;				/*** Graphics Mode Object ***/
+GXRModeObj *vmode;				/*** Graphics Mode Object ***/
 
 // Dummy functions
 static void dummy_func(){ }
@@ -265,7 +266,6 @@ static void rsp_info_init(void){
 }
 
 static void Initialise (void){
-  static GXRModeObj *vmode;        /*** Graphics Mode Object ***/
   static int whichfb = 0;        /*** Frame buffer toggle ***/
   VIDEO_Init ();
   PAD_Init ();

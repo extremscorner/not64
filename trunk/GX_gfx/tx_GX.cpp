@@ -282,7 +282,7 @@ void TX::loadTile(int tile, float uls, float ult, float lrs, float lrt)
 						   if((i_s<(lrs+1))&&(i_t<(lrt+1))) c = p[i_t*tile_width+i_s^S8]; 
 						   else c = 0;
 						   txl = (c&0xFF)<<8;
-						   if((i_s+1<(lrs+1))&&(i_t<(lrt+1))) c = p[i_t*tile_width*size+(i_s+1)^S8]; 
+						   if((i_s+1<(lrs+1))&&(i_t<(lrt+1))) c = p[i_t*tile_width+(i_s+1)^S8]; 
 						   else c = 0;
 						   GXtexture[count^S16] = txl|(c&0xFF);
 						   count++;

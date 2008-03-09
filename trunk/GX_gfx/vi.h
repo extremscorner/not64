@@ -56,6 +56,8 @@ class VI
    virtual void setGamma(float gamma) = 0;
    virtual void showLoadProg(float) = 0;
    virtual void updateDEBUG() = 0;
+   virtual void setCaptureScreen() = 0;
+   virtual void doCaptureScreen() = 0;
    void statusChanged();
    void widthChanged();
    void updateScreen();

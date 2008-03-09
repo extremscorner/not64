@@ -3,17 +3,22 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
+//#include <gccore.h>
 #include <ogc/system.h>
 #include <ogc/video.h>
 #include <ogc/gx.h>
 #include <ogc/gu.h>
+#include <sdcard.h>
+//#include <png/pngogc.h>
 #include "vi_GX.h"
 #include "../gui/font.h"
 #include "../gui/DEBUG.h"
 
-VI_GX::VI_GX(GFX_INFO info) : VI(info), width(0), height(0), which_fb(1){
+VI_GX::VI_GX(GFX_INFO info) : VI(info), which_fb(1), width(0), height(0){
 	init_font();
 	updateDEBUGflag = true;
+	captureScreenFlag = false;
 	// FIXME: Instead of creating our own fb, we should use main's
 	//xfb[0] = (unsigned int*) MEM_K0_TO_K1(SYS_AllocateFramebuffer(&TVNtsc480IntDf));
 	//xfb[1] = (unsigned int*) MEM_K0_TO_K1(SYS_AllocateFramebuffer(&TVNtsc480IntDf));
@@ -43,11 +48,12 @@ void VI_GX::blit(){
 	//printf("Should be blitting.");
 	showFPS();
 	showDEBUG();
-	updateDEBUGflag = false;
-    GX_DrawDone (); //needed?
+    GX_DrawDone(); //needed?
 	GX_CopyDisp (xfb[which_fb], GX_FALSE); //TODO: Figure out where the UpdateScreen interrupts are coming from!
-    GX_Flush (); //needed?
-//	showFPS();
+//    GX_Flush (); //needed?
+    GX_DrawDone(); //Shagkur's recommendation
+	doCaptureScreen();
+	updateDEBUGflag = false;
 	VIDEO_SetNextFramebuffer(xfb[which_fb]);
 	VIDEO_Flush();
 	which_fb ^= 1;
@@ -156,7 +162,9 @@ void VI_GX::updateDEBUG()
 {
 	updateDEBUGflag = true;
 }
+
 extern char text[DEBUG_TEXT_HEIGHT][DEBUG_TEXT_WIDTH];
+
 void VI_GX::showDEBUG()
 {
 	if (updateDEBUGflag)
@@ -172,5 +180,58 @@ void VI_GX::showDEBUG()
 	   //reset swap table from GUI/DEBUG
 		GX_SetTevSwapModeTable(GX_TEV_SWAP0, GX_CH_RED, GX_CH_GREEN, GX_CH_BLUE, GX_CH_ALPHA);
 		GX_SetTevSwapMode(GX_TEVSTAGE0, GX_TEV_SWAP0, GX_TEV_SWAP0);
+	}
+}
+
+void VI_GX::setCaptureScreen()
+{
+	captureScreenFlag = true;
+}
+
+extern GXRModeObj *vmode;		/*** Graphics Mode Object declared as global in main_gc-menu.c ***/
+
+void VI_GX::doCaptureScreen()
+{
+	if (updateDEBUGflag && captureScreenFlag)
+	{
+#if 0	//This code is for future Screen Capture functionality using libPNG
+
+		//The following code is adapted from SoftDev's libpngogc example
+		//requires -lpngogc -lpng in Makefile
+		//I estimate the required free memory to be about 1MB for this to work
+		/*** User defined types from pngogc ***/
+		PNG_MEMFILE *mf;
+		char *pic;		/*** Picture buffer ***/
+
+		SDCARD_Init();	/*** SDCard may not have been initialized yet ***/
+
+		pic = (char *)malloc(vmode->fbWidth * vmode->xfbHeight * 3); /*** Way too big, better to be safe though ***/
+		mf = pngmem_fopen(pic, vmode->fbWidth * vmode->xfbHeight * 3);
+
+		YUY2toRGB24(vmode, (u8 *) pic, (u8 *)((u32)xfb[which_fb] & 0x8fffffff) );	/* Take snapshot of current fb */
+
+		/* Write the compressed image to the memory file */
+		if(PNG_Write( pic, vmode->fbWidth, vmode->xfbHeight, mf ) == PNGOGC_SUCCESS)
+		{
+			/*** Write to SD ***/
+			sd_file *handle;
+			handle = SDCARD_OpenFile("dev0:\\N64SAVES\\gcscreen.png", "w");
+			if(!handle){
+				printf("file not found or wrong path\n");
+				DEBUG_print("Unable to open screen capture file on SD card slot A...",DBG_VIINFO);
+			}
+			else{
+				SDCARD_WriteFile(handle, pic, mf->currpos);
+				SDCARD_CloseFile(handle);
+				DEBUG_print("Screen capture saved to SD card in slot A...",DBG_VIINFO);
+			}
+		}
+
+		/*** Close memory file and free picture buffer ***/
+		pngmem_fclose(mf);
+		free(pic);
+
+#endif
+		captureScreenFlag = false;
 	}
 }

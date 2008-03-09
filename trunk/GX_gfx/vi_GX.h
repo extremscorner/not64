@@ -10,6 +10,7 @@
 class VI_GX : public VI
 {
    bool updateDEBUGflag;
+   bool captureScreenFlag;
    unsigned int* xfb[2];
    int which_fb;
    int width;
@@ -34,6 +35,8 @@ class VI_GX : public VI
    unsigned int* getScreenPointer();
    void showLoadProg(float);
    void updateDEBUG();
+   void setCaptureScreen();
+   void doCaptureScreen();
 };
 
 #endif
