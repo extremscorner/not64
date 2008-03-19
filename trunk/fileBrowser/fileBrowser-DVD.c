@@ -24,6 +24,13 @@ fileBrowser_file topLevel_DVD =
 	 };
 
 int DVD_check_state() {
+#ifdef WII
+	WiiDVD_Init();
+	WiiDVD_Reset();
+	dvd_read_id();
+	return 0;
+#endif
+	dvd_read_id();
 	if(dvd_get_error() == 0){
 		dvdInitialized = 1;
 		return 0;
@@ -48,7 +55,6 @@ int DVD_check_state() {
 	 
 int fileBrowser_DVD_readDir(fileBrowser_file* ffile, fileBrowser_file** dir){	
 	
-	dvd_read_id();
 	DVD_check_state();
 	
 	int num_entries = 0;
@@ -108,6 +114,12 @@ int fileBrowser_DVD_readFile(fileBrowser_file* file, void* buffer, unsigned int 
 }
 
 int fileBrowser_DVD_init(fileBrowser_file* file) {
+#ifdef WII
+	WiiDVD_Init();
+	WiiDVD_Reset();
+	dvd_read_id();
+	return 0;
+#endif
 	dvd_read_id();
 	if(dvd_get_error() == 0)
 		return 0;

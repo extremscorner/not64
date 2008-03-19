@@ -15,8 +15,9 @@ char text[DEBUG_TEXT_HEIGHT][DEBUG_TEXT_WIDTH];
 long long texttimes[DEBUG_TEXT_HEIGHT];
 extern long long gettime();
 extern unsigned int diff_sec(long long start,long long end);
-
+#endif
 void DEBUG_update() {
+	#ifdef SHOW_DEBUG
 	int i;
 	long long nowTick = gettime();
 	for(i=0; i<DEBUG_TEXT_HEIGHT; i++){
@@ -25,9 +26,9 @@ void DEBUG_update() {
 			memset(text[i],0,DEBUG_TEXT_WIDTH);
 		}
 	}
-	
+	#endif
 }
-#endif
+
 
 int flushed = 0;
 void DEBUG_print(char* string,int pos){
