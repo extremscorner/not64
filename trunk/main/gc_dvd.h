@@ -31,7 +31,8 @@ void WiiDVD_StopMotor();
 int WiiDVD_ReadID(void *dst);
 int WiiDVDReadUnEncrypted(void* dst, unsigned int len, unsigned int offset);
 int WiiDVDRead(void* dst, unsigned int len, unsigned int offset);
-
+int WiiDVDSeek(unsigned int offset);
+int WiiDVDSetOffset(unsigned int offset);
 #endif
 
 struct pvd_s
