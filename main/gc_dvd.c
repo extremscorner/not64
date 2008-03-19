@@ -22,7 +22,7 @@ volatile unsigned long* dvd = (volatile unsigned long*)0xCC006000;
 #define IOCTL_DI_STOPMOTOR			0xE3
 
 static int __dvd_fd = -1;
-static int previously_initd = 0;
+int previously_initd = 0;
 static char __di_fs[] ATTRIBUTE_ALIGN(32) = "/dev/di";
 
 u8 dicommand [32]   ATTRIBUTE_ALIGN(32);
@@ -83,7 +83,7 @@ int WiiDVDReadUnEncrypted(void* dst, unsigned int len, unsigned int offset){
 	((u32*)dicommand)[1] = len;
 	((u32*)dicommand)[2] = (u32)(offset>>2);
 	ret = IOS_Ioctl(__dvd_fd,dicommand[0],&dicommand,0x20,(u8*)dst,len);
-	return ret;
+	return 0;
 }
 
 int WiiDVDRead(void* dst, unsigned int len, unsigned int offset){
@@ -93,7 +93,23 @@ int WiiDVDRead(void* dst, unsigned int len, unsigned int offset){
 	((u32*)dicommand)[1] = len;
 	((u32*)dicommand)[2] = (u32)(offset>>2);
 	ret = IOS_Ioctl(__dvd_fd,dicommand[0],&dicommand,0x20,(u8*)dst,len);
-	return ret;
+	return 0;
+}
+int WiiDVDSeek(unsigned int offset){
+	int ret;
+	memset(dicommand, 0, 32 );	
+	dicommand[0] = 0xAB;
+	((u32*)dicommand)[1] = (u32)(offset>>2);
+	ret = IOS_Ioctl(__dvd_fd,dicommand[0],&dicommand,0x20,&dibufferio,0x20);
+	return 0;
+}
+int WiiDVDSetOffset(unsigned int offset){
+	int ret;
+	memset(dicommand, 0, 32 );	
+	dicommand[0] = 0xD9;
+	((u32*)dicommand)[1] = (u32)(offset>>2);
+	ret = IOS_Ioctl(__dvd_fd,dicommand[0],&dicommand,0x20,&dibufferio,0x20);
+	return 0;
 }
 #endif
 
@@ -172,6 +188,11 @@ int dvd_read(void* dst, unsigned int len, unsigned int offset)
 	return 0;
 }
 
+int read_sector(void* buffer, int sector)
+{
+	return dvd_read(buffer, 2048, sector * 2048);
+}
+
 int read_safe(void* dst, int offset, int len)
 {
 	int ol = len;
@@ -179,7 +200,7 @@ int read_safe(void* dst, int offset, int len)
 	while (len)
 	{
 		int sector = offset / 2048;
-		dvd_read(sector_buffer, 2048, sector * 2048);
+		read_sector(sector_buffer, sector);
 		int off = offset & 2047;
 
 		int rl = 2048 - off;
@@ -284,48 +305,52 @@ int read_direntry(unsigned char* direntry)
 
 void read_directory(int sector, int len)
 {
-	dvd_read(sector_buffer,2048,sector*2048);
+	read_sector(sector_buffer, sector);
 	
 	int ptr = 0;
 	files = 0;
 	memset(file,0,sizeof(file));
-	while (len > 0)	{
+	while (len > 0)	
+	{
 		ptr += read_direntry(sector_buffer + ptr);
 		if (!sector_buffer[ptr]) {
 			len -= 2048;
-			dvd_read(sector_buffer,2048,(++sector)*2048);
+			read_sector(sector_buffer, ++sector);
 			ptr = 0;
 		}
 	}
 }
 
+
 int dvd_read_directoryentries(unsigned int offset, int size) {
 	int sector = 16;
-	static unsigned char bufferDVD[2048] __attribute__((aligned(32)));
+	static unsigned char buffer[2048] __attribute__((aligned(32)));
 	
 	struct pvd_s* pvd = 0;
 	struct pvd_s* svd = 0;
-	while (sector < 32) {
-		if (dvd_read(bufferDVD,2048,sector*2048))
+	while (sector < 32)
+	{
+		if (read_sector(buffer, sector))
 			return FATAL_ERROR;
-		if (!memcmp(((struct pvd_s *)bufferDVD)->id, "\2CD001\1", 8))
+		if (!memcmp(((struct pvd_s *)buffer)->id, "\2CD001\1", 8))
 		{
-			svd = (void*)bufferDVD;
+			svd = (void*)buffer;
 			break;
 		}
 		++sector;
 	}
 
-	if (!svd) {
+	if (!svd)
+	{
 		sector = 16;
 		while (sector < 32)
 		{
-			if (dvd_read(bufferDVD,2048,sector*2048))
+			if (read_sector(buffer, sector))
 				return FATAL_ERROR;
 
-			if (!memcmp(((struct pvd_s *)bufferDVD)->id, "\1CD001\1", 8))
+			if (!memcmp(((struct pvd_s *)buffer)->id, "\1CD001\1", 8))
 			{
-				pvd = (void*)bufferDVD;
+				pvd = (void*)buffer;
 				break;
 			}
 			++sector;

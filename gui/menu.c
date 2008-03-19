@@ -287,6 +287,11 @@ static inline void menuStack_push(menu_item*);
 		romFile_seekFile = fileBrowser_DVD_seekFile;
 		romFile_init     = fileBrowser_DVD_init;
 		romFile_deinit   = fileBrowser_DVD_deinit;
+#ifdef WII
+		WiiDVD_Init();
+		WiiDVD_Reset();
+		dvd_read_id();
+#endif
 		// Then push the file browser onto the menu
 		menuStack_push( menuFileBrowser(romFile_topLevel) );
 		

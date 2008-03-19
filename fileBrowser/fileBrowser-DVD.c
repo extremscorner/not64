@@ -22,12 +22,10 @@ fileBrowser_file topLevel_DVD =
 	  0,         // size
 	  FILE_BROWSER_ATTR_DIR
 	 };
-
+extern int previously_initd;
 int DVD_check_state() {
 #ifdef WII
-	WiiDVD_Init();
-	WiiDVD_Reset();
-	dvd_read_id();
+	dvdInitialized = 1;
 	return 0;
 #endif
 	dvd_read_id();
@@ -115,9 +113,6 @@ int fileBrowser_DVD_readFile(fileBrowser_file* file, void* buffer, unsigned int 
 
 int fileBrowser_DVD_init(fileBrowser_file* file) {
 #ifdef WII
-	WiiDVD_Init();
-	WiiDVD_Reset();
-	dvd_read_id();
 	return 0;
 #endif
 	dvd_read_id();
