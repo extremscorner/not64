@@ -17,11 +17,22 @@ void read_directory(int sector, int len);
 int read_safe(void* dst, int offset, int len);
 int read_direntry(unsigned char* direntry);
 int read_sector(void* buffer, int sector);
-unsigned int dvd_read(void* dst, int len, unsigned int offset);
+int dvd_read(void* dst,unsigned int len, unsigned int offset);
 unsigned char sector_buffer[2048] __attribute__((aligned(32)));
 int is_unicode;
 int files;
-unsigned int dvd_read_id();
+int dvd_read_id();
+
+#ifdef WII
+int WiiDVD_Init();
+void WiiDVD_Reset();
+unsigned int WiiDVD_GetError();
+void WiiDVD_StopMotor();
+int WiiDVD_ReadID(void *dst);
+int WiiDVDReadUnEncrypted(void* dst, unsigned int len, unsigned int offset);
+int WiiDVDRead(void* dst, unsigned int len, unsigned int offset);
+
+#endif
 
 struct pvd_s
 {

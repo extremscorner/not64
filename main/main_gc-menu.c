@@ -71,9 +71,13 @@ int main(){
 	/* INITIALIZE */
 	Initialise(); // Stock OGC initialization
 	SDCARD_Init();
+#ifndef WII
 	DVD_Init();
+#endif
 	menuInit();
-	//killWiimote();
+#ifdef WII	
+	killWiimote();
+#endif
 	
 	// Default Settings
 	audioEnabled     = 0; // No audio
