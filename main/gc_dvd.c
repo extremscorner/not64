@@ -41,7 +41,7 @@ int WiiDVD_Init() {
 	return 0;
 }
 
-// Reset the drive + Spinup.
+/* Reset the drive plus spin it up, and retry infinitely too */
 void WiiDVD_Reset() {
 	memset(dicommand, 0, 32 );
 	dicommand[0] = IOCTL_DI_RESET;
@@ -49,6 +49,7 @@ void WiiDVD_Reset() {
 	IOS_Ioctl(__dvd_fd,dicommand[0],&dicommand,0x20,NULL,0);
 }
 
+/* Refer to YAGCD DVD Error codes, these are the same */
 u32 WiiDVD_GetError() {
 	int ret;
 	memset(dicommand, 0, 32 );
@@ -58,6 +59,7 @@ u32 WiiDVD_GetError() {
 	return ret;
 }
 
+/* Stop the drive completely (reset and read id required after this) */
 void WiiDVD_StopMotor() {
 	memset(dicommand, 0, 32 );
 	dicommand[0] = IOCTL_DI_STOPMOTOR;
@@ -66,6 +68,7 @@ void WiiDVD_StopMotor() {
 	IOS_Ioctl(__dvd_fd,dicommand[0],&dicommand,0x20,&dibufferio,0x20);
 }
 
+/* Read the Disc ID (This basically makes our medium readable) */
 int WiiDVD_ReadID(void *dst) {
 	int ret;
 	memset(dicommand, 0, 32 );
@@ -76,6 +79,7 @@ int WiiDVD_ReadID(void *dst) {
 	return ret;
 }
 
+/* Only used to open partitions. Pass in physical offset not sector LBA */
 int WiiDVDReadUnEncrypted(void* dst, unsigned int len, unsigned int offset){
 	int ret;
 	memset(dicommand, 0, 32 );	
@@ -86,6 +90,13 @@ int WiiDVDReadUnEncrypted(void* dst, unsigned int len, unsigned int offset){
 	return 0;
 }
 
+/*  Notes:
+	Only usable when a partition has been opened. 
+	Pass offset in as physical offset not sector LBA. 
+	(Remember the above as the wii gives you sector LBA ALOT (so just <<2 it and pass it in))
+	If you have opened a partition, the offsets you pass in are partition relative.
+	I.e. offset 0 is not offset 0 on the disc but only on the partition
+*/
 int WiiDVDRead(void* dst, unsigned int len, unsigned int offset){
 	int ret;
 	memset(dicommand, 0, 32 );	
@@ -95,6 +106,8 @@ int WiiDVDRead(void* dst, unsigned int len, unsigned int offset){
 	ret = IOS_Ioctl(__dvd_fd,dicommand[0],&dicommand,0x20,(u8*)dst,len);
 	return 0;
 }
+
+/* Not really needed */
 int WiiDVDSeek(unsigned int offset){
 	int ret;
 	memset(dicommand, 0, 32 );	
@@ -110,6 +123,51 @@ int WiiDVDSetOffset(unsigned int offset){
 	((u32*)dicommand)[1] = (u32)(offset>>2);
 	ret = IOS_Ioctl(__dvd_fd,dicommand[0],&dicommand,0x20,&dibufferio,0x20);
 	return 0;
+}
+
+/* Only needs valid offset+valid certificate_out 32 byte aligned buffer 
+	also this does all the /dev/es stuff for us!
+	*/
+static ioctlv __di_iovector[0x08] ATTRIBUTE_ALIGN(32);
+static u32 __di_lastticketerror[0x08] ATTRIBUTE_ALIGN(32);
+int WiiDVD_LowOpenPartition(u32 offset,void *eticket,u32 certin_len,void *certificate_in,void *certificate_out)
+{
+	int ret;
+
+	if(eticket!=NULL && ((u32)eticket%32)!=0) return -1;
+	if(certificate_in!=NULL && ((u32)certificate_in%32)!=0) return -1;
+	if(certificate_out!=NULL && ((u32)certificate_out%32)!=0) return -1;
+
+	memset(dicommand, 0, 32 );	
+	dicommand[0x00] = IOCTL_DI_OPENPART;
+	((u32*)dicommand)[1] = offset;
+
+	__di_iovector[0].data = &dicommand;
+	__di_iovector[0].len = 0x20;
+
+	__di_iovector[1].data = eticket;
+	if(eticket==NULL) __di_iovector[1].len = 0;
+	else __di_iovector[1].len = 676;
+
+	__di_iovector[2].data = certificate_in;
+	if(certificate_in==NULL) __di_iovector[2].len = 0;
+	else __di_iovector[2].len = certin_len;
+	
+	__di_iovector[3].data = certificate_out;
+	__di_iovector[3].len = 18916;
+	__di_iovector[4].data = __di_lastticketerror;
+	__di_iovector[4].len = 0x20;
+	ret = IOS_Ioctlv(__dvd_fd,dicommand[0],3,2,__di_iovector);
+	printf("LowOpenParition returns %i\n",ret);
+	return ret;
+}
+int WiiDVD_LowClosePartition()
+{
+	int ret;
+	memset(dicommand, 0, 32 );
+	dicommand[0x00] = IOCTL_DI_CLOSEPART;
+	ret = IOS_Ioctl(__dvd_fd,dicommand[0],&dicommand,0x20,NULL,0);
+	return ret;
 }
 #endif
 

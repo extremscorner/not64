@@ -33,6 +33,9 @@ int WiiDVDReadUnEncrypted(void* dst, unsigned int len, unsigned int offset);
 int WiiDVDRead(void* dst, unsigned int len, unsigned int offset);
 int WiiDVDSeek(unsigned int offset);
 int WiiDVDSetOffset(unsigned int offset);
+int WiiDVD_LowClosePartition();
+int WiiDVD_LowOpenPartition(u32 offset,void *eticket,u32 certin_len,void *certificate_in,void *certificate_out);
+
 #endif
 
 struct pvd_s
