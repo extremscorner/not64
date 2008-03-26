@@ -32,7 +32,8 @@ static PowerPC_instr* jump_pad;
 static jump_node    jump_table[MAX_JUMPS];
 static unsigned int current_jump;
 
-int emu_reg[32]; // State of emulator
+int    emu_reg[32]; // State of emulator
+double emu_fpr[32];
 int lr[8]; // link register stack
 int lr_i;
 
@@ -49,6 +50,8 @@ int has_next_src(void){ return (src_last-src) > 0; }
  void unget_last_src(void){ --src; }
  // Used for finding how many instructions were generated
  PowerPC_instr* get_curr_dst(void){ return dst; }
+// Returns the MIPS PC
+unsigned int get_src_pc(void){ return addr_first + ((src-src_last)<<2); }
 
 void set_next_dst(PowerPC_instr i){ *(dst++) = i; ++(*code_length); }
 
@@ -79,7 +82,7 @@ void recompile_block(PowerPC_block* ppc_block){
 		// FIXME: The resize factor may not be optimal
 		//          maybe we can make a guess based on
 		//          how far along we are now
-		if(*code_length + 13 >= ppc_block->max_length)
+		if(*code_length + 16 >= ppc_block->max_length)
 			resizeCode(ppc_block, ppc_block->max_length * 3/2);
 		
 		ppc_block->code_addr[src-src_first] = dst;
@@ -107,6 +110,10 @@ void recompile_block(PowerPC_block* ppc_block){
 	// Here we recompute jumps and branches
 	pass2(ppc_block);
 	invalid_code_set(ppc_block->start_address>>12, 0);
+	// Since this is a fresh block of code,
+	// Make sure it wil show up in the ICache
+	DCFlushRange(ppc_block->code, ppc_block->length*sizeof(PowerPC_instr));
+	ICInvalidateRange(ppc_block->code, ppc_block->length*sizeof(PowerPC_instr));
 }
 
 void init_block(MIPS_instr* mips_code, PowerPC_block* ppc_block){

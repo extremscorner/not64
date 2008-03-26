@@ -40,6 +40,23 @@ void decodeNInterpret(void);
 
 //#define INTERPRET_MOVN
 //#define INTERPRET_MOVZ
+
+#if 1
+#define INTERPRET_J
+#define INTERPRET_JAL
+#define INTERPRET_JR
+#define INTERPRET_JALR
+#define INTERPRET_BEQ
+#define INTERPRET_BNE
+#define INTERPRET_BLEZ
+#define INTERPRET_BGTZ
+#define INTERPRET_BLTZ
+#define INTERPRET_BGEZ
+#define INTERPRET_BLTZAL
+#define INTERPRET_BGEZAL
+#define INTERPRET_BCZF
+#define INTERPRET_BCZT
+#endif
 #endif
 #define INTERPRET_SYSCALL
 #define INTERPRET_BREAK
