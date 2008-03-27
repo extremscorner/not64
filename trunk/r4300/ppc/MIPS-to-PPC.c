@@ -2522,7 +2522,7 @@ static void genJumpTo(unsigned int loc, unsigned int type){
 	// If we're jumping to an address, load it in r0
 	if(type != JUMPTO_REG){
 		loc <<= 2;
-		if(type == JUMPTO_ADDR) loc += get_src_pc();
+		if(type == JUMPTO_OFF) loc += get_src_pc();
 		// lis	r1, loc@ha(0)
 		ppc = NEW_PPC_INSTR();
 		PPC_SET_OPCODE(ppc, PPC_OPCODE_ADDIS);
@@ -2532,8 +2532,8 @@ static void genJumpTo(unsigned int loc, unsigned int type){
 		// la	r0, loc@l(r1)
 		ppc = NEW_PPC_INSTR();
 		PPC_SET_OPCODE(ppc, PPC_OPCODE_ORI);
-		PPC_SET_RD    (ppc, locReg);
-		PPC_SET_RA    (ppc, 1);
+		PPC_SET_RD    (ppc, 1);
+		PPC_SET_RA    (ppc, locReg);
 		PPC_SET_IMMED (ppc, loc);
 		set_next_dst(ppc);
 	}
