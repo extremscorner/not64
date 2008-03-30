@@ -31,6 +31,7 @@ static unsigned int   addr_last;
 static PowerPC_instr* jump_pad;
 static jump_node    jump_table[MAX_JUMPS];
 static unsigned int current_jump;
+static PowerPC_instr** code_addr;
 
 int    emu_reg[32]; // State of emulator
 double emu_fpr[32];
@@ -50,8 +51,12 @@ int has_next_src(void){ return (src_last-src) > 0; }
  void unget_last_src(void){ --src; }
  // Used for finding how many instructions were generated
  PowerPC_instr* get_curr_dst(void){ return dst; }
+ // Makes sure a branch to a NOP in the delay slot won't crash
+ // This should be called ONLY after get_next_src returns a
+ //   NOP in a delay slot
+ void nop_ignored(void){ code_addr[src-1-src_first] = dst; }
 // Returns the MIPS PC
-unsigned int get_src_pc(void){ return addr_first + ((src-src_last)<<2); }
+unsigned int get_src_pc(void){ return addr_first + ((src-1-src_first)<<2); }
 
 void set_next_dst(PowerPC_instr i){ *(dst++) = i; ++(*code_length); }
 
@@ -76,6 +81,7 @@ void recompile_block(PowerPC_block* ppc_block){
 	addr_first = ppc_block->start_address;
 	addr_last  = ppc_block->end_address;
 	current_jump = 0;
+	code_addr = ppc_block;
 	
 	while(has_next_src()){
 		// Make sure the code doesn't overflow
@@ -299,6 +305,8 @@ void jump_to(unsigned int address){
 	DEBUG_print(txtbuffer, DBG_USBGECKO);
 	
 	if(!dst_block){
+		sprintf(txtbuffer, "block at %08x doesn't exist\n", address&~0xFFF);
+		DEBUG_print(txtbuffer, DBG_USBGECKO);
 		blocks[address>>12] = malloc(sizeof(PowerPC_block));
 		dst_block = blocks[address>>12];
 		dst_block->code          = NULL;
@@ -311,8 +319,10 @@ void jump_to(unsigned int address){
 	// TODO: If we deinit blocks we haven't used recently, we should do something like:
 	//         new_block(dst_block); // This checks if its not inited, if not, it inits
 	
-	if(invalid_code_get(address>>12))
+	if(invalid_code_get(address>>12)){
+		dst_block->length = 0;
 		recompile_block(dst_block);
+	}
 	
 	// Support the cache
 	//update_lru();

@@ -36,7 +36,6 @@ MIPS_instr get_next_src(void);
 MIPS_instr peek_next_src(void);
 int        has_next_src(void);
 void       set_next_dst(PowerPC_instr);
-uint       get_src_pc(void);
 int        add_jump(int old_jump, int is_j, int is_out);
 int        is_j_out(int branch, int is_aa);
 

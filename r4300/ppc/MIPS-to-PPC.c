@@ -167,7 +167,7 @@ int convert(void){
 			PPC_SET_OPCODE(ppc, PPC_OPCODE_B);
 			PPC_SET_LI    (ppc, ((temp2>>2)+1));
 			set_next_dst(ppc);
-		}
+		} else nop_ignored();
 		
 		return CONVERT_SUCCESS;
 	case MIPS_OPCODE_BEQL:
@@ -242,7 +242,7 @@ int convert(void){
 			PPC_SET_OPCODE(ppc, PPC_OPCODE_B);
 			PPC_SET_LI    (ppc, ((temp2>>2)+1));
 			set_next_dst(ppc);
-		}
+		} else nop_ignored();
 		
 		return CONVERT_SUCCESS;
 	case MIPS_OPCODE_BLEZL:
@@ -736,6 +736,7 @@ static int convert_R(MIPS_instr mips){
 			
 			// Allow the delay slot to be branched to
 			if(temp2) unget_last_src();
+			else nop_ignored();
 			
 			return INTERPRETED;
 		}
@@ -749,6 +750,7 @@ static int convert_R(MIPS_instr mips){
 			
 			// Allow the delay slot to be branched to
 			if(temp2) unget_last_src();
+			else nop_ignored();
 			
 			return CONVERT_SUCCESS;
 		} else {
@@ -767,6 +769,7 @@ static int convert_R(MIPS_instr mips){
 			
 			// Allow the delay slot to be branched to
 			if(temp2) unget_last_src();
+			else nop_ignored();
 			
 			return CONVERT_SUCCESS;
 		}
@@ -894,6 +897,7 @@ static int convert_R(MIPS_instr mips){
 			isGCAddr[MIPS_REG_LR] = 1;
 			// Allow the delay slot to be branched to
 			if(temp2) unget_last_src();
+			else nop_ignored();
 			
 			return INTERPRETED;
 		}
@@ -926,7 +930,7 @@ static int convert_R(MIPS_instr mips){
 			PPC_SET_OPCODE(ppc, PPC_OPCODE_B);
 			PPC_SET_LI    (ppc, ((temp2>>2)+1));
 			set_next_dst(ppc);
-		}
+		} else nop_ignored();
 		
 		isGCAddr[MIPS_REG_LR] = 1;
 		
