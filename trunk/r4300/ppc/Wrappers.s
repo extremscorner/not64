@@ -108,6 +108,8 @@
 	.globl	start
         .type   start, @function	
 start: /* The block* is passed through r3 */
+	/* Pop the stack frame */
+	lwz	1, 0(1)
 	/* Save emu_regs */
 	mtctr	10
 	lis	10, emu_reg@ha
