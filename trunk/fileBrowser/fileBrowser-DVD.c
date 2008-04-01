@@ -28,7 +28,6 @@ int DVD_check_state() {
 	dvdInitialized = 1;
 	return 0;
 #endif
-	dvd_read_id();
 	if(dvd_get_error() == 0){
 		dvdInitialized = 1;
 		return 0;
