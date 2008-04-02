@@ -22,7 +22,7 @@
 #define DBG_PROFILE_TLB 11
 #define DBG_PROFILE_FP 12
 #define DBG_USBGECKO 0xFF
-static char txtbuffer[1024];
+extern char txtbuffer[1024];
 // Amount of time each string will be held onto
 #define DEBUG_STRING_LIFE 3000
 // Dimensions of array returned by get_text
