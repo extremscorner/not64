@@ -105,6 +105,7 @@ extern  u16 LOGOtexture[];
 extern long BGtexture_length;
 extern long BGtextureCI_length;
 extern long LOGOtexture_length;
+extern GXRModeObj *vmode;
 
 void draw_quad (u8, u8, u8, u8, u8);
 void GUI_splashScreen();
@@ -163,6 +164,13 @@ void GUI_draw()
 
 	GUI_loadBGtex();
 
+	// Reset various parameters from gfx plugin
+	GX_SetViewport(0,0,vmode->fbWidth,vmode->efbHeight,0,1);
+	GX_SetCoPlanar(GX_DISABLE);
+	GX_SetClipMode(GX_CLIP_DISABLE);
+	GX_SetScissor(0,0,vmode->fbWidth,vmode->efbHeight);
+	GX_SetAlphaCompare(GX_ALWAYS,0,GX_AOP_AND,GX_ALWAYS,0);
+
 	guMtxIdentity(GXmodelView2D);
 	GX_LoadTexMtxImm(GXmodelView2D,GX_TEXMTX0,GX_MTX2x4);
 	guMtxTransApply (GXmodelView2D, GXmodelView2D, 0.0F, 0.0F, -5.0F);
@@ -211,9 +219,10 @@ void GUI_draw()
 	GUI_drawLogo(580.0, 70.0, -50.0);
 	GUI_drawLoadProg();
 
-	GX_DrawDone ();
+//	GX_DrawDone ();
 	GX_CopyDisp (GUI.xfb[GUI.which_fb], GX_FALSE);
-    GX_Flush ();
+//	GX_Flush ();
+	GX_DrawDone ();
 	VIDEO_SetNextFramebuffer(GUI.xfb[GUI.which_fb]);
 	VIDEO_Flush();
 	GUI.which_fb ^= 1;

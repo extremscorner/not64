@@ -16,6 +16,8 @@
 /* Backdrop Frame Width (to avoid writing outside of the background frame) */
 u16 back_framewidth = 640;
 
+extern GXRModeObj *vmode;
+
 typedef struct
 {
   unsigned short font_type, first_char, last_char, subst_char, ascent_units, descent_units, widest_char_width,
@@ -184,6 +186,7 @@ void write_font_init_GX(GXColor fontColor)
 	GX_LoadPosMtxImm(GXmodelView2D,GX_PNMTX0);
 	guOrtho(GXprojection2D, 0, 479, 0, 639, 0, 700);
 	GX_LoadProjectionMtx(GXprojection2D, GX_ORTHOGRAPHIC);
+	GX_SetViewport (0, 0, vmode->fbWidth, vmode->efbHeight, 0, 1);
 
 	GX_SetZMode(GX_DISABLE,GX_ALWAYS,GX_TRUE);
 
@@ -241,7 +244,7 @@ void write_font_color(GXColor* fontColorPtr)
 
 void write_font(int x, int y, char *string, float scale)
 {
-	int ox = x;
+//	int ox = x;
 	
 //	while (*string && (x < (ox + back_framewidth)))
 	while (*string)
