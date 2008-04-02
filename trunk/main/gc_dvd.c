@@ -20,7 +20,8 @@ volatile unsigned long* dvd = (volatile unsigned long*)0xCC006000;
 #define IOCTL_DI_OFFSET				0xD9
 #define IOCTL_DI_REQERROR			0xE0
 #define IOCTL_DI_STOPMOTOR			0xE3
-
+#define IOCTL_DI_OPENPART			0x8B
+#define IOCTL_DI_CLOSEPART			0x8C	
 static int __dvd_fd = -1;
 int previously_initd = 0;
 static char __di_fs[] ATTRIBUTE_ALIGN(32) = "/dev/di";
