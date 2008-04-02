@@ -8,6 +8,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
+#ifdef DEBUGON
+# include <debug.h>
+#endif
 
 #include "winlnxdefs.h"
 #include "main.h"
@@ -35,6 +38,14 @@ static void audio_info_init(void);
 static void rsp_info_init(void);
 static void control_info_init(void);
 // -- End init functions --
+
+// -- Debug constants -- 
+#if DEBUGON
+const char *dbg_local_ip = "192.168.1.32";
+const char *dbg_netmask = "255.255.255.0";
+const char *dbg_gw = "192.168.1.100";
+#endif
+// -- End Debug constants --
 
 // -- Plugin data --
 #define DEFAULT_FIFO_SIZE    (256*1024)//(64*1024) minimum
@@ -84,7 +95,7 @@ int main(){
 	saveEnabled      = 0; // Don't save game
 	creditsScrolling = 0; // Normal menu for now
 	dynacore         = 2; // Pure Interpreter
-	
+
 	// 'Page flip' buttons so we know when it released
 	int which_pad = 0;
 	u16 buttons[2];
@@ -171,6 +182,11 @@ void loadROM(fileBrowser_file* rom){
 	romOpen_input();
 	
 	cpu_init();
+
+#ifdef DEBUGON
+	DEBUG_Init(GDBSTUB_DEVICE_TCP,GDBSTUB_DEF_TCPPORT); //Default port is 2828
+	_break();
+#endif
 }
 
 static void gfx_info_init(void){
