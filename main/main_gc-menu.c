@@ -284,7 +284,11 @@ static void rsp_info_init(void){
 	rsp_info.ShowCFB = showCFB;
 	initiateRSP(rsp_info,(DWORD*)&cycle_count);
 }
-
+void ScanPADSandReset() {
+	PAD_ScanPads();
+	if(!((*(u32*)0xCC003000)>>16))
+		stop = 1;
+}
 static void Initialise (void){
   static int whichfb = 0;        /*** Frame buffer toggle ***/
   VIDEO_Init ();
@@ -319,7 +323,7 @@ static void Initialise (void){
   VIDEO_ClearFrameBuffer (vmode, xfb[0], COLOR_BLACK);
   VIDEO_ClearFrameBuffer (vmode, xfb[1], COLOR_BLACK);
   VIDEO_SetNextFramebuffer (xfb[0]);
-  VIDEO_SetPostRetraceCallback (PAD_ScanPads);
+  VIDEO_SetPostRetraceCallback (ScanPADSandReset);
   VIDEO_SetBlack (0);
   VIDEO_Flush ();
   VIDEO_WaitVSync ();        /*** Wait for VBL ***/

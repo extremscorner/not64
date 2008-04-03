@@ -52,6 +52,7 @@
 #include "../main/plugin.h"
 #include "../main/guifuncs.h"
 #include "../main/vcr.h"
+#include "../gui/DEBUG.h"
 #include <assert.h>
 
 /* definitions of the rcp's structures and memory area */
@@ -1334,7 +1335,8 @@ void update_DPC()
 void read_nothing()
 {
    if (address == 0xa5000508) *rdword = 0xFFFFFFFF;
-   else *rdword = 0;
+   else
+    *rdword = 0;
 }
 
 void read_nothingb()
