@@ -50,7 +50,7 @@
 #else
 #define PRINT printf
 #endif
-
+//todo: use one buffer for flashram+eeprom+sram cause they're never together at once
 static unsigned char sram[0x8000] __attribute__((aligned(32)));
 
 BOOL sramWritten = FALSE;

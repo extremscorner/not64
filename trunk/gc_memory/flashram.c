@@ -58,6 +58,7 @@ typedef enum flashram_mode
 
 static int mode;
 static unsigned long long status;
+//todo: use one buffer for flashram+eeprom+sram cause they're never together at once
 static unsigned char flashram[0x20000] __attribute__((aligned(32)));
 static unsigned long erase_offset, write_pointer;
 
