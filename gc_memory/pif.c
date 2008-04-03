@@ -56,7 +56,7 @@
 #else
 #define PRINT printf
 #endif
-
+//todo: use one buffer for flashram+eeprom+sram cause they're never together at once
 static unsigned char eeprom[0x800] __attribute__((aligned(32)));
 static unsigned char mempack[4][0x8000] __attribute__((aligned(32)));
 BOOL eepromWritten = FALSE;
