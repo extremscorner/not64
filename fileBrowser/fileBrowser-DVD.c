@@ -9,6 +9,12 @@
 #include <ogc/dvd.h>
 
 extern unsigned int isWii;
+extern struct
+{
+	char name[128];
+	int flags;
+	int sector, size;
+} file[MAXIMUM_ENTRIES_PER_DIR]; //150 files per dir, MAXIMUM.
 int dvdInitialized;
 /* Worked out manually from my original Disc */
 #define OOT_OFFSET 0x54FBEEF4
