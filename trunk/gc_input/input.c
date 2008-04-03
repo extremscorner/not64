@@ -207,9 +207,9 @@ EXPORT void CALL InitiateControllers (CONTROL_INFO ControlInfo)
 		control_info.Controls[i].Present = 
 			(status[i].err == PAD_ERR_NO_CONTROLLER) ?
 					FALSE : TRUE;
-		printf("Controller %d is %s\n", i,
+/*		printf("Controller %d is %s\n", i,
 		       control_info.Controls[i].Present ? "plugged in" : "unplugged");
-		
+*/		
 		control_info.Controls[i].Plugin = PLUGIN_MEMPAK;
 		//control_info.Controls[i].Plugin = PLUGIN_RAW; // Uncomment for rumble
 	}
