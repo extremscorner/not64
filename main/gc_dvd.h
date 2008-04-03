@@ -9,6 +9,7 @@
 #define NO_FILES -1
 #define NO_ISO9660_DISC -2
 #define FATAL_ERROR -3
+#define MAXIMUM_ENTRIES_PER_DIR 150
 
 void dvd_motor_off();
 unsigned int dvd_get_error(void);
@@ -62,7 +63,7 @@ struct
 	char name[128];
 	int flags;
 	int sector, size;
-} file[1024];
+} file[MAXIMUM_ENTRIES_PER_DIR]; //150 files per dir, MAXIMUM.
 
 #endif
 

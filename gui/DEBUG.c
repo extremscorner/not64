@@ -7,8 +7,6 @@
 #include "TEXT.h"
 #include "usb.h"
 
-#define ALIVETIME 5 //amount of time in seconds to display a debug string
-
 char text[DEBUG_TEXT_HEIGHT][DEBUG_TEXT_WIDTH];
 
 #ifdef SHOW_DEBUG
@@ -31,7 +29,7 @@ void DEBUG_update() {
 	int i;
 	long long nowTick = gettime();
 	for(i=0; i<DEBUG_TEXT_HEIGHT; i++){
-		if(diff_sec(texttimes[i],nowTick)>=ALIVETIME) 
+		if(diff_sec(texttimes[i],nowTick)>=DEBUG_STRING_LIFE) 
 		{
 			memset(text[i],0,DEBUG_TEXT_WIDTH);
 		}
