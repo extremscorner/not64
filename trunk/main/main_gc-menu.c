@@ -323,7 +323,8 @@ static void Initialise (void){
   VIDEO_ClearFrameBuffer (vmode, xfb[0], COLOR_BLACK);
   VIDEO_ClearFrameBuffer (vmode, xfb[1], COLOR_BLACK);
   VIDEO_SetNextFramebuffer (xfb[0]);
-  VIDEO_SetPostRetraceCallback (ScanPADSandReset);
+  VIDEO_SetPostRetraceCallback (PAD_ScanPads);
+  //VIDEO_SetPostRetraceCallback (ScanPADSandReset);
   VIDEO_SetBlack (0);
   VIDEO_Flush ();
   VIDEO_WaitVSync ();        /*** Wait for VBL ***/
