@@ -8,7 +8,13 @@
 
 int last_current_dir = -1;
 volatile unsigned long* dvd = (volatile unsigned long*)0xCC006000;
-
+struct
+{
+	char name[128];
+	int flags;
+	int sector, size;
+} file[MAXIMUM_ENTRIES_PER_DIR]; //150 files per dir, MAXIMUM.
+unsigned char sector_buffer[2048] __attribute__((aligned(32)));
 // Wii stuff added.
 #ifdef WII
 #include <ogc/ipc.h>
@@ -25,15 +31,10 @@ volatile unsigned long* dvd = (volatile unsigned long*)0xCC006000;
 static int __dvd_fd = -1;
 int previously_initd = 0;
 static char __di_fs[] ATTRIBUTE_ALIGN(32) = "/dev/di";
-unsigned char sector_buffer[2048] __attribute__((aligned(32)));
+
 u8 dicommand [32]   ATTRIBUTE_ALIGN(32);
 u8 dibufferio[32]   ATTRIBUTE_ALIGN(32);
-struct
-{
-	char name[128];
-	int flags;
-	int sector, size;
-} file[MAXIMUM_ENTRIES_PER_DIR]; //150 files per dir, MAXIMUM.
+
 
 // Run this as many times as you want, it won't have any effect apart from the 1st time.
 int WiiDVD_Init() {
