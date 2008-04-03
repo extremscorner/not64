@@ -167,9 +167,9 @@ void EepromCommand(BYTE *Command)
 	     memcpy(eeprom + Command[3]*8, &Command[4], 8);
 	  }
 	break;
-      default:
+/*      default:
     break;  
-//	printf("unknown command in EepromCommand : %x\n", Command[2]);
+*///	printf("unknown command in EepromCommand : %x\n", Command[2]);
      }
 }
 
@@ -449,10 +449,10 @@ void update_pif_write()
 	   case 0x08:
 	     PIF_RAMb[0x3F] = 0;
 	     break;
-	   default:
+/*	   default:
 	   break;
 //	     printf("error in update_pif_write : %x\n", PIF_RAMb[0x3F]);
-	  }
+*/	  }
 	return;
      }
    while (i<0x40)
@@ -478,7 +478,7 @@ void update_pif_write()
 		    }
 		  else if (channel == 4)
 		    EepromCommand(&PIF_RAMb[i]);
-		  else
+	//	  else
 	//	    printf("channel >= 4 in update_pif_write\n");
 		  i += PIF_RAMb[i] + (PIF_RAMb[(i+1)] & 0x3F) + 1;
 		  channel++;
