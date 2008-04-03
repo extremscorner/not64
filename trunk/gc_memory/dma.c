@@ -82,32 +82,6 @@ int loadSram(fileBrowser_file* savepath){
 	sramWritten = FALSE;
 	
 	return result;
-#if 0	
-	if(savetype & SELECTION_TYPE_SD){
-		sd_file *f;
-		DIR* sddir = NULL;
-		
-		if (SDCARD_ReadDir(filename, &sddir) > 0){
-			PRINT("Loading SRAM, please be patient...\n");
-			f = SDCARD_OpenFile(filename, "rb");
-	  		SDCARD_ReadFile (f, sram, 0x8000);
-	  		SDCARD_CloseFile(f);
-	  		PRINT("OK\n");
-	  	} else for (i=0; i<0x8000; i++) sram[i] = 0;
-	  	
-	  	if(sddir) free(sddir);
-	} else {
-		card_file CardFile;
-		int slot = (savetype & SELECTION_SLOT_B) ? CARD_SLOTB : CARD_SLOTA;
-	
-	        if(CARD_Open(slot, filename, &CardFile) != CARD_ERROR_NOFILE){
-	        	PRINT("Loading SRAM, please be patient...\n");		
-			CARD_Read (&CardFile, sram, 0x8000, 0);
-			CARD_Close(&CardFile);
-			PRINT("OK\n");
-	        } else for (i=0; i<0x8000; i++) sram[i] = 0;
-	}
-#endif
 	
 }
 
@@ -155,8 +129,8 @@ void dma_pi_read()
 	else
 	  dma_write_flashram();
      }
-   else
-     printf("unknown dma read\n");
+ //  else
+ //    printf("unknown dma read\n");
    
    pi_register.read_pi_status_reg |= 1;
    update_count();
@@ -188,8 +162,8 @@ void dma_pi_write()
 		 pi_register.pi_cart_addr_reg < 0x08000000)
 	  {
 	  }
-	else
-	  printf("unknown dma write:%x\n", (int)pi_register.pi_cart_addr_reg);
+//	else
+//	  printf("unknown dma write:%x\n", (int)pi_register.pi_cart_addr_reg);
 	
 	pi_register.read_pi_status_reg |= 1;
 	update_count();
@@ -323,7 +297,7 @@ void dma_si_write()
    int i;
    if (si_register.si_pif_addr_wr64b != 0x1FC007C0)
      {
-	printf("unknown SI use\n");
+//	printf("unknown SI use\n");
 	stop=1;
      }
    for (i=0; i<(64/4); i++)
@@ -338,7 +312,7 @@ void dma_si_read()
    int i;
    if (si_register.si_pif_addr_rd64b != 0x1FC007C0)
      {
-	printf("unknown SI use\n");
+//	printf("unknown SI use\n");
 	stop=1;
      }
    update_pif_read();
