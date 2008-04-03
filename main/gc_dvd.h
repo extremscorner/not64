@@ -19,7 +19,7 @@ int read_safe(void* dst, int offset, int len);
 int read_direntry(unsigned char* direntry);
 int read_sector(void* buffer, int sector);
 int dvd_read(void* dst,unsigned int len, unsigned int offset);
-unsigned char sector_buffer[2048] __attribute__((aligned(32)));
+extern unsigned char sector_buffer[2048] __attribute__((aligned(32)));
 int is_unicode;
 int files;
 int dvd_read_id();
@@ -57,13 +57,6 @@ struct pvd_s
 	char copyright_file_id[37], abstract_file_id[37], bibliographical_file_id[37];
 	// some additional dates, but we don't care for them :)
 }  __attribute__((packed));
-
-struct
-{
-	char name[128];
-	int flags;
-	int sector, size;
-} file[MAXIMUM_ENTRIES_PER_DIR]; //150 files per dir, MAXIMUM.
 
 #endif
 
