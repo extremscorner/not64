@@ -16,6 +16,15 @@ char txtbuffer[1024];
 long long texttimes[DEBUG_TEXT_HEIGHT];
 extern long long gettime();
 extern unsigned int diff_sec(long long start,long long end);
+static void check_heap_space(void){
+	int space = 8 * 1024 * 1024, *ptr=NULL;
+	while(space > 0)
+		if(ptr = malloc(space)) break;
+		else space -= 4096;
+	if(ptr) free(ptr);
+	sprintf(txtbuffer,"At least %dKB or %dMB space available\n", space/1024, space/1024/1024);
+	DEBUG_print(txtbuffer,10);
+}
 #endif
 void DEBUG_update() {
 	#ifdef SHOW_DEBUG
@@ -27,6 +36,7 @@ void DEBUG_update() {
 			memset(text[i],0,DEBUG_TEXT_WIDTH);
 		}
 	}
+	check_heap_space();
 	#endif
 }
 
