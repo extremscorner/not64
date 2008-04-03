@@ -49,7 +49,6 @@
 #include "../main/guifuncs.h"
 #include "../main/vcr.h"
 #include "Saves.h"
-#include "mcbanner.h"
 
 #ifdef USE_GUI
 #include "../gui/GUI.h"
@@ -66,7 +65,6 @@ BOOL mempakWritten = FALSE;
 
 void check_input_sync(unsigned char *value);
 
-// TODO: Support memory card header stuff
 int loadEeprom(fileBrowser_file* savepath){
 	int i, result = 0;
 	fileBrowser_file saveFile;
@@ -94,35 +92,6 @@ int loadEeprom(fileBrowser_file* savepath){
 	eepromWritten = FALSE;
 	
 	return result;
-#if 0
-	if(savetype & SELECTION_TYPE_SD){
-		sd_file *f;
-		DIR* sddir = NULL;
-		
-		if(SDCARD_ReadDir(filename, &sddir) > 0){
-			PRINT("Loading EEPROM, please be patient...\n");
-			f = SDCARD_OpenFile(filename, "rb");
-	  		SDCARD_ReadFile (f, eeprom, 0x800);
-	  		SDCARD_CloseFile(f);
-	  		PRINT("OK\n");
-	  	} else for (i=0; i<0x800; i++) eeprom[i] = 0;
-	  	
-	  	if(sddir) free(sddir);
-	} else {
-		card_file CardFile;
-		int slot = (savetype & SELECTION_SLOT_B) ? CARD_SLOTB : CARD_SLOTA;
-		unsigned int SectorSize = 0;
-        CARD_GetSectorSize (slot, &SectorSize);
-        	if(CARD_Open(slot, filename, &CardFile) != CARD_ERROR_NOFILE){
-        		PRINT("Loading EEPROM, please be patient...\n");			
-			CARD_Read(&CardFile, eeprom, 0x800, EEP_MC_OFFSET);
-			CARD_Close(&CardFile);
-			PRINT("OK\n");
-        	} else for (i=0; i<0x800; i++) eeprom[i] = 0;
-	}
-
-	free(filename);
-#endif
 }
 
 extern long long gettime();
@@ -149,48 +118,7 @@ int saveEeprom(fileBrowser_file* savepath){
 	PRINT("OK\n");
 	
 	return 1;
-#if 0	
-	char* filename = malloc(strlen(savepath)+
-	                        strlen(ROM_SETTINGS.goodname)+4+1);
-	strcpy(filename, savepath);
-	strcat(filename, ROM_SETTINGS.goodname);
-	strcat(filename, ".eep");
 
-	if(savetype & SELECTION_TYPE_SD){
-		sd_file *f;
-		f = SDCARD_OpenFile(filename, "wb");
-	  	SDCARD_WriteFile(f, eeprom, 0x800);
-	  	SDCARD_CloseFile(f);
-	} else {
-		card_file CardFile;
-		card_stat CardStat;
-		int slot = (savetype & SELECTION_SLOT_B) ? CARD_SLOTB : CARD_SLOTA;
-		unsigned int SectorSize = 0;
-        CARD_GetSectorSize (slot, &SectorSize);
-		if(CARD_Open(slot, filename, &CardFile) == CARD_ERROR_NOFILE) {
-			CARD_Create(slot, filename, SectorSize, &CardFile);
-		}
-		//Update card stats
-        CARD_GetStatus(slot,CardFile.filenum,&CardStat);
-        time_t gc_time;
-        gc_time = time (NULL);
-		CardStat.icon_fmt = 2;
-		CardStat.icon_speed = 1;
-		CardStat.banner_fmt = 0;
-		CardStat.comment_addr = sizeof(mupenicon);
-		CardStat.icon_addr = 0;
-		char* buffer = memalign(32, 0x800 + 0x40 + sizeof(mupenicon) );
-		memcpy(buffer,mupenicon,sizeof(mupenicon));
-		strcpy(buffer+sizeof(mupenicon),ROM_SETTINGS.goodname);
-		strcpy(buffer+0x20+sizeof(mupenicon),ctime (&gc_time));
-		memcpy(buffer+EEP_MC_OFFSET,eeprom,0x800);
-		CARD_SetStatus(slot,CardFile.filenum,&CardStat);
-		CARD_Write(&CardFile, buffer, SectorSize, 0);
-		CARD_Close(&CardFile);		
-		free(buffer);
-	}
-	free(filename);
-#endif
 }
 
 //#define DEBUG_PIF
@@ -240,7 +168,8 @@ void EepromCommand(BYTE *Command)
 	  }
 	break;
       default:
-	printf("unknown command in EepromCommand : %x\n", Command[2]);
+    break;  
+//	printf("unknown command in EepromCommand : %x\n", Command[2]);
      }
 }
 
@@ -323,40 +252,6 @@ int loadMempak(fileBrowser_file* savepath){
 	mempakWritten = FALSE;
 	
 	return result;
-#if 0
-	if(savetype & SELECTION_TYPE_SD){
-		sd_file *f;
-		DIR* sddir = NULL;
-		
-		if(SDCARD_ReadDir(filename, &sddir) > 0){
-			PRINT("Loading mempak, please be patient...\n");
-			f = SDCARD_OpenFile(filename, "rb");
-			SDCARD_ReadFile (f, mempack[0], 0x8000);
-			SDCARD_ReadFile (f, mempack[1], 0x8000);
-			SDCARD_ReadFile (f, mempack[2], 0x8000);
-			SDCARD_ReadFile (f, mempack[3], 0x8000);
-			SDCARD_CloseFile(f);
-			PRINT("OK\n");
-		} else format_mempacks();
-		
-	  	if(sddir) free(sddir);
-	} else {
-		card_file CardFile;
-		int slot = (savetype & SELECTION_SLOT_B) ? CARD_SLOTB : CARD_SLOTA;
-		
-		if(CARD_Open(slot, filename, &CardFile) != CARD_ERROR_NOFILE){
-			PRINT("Loading mempak, please be patient...\n");
-			CARD_Read (&CardFile, mempack[0], 0x8000, 0);
-			CARD_Read (&CardFile, mempack[1], 0x8000, 0x8000);
-			CARD_Read (&CardFile, mempack[2], 0x8000, 0x8000*2);
-			CARD_Read (&CardFile, mempack[3], 0x8000, 0x8000*3);
-			CARD_Close(&CardFile);
-			PRINT("OK\n");
-		} else format_mempacks();
-	}
-
-	free(filename);
-#endif
 }
 
 int saveMempak(fileBrowser_file* savepath){
@@ -378,31 +273,6 @@ int saveMempak(fileBrowser_file* savepath){
 	
 	saveFile_writeFile(&saveFile, mempack, 0x8000 * 4);
 	
-#if 0	
-	if(savetype & SELECTION_TYPE_SD){
-		sd_file *f;
-		
-		f = SDCARD_OpenFile(filename, "wb");
-	  	SDCARD_WriteFile(f, mempack[0], 0x8000);
-	  	SDCARD_WriteFile(f, mempack[1], 0x8000);
-	  	SDCARD_WriteFile(f, mempack[2], 0x8000);
-	  	SDCARD_WriteFile(f, mempack[3], 0x8000);
-	  	SDCARD_CloseFile(f);
-	} else {
-		card_file CardFile;
-		int slot = (savetype & SELECTION_SLOT_B) ? CARD_SLOTB : CARD_SLOTA;
-		
-		if(CARD_Open(slot, filename, &CardFile) == CARD_ERROR_NOFILE)
-			CARD_Create(slot, filename, 0x8000*4, &CardFile);			
-		CARD_Write(&CardFile, mempack[0], 0x8000, 0);
-		CARD_Write(&CardFile, mempack[1], 0x8000, 0x8000);
-		CARD_Write(&CardFile, mempack[2], 0x8000, 0x8000*2);
-		CARD_Write(&CardFile, mempack[3], 0x8000, 0x8000*3);
-		CARD_Close(&CardFile);
-	}
-	
-	free(filename);
-#endif
 	PRINT("OK\n");
 	
 	return 1;
@@ -554,7 +424,7 @@ void update_pif_write()
 {
    int i=0, channel=0;
 #ifdef DEBUG_PIF
-   printf("write\n");
+//   printf("write\n");
    print_pif();
 #endif
    if (PIF_RAMb[0x3F] > 1)
@@ -570,17 +440,18 @@ void update_pif_write()
 		       return;
 		    }
 	       }
-	     printf("unknown pif2 code:\n");
+/*	     printf("unknown pif2 code:\n");
 	     for (i=(64-2*8)/8; i<(64/8); i++)
 	       printf("%x %x %x %x | %x %x %x %x\n",
 		      PIF_RAMb[i*8+0], PIF_RAMb[i*8+1],PIF_RAMb[i*8+2], PIF_RAMb[i*8+3],
 		      PIF_RAMb[i*8+4], PIF_RAMb[i*8+5],PIF_RAMb[i*8+6], PIF_RAMb[i*8+7]);
-	     break;
+*/	     break;
 	   case 0x08:
 	     PIF_RAMb[0x3F] = 0;
 	     break;
 	   default:
-	     printf("error in update_pif_write : %x\n", PIF_RAMb[0x3F]);
+	   break;
+//	     printf("error in update_pif_write : %x\n", PIF_RAMb[0x3F]);
 	  }
 	return;
      }
@@ -608,7 +479,7 @@ void update_pif_write()
 		  else if (channel == 4)
 		    EepromCommand(&PIF_RAMb[i]);
 		  else
-		    printf("channel >= 4 in update_pif_write\n");
+	//	    printf("channel >= 4 in update_pif_write\n");
 		  i += PIF_RAMb[i] + (PIF_RAMb[(i+1)] & 0x3F) + 1;
 		  channel++;
 	       }
@@ -628,7 +499,7 @@ void update_pif_read()
 {
    int i=0, channel=0;
 #ifdef DEBUG_PIF
-   printf("read\n");
+//   printf("read\n");
    print_pif();
 #endif
    while (i<0x40)
