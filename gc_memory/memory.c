@@ -1334,8 +1334,8 @@ void update_DPC()
 
 void read_nothing()
 {
-   //if (address == 0xa5000508) *rdword = 0xFFFFFFFF;
-   //else
+   if (address == 0xa5000508) *rdword = 0xFFFFFFFF;
+   else
     *rdword = 0;
 }
 
