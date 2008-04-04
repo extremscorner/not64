@@ -32,9 +32,11 @@ CREDITS:
 
 CHANGE LOG:
  r2xx:
+   + glN64 Port
    + MEM2 ROM Cache for Wii (fits 32MB ROMs)
    + Progressive video support
    + Embedded font support for Qoob users
+   * Threaded audio
    * Various GX_gfx fixes
  r200:
    * Replaced GUI
