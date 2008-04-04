@@ -38,10 +38,11 @@ static unsigned int buffer_offset = 0;
 static lwp_t audio_thread;
 static sem_t buffer_full;
 static sem_t buffer_empty;
+static sem_t audio_free;
 static int   thread_inited;
-#define AUDIO_STACK_SIZE 256
-static char  audio_stack[256];
-#define AUDIO_PRIORITY 15
+#define AUDIO_STACK_SIZE 1024
+static char  audio_stack[AUDIO_STACK_SIZE];
+#define AUDIO_PRIORITY 50
 static int   thread_buffer = 0;
 #else // !THREADED_AUDIO
 #define thread_buffer which_buffer
@@ -82,8 +83,9 @@ AiDacrateChanged( int SystemType )
 #ifdef THREADED_AUDIO
 static void done_playing(void){
 	// THREADME: This should probably be a DMA finished call back
-	AUDIO_StopDMA();
+	//AUDIO_StopDMA();
 	LWP_SemPost(buffer_empty);
+	LWP_SemPost(audio_free);
 }
 #endif
 
@@ -98,6 +100,7 @@ static void inline play_buffer(void){
 	
 	// THREADME: sem_wait( buffer_full )
 	LWP_SemWait(buffer_full);
+	LWP_SemWait(audio_free);
 #endif
 	
 	DCFlushRange (buffer[thread_buffer], BUFFER_SIZE);
@@ -126,7 +129,9 @@ static void inline add_to_buffer(void* stream, unsigned int length){
 		lengthi = (buffer_offset + lengthLeft < BUFFER_SIZE) ?
 		           lengthLeft : (BUFFER_SIZE - buffer_offset);
 	
-		//memcpy(buffer[which_buffer] + buffer_offset, stream + stream_offset, lengthi);
+#ifdef THREADED_AUDIO
+		LWP_SemWait(buffer_empty);
+#endif		
 		copy_to_buffer(buffer[which_buffer] + buffer_offset,
 		               stream + stream_offset, lengthi);
 		
@@ -169,9 +174,6 @@ AiLenChanged( void )
 		         (*AudioInfo.AI_DRAM_ADDR_REG & 0xFFFFFF));
 	unsigned int length = *AudioInfo.AI_LEN_REG;
 	
-#if THREADED_AUDIO
-	LWP_SemWait(buffer_empty);
-#endif
 	add_to_buffer(stream, length);
 }
 
@@ -222,7 +224,7 @@ EXPORT BOOL CALL
 InitiateAudio( AUDIO_INFO Audio_Info )
 {
 	AudioInfo = Audio_Info;
-	AUDIO_Init(0);
+	AUDIO_Init(NULL);
 	return TRUE;
 }
 
@@ -233,6 +235,7 @@ EXPORT void CALL RomOpen()
 	if(!thread_inited){
 		LWP_SemInit(&buffer_full, 0, NUM_BUFFERS);
 		LWP_SemInit(&buffer_empty, NUM_BUFFERS, NUM_BUFFERS);
+		LWP_SemInit(&audio_free, 1, 1);
 		LWP_CreateThread(&audio_thread, play_buffer, NULL, audio_stack, AUDIO_STACK_SIZE, AUDIO_PRIORITY);
 		AUDIO_RegisterDMACallback(done_playing);
 		thread_inited = 1;
