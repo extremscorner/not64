@@ -237,8 +237,8 @@ void ROMCache_load(fileBrowser_file* file, int byteSwap){
 				offset += bytes_read;
 				
 				if(!loads_til_update--){
-					GUI_setLoadProg( (float)offset/BLOCK_SIZE );
-					//GUI_setLoadProg( (float)((((float)(i/available))) + ((float)((float)(offset/(available*BLOCK_SIZE))))) );
+					//GUI_setLoadProg( (float)offset/BLOCK_SIZE );
+					GUI_setLoadProg((float)i/available + (float)offset/(available*BLOCK_SIZE));
 					GUI_draw();
 					loads_til_update = 32;
 				}
