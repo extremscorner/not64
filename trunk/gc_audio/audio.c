@@ -1,12 +1,6 @@
 /* audio.c - Low-level Audio plugin for the gamecube
    by Mike Slegeir for Mupen64-GC
    ----------------------------------------------------
-   FIXME: This probably needs to be threaded so that we
-            can start playing the next buffer once the
-            playing buffer is finished.  However, this
-            is nontrivial since we need to make sure
-            the buffer has a length divisble by 32
-   ----------------------------------------------------
    MEMORY USAGE:
      STATIC:
    	Audio Buffer: 2x BUFFER_SIZE (currently 4kb each)
@@ -40,7 +34,7 @@ static sem_t buffer_full;
 static sem_t buffer_empty;
 static sem_t audio_free;
 static int   thread_inited;
-#define AUDIO_STACK_SIZE 1024
+#define AUDIO_STACK_SIZE 1024 // MEM: I could get away with a smaller stack
 static char  audio_stack[AUDIO_STACK_SIZE];
 #define AUDIO_PRIORITY 50
 static int   thread_buffer = 0;
@@ -82,8 +76,7 @@ AiDacrateChanged( int SystemType )
 
 #ifdef THREADED_AUDIO
 static void done_playing(void){
-	// THREADME: This should probably be a DMA finished call back
-	//AUDIO_StopDMA();
+	// We're done playing, so we're releasing a buffer and the audio
 	LWP_SemPost(buffer_empty);
 	LWP_SemPost(audio_free);
 }
@@ -96,9 +89,10 @@ static void inline play_buffer(void){
 	AUDIO_StopDMA();
 	
 #else // THREADED_AUDIO
+	// This thread will keep giving buffers to the audio as they come
 	while(1){
 	
-	// THREADME: sem_wait( buffer_full )
+	// Wait for a buffer to be processed and the audio to be ready
 	LWP_SemWait(buffer_full);
 	LWP_SemWait(audio_free);
 #endif
@@ -113,11 +107,7 @@ static void inline play_buffer(void){
 }
 
 static void inline copy_to_buffer(char* buffer, char* stream, unsigned int length){
-	// FIXME: We need to fix the endian-ness issue from the source: RSP
-	// Here we're byte-swapping 16-bit samples
-	int i;
-	for(i=0; i<length; ++i)
-		buffer[i] = stream[i];
+	memcpy(buffer, stream, length);
 }
 
 static void inline add_to_buffer(void* stream, unsigned int length){
@@ -130,6 +120,7 @@ static void inline add_to_buffer(void* stream, unsigned int length){
 		           lengthLeft : (BUFFER_SIZE - buffer_offset);
 	
 #ifdef THREADED_AUDIO
+		// Wait for a buffer we can copy into
 		LWP_SemWait(buffer_empty);
 #endif		
 		copy_to_buffer(buffer[which_buffer] + buffer_offset,
@@ -139,7 +130,7 @@ static void inline add_to_buffer(void* stream, unsigned int length){
 			buffer_offset += lengthi;
 #ifdef THREADED_AUDIO
 			// This is a little weird, but we didn't fill this buffer.
-			//   So it is still considered empty, but since we 'decremented'
+			//   So it is still considered 'empty', but since we 'decremented'
 			//   buffer_empty coming in here, we want to set it back how
 			//   it was, so we don't cause a deadlock
 			LWP_SemPost(buffer_empty);
@@ -151,9 +142,7 @@ static void inline add_to_buffer(void* stream, unsigned int length){
 		stream_offset += lengthi;
 		
 #ifdef THREADED_AUDIO
-		/* THREADME: Replace play_buffer with:
-			sem_post( buffer_full )
-		 */
+		// Let the audio thread know that we've filled a new buffer
 		LWP_SemPost(buffer_full);
 #else
 		play_buffer();
@@ -231,15 +220,16 @@ InitiateAudio( AUDIO_INFO Audio_Info )
 EXPORT void CALL RomOpen()
 {
 #ifdef THREADED_AUDIO
-	// THREADME: CreateThread play_buffer, CreateSemaphore buffer_full(1)
+	// Create our semaphores and start/resume the audio thread; reset the buffer index
+	LWP_SemInit(&buffer_full, 0, NUM_BUFFERS);
+	LWP_SemInit(&buffer_empty, NUM_BUFFERS, NUM_BUFFERS);
+	LWP_SemInit(&audio_free, 1, 1);
 	if(!thread_inited){
-		LWP_SemInit(&buffer_full, 0, NUM_BUFFERS);
-		LWP_SemInit(&buffer_empty, NUM_BUFFERS, NUM_BUFFERS);
-		LWP_SemInit(&audio_free, 1, 1);
 		LWP_CreateThread(&audio_thread, play_buffer, NULL, audio_stack, AUDIO_STACK_SIZE, AUDIO_PRIORITY);
 		AUDIO_RegisterDMACallback(done_playing);
 		thread_inited = 1;
 	} else LWP_ResumeThread(audio_thread);
+	thread_buffer = which_buffer = 0;
 #endif
 }
 
@@ -247,7 +237,10 @@ EXPORT void CALL
 RomClosed( void )
 {
 #ifdef THREADED_AUDIO
-	// THREADME: KillThread play_buffer, DestroySemaphore buffer_full
+	// Destroy semaphores and suspend the thread so audio can't play
+	LWP_SemDestroy(buffer_full);
+	LWP_SemDestroy(buffer_empty);
+	LWP_SemDestroy(audio_free);
 	LWP_SuspendThread(audio_thread);
 #endif
 	AUDIO_StopDMA(); // So we don't have a buzzing sound when we exit the game
