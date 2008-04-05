@@ -21,8 +21,8 @@
 
 AUDIO_INFO AudioInfo;
 
-#define NUM_BUFFERS 2
-#define BUFFER_SIZE 4*1024
+#define NUM_BUFFERS 4
+#define BUFFER_SIZE 2*1024
 static char buffer[NUM_BUFFERS][BUFFER_SIZE] __attribute__((aligned(32)));
 static int which_buffer = 0;
 static unsigned int buffer_offset = 0;
@@ -38,6 +38,7 @@ static int   thread_inited;
 static char  audio_stack[AUDIO_STACK_SIZE];
 #define AUDIO_PRIORITY 50
 static int   thread_buffer = 0;
+static int   audio_paused = 0;
 #else // !THREADED_AUDIO
 #define thread_buffer which_buffer
 #endif
@@ -249,5 +250,22 @@ RomClosed( void )
 EXPORT void CALL
 ProcessAlist( void )
 {
+}
+
+void pauseAudio(void){
+#ifdef THREADED_AUDIO
+	LWP_SemWait(audio_free);
+	audio_paused = 1;
+#endif
+	AUDIO_StopDMA();
+}
+
+void resumeAudio(void){
+#ifdef THREADED_AUDIO
+	if(audio_paused){
+		LWP_SemPost(audio_free);
+		audio_paused = 0;
+	}
+#endif
 }
 
