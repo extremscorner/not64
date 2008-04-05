@@ -33,10 +33,10 @@ static lwp_t audio_thread;
 static sem_t buffer_full;
 static sem_t buffer_empty;
 static sem_t audio_free;
-static int   thread_inited;
+static int   thread_running;
 #define AUDIO_STACK_SIZE 1024 // MEM: I could get away with a smaller stack
 static char  audio_stack[AUDIO_STACK_SIZE];
-#define AUDIO_PRIORITY 50
+#define AUDIO_PRIORITY 100
 static int   thread_buffer = 0;
 static int   audio_paused = 0;
 #else // !THREADED_AUDIO
@@ -91,7 +91,7 @@ static void inline play_buffer(void){
 	
 #else // THREADED_AUDIO
 	// This thread will keep giving buffers to the audio as they come
-	while(1){
+	while(thread_running){
 	
 	// Wait for a buffer to be processed and the audio to be ready
 	LWP_SemWait(buffer_full);
@@ -224,13 +224,12 @@ EXPORT void CALL RomOpen()
 	// Create our semaphores and start/resume the audio thread; reset the buffer index
 	LWP_SemInit(&buffer_full, 0, NUM_BUFFERS);
 	LWP_SemInit(&buffer_empty, NUM_BUFFERS, NUM_BUFFERS);
-	LWP_SemInit(&audio_free, 1, 1);
-	if(!thread_inited){
-		LWP_CreateThread(&audio_thread, play_buffer, NULL, audio_stack, AUDIO_STACK_SIZE, AUDIO_PRIORITY);
-		AUDIO_RegisterDMACallback(done_playing);
-		thread_inited = 1;
-	} else LWP_ResumeThread(audio_thread);
+	LWP_SemInit(&audio_free, 0, 1);
+	thread_running = 1;
+	LWP_CreateThread(&audio_thread, play_buffer, NULL, audio_stack, AUDIO_STACK_SIZE, AUDIO_PRIORITY);
+	AUDIO_RegisterDMACallback(done_playing);
 	thread_buffer = which_buffer = 0;
+	audio_paused = 1;
 #endif
 }
 
@@ -239,10 +238,11 @@ RomClosed( void )
 {
 #ifdef THREADED_AUDIO
 	// Destroy semaphores and suspend the thread so audio can't play
+	thread_running = 0;
 	LWP_SemDestroy(buffer_full);
 	LWP_SemDestroy(buffer_empty);
 	LWP_SemDestroy(audio_free);
-	LWP_SuspendThread(audio_thread);
+	LWP_JoinThread(audio_thread, NULL);
 	audio_paused = 0;
 #endif
 	AUDIO_StopDMA(); // So we don't have a buzzing sound when we exit the game
