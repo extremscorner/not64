@@ -243,6 +243,7 @@ RomClosed( void )
 	LWP_SemDestroy(buffer_empty);
 	LWP_SemDestroy(audio_free);
 	LWP_SuspendThread(audio_thread);
+	audio_paused = 0;
 #endif
 	AUDIO_StopDMA(); // So we don't have a buzzing sound when we exit the game
 }
@@ -254,6 +255,8 @@ ProcessAlist( void )
 
 void pauseAudio(void){
 #ifdef THREADED_AUDIO
+	// We just grab the audio_free 'lock' and don't let go
+	//   when we have this lock, audio_thread must be waiting
 	LWP_SemWait(audio_free);
 	audio_paused = 1;
 #endif
@@ -263,6 +266,7 @@ void pauseAudio(void){
 void resumeAudio(void){
 #ifdef THREADED_AUDIO
 	if(audio_paused){
+		// When we're want the audio to resume, release the 'lock'
 		LWP_SemPost(audio_free);
 		audio_paused = 0;
 	}
