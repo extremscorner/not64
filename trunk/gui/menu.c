@@ -39,14 +39,17 @@ static void setMessage( char* msg ){
 /* End of Message menu_item */
 
 /* Example - "Play Game" */
+void pauseAudio(void);
+void resumeAudio(void);
 extern BOOL hasLoadedROM;
 	static char* playGame_func(){
 		if(!hasLoadedROM) return "Please load a ROM first";
 		
+		resumeAudio();
 		GUI_toggle();
 		go();
 		GUI_toggle();
-		AUDIO_StopDMA();
+		pauseAudio();
 		return NULL;
 	}
 
@@ -204,6 +207,7 @@ static inline void menuStack_push(menu_item*);
 			  controllerPak_strings[i+4];
 		else	controllerPakControllers_items[i].caption =
 			  controllerPak_strings[i+8];
+		return NULL;
 	}
 	static menu_item controllerPak_item =
 		{ NULL,

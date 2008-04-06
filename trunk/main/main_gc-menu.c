@@ -315,6 +315,15 @@ static void Initialise (void){
       vmode = &TVNtsc480IntDf;
       break;
     }
+    
+  if(!((*(u32*)0xCC003000)>>16)) //if you held reset button down, then swap from 50->60hz or 60->50hz
+  {
+ 	if(VIDEO_GetCurrentTvMode () == VI_PAL)
+		vmode = &TVNtsc480IntDf;
+	if(VIDEO_GetCurrentTvMode () == VI_NTSC)
+		vmode = &TVPal528IntDf;
+  }
+	    	
   VIDEO_Configure (vmode);
   xfb[0] = (u32 *) MEM_K0_TO_K1 (SYS_AllocateFramebuffer (vmode));
   xfb[1] = (u32 *) MEM_K0_TO_K1 (SYS_AllocateFramebuffer (vmode));
