@@ -1,6 +1,7 @@
 #ifdef __GX__
 #include <gccore.h>
 #include "../gui/DEBUG.h"
+#include <stdio.h>
 #endif // __GX__
 
 #ifndef __LINUX__
@@ -11,8 +12,12 @@
 #endif // __LINUX__
 #include "OpenGL.h"
 #include "Combiner.h"
-#include "NV_register_combiners.h"
-#include "texture_env_combine.h"
+#ifndef __GX__
+# include "NV_register_combiners.h"
+# include "texture_env_combine.h"
+#else // !__GX__
+# include "TEV_combiner.h"
+#endif // __GX__
 #include "texture_env.h"
 #include "Debug.h"
 #include "gDP.h"
@@ -21,29 +26,37 @@ CombinerInfo combiner;
 
 void Combiner_Init()
 {
+#ifndef __GX__
 	if (OGL.NV_register_combiners)
 		combiner.compiler = NV_REGISTER_COMBINERS;
 	else if (OGL.EXT_texture_env_combine || OGL.ARB_texture_env_combine)
 		combiner.compiler = TEXTURE_ENV_COMBINE;
 	else
 		combiner.compiler = TEXTURE_ENV;
-
+#else // !__GX__
+//	combiner.compiler = TEXTURE_ENV;	//Use simple combining.
+	combiner.compiler = TEV_COMBINE;	//Use GX combiner designed by sepp256.
+#endif // __GX__
 
 	switch (combiner.compiler)
 	{
-		case TEXTURE_ENV:
-			DEBUG_print((char*)"Combiner: Texture_Env",DBG_CCINFO);
-			Init_texture_env();
-			break;
-
+#ifndef __GX__
 		case TEXTURE_ENV_COMBINE:
-			DEBUG_print((char*)"Combiner: Texture_Env_Combine",DBG_CCINFO);
 			Init_texture_env_combine();
 			break;
 
 		case NV_REGISTER_COMBINERS:
-			DEBUG_print((char*)"Combiner: NV_Register_Combiners",DBG_CCINFO);
 			Init_NV_register_combiners();
+			break;
+#else // !__GX__
+		case TEV_COMBINE:
+			DEBUG_print((char*)"Combiner: TEV_Combiner",DBG_CCINFO);
+			Init_TEV_combine();
+			break;
+#endif // __GX__
+		case TEXTURE_ENV:
+			DEBUG_print((char*)"Combiner: Texture_Env",DBG_CCINFO);
+			Init_texture_env();
 			break;
 	}
 	combiner.root = NULL;
@@ -53,6 +66,7 @@ void Combiner_UpdateCombineColors()
 {
 	switch (combiner.compiler)
 	{
+#ifndef __GX__
 		case TEXTURE_ENV_COMBINE:
 			Update_texture_env_combine_Colors( (TexEnvCombiner*)combiner.current->compiled );
 			break;
@@ -60,6 +74,11 @@ void Combiner_UpdateCombineColors()
 		case NV_REGISTER_COMBINERS:
 			Update_NV_register_combiners_Colors( (RegisterCombiners*)combiner.current->compiled );
 			break;
+#else // !__GX__
+		case TEV_COMBINE:
+			Update_TEV_combine_Colors( (TEVCombiner*)combiner.current->compiled );
+			break;
+#endif // __GX__
 	}
 
 	gDP.changed &= ~CHANGED_COMBINE_COLORS;
@@ -278,14 +297,28 @@ CachedCombiner *Combiner_Compile( u64 mux )
 	cached->combine.mux = combine.mux;
 	cached->left = NULL;
 	cached->right = NULL;
-	
+
+#ifdef DBGCOMBINE
+	u32 mux1 = ((mux >> 32) & 0xFFFFFFFF);
+	u32 mux2 = (mux & 0xFFFFFFFF);
+//	if (mux2 == 0xfffff9fc) 
+//	{
+		sprintf(txtbuffer,"Combiner: mux1 = %x, mux2 = %x", mux1, mux2);
+		DEBUG_print(txtbuffer,9);
+		sprintf(txtbuffer," Cyc = %d, colStag = %d (1) %d (2) %d, alphaStag = %d (1) %d (2) %d", numCycles, color.numStages, color.stage[0].numOps, color.stage[1].numOps, alpha.numStages, alpha.stage[0].numOps, alpha.stage[1].numOps);
+		DEBUG_print(txtbuffer,10);
+		for (int i = 0; i < 6; i++)
+		{
+			sprintf(txtbuffer," op %d col (1) op %d par1 %d (2) op %d par1 %d; alpha (1) op %d par1 %d (2) op %d par1 %d", i+1, color.stage[0].op[i].op, color.stage[0].op[i].param1, color.stage[1].op[i].op, color.stage[1].op[i].param1, alpha.stage[0].op[i].op, alpha.stage[0].op[i].param1, alpha.stage[1].op[i].op, alpha.stage[1].op[i].param1);
+			DEBUG_print(txtbuffer,11+i);
+		}
+//	}
+#endif
+
 	// Send the simplified combiner to the hardware-specific compiler
 	switch (combiner.compiler)
 	{
-		case TEXTURE_ENV:
-			cached->compiled = (void*)Compile_texture_env( &color, &alpha );
-			break;
-
+#ifndef __GX__
 		case TEXTURE_ENV_COMBINE:
 			cached->compiled = (void*)Compile_texture_env_combine( &color, &alpha );
 			break;
@@ -293,7 +326,35 @@ CachedCombiner *Combiner_Compile( u64 mux )
 		case NV_REGISTER_COMBINERS:
 			cached->compiled = (void*)Compile_NV_register_combiners( &color, &alpha );
 			break;
+#else // !__GX__
+		case TEV_COMBINE:
+			cached->compiled = (void*)Compile_TEV_combine( &color, &alpha );
+			break;
+#endif // __GX__
+		case TEXTURE_ENV:
+			cached->compiled = (void*)Compile_texture_env( &color, &alpha );
+			break;
 	}
+
+#ifdef DBGCOMBINE
+//	if (mux2 == 0xfffff9fc) 
+//	{
+		sprintf(txtbuffer,"Combiner: mux1 = %x, mux2 = %x", mux1, mux2);
+		DEBUG_print(txtbuffer,17);
+		TEVCombiner* TEVcombiner = (TEVCombiner*)cached->compiled;
+		sprintf(txtbuffer,"TEV:%d stages, %d tex, %d chans", TEVcombiner->numTevStages, TEVcombiner->numTexGens, TEVcombiner->numColChans);
+		DEBUG_print(txtbuffer,18);
+	
+		for (u8 tevstage = 0; tevstage < TEVcombiner->numTevStages; tevstage++)
+		{
+			sprintf(txtbuffer,"stage%d: tx %d, map %d, col %d; inCol %d, %d, %d, %d; ColorOp %d, ColorOut %d", tevstage, TEVcombiner->TEVstage[tevstage].texcoord, TEVcombiner->TEVstage[tevstage].texmap, TEVcombiner->TEVstage[tevstage].color, TEVcombiner->TEVstage[tevstage].colorA, TEVcombiner->TEVstage[tevstage].colorB, TEVcombiner->TEVstage[tevstage].colorC, TEVcombiner->TEVstage[tevstage].colorD, TEVcombiner->TEVstage[tevstage].colorTevop, TEVcombiner->TEVstage[tevstage].colorTevRegOut);
+			DEBUG_print(txtbuffer,19+2*tevstage);
+			sprintf(txtbuffer," Kcol %d, Kalp %d;  inAlpha %d, %d, %d, %d; AlphaOp %d, AlphaOut %d", TEVcombiner->TEVstage[tevstage].tevKColSel, TEVcombiner->TEVstage[tevstage].tevKAlphaSel, TEVcombiner->TEVstage[tevstage].alphaA, TEVcombiner->TEVstage[tevstage].alphaB, TEVcombiner->TEVstage[tevstage].alphaC, TEVcombiner->TEVstage[tevstage].alphaD, TEVcombiner->TEVstage[tevstage].alphaTevop, TEVcombiner->TEVstage[tevstage].alphaTevRegOut);
+			DEBUG_print(txtbuffer,20+2*tevstage);
+		}
+//	}
+#endif
+
 
 	return cached;
 }
@@ -315,29 +376,30 @@ void Combiner_Destroy()
 		combiner.root = NULL;
 	}
 
+#ifndef __GX__
 	for (int i = 0; i < OGL.maxTextureUnits; i++)
 	{
-#ifndef __GX__
 		glActiveTextureARB( GL_TEXTURE0_ARB + i );
 		glDisable( GL_TEXTURE_2D );
-#else // !__GX__
-	//TODO: Implement this in GX??
-#endif // __GX__
 	}
+#endif // !__GX__
 }
 
 void Combiner_BeginTextureUpdate()
 {
+#ifndef __GX__
 	switch (combiner.compiler)
 	{
 		case TEXTURE_ENV_COMBINE:
 			BeginTextureUpdate_texture_env_combine();
 			break;
 	}
+#endif // !__GX__
 }
 
 void Combiner_EndTextureUpdate()
 {
+#ifndef __GX__
 	switch (combiner.compiler)
 	{
 		case TEXTURE_ENV_COMBINE:
@@ -345,21 +407,25 @@ void Combiner_EndTextureUpdate()
 			Set_texture_env_combine( (TexEnvCombiner*)combiner.current->compiled );
 			break;
 	}
+#endif // !__GX__
 }
 
 DWORD64 Combiner_EncodeCombineMode( WORD saRGB0, WORD sbRGB0, WORD mRGB0, WORD aRGB0,
 								 WORD saA0,   WORD sbA0,   WORD mA0,   WORD aA0,
 								 WORD saRGB1, WORD sbRGB1, WORD mRGB1, WORD aRGB1,
 								 WORD saA1,   WORD sbA1,   WORD mA1,   WORD aA1 )
-{
+{	// 2 args fixed by sepp256, but this function isn't used anywhere.
 	return (((DWORD64)CCEncodeA[saRGB0] << 52) | ((DWORD64)CCEncodeB[sbRGB0] << 28) | ((DWORD64)CCEncodeC[mRGB0] << 47) | ((DWORD64)CCEncodeD[aRGB0] << 15) |
 		    ((DWORD64)ACEncodeA[saA0] << 44) | ((DWORD64)ACEncodeB[sbA0] << 12) | ((DWORD64)ACEncodeC[mA0] << 41) | ((DWORD64)ACEncodeD[aA0] << 9) |
-			((DWORD64)CCEncodeA[saRGB1] << 37) | ((DWORD64)CCEncodeB[sbRGB1] << 24) | ((DWORD64)CCEncodeC[mRGB1]      ) | ((DWORD64)CCEncodeD[aRGB1] <<  6) |
-			((DWORD64)ACEncodeA[saA1] << 18) | ((DWORD64)ACEncodeB[sbA1] <<  3) | ((DWORD64)ACEncodeC[mA1] << 18) | ((DWORD64)ACEncodeD[aA1]     ));
+//			((DWORD64)CCEncodeA[saRGB1] << 37) | ((DWORD64)CCEncodeB[sbRGB1] << 24) | ((DWORD64)CCEncodeC[mRGB1]      ) | ((DWORD64)CCEncodeD[aRGB1] <<  6) |
+			((DWORD64)CCEncodeA[saRGB1] << 37) | ((DWORD64)CCEncodeB[sbRGB1] << 24) | ((DWORD64)CCEncodeC[mRGB1] << 32) | ((DWORD64)CCEncodeD[aRGB1] <<  6) |
+//			((DWORD64)ACEncodeA[saA1] << 18) | ((DWORD64)ACEncodeB[sbA1] <<  3) | ((DWORD64)ACEncodeC[mA1] << 18) | ((DWORD64)ACEncodeD[aA1]     ));
+			((DWORD64)ACEncodeA[saA1] << 21) | ((DWORD64)ACEncodeB[sbA1] <<  3) | ((DWORD64)ACEncodeC[mA1] << 18) | ((DWORD64)ACEncodeD[aA1]     ));
 }
 
 void Combiner_SelectCombine( u64 mux )
 {
+	//TODO: mux may have an endian issue
 	// Hack for the Banjo-Tooie shadow (framebuffer textures must be enabled too)
 	if ((gDP.otherMode.cycleType == G_CYC_1CYCLE) && (mux == 0x00ffe7ffffcf9fcfLL) && (cache.current[0]->frameBufferTexture))
 	{
@@ -397,22 +463,34 @@ void Combiner_SelectCombine( u64 mux )
 	combiner.current = current;
 
 	gDP.changed |= CHANGED_COMBINE_COLORS;
+
+#if 0 //def DBGCOMBINE
+	u32 mux1 = ((mux >> 32) & 0xFFFFFFFF);
+	u32 mux2 = (mux & 0xFFFFFFFF);
+	sprintf(txtbuffer,"Combiner: mux1 = %x, mux2 = %x", mux1, mux2);
+	DEBUG_print(txtbuffer,17);
+#endif
 }
 
 void Combiner_SetCombineStates()
 {
 	switch (combiner.compiler)
 	{
-		case TEXTURE_ENV:
-			Set_texture_env( (TexEnv*)combiner.current->compiled );
-			break;
-
+#ifndef __GX__
 		case TEXTURE_ENV_COMBINE:
 			Set_texture_env_combine( (TexEnvCombiner*)combiner.current->compiled );
 			break;
 
 		case NV_REGISTER_COMBINERS:
 			Set_NV_register_combiners( (RegisterCombiners*)combiner.current->compiled );
+			break;
+#else // !__GX__
+		case TEV_COMBINE:
+			Set_TEV_combine( (TEVCombiner*)combiner.current->compiled );
+			break;
+#endif // __GX__
+		case TEXTURE_ENV:
+			Set_texture_env( (TexEnv*)combiner.current->compiled );
 			break;
 	}
 }

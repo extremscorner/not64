@@ -26,8 +26,8 @@ extern char txtbuffer[1024];
 // Amount of time each string will be held onto
 #define DEBUG_STRING_LIFE 5
 // Dimensions of array returned by get_text
-#define DEBUG_TEXT_WIDTH  64
-#define DEBUG_TEXT_HEIGHT 20
+#define DEBUG_TEXT_WIDTH  100
+#define DEBUG_TEXT_HEIGHT 40
 
 #ifdef __cplusplus
 extern "C" {

@@ -157,6 +157,7 @@ OBJ_GLN64_GX	=glN64_GX/glN64.o \
 		glN64_GX/NV_register_combiners.o \
 		glN64_GX/texture_env.o \
 		glN64_GX/texture_env_combine.o \
+		glN64_GX/TEV_combiner.o \
 		glN64_GX/RDP.o \
 		glN64_GX/F3D.o \
 		glN64_GX/F3DEX.o \
@@ -317,6 +318,9 @@ glN64_GX/texture_env.o:		glN64_GX/texture_env.cpp
 				$(CXX) $(CFLAGS) -D__LINUX__ -D__GX__ -c -o $@ $<
 
 glN64_GX/texture_env_combine.o:	glN64_GX/texture_env_combine.cpp
+				$(CXX) $(CFLAGS) -D__LINUX__ -D__GX__ -c -o $@ $<
+
+glN64_GX/TEV_combiner.o: glN64_GX/TEV_combiner.cpp
 				$(CXX) $(CFLAGS) -D__LINUX__ -D__GX__ -c -o $@ $<
 
 glN64_GX/RDP.o:			glN64_GX/RDP.cpp

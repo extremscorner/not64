@@ -170,6 +170,7 @@ void OGL_InitExtensions()
 #else // !__GX__
 		//TODO: Check this
 		OGL.maxTextureUnits = 8;
+		OGL.ARB_multitexture = TRUE;
 #endif // __GX__
 	}
 
@@ -1188,6 +1189,12 @@ void OGL_DrawRect( int ulx, int uly, int lrx, int lry, float *color )
 	GXcol.b = (u8) (color[2]*255);
 	GXcol.a = (u8) (color[3]*255);
 
+/*
+// Set TEV up for pass color.
+	GX_SetNumTevStages (1);
+	GX_SetTevOp (GX_TEVSTAGE0,GX_PASSCLR);
+*/
+
 /*	glBegin( GL_QUADS );
 		glVertex4f( ulx, uly, (gDP.otherMode.depthSource == G_ZS_PRIM) ? gDP.primDepth.z : gSP.viewport.nearz, 1.0f );
 		glVertex4f( lrx, uly, (gDP.otherMode.depthSource == G_ZS_PRIM) ? gDP.primDepth.z : gSP.viewport.nearz, 1.0f );
@@ -1425,36 +1432,61 @@ void OGL_DrawTexturedRect( float ulx, float uly, float lrx, float lry, float uls
 	GXcol.b = (u8) (rect[0].color.b*255);
 	GXcol.a = (u8) (rect[0].color.a*255);
 
+/*
+// Set TEV up for pass texture.
+//TODO: Figure out the correct combining modes for this function.
+	GX_SetNumTevStages (1);
+	GX_SetTevOp (GX_TEVSTAGE0,GX_REPLACE);
+*/
+
 	//TODO: Change the following for multitexturing.
 	//set vertex description here
 	GX_ClearVtxDesc();
 	GX_SetVtxDesc(GX_VA_PTNMTXIDX, GX_PNMTX0);
 	GX_SetVtxDesc(GX_VA_TEX0MTXIDX, GX_IDENTITY);
-//	GX_SetVtxDesc(GX_VA_TEX1MTXIDX, GX_IDENTITY);
+	GX_SetVtxDesc(GX_VA_TEX1MTXIDX, GX_IDENTITY);
 	GX_SetVtxDesc(GX_VA_POS, GX_DIRECT);
 	GX_SetVtxDesc(GX_VA_CLR0, GX_DIRECT);
 	GX_SetVtxDesc(GX_VA_TEX0, GX_DIRECT);
-//	GX_SetVtxDesc(GX_VA_TEX1, GX_DIRECT);
+	GX_SetVtxDesc(GX_VA_TEX1, GX_DIRECT);
 	//set vertex attribute formats here
 	GX_SetVtxAttrFmt(GX_VTXFMT0, GX_VA_POS, GX_POS_XYZ, GX_F32, 0);
 	GX_SetVtxAttrFmt(GX_VTXFMT0, GX_VA_CLR0, GX_CLR_RGBA, GX_RGBA8, 0);
 	GX_SetVtxAttrFmt(GX_VTXFMT0, GX_VA_TEX0, GX_TEX_ST, GX_F32, 0);
-//	GX_SetVtxAttrFmt(GX_VTXFMT0, GX_VA_TEX1, GX_TEX_ST, GX_F32, 0);
+	GX_SetVtxAttrFmt(GX_VTXFMT0, GX_VA_TEX1, GX_TEX_ST, GX_F32, 0);
 	GX_Begin(GX_QUADS, GX_VTXFMT0, 4);
 		GX_Position3f32( rect[0].x, rect[0].y, rect[0].z );
 		GX_Color4u8( GXcol.r, GXcol.g, GXcol.b, GXcol.a ); 
 		GX_TexCoord2f32( rect[0].s0, rect[0].t0 );
+		GX_TexCoord2f32( rect[0].s1, rect[0].t1 );
 		GX_Position3f32( rect[1].x, rect[0].y, rect[0].z );
 		GX_Color4u8(GXcol.r, GXcol.g, GXcol.b, GXcol.a); 
-		if (flip)	GX_TexCoord2f32( rect[0].s0, rect[1].t0 );
-		else	GX_TexCoord2f32( rect[1].s0, rect[0].t0 );
+		if (flip)
+		{
+			GX_TexCoord2f32( rect[0].s0, rect[1].t0 );
+			GX_TexCoord2f32( rect[0].s1, rect[1].t1 );
+		}
+		else	
+		{
+			GX_TexCoord2f32( rect[1].s0, rect[0].t0 );
+			GX_TexCoord2f32( rect[1].s1, rect[0].t1 );
+		}
 		GX_Position3f32( rect[1].x, rect[1].y, rect[0].z );
 		GX_Color4u8( GXcol.r, GXcol.g, GXcol.b, GXcol.a ); 
 		GX_TexCoord2f32( rect[1].s0, rect[1].t0 );
+		GX_TexCoord2f32( rect[1].s1, rect[1].t1 );
 		GX_Position3f32( rect[0].x, rect[1].y, rect[0].z );
 		GX_Color4u8(GXcol.r, GXcol.g, GXcol.b, GXcol.a); 
-		if (flip)	GX_TexCoord2f32( rect[1].s0, rect[0].t0 );
-		else	GX_TexCoord2f32( rect[0].s0, rect[1].t0 );
+		if (flip)
+		{
+			GX_TexCoord2f32( rect[1].s0, rect[0].t0 );
+			GX_TexCoord2f32( rect[1].s1, rect[0].t1 );
+		}
+		else
+		{
+			GX_TexCoord2f32( rect[0].s0, rect[1].t0 );
+			GX_TexCoord2f32( rect[0].s1, rect[1].t1 );
+		}
 	GX_End();
 #endif // __GX__
 
