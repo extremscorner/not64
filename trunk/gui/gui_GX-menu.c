@@ -190,6 +190,7 @@ void GUI_draw()
 	GX_SetVtxAttrFmt(GX_VTXFMT1, GX_VA_TEX0, GX_TEX_ST, GX_F32, 0);
 
 	//enable textures
+	GX_SetNumTevStages(1);
 	GX_SetNumChans (1);
 	GX_SetNumTexGens (1);
 	GX_SetTevOrder (GX_TEVSTAGE0, GX_TEXCOORD0, GX_TEXMAP0, GX_COLOR0A0); // change to (u8) tile later
@@ -399,10 +400,13 @@ void GUI_drawLogo(float x0, float y0, float z0){
   guLookAt (v, &cam, &up, &look);
   rotateby++;
 
+  //libOGC was changed such that sticks are now clamped and don't have to be by us
   stickX = PAD_SubStickX(0);
   stickY = PAD_SubStickY(0);
-  if(stickX > 18 || stickX < -18) rotatebyX += stickX/32;
-  if(stickY > 18 || stickY < -18) rotatebyY += stickY/32;
+//  if(stickX > 18 || stickX < -18) rotatebyX += stickX/32;
+//  if(stickY > 18 || stickY < -18) rotatebyY += stickY/32;
+  rotatebyX += stickX/32;
+  rotatebyY += stickY/32;
 
   // move the logo out in front of us and rotate it
   guMtxIdentity (m);
@@ -542,8 +546,8 @@ void GUI_splashScreen()
 		case 3: //Bounce/spin N64 cube for a couple seconds
 			draw_rect((GXColor){0,0,0,255},0,0,639,479,-1,true);
 			GUI_drawWiiN64(319.5,300,-20.0,2);
-			x0 = 320 + PAD_StickX(0)*0.6;
-			y0 = 150 - PAD_StickY(0)*0.5;
+			x0 = 320 + PAD_StickX(0)*0.7;
+			y0 = 150 - PAD_StickY(0)*0.6;
 			GUI_drawLogo(x0, y0, -50.0);
 			if (i>=SPLASH_CUBE_SPIN) {
 				i = 0;

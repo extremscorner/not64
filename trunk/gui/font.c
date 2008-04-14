@@ -180,6 +180,12 @@ void write_font_init_GX(GXColor fontColor)
 	Mtx44 GXprojection2D;
 	Mtx GXmodelView2D;
 
+	// Reset various parameters from gfx plugin
+	GX_SetCoPlanar(GX_DISABLE);
+	GX_SetClipMode(GX_CLIP_DISABLE);
+	GX_SetScissor(0,0,vmode->fbWidth,vmode->efbHeight);
+	GX_SetAlphaCompare(GX_ALWAYS,0,GX_AOP_AND,GX_ALWAYS,0);
+
 	guMtxIdentity(GXmodelView2D);
 	GX_LoadTexMtxImm(GXmodelView2D,GX_TEXMTX0,GX_MTX2x4);
 //	guMtxTransApply (GXmodelView2D, GXmodelView2D, 0.0F, 0.0F, -5.0F);
@@ -211,14 +217,15 @@ void write_font_init_GX(GXColor fontColor)
 	GX_LoadTexObj(&fontTexObj, GX_TEXMAP1);
 
 	GX_SetTevColor(GX_TEVREG1,fontColor);
+	GX_SetTevKColor(GX_TEVPREV,fontColor);
 //	GX_SetTevKColor(GX_TEVKREG0,fontColor);
-//	GX_SetTevKColorSel(GX_TEVSTAGE0,GX_TEV_KCSEL_K0);
+	GX_SetTevKColorSel(GX_TEVSTAGE0,GX_TEV_KCSEL_K0);
 //	GX_SetTevKAlphaSel(GX_TEVSTAGE0,GX_TEV_KCSEL_K0_A);
 
 	GX_SetNumTevStages (1);
 	GX_SetTevOrder (GX_TEVSTAGE0, GX_TEXCOORD0, GX_TEXMAP1, GX_COLOR0A0); // change to (u8) tile later
-	GX_SetTevColorIn (GX_TEVSTAGE0, GX_CC_C1, GX_CC_ZERO, GX_CC_ZERO, GX_CC_ZERO);
-//	GX_SetTevColorIn (GX_TEVSTAGE0, GX_CC_KONST, GX_CC_ZERO, GX_CC_ZERO, GX_CC_ZERO);
+//	GX_SetTevColorIn (GX_TEVSTAGE0, GX_CC_C1, GX_CC_ZERO, GX_CC_ZERO, GX_CC_ZERO);
+	GX_SetTevColorIn (GX_TEVSTAGE0, GX_CC_KONST, GX_CC_ZERO, GX_CC_ZERO, GX_CC_ZERO);
 	GX_SetTevColorOp (GX_TEVSTAGE0, GX_TEV_ADD, GX_TB_ZERO, GX_CS_SCALE_1, GX_ENABLE, GX_TEVPREV);
 	GX_SetTevAlphaIn (GX_TEVSTAGE0, GX_CA_TEXA, GX_CA_ZERO, GX_CA_ZERO, GX_CA_ZERO);
 	GX_SetTevAlphaOp (GX_TEVSTAGE0, GX_TEV_ADD, GX_TB_ZERO, GX_CS_SCALE_1, GX_ENABLE, GX_TEVPREV);
@@ -239,6 +246,7 @@ void write_font_init_GX(GXColor fontColor)
 void write_font_color(GXColor* fontColorPtr)
 {
 	GX_SetTevColor(GX_TEVREG1, *fontColorPtr);
+	GX_SetTevKColor(GX_TEVPREV, *fontColorPtr);
 //	GX_SetTevKColor(GX_TEVKREG0, *fontColorPtr);
 }
 
