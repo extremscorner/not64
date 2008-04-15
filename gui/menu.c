@@ -48,7 +48,9 @@ void resumeAudio(void); void resumeInput(void);
 extern BOOL hasLoadedROM;
 	static char* playGame_func(){
 		if(!hasLoadedROM) return "Please load a ROM first";
+#ifdef SDPRINT
 		DEBUG_print("open",DBG_SDGECKOOPEN);
+#endif
 		resumeAudio();
 		resumeInput();
 		GUI_toggle();
@@ -56,7 +58,9 @@ extern BOOL hasLoadedROM;
 		GUI_toggle();
 		pauseInput();
 		pauseAudio();
+#ifdef SDPRINT
 		DEBUG_print("close",DBG_SDGECKOCLOSE);
+#endif
 		return NULL;
 	}
 

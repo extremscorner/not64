@@ -62,17 +62,23 @@ void DEBUG_print(char* string,int pos){
 			#endif
 		}
 		else if(pos == DBG_SDGECKOOPEN) {
+#ifdef SDPRINT
 			if(!f)
 				f = SDCARD_OpenFile( dump_filename, "wb");
+#endif
 		}
 		else if(pos == DBG_SDGECKOCLOSE) {
+#ifdef SDPRINT
 			if(f)
 				SDCARD_CloseFile(f);
+#endif
 		}
 		else if(pos == DBG_SDGECKOPRINT) {			
+#ifdef SDPRINT
 			if(!f)
 				return;
 			SDCARD_WriteFile(f, string, strlen(string));
+#endif
 		}
 		else {
 			memset(text[pos],0,DEBUG_TEXT_WIDTH);
