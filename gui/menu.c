@@ -14,6 +14,7 @@
 #include "menuFileBrowser.h"
 #include <ogc/dvd.h>
 #include "../main/gc_dvd.h"
+#include "../gui/DEBUG.h"
 
 // -- ACTUAL MENU LAYOUT --
 
@@ -47,7 +48,7 @@ void resumeAudio(void); void resumeInput(void);
 extern BOOL hasLoadedROM;
 	static char* playGame_func(){
 		if(!hasLoadedROM) return "Please load a ROM first";
-		
+		DEBUG_print("open",DBG_SDGECKOOPEN);
 		resumeAudio();
 		resumeInput();
 		GUI_toggle();
@@ -55,6 +56,7 @@ extern BOOL hasLoadedROM;
 		GUI_toggle();
 		pauseInput();
 		pauseAudio();
+		DEBUG_print("close",DBG_SDGECKOCLOSE);
 		return NULL;
 	}
 
