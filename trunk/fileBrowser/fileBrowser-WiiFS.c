@@ -241,7 +241,7 @@ static int identify(void){
 		ISFS_Initialize();
 		// If we haven't identified this title before
 		// we'll need to set some things up
-		char path[64] __attribute__((aligned(32)));
+		char* path = memalign(32, 64);;
 		ES_GetDataDir(titleID, path);
 		strncat(path, "/banner.bin", 64);
 		ret = ISFS_Open(path, 1);
@@ -261,6 +261,7 @@ static int identify(void){
 			ISFS_CreateDir(path, 0, 3, 3, 1);
 		} else ISFS_Close(ret);
 		
+		free(path);
 		return identified = 1;
 	}
 	
@@ -344,5 +345,9 @@ int fileBrowser_WiiFSROM_readFile(fileBrowser_file* file, void* buffer, unsigned
 	return bytes_read;
 }
 
-int fileBrowser_WiiFSROM_deinit(fileBrowser_file* f){ if(fd >= 0) ISFS_Close(fd); return recCloseLib(); }
+int fileBrowser_WiiFSROM_deinit(fileBrowser_file* f){
+	if(fd >= 0) ISFS_Close(fd);
+	fd = -1;
+	return recCloseLib();
+}
 
