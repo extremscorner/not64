@@ -22,12 +22,12 @@
 
    .balign 32
    _customCert:
-   /*
+   /**/
    	.incbin	"./fileBrowser/HW64/cert"
-    */
+    /**/
    .globl customCert
    customCert:
-   	.long 0/*_customCert*/
+   	.long /*0/**/_customCert/**/
    .globl customCertSize
    customCertSize:
    	.long (customCert - _customCert)
