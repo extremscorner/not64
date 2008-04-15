@@ -77,6 +77,9 @@ void (*fBWrite)(DWORD addr, DWORD size) = NULL;
 void (*fBGetFrameBufferInfo)(void *p) = NULL;
 void new_frame(){ }
 void new_vi(){ }
+int tcp_localip;
+int tcp_netmask;
+int tcp_gateway;
 
 int main(){
 	/* INITIALIZE */
@@ -86,9 +89,12 @@ int main(){
 	DVD_Init();
 #endif
 	menuInit();
-#ifdef WII	
+#ifdef WII
 	killWiimote();
+	//SYS_SetPowerCallback(STM_ShutdownToIdle());
 #endif
+	//DEBUG_Init(0, 1);
+	//_break();
 	
 	// Default Settings
 	audioEnabled     = 0; // No audio
@@ -135,13 +141,11 @@ extern BOOL eepromWritten;
 extern BOOL mempakWritten;
 extern BOOL sramWritten;
 extern BOOL flashramWritten;
-// TODO: I have to split loading and unloading in case user changes source
 BOOL hasLoadedROM = FALSE;
 void loadROM(fileBrowser_file* rom){
 	
 	// First, if there's already a loaded ROM
 	if(hasLoadedROM){
-		romFile_deinit(rom);
 		// Unload it, and deinit everything
 		cpu_deinit();
 		eepromWritten = FALSE;
@@ -165,7 +169,7 @@ void loadROM(fileBrowser_file* rom){
 	
 	ARAM_manager_init();
 	TLBCache_init();
-	romFile_init(rom);
+	//romFile_init(rom);
 	rom_read(rom);
 	
 	// Init everything for this ROM
@@ -332,8 +336,8 @@ static void Initialise (void){
   VIDEO_ClearFrameBuffer (vmode, xfb[0], COLOR_BLACK);
   VIDEO_ClearFrameBuffer (vmode, xfb[1], COLOR_BLACK);
   VIDEO_SetNextFramebuffer (xfb[0]);
-  VIDEO_SetPostRetraceCallback (PAD_ScanPads);
-  //VIDEO_SetPostRetraceCallback (ScanPADSandReset);
+  //VIDEO_SetPostRetraceCallback (PAD_ScanPads);
+  VIDEO_SetPostRetraceCallback (ScanPADSandReset);
   VIDEO_SetBlack (0);
   VIDEO_Flush ();
   VIDEO_WaitVSync ();        /*** Wait for VBL ***/

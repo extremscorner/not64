@@ -33,11 +33,11 @@ void ROMCache_init(u32 size){
 	ROMSize = size;
 	ROMTooBig = size > ROMCACHE_SIZE;
 	
-	romFile_init( romFile_topLevel );
+	//romFile_init( romFile_topLevel );
 }
 
 void ROMCache_deinit(){
-	romFile_deinit( romFile_topLevel );
+	//romFile_deinit( romFile_topLevel );
 }
 
 void ROMCache_load_block(char* dst, u32 rom_offset){
