@@ -70,9 +70,6 @@ AiDacrateChanged( int SystemType )
 		 sprintf(txtbuffer,"error initializing frequency: %d", f);
 	   	 DEBUG_print(txtbuffer,DBG_AUDIOINFO); 
 	}
-		
-	// FIXME: Trying to force 48khz
-	AUDIO_SetStreamSampleRate(AI_SAMPLERATE_48KHZ);
 }
 
 #ifdef THREADED_AUDIO
