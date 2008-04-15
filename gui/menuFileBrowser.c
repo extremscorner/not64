@@ -21,12 +21,17 @@ static menu_item  currentDirMenu =
 
 // Return this item on errors to avoid unrecoverable exceptions
 static char* errorFunc(){ return NULL; }
+static menu_item errorItem_submenu[] =
+	{{ "An Error has occured",
+	    MENU_ATTR_NONE,
+	    { .func = errorFunc }
+	  }};
 static menu_item errorItem =
 	{ NULL,
 	  MENU_ATTR_HASSUBMENU,
-	  { 1,
-	    { "An Error has occured", MENU_ATTR_NONE, errorFunc }
-	   }
+	  {{ 1,
+	     &errorItem_submenu[0]
+	   }}
 	  };
 
 static menu_item*        menu_items;
@@ -41,7 +46,7 @@ static char* filenameFromAbsPath(char* absPath){
 	while( *filename ) ++filename;
 	// Now, just move it back to the last '/' or the start
 	//   of the string
-	while( filename != absPath && *(filename-1) != '\\')
+	while( filename != absPath && (*(filename-1) != '\\' && *(filename-1) != '/'))
 		--filename;
 	return filename;
 }
@@ -74,18 +79,7 @@ static char* recurseOrSelect(int i){
 static void inline fillItems(int num_entries, fileBrowser_file* entries){
 	int i;
 	for(i=0; i<num_entries; ++i){
-		menu_items[i].caption = filenameFromAbsPath(entries[i].name);/*entries[i].name;
-		
-		// Here we want to extract from the absolute path
-		//   just the filename
-		// First we move the pointer all the way to the end
-		//   of the the string so we can work our way back
-		while( *menu_items[i].caption ) ++menu_items[i].caption;
-		// Now, just move it back to the last '/' or the start
-		//   of the string
-		while( menu_items[i].caption != entries[i].name &&
-		       *(menu_items[i].caption-1) != '\\')
-			--menu_items[i].caption;*/
+		menu_items[i].caption = filenameFromAbsPath(entries[i].name);
 		
 		menu_items[i].attr = (entries[i].attr & FILE_BROWSER_ATTR_DIR) ?
 		                        MENU_ATTR_SPECIAL : MENU_ATTR_NONE;
