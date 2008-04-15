@@ -288,7 +288,7 @@ EXPORT void CALL RomClosed (void)
 *******************************************************************/ 
 EXPORT void CALL RomOpen (void)
 {
-	PAD_Init(); // FIXME: This is probably done in main
+	PAD_Init();
 }
 
 /******************************************************************
@@ -311,4 +311,13 @@ EXPORT void CALL WM_KeyDown( WPARAM wParam, LPARAM lParam )
 EXPORT void CALL WM_KeyUp( WPARAM wParam, LPARAM lParam )
 {
 }
+void pauseInput(void){
+	PAD_ControlMotor(0, PAD_MOTOR_STOP);
+	PAD_ControlMotor(1, PAD_MOTOR_STOP);
+	PAD_ControlMotor(2, PAD_MOTOR_STOP);
+	PAD_ControlMotor(3, PAD_MOTOR_STOP);
+	// When networked, send a message to other players
+}
+
+void resumeInput(void){ }
 
