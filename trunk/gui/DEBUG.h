@@ -21,6 +21,9 @@
 #define DBG_PROFILE_AUDIO 10
 #define DBG_PROFILE_TLB 11
 #define DBG_PROFILE_FP 12
+#define DBG_SDGECKOOPEN 0xFC
+#define DBG_SDGECKOCLOSE 0xFD
+#define DBG_SDGECKOPRINT 0xFE
 #define DBG_USBGECKO 0xFF
 extern char txtbuffer[1024];
 // Amount of time each string will be held onto

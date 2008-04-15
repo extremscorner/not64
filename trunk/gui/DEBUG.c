@@ -3,6 +3,8 @@
  */
 
 #include <string.h>
+#include <stdio.h>
+#include <sdcard.h>
 #include "DEBUG.h"
 #include "TEXT.h"
 #include "usb.h"
@@ -22,6 +24,7 @@ static void check_heap_space(void){
 	if(ptr) free(ptr);
 	sprintf(txtbuffer,"At least %dKB or %dMB space available\n", space/1024, space/1024/1024);
 	DEBUG_print(txtbuffer,10);
+
 }
 #endif
 void DEBUG_update() {
@@ -40,6 +43,10 @@ void DEBUG_update() {
 
 
 int flushed = 0;
+int writtenbefore = 0;
+int amountwritten = 0;
+char *dump_filename = "dev0:\\N64ROMS\\debug.txt";
+sd_file* f = NULL;
 void DEBUG_print(char* string,int pos){
 
 	#ifdef SHOW_DEBUG
@@ -53,6 +60,19 @@ void DEBUG_print(char* string,int pos){
 			usb_sendbuffer (&size,4);
 			usb_sendbuffer (string,size);
 			#endif
+		}
+		else if(pos == DBG_SDGECKOOPEN) {
+			if(!f)
+				f = SDCARD_OpenFile( dump_filename, "wb");
+		}
+		else if(pos == DBG_SDGECKOCLOSE) {
+			if(f)
+				SDCARD_CloseFile(f);
+		}
+		else if(pos == DBG_SDGECKOPRINT) {			
+			if(!f)
+				return;
+			SDCARD_WriteFile(f, string, strlen(string));
 		}
 		else {
 			memset(text[pos],0,DEBUG_TEXT_WIDTH);
