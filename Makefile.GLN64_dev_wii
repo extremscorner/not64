@@ -113,7 +113,8 @@ OBJ_GTK_GUI	=main/gui_gtk/main_gtk.o \
 		main/gui_gtk/config.o \
 		main/gui_gtk/dirbrowser.o
 
-OBJ_INPUT	=gc_input/main.o
+OBJ_INPUT	=gc_input/main.o \
+		gc_input/controller-GC.o
 
 OBJ_RSPHLE	=rsp_hle-ppc/main.o \
 		rsp_hle-ppc/jpeg.o \
