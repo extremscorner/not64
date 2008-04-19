@@ -3,13 +3,13 @@
  */
 
 #include <string.h>
-#include <ogc/pad.h>
 #include <stdio.h>
 
 #include "../main/winlnxdefs.h"
 #include "InputPlugin.h"
 #include "Controller_#1.1.h"
 #include "PakIO.h"
+#include "controller.h"
 
 #ifdef USE_GUI
 
@@ -17,6 +17,16 @@
  
 static CONTROL_INFO control_info;
 static BOOL lastData[4];
+
+static struct {
+	BOOL          inUse;
+	controller_t* control;
+	int           number;
+} controllers[4];
+
+// Use to invoke func on the mapped controller with args
+#define DO_CONTROL(Control,func,args...) \
+	controllers[Control].control->func(controllers[Control].number, ## args)
 
 unsigned char mempack_crc(unsigned char *data);
 
@@ -26,8 +36,7 @@ static BYTE writePak(int Control, BYTE* Command){
 	unsigned int dwAddress = (Command[0] << 8) + (Command[1] & 0xE0);
 	
 	if( dwAddress == PAK_IO_RUMBLE ){
-		if( *data ) PAD_ControlMotor(Control, PAD_MOTOR_RUMBLE);
-		else PAD_ControlMotor(Control, PAD_MOTOR_STOP);
+		DO_CONTROL(Control, rumble, *data);
 	} else if( dwAddress >= 0x8000 && dwAddress < 0x9000 ){
 		lastData[Control] = (*data) ? TRUE : FALSE;
 	}
@@ -150,40 +159,7 @@ EXPORT void CALL GetDllInfo ( PLUGIN_INFO * PluginInfo )
 extern int stop;	
 EXPORT void CALL GetKeys(int Control, BUTTONS * Keys )
 {
-	BUTTONS* c = Keys;
-		
-	int b = PAD_ButtonsHeld(Control);
-	c->R_DPAD       = (b & PAD_BUTTON_RIGHT) ? 1 : 0;
-	c->L_DPAD       = (b & PAD_BUTTON_LEFT)  ? 1 : 0;
-	c->D_DPAD       = (b & PAD_BUTTON_DOWN)  ? 1 : 0;
-	c->U_DPAD       = (b & PAD_BUTTON_UP)    ? 1 : 0;
-	c->START_BUTTON = (b & PAD_BUTTON_START) ? 1 : 0;
-	c->B_BUTTON     = (b & PAD_BUTTON_B)     ? 1 : 0;
-	c->A_BUTTON     = (b & PAD_BUTTON_A)     ? 1 : 0;
-
-	c->Z_TRIG       = (b & PAD_TRIGGER_Z)    ? 1 : 0;
-	c->R_TRIG       = (b & PAD_TRIGGER_R)    ? 1 : 0;
-	c->L_TRIG       = (b & PAD_TRIGGER_L)    ? 1 : 0;
-
-	// FIXME: Proper values for analog and C-Stick
-	s8 substickX = PAD_SubStickX(Control);
-	c->R_CBUTTON    = (substickX >  5)       ? 1 : 0;
-	c->L_CBUTTON    = (substickX < -5)       ? 1 : 0;
-	s8 substickY = PAD_SubStickY(Control);
-	c->D_CBUTTON    = (substickY >  5)       ? 1 : 0;
-	c->U_CBUTTON    = (substickY < -5)       ? 1 : 0;
-	
-	c->X_AXIS       = PAD_StickX(Control);
-	c->Y_AXIS       = PAD_StickY(Control);
-	
-	// In pure interpreter mode X+Y quits
-	if((b & PAD_BUTTON_X) && (b & PAD_BUTTON_Y)) 
-		stop = 1;
-		
-	if(!((*(u32*)0xCC003000)>>16))
-		stop = 1;
-
-	
+	if( DO_CONTROL(Control, GetKeys, Keys) ) stop = 1;
 }
 
 /******************************************************************
@@ -199,19 +175,18 @@ EXPORT void CALL InitiateControllers (CONTROL_INFO ControlInfo)
 {
 	control_info = ControlInfo;
 	
-	PADStatus status[4];
-	PAD_Read(status);
+	// FIXME: This needs to work for all controller_t's
+	extern controller_t controller_GC;
+	
+	controller_GC.init();
 	int i;
 	for(i=0; i<4; ++i){
-		// Check if controller is plugged
-		control_info.Controls[i].Present = 
-			(status[i].err == PAD_ERR_NO_CONTROLLER) ?
-					FALSE : TRUE;
-/*		printf("Controller %d is %s\n", i,
-		       control_info.Controls[i].Present ? "plugged in" : "unplugged");
-*/		
-		control_info.Controls[i].Plugin = PLUGIN_MEMPAK;
-		//control_info.Controls[i].Plugin = PLUGIN_RAW; // Uncomment for rumble
+		// TODO: Use controller type priorities
+		controllers[i].control = &controller_GC;
+		controllers[i].inUse   = controller_GC.available[i];
+		controllers[i].number  = i;
+		control_info.Controls[i].Present = controllers[i].inUse;
+		control_info.Controls[i].Plugin  = PLUGIN_MEMPAK;
 	}
 }
 
@@ -248,7 +223,7 @@ EXPORT void CALL ReadController ( int Control, BYTE * Command )
 	case RD_READKEYS:
 		// I don't think I should be getting this command
 		//   but just in case
-		GetKeys(Control, &Command[3]);
+		GetKeys(Control, (BUTTONS*)&Command[3]);
 		break;
 	case RD_READPAK:
 		readPak(Control, &Command[3]);
@@ -288,7 +263,6 @@ EXPORT void CALL RomClosed (void)
 *******************************************************************/ 
 EXPORT void CALL RomOpen (void)
 {
-	PAD_Init();
 }
 
 /******************************************************************
@@ -312,12 +286,14 @@ EXPORT void CALL WM_KeyUp( WPARAM wParam, LPARAM lParam )
 {
 }
 void pauseInput(void){
-	PAD_ControlMotor(0, PAD_MOTOR_STOP);
-	PAD_ControlMotor(1, PAD_MOTOR_STOP);
-	PAD_ControlMotor(2, PAD_MOTOR_STOP);
-	PAD_ControlMotor(3, PAD_MOTOR_STOP);
-	// When networked, send a message to other players
+	int i;
+	for(i=0; i<4; ++i)
+		if(controllers[i].inUse) DO_CONTROL(i, pause);
 }
 
-void resumeInput(void){ }
+void resumeInput(void){
+	int i;
+	for(i=0; i<4; ++i)
+		if(controllers[i].inUse) DO_CONTROL(i, resume);
+}
 
