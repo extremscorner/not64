@@ -10,6 +10,8 @@
 #ifdef __GX__
 #include "GFXPlugin.h"
 #include <gccore.h>
+#include <stdio.h>
+#include "../gui/DEBUG.h"
 #endif
 
 //#include <GL/gl.h>	//not available
@@ -297,6 +299,12 @@ EXPORT void CALL ProcessDList(void)
 		WaitForSingleObject( RSP.threadFinished, INFINITE );
 	}
 #else
+#ifdef __GX__
+#ifdef SDPRINT
+	sprintf(txtbuffer,"\nPROCESS D LIST!!\n\n");
+	DEBUG_print(txtbuffer,DBG_SDGECKOPRINT);
+#endif // SDPRINT
+#endif // __GX__
 	RSP_ProcessDList();
 #endif
 

@@ -273,8 +273,8 @@ void VI_GX_showStats()
 {
 	if (updateDEBUGflag)
 	{
-		sprintf(txtbuffer,"texCache: %d bytes in %d cached textures",cache.cachedBytes,cache.numCached);
-		DEBUG_print(txtbuffer,DBG_CACHEINFO); 
+//		sprintf(txtbuffer,"texCache: %d bytes in %d cached textures",cache.cachedBytes,cache.numCached);
+//		DEBUG_print(txtbuffer,DBG_CACHEINFO); 
 	}
 }
 
