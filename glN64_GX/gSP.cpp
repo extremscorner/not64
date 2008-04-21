@@ -531,6 +531,7 @@ void gSPCIVertex( u32 v, u32 n, u32 v0 )
 
 			u8 *color = &RDRAM[gSP.vertexColorBase + (vertex->ci & 0xff)];
 
+#ifndef __GX__
 			if (gSP.geometryMode & G_LIGHTING)
 			{
 				gSP.vertices[i].nx = (s8)color[3];
@@ -545,6 +546,22 @@ void gSPCIVertex( u32 v, u32 n, u32 v0 )
 				gSP.vertices[i].b = color[1] * 0.0039215689f;
 				gSP.vertices[i].a = color[0] * 0.0039215689f;
 			}
+#else // !__GX__
+			if (gSP.geometryMode & G_LIGHTING)
+			{
+				gSP.vertices[i].nx = (s8)color[0];
+				gSP.vertices[i].ny = (s8)color[1];
+				gSP.vertices[i].nz = (s8)color[2];
+				gSP.vertices[i].a = color[3] * 0.0039215689f;
+			}
+			else
+			{
+				gSP.vertices[i].r = color[0] * 0.0039215689f;
+				gSP.vertices[i].g = color[1] * 0.0039215689f;
+				gSP.vertices[i].b = color[2] * 0.0039215689f;
+				gSP.vertices[i].a = color[3] * 0.0039215689f;
+			}
+#endif // __GX__
 
 			gSPProcessVertex( i );
 

@@ -280,12 +280,18 @@ void Update_TEV_combine_Colors( TEVCombiner *TEVcombiner )	//Called from OGL_Upd
 				GXconstantColor.b = (u8) 255;
 				GXconstantColor.a = (u8) 255;
 			}
-		if ( TEVcombiner->TEVconstant[i] < 4 ) // These constants go into Konst registers
-			GX_SetTevKColor(TEVconstRegs[TEVcombiner->TEVconstant[i]].tev_regid,GXconstantColor);
+			if ( TEVcombiner->TEVconstant[i] < 4 ) // These constants go into Konst registers
+				GX_SetTevKColor(TEVconstRegs[TEVcombiner->TEVconstant[i]].tev_regid,GXconstantColor);
 
-		else // These constants go into normal TEV registers
-			GX_SetTevColor(TEVconstRegs[TEVcombiner->TEVconstant[i]].tev_regid,GXconstantColor);
+			else // These constants go into normal TEV registers
+				GX_SetTevColor(TEVconstRegs[TEVcombiner->TEVconstant[i]].tev_regid,GXconstantColor);
 
+#ifdef DBGCOMBINE
+#ifdef SDPRINT
+			sprintf(txtbuffer,"SetTEVConst: TEVinp %d, TEVind %d, TEVregID %d, GXcol %d,%d,%d,%d\n", i, TEVcombiner->TEVconstant[i], TEVconstRegs[TEVcombiner->TEVconstant[i]].tev_regid, GXconstantColor.r, GXconstantColor.g, GXconstantColor.b, GXconstantColor.a);
+			DEBUG_print(txtbuffer,DBG_SDGECKOPRINT);
+#endif // SDPRINT
+#endif
 		}
 	}
 }
@@ -1235,9 +1241,12 @@ void Set_TEV_combine( TEVCombiner *TEVcombiner )	//Called from OGL_UpdateStates(
 	GX_SetNumTexGens(TEVcombiner->numTexGens);
 	GX_SetNumTevStages(TEVcombiner->numTevStages);
 
-#if 0 //def DBGCOMBINE
-	sprintf(txtbuffer,"TEV:%d stages, %d tex, %d chans", TEVcombiner->numTevStages, TEVcombiner->numTexGens, TEVcombiner->numColChans);
-	DEBUG_print(txtbuffer,18);
+#ifdef DBGCOMBINE
+#ifdef SDPRINT
+	sprintf(txtbuffer,"TEV:%d stages, %d tex, %d chans\n", TEVcombiner->numTevStages, TEVcombiner->numTexGens, TEVcombiner->numColChans);
+//	DEBUG_print(txtbuffer,18);
+	DEBUG_print(txtbuffer,DBG_SDGECKOPRINT);
+#endif // SDPRINT
 #endif
 
 	//Set TEV stage variables
@@ -1251,11 +1260,15 @@ void Set_TEV_combine( TEVCombiner *TEVcombiner )	//Called from OGL_UpdateStates(
 		GX_SetTevAlphaOp (tevstage, TEVcombiner->TEVstage[tevstage].alphaTevop, GX_TB_ZERO, GX_CS_SCALE_1, GX_ENABLE, TEVcombiner->TEVstage[tevstage].alphaTevRegOut);
 		GX_SetTevKAlphaSel(tevstage, TEVcombiner->TEVstage[tevstage].tevKAlphaSel);
 
-#if 0 //def DBGCOMBINE
-		sprintf(txtbuffer,"stage%d: tx %d, map %d, col %d; inCol %d, %d, %d, %d; ColorOp %d, ColorOut %d", tevstage, TEVcombiner->TEVstage[tevstage].texcoord, TEVcombiner->TEVstage[tevstage].texmap, TEVcombiner->TEVstage[tevstage].color, TEVcombiner->TEVstage[tevstage].colorA, TEVcombiner->TEVstage[tevstage].colorB, TEVcombiner->TEVstage[tevstage].colorC, TEVcombiner->TEVstage[tevstage].colorD, TEVcombiner->TEVstage[tevstage].colorTevop, TEVcombiner->TEVstage[tevstage].colorTevRegOut);
-		DEBUG_print(txtbuffer,19+2*tevstage);
-		sprintf(txtbuffer," Kcol %d, Kalp %d;  inAlpha %d, %d, %d, %d; AlphaOp %d, AlphaOut %d", TEVcombiner->TEVstage[tevstage].tevKColSel, TEVcombiner->TEVstage[tevstage].tevKAlphaSel, TEVcombiner->TEVstage[tevstage].alphaA, TEVcombiner->TEVstage[tevstage].alphaB, TEVcombiner->TEVstage[tevstage].alphaC, TEVcombiner->TEVstage[tevstage].alphaD, TEVcombiner->TEVstage[tevstage].alphaTevop, TEVcombiner->TEVstage[tevstage].alphaTevRegOut);
-		DEBUG_print(txtbuffer,20+2*tevstage);
+#ifdef DBGCOMBINE
+#ifdef SDPRINT
+		sprintf(txtbuffer,"stage%d: tx %d, map %d, col %d; inCol %d, %d, %d, %d; ColorOp %d, ColorOut %d\n", tevstage, TEVcombiner->TEVstage[tevstage].texcoord, TEVcombiner->TEVstage[tevstage].texmap, TEVcombiner->TEVstage[tevstage].color, TEVcombiner->TEVstage[tevstage].colorA, TEVcombiner->TEVstage[tevstage].colorB, TEVcombiner->TEVstage[tevstage].colorC, TEVcombiner->TEVstage[tevstage].colorD, TEVcombiner->TEVstage[tevstage].colorTevop, TEVcombiner->TEVstage[tevstage].colorTevRegOut);
+//		DEBUG_print(txtbuffer,19+2*tevstage);
+		DEBUG_print(txtbuffer,DBG_SDGECKOPRINT);
+		sprintf(txtbuffer," Kcol %d, Kalp %d;  inAlpha %d, %d, %d, %d; AlphaOp %d, AlphaOut %d\n", TEVcombiner->TEVstage[tevstage].tevKColSel, TEVcombiner->TEVstage[tevstage].tevKAlphaSel, TEVcombiner->TEVstage[tevstage].alphaA, TEVcombiner->TEVstage[tevstage].alphaB, TEVcombiner->TEVstage[tevstage].alphaC, TEVcombiner->TEVstage[tevstage].alphaD, TEVcombiner->TEVstage[tevstage].alphaTevop, TEVcombiner->TEVstage[tevstage].alphaTevRegOut);
+//		DEBUG_print(txtbuffer,20+2*tevstage);
+		DEBUG_print(txtbuffer,DBG_SDGECKOPRINT);
+#endif // SDPRINT
 #endif
 	}
 }

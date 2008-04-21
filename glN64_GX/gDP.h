@@ -48,8 +48,10 @@ struct gDPCombine
 			unsigned	saA0	: 3;
 			unsigned	mRGB0	: 5;
 			unsigned	saRGB0	: 4;
+			unsigned	pad0	: 8;
 #else // !__GX__ -> This should fix for BE.
 			// muxs0
+			unsigned	pad0	: 8;
 			unsigned	saRGB0	: 4;
 			unsigned	mRGB0	: 5;
 			unsigned	saA0	: 3;

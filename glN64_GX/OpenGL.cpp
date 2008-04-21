@@ -1,5 +1,6 @@
 #ifdef __GX__
 #include <gccore.h>
+#include "../gui/DEBUG.h"
 #endif // __GX__
 
 #ifndef __LINUX__
@@ -713,6 +714,11 @@ void OGL_UpdateStates()
 		GX_SetZCompLoc(GXZcompLoc);
 		GX_SetAlphaCompare(GXalphaFunc,GXalphaRef,GX_AOP_AND,GX_ALWAYS,0);
 
+#ifdef SDPRINT
+		sprintf(txtbuffer,"SetAlphaCompare: GXalphaFunc %d, GXalphaRef %d, GXZcompLoc %d\n", GXalphaFunc, GXalphaRef, GXZcompLoc);
+	DEBUG_print(txtbuffer,DBG_SDGECKOPRINT);
+#endif // SDPRINT
+
 //TODO: Not sure yet how to implement this:
 /*		if (OGL.usePolygonStipple && (gDP.otherMode.alphaCompare == G_AC_DITHER) && !(gDP.otherMode.alphaCvgSel))
 			glEnable( GL_POLYGON_STIPPLE );
@@ -847,7 +853,7 @@ void OGL_UpdateStates()
 		}
 	}
 #else // !__GX__
-	u8 GXblenddstfactor, GXblendsrcfactor;
+	u8 GXblenddstfactor, GXblendsrcfactor, GXblendmode;
 
 	if ((gDP.changed & CHANGED_RENDERMODE) || (gDP.changed & CHANGED_CYCLETYPE))
 	{
@@ -857,6 +863,7 @@ void OGL_UpdateStates()
 			!(gDP.otherMode.alphaCvgSel))
 		{
 // 			glEnable( GL_BLEND );
+			GXblendmode = GX_BM_BLEND;
 
 			switch (gDP.otherMode.l >> 16)
 			{
@@ -897,6 +904,7 @@ void OGL_UpdateStates()
 		}
 		else {
 //			glDisable( GL_BLEND );
+			GXblendmode = GX_BM_NONE;
 			GXblendsrcfactor = GX_BL_ONE;
 			GXblenddstfactor = GX_BL_ZERO;
 		}
@@ -905,13 +913,19 @@ void OGL_UpdateStates()
 		{
 //			glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
 //			glEnable( GL_BLEND );
+			GXblendmode = GX_BM_BLEND;
 			GXblendsrcfactor = GX_BL_SRCALPHA;
 			GXblenddstfactor = GX_BL_INVSRCALPHA;
 		}
-		GX_SetBlendMode(GX_BM_BLEND, GXblendsrcfactor, GXblenddstfactor, GX_LO_CLEAR); 
+		GX_SetBlendMode(GXblendmode, GXblendsrcfactor, GXblenddstfactor, GX_LO_CLEAR); 
 		GX_SetColorUpdate(GX_ENABLE);
 		GX_SetAlphaUpdate(GX_ENABLE);
 		GX_SetDstAlpha(GX_DISABLE, 0xFF);
+
+#ifdef SDPRINT
+		sprintf(txtbuffer,"SetBlendMode: GXblendmode %d, SrcFactor %d, DestFactor %d\n", GXblendmode, GXblendsrcfactor, GXblenddstfactor);
+		DEBUG_print(txtbuffer,DBG_SDGECKOPRINT);
+#endif // SDPRINT
 	}
 #endif // __GX__
 
@@ -1066,6 +1080,10 @@ void OGL_DrawTriangles()
 		if (combiner.usesT1) GX_TexCoord2f32(OGL.vertices[i].s1,OGL.vertices[i].t1);
 	}
 	GX_End();
+#ifdef SDPRINT
+	sprintf(txtbuffer,"OGL_DrawTris: numTri %d, numVert %d, useT0 %d, useT1 %d\n", OGL.numTriangles, OGL.numVertices, combiner.usesT0, combiner.usesT1);
+	DEBUG_print(txtbuffer,DBG_SDGECKOPRINT);
+#endif // SDPRINT
 #endif // __GX__
 	OGL.numTriangles = OGL.numVertices = 0;
 }
@@ -1674,7 +1692,8 @@ void OGL_GXinitDlist()
 	GX_LoadProjectionMtx(GXprojection, GX_ORTHOGRAPHIC); 
 
 	//Not sure if this is needed.  Clipping is a slow process...
-	GX_SetClipMode(GX_CLIP_ENABLE);
+//	GX_SetClipMode(GX_CLIP_ENABLE);
+	GX_SetClipMode(GX_CLIP_DISABLE);
 
 	//These are here temporarily until combining/blending is sorted out...
 	//Set PassColor TEV mode

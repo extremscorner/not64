@@ -47,7 +47,7 @@ inline u32 GXGetIA31_IA4( u64 *src, u16 x, u16 i, u8 palette )
 	color4B = (x & 1) ? (color4B & 0x0F) : (color4B >> 4);
 	u8 i4 = Three2Four[color4B >> 1];
 	u8 a4 = One2Four[color4B & 0x01];
-	u8 ia = ((i4 << 4) | a4);
+	u8 ia = ((a4 << 4) | i4);
 	return (u32) ia;
 
 /*	u8 color4B, i4, a4, ia[4];
@@ -107,7 +107,9 @@ inline u16 I4_RGBA4444( u8 color )
 
 inline u32 GXGetIA44_IA4( u64 *src, u16 x, u16 i, u8 palette )
 {
-	return (u32) ((u8*)src)[x];
+	u8 color = ((u8*)src)[x];
+	color = ((color & 0xf0) >> 4) | ((color & 0x0f) << 4);
+	return (u32) color;
 
 /*	return IA44_RGBA4444(((u8*)src)[x^(i<<1)]);
 
@@ -120,6 +122,7 @@ inline u32 GXGetCI4IA_IA8( u64 *src, u16 x, u16 i, u8 palette )
 	u8 ind4B = ((u8*)src)[x>>1];
 	u16 color = (x & 1) ?	*(u16*)&TMEM[256 + (palette << 4) + (ind4B & 0x0F)] :
 							*(u16*)&TMEM[256 + (palette << 4) + (ind4B >> 4)];
+	color = ((color & 0xff00) >> 8) | ((color & 0x00ff) << 8);
 	return (u32) color;
 
 /*	u8 ind4B;
@@ -155,6 +158,7 @@ inline u32 IA88_RGBA8888( u16 color )
 inline u32 GXGetCI8IA_IA8( u64 *src, u16 x, u16 i, u8 palette )
 {
 	u16 color = *(u16*)&TMEM[256 + ((u8*)src)[x]];
+	color = ((color & 0xff00) >> 8) | ((color & 0x00ff) << 8);
 	return (u32) color;
 
 /*	u16 color[2];
@@ -258,7 +262,9 @@ inline u32 I8_RGBA8888( u8 color )
 
 inline u32 GXGetIA88_IA8( u64 *src, u16 x, u16 i, u8 palette )
 {
-	return (u32) ((u16*)src)[x];
+	u16 color = ((u16*)src)[x];
+	color = ((color & 0xff00) >> 8) | ((color & 0x00ff) << 8);
+	return (u32) color;
 
 /* 	return IA88_RGBA8888(((u16*)src)[x^i]);
 
@@ -931,16 +937,16 @@ void TextureCache_LoadBackground( CachedTexture *texInfo )
 	if(texInfo->realWidth % blockWidth || texInfo->realWidth == 0)
 	{
 		texInfo->GXrealWidth = texInfo->realWidth + blockWidth - (texInfo->realWidth % blockWidth);
-		sprintf(txtbuffer,"texture:GXrealWidth = %d, realWidth = %d",texInfo->GXrealWidth,texInfo->realWidth);
-		DEBUG_print(txtbuffer,DBG_TXINFO1); 
+//		sprintf(txtbuffer,"texture:GXrealWidth = %d, realWidth = %d",texInfo->GXrealWidth,texInfo->realWidth);
+//		DEBUG_print(txtbuffer,DBG_TXINFO1); 
 	}
 	else
 		texInfo->GXrealWidth = texInfo->realWidth;
 	if(texInfo->realHeight % blockHeight || texInfo->realHeight == 0)
 	{
 		texInfo->GXrealHeight = texInfo->realHeight + blockHeight - (texInfo->realHeight % blockHeight);
-		sprintf(txtbuffer,"texture:GXrealHeight = %d, realHeight = %d",texInfo->GXrealHeight,texInfo->realHeight);
-		DEBUG_print(txtbuffer,DBG_TXINFO1); 
+//		sprintf(txtbuffer,"texture:GXrealHeight = %d, realHeight = %d",texInfo->GXrealHeight,texInfo->realHeight);
+//		DEBUG_print(txtbuffer,DBG_TXINFO1); 
 	}
 	else
 		texInfo->GXrealHeight = texInfo->realHeight;
@@ -1158,16 +1164,16 @@ void TextureCache_Load( CachedTexture *texInfo )
 	if(texInfo->realWidth % blockWidth || texInfo->realWidth == 0)
 	{
 		texInfo->GXrealWidth = texInfo->realWidth + blockWidth - (texInfo->realWidth % blockWidth);
-		sprintf(txtbuffer,"texture:GXrealWidth = %d, realWidth = %d",texInfo->GXrealWidth,texInfo->realWidth);
-		DEBUG_print(txtbuffer,DBG_TXINFO1); 
+//		sprintf(txtbuffer,"texture:GXrealWidth = %d, realWidth = %d",texInfo->GXrealWidth,texInfo->realWidth);
+//		DEBUG_print(txtbuffer,DBG_TXINFO1); 
 	}
 	else
 		texInfo->GXrealWidth = texInfo->realWidth;
 	if(texInfo->realHeight % blockHeight || texInfo->realHeight == 0)
 	{
 		texInfo->GXrealHeight = texInfo->realHeight + blockHeight - (texInfo->realHeight % blockHeight);
-		sprintf(txtbuffer,"texture:GXrealHeight = %d, realHeight = %d",texInfo->GXrealHeight,texInfo->realHeight);
-		DEBUG_print(txtbuffer,DBG_TXINFO1); 
+//		sprintf(txtbuffer,"texture:GXrealHeight = %d, realHeight = %d",texInfo->GXrealHeight,texInfo->realHeight);
+//		DEBUG_print(txtbuffer,DBG_TXINFO1); 
 	}
 	else
 		texInfo->GXrealHeight = texInfo->realHeight;
@@ -1443,6 +1449,10 @@ void TextureCache_ActivateTexture( u32 t, CachedTexture *texture )
 			texture->clampS ? GX_CLAMP : GX_REPEAT, texture->clampT ? GX_CLAMP : GX_REPEAT, GX_FALSE); 
 //		GX_InvalidateTexAll();
 		GX_LoadTexObj(&texture->GXtex, t); // t = 0 is GX_TEXMAP0 and t = 1 is GX_TEXMAP1
+#ifdef SDPRINT
+	sprintf(txtbuffer,"Texture_ActivateTex: MAP%d, GXtexfmt %d, wd %d, ht %d, GXwd %d, GXht %d, clampS %d, clampT %d\n", t, texture->GXtexfmt, texture->realWidth, texture->realHeight, texture->GXrealWidth, texture->GXrealHeight, texture->clampS, texture->clampT);
+	DEBUG_print(txtbuffer,DBG_SDGECKOPRINT);
+#endif // SDPRINT
 	}
 #endif // __GX__
 
@@ -1473,6 +1483,10 @@ void TextureCache_ActivateDummy( u32 t )
 //		GX_InvalidateTexAll();
 		GX_LoadTexObj(&cache.dummy->GXtex, t); // t = 0 is GX_TEXMAP0 and t = 1 is GX_TEXMAP1
 	}
+#ifdef SDPRINT
+	sprintf(txtbuffer,"Texture_ActivateDummy: %d\n", t);
+	DEBUG_print(txtbuffer,DBG_SDGECKOPRINT);
+#endif // SDPRINT
 #endif // __GX__
 }
 
@@ -1502,6 +1516,7 @@ void TextureCache_UpdateBackground()
 			(current->size == gSP.bgImage.size))
 		{
 			TextureCache_ActivateTexture( 0, current );
+//			TextureCache_ActivateDummy( 0 );
 
 			cache.hits++;
 			return;
@@ -1562,6 +1577,7 @@ void TextureCache_UpdateBackground()
 
 	TextureCache_LoadBackground( cache.current[0] );
 	TextureCache_ActivateTexture( 0, cache.current[0] );
+//	TextureCache_ActivateDummy( 0 );
 
 	cache.cachedBytes += cache.current[0]->textureBytes;
 }
@@ -1738,6 +1754,7 @@ void TextureCache_Update( u32 t )
 			(current->size == gSP.textureTile[t]->size))
 		{
 			TextureCache_ActivateTexture( t, current );
+//			TextureCache_ActivateDummy( t );
 
 			cache.hits++;
 			return;
@@ -1843,6 +1860,7 @@ void TextureCache_Update( u32 t )
 
 	TextureCache_Load( cache.current[t] );
 	TextureCache_ActivateTexture( t, cache.current[t] );
+//	TextureCache_ActivateDummy( t );
 
 	cache.cachedBytes += cache.current[t]->textureBytes;
 }
