@@ -167,11 +167,12 @@ void VI_GX_showFPS(){
 		lastTick = nowTick;
 	}
 	
-	if (updateDEBUGflag && showFPS)
+	if (updateDEBUGflag)
 	{
 		GXColor fontColor = {150,255,150,255};
 		write_font_init_GX(fontColor);
-		write_font(10,35,caption, 1.0);
+		if(showFPS)
+			write_font(10,35,caption, 1.0);
 		//write_font(10,10,caption,xfb,which_fb);
 
 		//reset swap table from GUI/DEBUG
@@ -256,15 +257,15 @@ extern char text[DEBUG_TEXT_HEIGHT][DEBUG_TEXT_WIDTH];
 
 void VI_GX_showDEBUG()
 {
-	if (updateDEBUGflag && printToScreen)
+	if (updateDEBUGflag)
 	{
 		int i = 0;
 		GXColor fontColor = {150, 255, 150, 255};
 		DEBUG_update();
 		write_font_init_GX(fontColor);
-		for (i=0;i<DEBUG_TEXT_HEIGHT;i++){
+		if(printToScreen)
+			for (i=0;i<DEBUG_TEXT_HEIGHT;i++)
 				write_font(10,(10*i+60),text[i], 0.5); 
-		}
 		
 	   //reset swap table from GUI/DEBUG
 		GX_SetTevSwapModeTable(GX_TEV_SWAP0, GX_CH_RED, GX_CH_GREEN, GX_CH_BLUE, GX_CH_ALPHA);
