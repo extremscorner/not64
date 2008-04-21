@@ -610,20 +610,23 @@ static inline void menuStack_push(menu_item*);
 
 /* "Dev Features" menu item */
 
+	extern char printToScreen;
 	static char toggleScreenDebug_strings[2][21] =
-		{ "Debug on Screen: On",
-		  "Debug on Screen: Off" };
+		{ "Debug on Screen: Off",
+		  "Debug on Screen: On" };
 	static char* toggleScreenDebug_func(void);
 	
+	extern char printToSD;
 	static char toggleSDDebug_strings[2][17] =
-		{ "Debug to SD: On",
-		  "Debug to SD: Off" };
+		{ "Debug to SD: Off",
+		  "Debug to SD: On" };
 	static char* toggleSDDebug_func(void);
 	
+	extern char showFPS;
 	static char* toggleFPS_func(void);
 	static char toggleFPS_strings[2][14] =
-		{ "Show FPS: On",
-		  "Show FPS: Off" };
+		{ "Show FPS: Off",
+		  "Show FPS: On" };
 	
 	#define NUM_DEV_FEATURES 3
 	static menu_item devFeatures_submenu[] =
@@ -645,22 +648,22 @@ static inline void menuStack_push(menu_item*);
 	
 	static char* toggleScreenDebug_func(void){
 		// TODO: Actually toggle something
-		// printToScreen ^= 1;
-		// devFeatures_submenu[0].caption = &toggleScreenDebug_strings[printToScreen][0];
+		printToScreen ^= 1;
+		devFeatures_submenu[0].caption = &toggleScreenDebug_strings[printToScreen][0];
 		return NULL;
 	}
 	
 	static char* toggleSDDebug_func(void){
 		// TODO: Actually toggle something
-		// printToSD ^= 1;
-		// devFeatures_submenu[1].caption = &toggleSDDebug_strings[printToSD][0];
+		printToSD ^= 1;
+		devFeatures_submenu[1].caption = &toggleSDDebug_strings[printToSD][0];
 		return NULL;
 	}
 	
 	static char* toggleFPS_func(void){
 		// TODO: Actually toggle something
-		// showFPS ^= 1;
-		// devFeatures_submenu[2].caption = &toggleScreenDebug_strings[showFPS][0];
+		showFPS ^= 1;
+		devFeatures_submenu[2].caption = &toggleScreenDebug_strings[showFPS][0];
 		return NULL;
 	}
 

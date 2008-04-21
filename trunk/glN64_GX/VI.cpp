@@ -26,6 +26,9 @@ extern GXRModeObj *vmode;
 
 #ifdef __GX__
 bool updateDEBUGflag;
+char printToScreen;
+char showFPS;
+
 unsigned int* xfb[2];
 int which_fb;
 #endif // __GX__
@@ -164,7 +167,7 @@ void VI_GX_showFPS(){
 		lastTick = nowTick;
 	}
 	
-	if (updateDEBUGflag)
+	if (updateDEBUGflag && showFPS)
 	{
 		GXColor fontColor = {150,255,150,255};
 		write_font_init_GX(fontColor);
@@ -253,7 +256,7 @@ extern char text[DEBUG_TEXT_HEIGHT][DEBUG_TEXT_WIDTH];
 
 void VI_GX_showDEBUG()
 {
-	if (updateDEBUGflag)
+	if (updateDEBUGflag && printToScreen)
 	{
 		int i = 0;
 		GXColor fontColor = {150, 255, 150, 255};
