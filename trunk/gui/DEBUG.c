@@ -71,7 +71,10 @@ void DEBUG_print(char* string,int pos){
 		else if(pos == DBG_SDGECKOCLOSE) {
 #ifdef SDPRINT
 			if(f)
+			{
 				SDCARD_CloseFile(f);
+				f = NULL;
+			}
 #endif
 		}
 		else if(pos == DBG_SDGECKOPRINT) {			
