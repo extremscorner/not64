@@ -58,6 +58,9 @@ static CONTROL_INFO control_info;
 static RSP_INFO     rsp_info;
 
 extern char audioEnabled;
+extern char printToScreen;
+extern char showFPS;
+extern char printToSD;
        char saveEnabled;
        char creditsScrolling;
 unsigned int isWii = 0;
@@ -98,6 +101,9 @@ int main(){
 	
 	// Default Settings
 	audioEnabled     = 0; // No audio
+	showFPS          = 1; // Show FPS on Screen
+	printToScreen    = 1; // Show DEBUG text on screen
+	printToSD        = 0; // Disable SD logging
 	saveEnabled      = 0; // Don't save game
 	creditsScrolling = 0; // Normal menu for now
 	dynacore         = 2; // Pure Interpreter

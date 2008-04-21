@@ -10,6 +10,7 @@
 #include "usb.h"
 
 char text[DEBUG_TEXT_HEIGHT][DEBUG_TEXT_WIDTH];
+char printToSD;
 
 #ifdef SHOW_DEBUG
 char txtbuffer[1024];
@@ -61,19 +62,19 @@ void DEBUG_print(char* string,int pos){
 			usb_sendbuffer (string,size);
 			#endif
 		}
-		else if(pos == DBG_SDGECKOOPEN) {
+		else if((pos == DBG_SDGECKOOPEN) && printToSD) {
 #ifdef SDPRINT
 			if(!f)
 				f = SDCARD_OpenFile( dump_filename, "wb");
 #endif
 		}
-		else if(pos == DBG_SDGECKOCLOSE) {
+		else if((pos == DBG_SDGECKOCLOSE) && printToSD) {
 #ifdef SDPRINT
 			if(f)
 				SDCARD_CloseFile(f);
 #endif
 		}
-		else if(pos == DBG_SDGECKOPRINT) {			
+		else if((pos == DBG_SDGECKOPRINT) && printToSD) {			
 #ifdef SDPRINT
 			if(!f)
 				return;
