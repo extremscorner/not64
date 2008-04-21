@@ -18,7 +18,7 @@
 
 // -- ACTUAL MENU LAYOUT --
 
-#define MAIN_MENU_SIZE 12
+#define MAIN_MENU_SIZE 13
 
 
 /* Message menu_item: used for feedback, set the caption to what you want it to say */
@@ -416,6 +416,7 @@ static inline void menuStack_push(menu_item*);
 		
 		return result ? "Loaded save from memcard" : "No saves found on memcard";
 	}
+	
 #ifdef WII
 	static char* loadSaveWiiFS_func(){
 		if(!hasLoadedROM) return "Please load a ROM first";
@@ -514,6 +515,7 @@ static inline void menuStack_push(menu_item*);
 		
 		return result ? "Saved game to memcard" : "Nothing to save";
 	}
+	
 #ifdef WII
 	static char* saveGameWiiFS_func(){
 		// Adjust saveFile pointers
@@ -605,6 +607,73 @@ static inline void menuStack_push(menu_item*);
 	 }
 
 /* End of "Restart Game" item */
+
+/* "Dev Features" menu item */
+
+	static char toggleScreenDebug_strings[2][21] =
+		{ "Debug on Screen: On",
+		  "Debug on Screen: Off" };
+	static char* toggleScreenDebug_func(void);
+	
+	static char toggleSDDebug_strings[2][17] =
+		{ "Debug to SD: On",
+		  "Debug to SD: Off" };
+	static char* toggleSDDebug_func(void);
+	
+	static char* toggleFPS_func(void);
+	static char toggleFPS_strings[2][14] =
+		{ "Show FPS: On",
+		  "Show FPS: Off" };
+	
+	#define NUM_DEV_FEATURES 3
+	static menu_item devFeatures_submenu[] =
+		{{ &toggleScreenDebug_strings[0][0],
+		   MENU_ATTR_NONE,
+		   { .func = toggleScreenDebug_func }
+		  },
+		  
+		 { &toggleSDDebug_strings[0][0],
+		   MENU_ATTR_NONE,
+		   { .func = toggleSDDebug_func }
+		  },
+		  
+		 { &toggleFPS_strings[0][0],
+		   MENU_ATTR_NONE,
+		   { .func = toggleFPS_func }
+		  },
+		 };
+	
+	static char* toggleScreenDebug_func(void){
+		// TODO: Actually toggle something
+		// printToScreen ^= 1;
+		// devFeatures_submenu[0].caption = &toggleScreenDebug_strings[printToScreen][0];
+		return NULL;
+	}
+	
+	static char* toggleSDDebug_func(void){
+		// TODO: Actually toggle something
+		// printToSD ^= 1;
+		// devFeatures_submenu[1].caption = &toggleSDDebug_strings[printToSD][0];
+		return NULL;
+	}
+	
+	static char* toggleFPS_func(void){
+		// TODO: Actually toggle something
+		// showFPS ^= 1;
+		// devFeatures_submenu[2].caption = &toggleScreenDebug_strings[showFPS][0];
+		return NULL;
+	}
+
+#define DEV_FEATURES_INDEX MAIN_MENU_SIZE-6
+#define DEV_FEATURES_ITEM \
+	{ "Dev Features", \
+	  MENU_ATTR_HASSUBMENU, \
+	  { NUM_DEV_FEATURES, \
+	  	&devFeatures_submenu[0] \
+	   } \
+	 }
+
+/* End of "Dev Features" item */
 	
 static menu_item main_menu[MAIN_MENU_SIZE] = 
 	{ LOAD_ROM_ITEM,
@@ -619,6 +688,7 @@ static menu_item main_menu[MAIN_MENU_SIZE] =
 	  STOP_DVD_ITEM,
 	  SWAP_DVD_ITEM,
 	 
+	  DEV_FEATURES_ITEM,
 	  CONTROLLER_PAKS_ITEM,
 	  TOGGLE_AUDIO_ITEM,
 	  EXIT_ITEM,
