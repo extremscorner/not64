@@ -62,21 +62,21 @@ void DEBUG_print(char* string,int pos){
 			usb_sendbuffer (string,size);
 			#endif
 		}
-		else if((pos == DBG_SDGECKOOPEN) && printToSD) {
+		else if(pos == DBG_SDGECKOOPEN) {
 #ifdef SDPRINT
-			if(!f)
+			if(!f && printToSD)
 				f = SDCARD_OpenFile( dump_filename, "wb");
 #endif
 		}
-		else if((pos == DBG_SDGECKOCLOSE) && printToSD) {
+		else if(pos == DBG_SDGECKOCLOSE) {
 #ifdef SDPRINT
 			if(f)
 				SDCARD_CloseFile(f);
 #endif
 		}
-		else if((pos == DBG_SDGECKOPRINT) && printToSD) {			
+		else if(pos == DBG_SDGECKOPRINT) {			
 #ifdef SDPRINT
-			if(!f)
+			if(!f || (printToSD == 0))
 				return;
 			SDCARD_WriteFile(f, string, strlen(string));
 #endif
