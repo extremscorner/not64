@@ -39,14 +39,6 @@ static void rsp_info_init(void);
 static void control_info_init(void);
 // -- End init functions --
 
-// -- Debug constants -- 
-#if DEBUGON
-const char *dbg_local_ip = "192.168.1.32";
-const char *dbg_netmask = "255.255.255.0";
-const char *dbg_gw = "192.168.1.100";
-#endif
-// -- End Debug constants --
-
 // -- Plugin data --
 #define DEFAULT_FIFO_SIZE    (256*1024)//(64*1024) minimum
 
@@ -80,9 +72,6 @@ void (*fBWrite)(DWORD addr, DWORD size) = NULL;
 void (*fBGetFrameBufferInfo)(void *p) = NULL;
 void new_frame(){ }
 void new_vi(){ }
-int tcp_localip;
-int tcp_netmask;
-int tcp_gateway;
 
 int main(){
 	/* INITIALIZE */
@@ -96,8 +85,11 @@ int main(){
 	killWiimote();
 	//SYS_SetPowerCallback(STM_ShutdownToIdle());
 #endif
-	//DEBUG_Init(0, 1);
-	//_break();
+#ifdef DEBUGON
+	//DEBUG_Init(GDBSTUB_DEVICE_TCP,GDBSTUB_DEF_TCPPORT); //Default port is 2828
+	DEBUG_Init(GDBSTUB_DEVICE_USB, 1);
+	_break();
+#endif
 	
 	// Default Settings
 	audioEnabled     = 0; // No audio
@@ -192,11 +184,6 @@ void loadROM(fileBrowser_file* rom){
 	romOpen_input();
 	
 	cpu_init();
-
-#ifdef DEBUGON
-	DEBUG_Init(GDBSTUB_DEVICE_TCP,GDBSTUB_DEF_TCPPORT); //Default port is 2828
-	_break();
-#endif
 }
 
 static void gfx_info_init(void){
