@@ -2,6 +2,7 @@
 
 CC		=powerpc-gekko-gcc
 CXX		=powerpc-gekko-g++
+AS		=powerpc-gekko-as
 
 #CFLAGS		=-DX86 -O3 -mpentium -Wall -DEMU64_DEBUG
 #CFLAGS		=-DX86 -O3 -fexpensive-optimizations -fomit-frame-pointer -funroll-loops -ffast-math -fno-strict-aliasing -mcpu=athlon -Wall -pipe
@@ -15,7 +16,8 @@ CFLAGS  = -g -O2 -Wall $(MACHDEP) \
 	  -DNOASM -DNGC -DNOASM -DPIXEL_FORMAT=RGB565  \
 	  -DM_PI=3.14159265359  \
 	  -fno-exceptions -Wno-unused-parameter -pipe \
-	   -DUSE_GUI -DSHOW_DEBUG #-DEMBEDDED_FONTS -DPRINTGECKO
+	   -DUSE_GUI -DSHOW_DEBUG -DTHREADED_AUDIO
+	   #-DEMBEDDED_FONTS -DPRINTGECKO
 
 MACHDEP	= -DGEKKO -mcpu=750 -meabi -mhard-float 
 LDFLAGS	=	$(MACHDEP) -mogc -Wl,-Map,$(notdir $@).map -Wl,--cref
@@ -108,7 +110,8 @@ OBJ_GTK_GUI	=main/gui_gtk/main_gtk.o \
 		main/gui_gtk/config.o \
 		main/gui_gtk/dirbrowser.o
 
-OBJ_INPUT	=gc_input/main.o
+OBJ_INPUT	=gc_input/main.o \
+		gc_input/controller-GC.o
 
 OBJ_RSPHLE	=rsp_hle-ppc/main.o \
 		rsp_hle-ppc/jpeg.o \

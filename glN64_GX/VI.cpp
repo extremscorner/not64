@@ -157,13 +157,17 @@ unsigned int* VI_GX_getScreenPointer(){ return xfb[which_fb]; }
 void VI_GX_showFPS(){
 	static long long lastTick=0;
 	static int frames=0;
-	static char caption[16];
+	static int VIs=0;
+	static char caption[20];
 	
 	long long nowTick = gettime();
-	frames++;
+	VIs++;
+	if (updateDEBUGflag)
+		frames++;
 	if (diff_sec(lastTick,nowTick)>=1) {
-		sprintf(caption, "%02d FPS",frames);
+		sprintf(caption, "%02d VI/s, %02d FPS",VIs,frames);
 		frames = 0;
+		VIs = 0;
 		lastTick = nowTick;
 	}
 	

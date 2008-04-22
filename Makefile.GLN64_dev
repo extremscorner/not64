@@ -17,7 +17,7 @@ CFLAGS  = -g -O2 -Wall $(MACHDEP) \
 	  -DM_PI=3.14159265359  \
 	  -fno-exceptions -Wno-unused-parameter -pipe \
 	  -DUSE_GUI -DSHOW_DEBUG -DTHREADED_AUDIO
-#	  -DDEBUGON 
+#	  -DDEBUGON -DGLN64_SDLOG
 
 MACHDEP	= -DGEKKO -mcpu=750 -meabi -mhard-float 
 LDFLAGS	=	$(MACHDEP) -mogc -Wl,-Map,$(notdir $@).map -Wl,--cref
@@ -35,6 +35,7 @@ OBJ		=main/rom_gc.o \
 		fileBrowser/fileBrowser-DVD.o \
 		fileBrowser/fileBrowser-CARD.o \
 		fileBrowser/fileBrowser.o \
+		gui/usb.o \
 		gui/menu.o \
 		gui/menuFileBrowser.o \
 		gui/background_tex.o \

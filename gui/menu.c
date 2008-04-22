@@ -647,13 +647,13 @@ static inline void menuStack_push(menu_item*);
 	
 	static char* toggleFPS_func(void){
 		showFPS ^= 1;
-		devFeatures_submenu[2].caption = &toggleFPS_strings[showFPS][0];
+		devFeatures_submenu[0].caption = &toggleFPS_strings[showFPS][0];
 		return NULL;
 	}
 
 	static char* toggleScreenDebug_func(void){
 		printToScreen ^= 1;
-		devFeatures_submenu[0].caption = &toggleScreenDebug_strings[printToScreen][0];
+		devFeatures_submenu[1].caption = &toggleScreenDebug_strings[printToScreen][0];
 		return NULL;
 	}
 	
@@ -663,7 +663,7 @@ static inline void menuStack_push(menu_item*);
 			DEBUG_print("open",DBG_SDGECKOOPEN);
 		else
 			DEBUG_print("close",DBG_SDGECKOCLOSE);
-		devFeatures_submenu[1].caption = &toggleSDDebug_strings[printToSD][0];
+		devFeatures_submenu[2].caption = &toggleSDDebug_strings[printToSD][0];
 		return NULL;
 	}
 

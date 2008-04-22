@@ -6,7 +6,7 @@
 #include "gDP.h"
 #include "Types.h"
 
-//#define DBGCOMBINE
+#define DBGCOMBINE
 
 #define TEXTURE_ENV					0
 #define TEXTURE_ENV_COMBINE			1

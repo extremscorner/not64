@@ -15,6 +15,10 @@
 #include "../gui/font.h"
 #include "../gui/DEBUG.h"
 
+//Global variables set by menu
+char printToScreen;
+char showFPS;
+
 VI_GX::VI_GX(GFX_INFO info) : VI(info), which_fb(1), width(0), height(0){
 	init_font();
 	updateDEBUGflag = true;
@@ -70,13 +74,18 @@ extern unsigned int diff_sec(long long start,long long end);
 void VI_GX::showFPS(){
 	static long long lastTick=0;
 	static int frames=0;
-	static char caption[16];
+	static int VIs=0;
+	static char caption[20];
 	
 	long long nowTick = gettime();
-	frames++;
+	VIs++;
+	if (updateDEBUGflag)
+		frames++;
 	if (diff_sec(lastTick,nowTick)>=1) {
-		sprintf(caption, "%02d FPS",frames);
+		sprintf(caption, "%02d VI/s, %02d FPS",frames,VIs);
+//		sprintf(caption, "%02d FPS",frames);
 		frames = 0;
+		VIs = 0;
 		lastTick = nowTick;
 	}
 	
@@ -84,7 +93,8 @@ void VI_GX::showFPS(){
 	{
 		GXColor fontColor = {150,255,150,255};
 		write_font_init_GX(fontColor);
-		write_font(10,35,caption, 1.0);
+		if(showFPS)
+			write_font(10,35,caption, 1.0);
 		//write_font(10,10,caption,xfb,which_fb);
 
 		//reset swap table from GUI/DEBUG
@@ -173,9 +183,10 @@ void VI_GX::showDEBUG()
 		GXColor fontColor = {150, 255, 150, 255};
 		DEBUG_update();
 		write_font_init_GX(fontColor);
-		for (i=0;i<DEBUG_TEXT_HEIGHT;i++){
-				write_font(10,(6*i+60),text[i], 0.5); 
-		}
+		if(printToScreen)
+			for (i=0;i<DEBUG_TEXT_HEIGHT;i++)
+				write_font(10,(10*i+60),text[i], 0.5); 
+//				write_font(10,(6*i+60),text[i], 0.5); 
 		
 	   //reset swap table from GUI/DEBUG
 		GX_SetTevSwapModeTable(GX_TEV_SWAP0, GX_CH_RED, GX_CH_GREEN, GX_CH_BLUE, GX_CH_ALPHA);
