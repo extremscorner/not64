@@ -1449,10 +1449,10 @@ void TextureCache_ActivateTexture( u32 t, CachedTexture *texture )
 			texture->clampS ? GX_CLAMP : GX_REPEAT, texture->clampT ? GX_CLAMP : GX_REPEAT, GX_FALSE); 
 //		GX_InvalidateTexAll();
 		GX_LoadTexObj(&texture->GXtex, t); // t = 0 is GX_TEXMAP0 and t = 1 is GX_TEXMAP1
-#ifdef SDPRINT
+#ifdef GLN64_SDLOG
 	sprintf(txtbuffer,"Texture_ActivateTex: MAP%d, GXtexfmt %d, wd %d, ht %d, GXwd %d, GXht %d, clampS %d, clampT %d\n", t, texture->GXtexfmt, texture->realWidth, texture->realHeight, texture->GXrealWidth, texture->GXrealHeight, texture->clampS, texture->clampT);
 	DEBUG_print(txtbuffer,DBG_SDGECKOPRINT);
-#endif // SDPRINT
+#endif // GLN64_SDLOG
 	}
 #endif // __GX__
 
@@ -1483,10 +1483,10 @@ void TextureCache_ActivateDummy( u32 t )
 //		GX_InvalidateTexAll();
 		GX_LoadTexObj(&cache.dummy->GXtex, t); // t = 0 is GX_TEXMAP0 and t = 1 is GX_TEXMAP1
 	}
-#ifdef SDPRINT
+#ifdef GLN64_SDLOG
 	sprintf(txtbuffer,"Texture_ActivateDummy: %d\n", t);
 	DEBUG_print(txtbuffer,DBG_SDGECKOPRINT);
-#endif // SDPRINT
+#endif // GLN64_SDLOG
 #endif // __GX__
 }
 

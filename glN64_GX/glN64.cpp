@@ -300,10 +300,10 @@ EXPORT void CALL ProcessDList(void)
 	}
 #else
 #ifdef __GX__
-#ifdef SDPRINT
+#ifdef GLN64_SDLOG
 	sprintf(txtbuffer,"\nPROCESS D LIST!!\n\n");
 	DEBUG_print(txtbuffer,DBG_SDGECKOPRINT);
-#endif // SDPRINT
+#endif // GLN64_SDLOG
 #endif // __GX__
 	RSP_ProcessDList();
 #endif

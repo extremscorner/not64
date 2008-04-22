@@ -714,10 +714,10 @@ void OGL_UpdateStates()
 		GX_SetZCompLoc(GXZcompLoc);
 		GX_SetAlphaCompare(GXalphaFunc,GXalphaRef,GX_AOP_AND,GX_ALWAYS,0);
 
-#ifdef SDPRINT
+#ifdef GLN64_SDLOG
 		sprintf(txtbuffer,"SetAlphaCompare: GXalphaFunc %d, GXalphaRef %d, GXZcompLoc %d\n", GXalphaFunc, GXalphaRef, GXZcompLoc);
-	DEBUG_print(txtbuffer,DBG_SDGECKOPRINT);
-#endif // SDPRINT
+		DEBUG_print(txtbuffer,DBG_SDGECKOPRINT);
+#endif // GLN64_SDLOG
 
 //TODO: Not sure yet how to implement this:
 /*		if (OGL.usePolygonStipple && (gDP.otherMode.alphaCompare == G_AC_DITHER) && !(gDP.otherMode.alphaCvgSel))
@@ -922,10 +922,10 @@ void OGL_UpdateStates()
 		GX_SetAlphaUpdate(GX_ENABLE);
 		GX_SetDstAlpha(GX_DISABLE, 0xFF);
 
-#ifdef SDPRINT
+#ifdef GLN64_SDLOG
 		sprintf(txtbuffer,"SetBlendMode: GXblendmode %d, SrcFactor %d, DestFactor %d\n", GXblendmode, GXblendsrcfactor, GXblenddstfactor);
 		DEBUG_print(txtbuffer,DBG_SDGECKOPRINT);
-#endif // SDPRINT
+#endif // GLN64_SDLOG
 	}
 #endif // __GX__
 
@@ -1080,10 +1080,10 @@ void OGL_DrawTriangles()
 		if (combiner.usesT1) GX_TexCoord2f32(OGL.vertices[i].s1,OGL.vertices[i].t1);
 	}
 	GX_End();
-#ifdef SDPRINT
+#ifdef GLN64_SDLOG
 	sprintf(txtbuffer,"OGL_DrawTris: numTri %d, numVert %d, useT0 %d, useT1 %d\n", OGL.numTriangles, OGL.numVertices, combiner.usesT0, combiner.usesT1);
 	DEBUG_print(txtbuffer,DBG_SDGECKOPRINT);
-#endif // SDPRINT
+#endif // GLN64_SDLOG
 #endif // __GX__
 	OGL.numTriangles = OGL.numVertices = 0;
 }

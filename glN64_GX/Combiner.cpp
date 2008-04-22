@@ -303,7 +303,7 @@ CachedCombiner *Combiner_Compile( u64 mux )
 	u32 mux2 = (mux & 0xFFFFFFFF);
 //	if (mux2 == 0xfffff9fc) 
 //	{
-#ifdef SDPRINT
+#ifdef GLN64_SDLOG
 		sprintf(txtbuffer,"Combiner Compile: mux1 = %x, mux2 = %x\n", mux1, mux2);
 //		DEBUG_print(txtbuffer,9);
 		DEBUG_print(txtbuffer,DBG_SDGECKOPRINT);
@@ -323,8 +323,8 @@ CachedCombiner *Combiner_Compile( u64 mux )
 			DEBUG_print(txtbuffer,DBG_SDGECKOPRINT);
 		}
 //	}
-#endif // SDPRINT
-#endif
+#endif // GLN64_SDLOG
+#endif // DBGCOMBINE
 
 	// Send the simplified combiner to the hardware-specific compiler
 	switch (combiner.compiler)
@@ -478,12 +478,12 @@ void Combiner_SelectCombine( u64 mux )
 #ifdef DBGCOMBINE
 	u32 mux1 = ((mux >> 32) & 0xFFFFFFFF);
 	u32 mux2 = (mux & 0xFFFFFFFF);
-#ifdef SDPRINT
+#ifdef GLN64_SDLOG
 	sprintf(txtbuffer,"Combiner Select Combine: mux1 = %x, mux2 = %x\n", mux1, mux2);
 //	DEBUG_print(txtbuffer,17);
 	DEBUG_print(txtbuffer,DBG_SDGECKOPRINT);
-#endif // SDPRINT
-#endif
+#endif // GLN64_SDLOG
+#endif // DBGCOMBINE
 }
 
 void Combiner_SetCombineStates()
