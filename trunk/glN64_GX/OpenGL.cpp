@@ -1,6 +1,8 @@
 #ifdef __GX__
 #include <gccore.h>
 #include "../gui/DEBUG.h"
+#define GXprojZScale	 0.5
+#define GXprojZOffset	-0.5
 #endif // __GX__
 
 #ifndef __LINUX__
@@ -1041,6 +1043,11 @@ void OGL_DrawTriangles()
 	//TODO: Implement in GX
 	GXColor GXcol;
 
+#ifdef GLN64_SDLOG
+	sprintf(txtbuffer,"OGL_DrawTris: numTri %d, numVert %d, useT0 %d, useT1 %d\n", OGL.numTriangles, OGL.numVertices, combiner.usesT0, combiner.usesT1);
+	DEBUG_print(txtbuffer,DBG_SDGECKOPRINT);
+#endif // GLN64_SDLOG
+
 	//set vertex description here
 	GX_ClearVtxDesc();
 	GX_SetVtxDesc(GX_VA_PTNMTXIDX, GX_PNMTX0);
@@ -1061,29 +1068,21 @@ void OGL_DrawTriangles()
 
 	GX_Begin(GX_TRIANGLES, GX_VTXFMT0, OGL.numVertices);
 	for (int i = 0; i < OGL.numVertices; i++) {
-		GX_Position3f32(OGL.vertices[i].x/OGL.vertices[i].w, OGL.vertices[i].y/OGL.vertices[i].w, OGL.vertices[i].z/OGL.vertices[i].w);
-//		if (lighting) GX_Normal3f32(vtx[v0].n[0], vtx[v0].n[1], vtx[v0].n[2]);
-//		if (shading_smooth) { //use per vertex color
-			GXcol.r = (u8) (OGL.vertices[i].color.r*255);
-			GXcol.g = (u8) (OGL.vertices[i].color.g*255);
-			GXcol.b = (u8) (OGL.vertices[i].color.b*255);
-			GXcol.a = (u8) (OGL.vertices[i].color.a*255);
-/*		}
-		else {	//use volor from a (v1)
-			GXcol.r = (u8)vtx[v1].c.getR();
-			GXcol.g = (u8)vtx[v1].c.getG();
-			GXcol.b = (u8)vtx[v1].c.getB();
-			GXcol.a = (u8)vtx[v1].c.getAlpha();
-		}*/
+//		GX_Position3f32(OGL.vertices[i].x/OGL.vertices[i].w, OGL.vertices[i].y/OGL.vertices[i].w, OGL.vertices[i].z/OGL.vertices[i].w);
+		GX_Position3f32(OGL.vertices[i].x/OGL.vertices[i].w, OGL.vertices[i].y/OGL.vertices[i].w, min(OGL.vertices[i].z/OGL.vertices[i].w,1.0));
+		GXcol.r = (u8) (min(OGL.vertices[i].color.r,1.0)*255);
+		GXcol.g = (u8) (min(OGL.vertices[i].color.g,1.0)*255);
+		GXcol.b = (u8) (min(OGL.vertices[i].color.b,1.0)*255);
+		GXcol.a = (u8) (min(OGL.vertices[i].color.a,1.0)*255);
 		GX_Color4u8(GXcol.r, GXcol.g, GXcol.b, GXcol.a); 
 		if (combiner.usesT0) GX_TexCoord2f32(OGL.vertices[i].s0,OGL.vertices[i].t0);
 		if (combiner.usesT1) GX_TexCoord2f32(OGL.vertices[i].s1,OGL.vertices[i].t1);
+#ifdef GLN64_SDLOG
+		sprintf(txtbuffer," Vert%d: Pos x = %.2f, y = %.2f, z = %.2f, w = %.2f, RGBA = %d, %d, %d, %d, VertCol RGBA = %.2f, %.2f, %.2f, %.2f\n", i, OGL.vertices[i].x/OGL.vertices[i].w, OGL.vertices[i].y/OGL.vertices[i].w, OGL.vertices[i].z/OGL.vertices[i].w, OGL.vertices[i].w, GXcol.r, GXcol.g, GXcol.b, GXcol.a, OGL.vertices[i].color.r, OGL.vertices[i].color.g, OGL.vertices[i].color.b, OGL.vertices[i].color.a);
+		DEBUG_print(txtbuffer,DBG_SDGECKOPRINT);
+#endif // GLN64_SDLOG
 	}
 	GX_End();
-#ifdef GLN64_SDLOG
-	sprintf(txtbuffer,"OGL_DrawTris: numTri %d, numVert %d, useT0 %d, useT1 %d\n", OGL.numTriangles, OGL.numVertices, combiner.usesT0, combiner.usesT1);
-	DEBUG_print(txtbuffer,DBG_SDGECKOPRINT);
-#endif // GLN64_SDLOG
 #endif // __GX__
 	OGL.numTriangles = OGL.numVertices = 0;
 }
@@ -1241,8 +1240,8 @@ void OGL_DrawRect( int ulx, int uly, int lrx, int lry, float *color )
 
 //	glLoadIdentity();
 	guMtxIdentity(GXprojection);
-	GXprojection[2][2] = 0.5;
-	GXprojection[2][3] = -0.5;
+	GXprojection[2][2] = GXprojZScale; //0.5;
+	GXprojection[2][3] = GXprojZOffset; //-0.5;
 	GX_LoadProjectionMtx(GXprojection, GX_ORTHOGRAPHIC); 
 	OGL_UpdateCullFace();
 	OGL_UpdateViewport();
@@ -1512,8 +1511,8 @@ void OGL_DrawTexturedRect( float ulx, float uly, float lrx, float lry, float uls
 	glLoadIdentity();
 #else // !__GX__
 	guMtxIdentity(GXprojection);
-	GXprojection[2][2] = 0.5;
-	GXprojection[2][3] = -0.5;
+	GXprojection[2][2] = GXprojZScale; //0.5;
+	GXprojection[2][3] = GXprojZOffset; //-0.5;
 	GX_LoadProjectionMtx(GXprojection, GX_ORTHOGRAPHIC); 
 #endif // __GX__
 	OGL_UpdateCullFace();
@@ -1687,13 +1686,13 @@ void OGL_GXinitDlist()
 	//N64 Z [-1,1] whereas GC Z [-1,0], so mult by 0.5 and shift by -0.5
 //	GXprojection[2][2] = 0.5*GXprojection[2][2] - 0.5*GXprojection[3][2];
 //	GXprojection[2][3] = 0.5*GXprojection[2][3] - 0.5*GXprojection[3][3];
-	GXprojection[2][2] = 0.5;
-	GXprojection[2][3] = -0.5;
+	GXprojection[2][2] = GXprojZScale; //0.5;
+	GXprojection[2][3] = GXprojZOffset; //-0.5;
 	GX_LoadProjectionMtx(GXprojection, GX_ORTHOGRAPHIC); 
 
 	//Not sure if this is needed.  Clipping is a slow process...
-//	GX_SetClipMode(GX_CLIP_ENABLE);
-	GX_SetClipMode(GX_CLIP_DISABLE);
+	GX_SetClipMode(GX_CLIP_ENABLE);
+//	GX_SetClipMode(GX_CLIP_DISABLE);
 
 	//These are here temporarily until combining/blending is sorted out...
 	//Set PassColor TEV mode
