@@ -14,7 +14,6 @@
 #include "menuFileBrowser.h"
 #include <ogc/dvd.h>
 #include "../main/gc_dvd.h"
-#include "../gui/DEBUG.h"
 
 // -- ACTUAL MENU LAYOUT --
 
@@ -48,9 +47,7 @@ void resumeAudio(void); void resumeInput(void);
 extern BOOL hasLoadedROM;
 	static char* playGame_func(){
 		if(!hasLoadedROM) return "Please load a ROM first";
-#ifdef SDPRINT
-		DEBUG_print("open",DBG_SDGECKOOPEN);
-#endif
+		
 		resumeAudio();
 		resumeInput();
 		GUI_toggle();
@@ -58,9 +55,6 @@ extern BOOL hasLoadedROM;
 		GUI_toggle();
 		pauseInput();
 		pauseAudio();
-#ifdef SDPRINT
-		DEBUG_print("close",DBG_SDGECKOCLOSE);
-#endif
 		return NULL;
 	}
 
@@ -627,43 +621,44 @@ static inline void menuStack_push(menu_item*);
 	static char toggleFPS_strings[2][14] =
 		{ "Show FPS: Off",
 		  "Show FPS: On" };
-	
+
+#ifdef SDPRINT
 	#define NUM_DEV_FEATURES 3
+#else
+	#define NUM_DEV_FEATURES 2
+#endif
 	static menu_item devFeatures_submenu[] =
-		{{ &toggleScreenDebug_strings[0][0],
+		{{ &toggleScreenDebug_strings[1][0],
 		   MENU_ATTR_NONE,
 		   { .func = toggleScreenDebug_func }
 		  },
-		  
+#ifdef SDPRINT
 		 { &toggleSDDebug_strings[0][0],
 		   MENU_ATTR_NONE,
 		   { .func = toggleSDDebug_func }
 		  },
-		  
-		 { &toggleFPS_strings[0][0],
+#endif
+		 { &toggleFPS_strings[1][0],
 		   MENU_ATTR_NONE,
 		   { .func = toggleFPS_func }
 		  },
 		 };
 	
 	static char* toggleScreenDebug_func(void){
-		// TODO: Actually toggle something
 		printToScreen ^= 1;
 		devFeatures_submenu[0].caption = &toggleScreenDebug_strings[printToScreen][0];
 		return NULL;
 	}
 	
 	static char* toggleSDDebug_func(void){
-		// TODO: Actually toggle something
 		printToSD ^= 1;
 		devFeatures_submenu[1].caption = &toggleSDDebug_strings[printToSD][0];
 		return NULL;
 	}
 	
 	static char* toggleFPS_func(void){
-		// TODO: Actually toggle something
 		showFPS ^= 1;
-		devFeatures_submenu[2].caption = &toggleScreenDebug_strings[showFPS][0];
+		devFeatures_submenu[2].caption = &toggleFPS_strings[showFPS][0];
 		return NULL;
 	}
 
