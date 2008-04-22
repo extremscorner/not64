@@ -14,6 +14,7 @@
 #include "menuFileBrowser.h"
 #include <ogc/dvd.h>
 #include "../main/gc_dvd.h"
+#include "../gui/DEBUG.h"
 
 // -- ACTUAL MENU LAYOUT --
 
@@ -604,6 +605,12 @@ static inline void menuStack_push(menu_item*);
 
 /* "Dev Features" menu item */
 
+	extern char showFPS;
+	static char* toggleFPS_func(void);
+	static char toggleFPS_strings[2][14] =
+		{ "Show FPS: Off",
+		  "Show FPS: On" };
+
 	extern char printToScreen;
 	static char toggleScreenDebug_strings[2][21] =
 		{ "Debug on Screen: Off",
@@ -611,16 +618,10 @@ static inline void menuStack_push(menu_item*);
 	static char* toggleScreenDebug_func(void);
 	
 	extern char printToSD;
-	static char toggleSDDebug_strings[2][17] =
-		{ "Debug to SD: Off",
-		  "Debug to SD: On" };
+	static char toggleSDDebug_strings[2][25] =
+		{ "Debug to SD: file Closed",
+		  "Debug to SD: file Open" };
 	static char* toggleSDDebug_func(void);
-	
-	extern char showFPS;
-	static char* toggleFPS_func(void);
-	static char toggleFPS_strings[2][14] =
-		{ "Show FPS: Off",
-		  "Show FPS: On" };
 
 #ifdef SDPRINT
 	#define NUM_DEV_FEATURES 3
@@ -628,7 +629,11 @@ static inline void menuStack_push(menu_item*);
 	#define NUM_DEV_FEATURES 2
 #endif
 	static menu_item devFeatures_submenu[] =
-		{{ &toggleScreenDebug_strings[1][0],
+		{{ &toggleFPS_strings[1][0],
+		   MENU_ATTR_NONE,
+		   { .func = toggleFPS_func }
+		  },
+		 { &toggleScreenDebug_strings[1][0],
 		   MENU_ATTR_NONE,
 		   { .func = toggleScreenDebug_func }
 		  },
@@ -638,12 +643,14 @@ static inline void menuStack_push(menu_item*);
 		   { .func = toggleSDDebug_func }
 		  },
 #endif
-		 { &toggleFPS_strings[1][0],
-		   MENU_ATTR_NONE,
-		   { .func = toggleFPS_func }
-		  },
 		 };
 	
+	static char* toggleFPS_func(void){
+		showFPS ^= 1;
+		devFeatures_submenu[2].caption = &toggleFPS_strings[showFPS][0];
+		return NULL;
+	}
+
 	static char* toggleScreenDebug_func(void){
 		printToScreen ^= 1;
 		devFeatures_submenu[0].caption = &toggleScreenDebug_strings[printToScreen][0];
@@ -652,13 +659,11 @@ static inline void menuStack_push(menu_item*);
 	
 	static char* toggleSDDebug_func(void){
 		printToSD ^= 1;
+		if(printToSD)
+			DEBUG_print("open",DBG_SDGECKOOPEN);
+		else
+			DEBUG_print("close",DBG_SDGECKOCLOSE);
 		devFeatures_submenu[1].caption = &toggleSDDebug_strings[printToSD][0];
-		return NULL;
-	}
-	
-	static char* toggleFPS_func(void){
-		showFPS ^= 1;
-		devFeatures_submenu[2].caption = &toggleFPS_strings[showFPS][0];
 		return NULL;
 	}
 
