@@ -330,7 +330,11 @@ void RSP_Init()
 	}
 #else // !__LINUX__
 # ifdef __GX__
-	RDRAMSize = 1024 * 1024 * 4;	//TODO: Check on this, may need Wii/GC flag here
+#  ifdef USE_EXPANSION
+	RDRAMSize = 1024 * 1024 * 8;	//TODO: Check on this, may need Wii/GC flag here
+#  else
+	RDRAMSize = 1024 * 1024 * 4;	
+#  endif
 # else // __GX__
 	RDRAMSize = 1024 * 1024 * 8;
 # endif // !__GX__

@@ -69,7 +69,11 @@ DPC_register dpc_register;
 DPS_register dps_register;
 // TODO: We only need 8MB when it's used, it'll save
 //         memory when we can alloc only 4MB
-unsigned long rdram[0x800000/4/2];
+#ifdef USE_EXPANSION
+	unsigned long rdram[0x800000/4];
+#else
+	unsigned long rdram[0x800000/4/2];
+#endif
 unsigned char *rdramb = (unsigned char *)(rdram);
 unsigned long SP_DMEM[0x1000/4*2];
 unsigned long *SP_IMEM = SP_DMEM+0x1000/4;
@@ -158,8 +162,13 @@ int init_memory()
      }
    
    //init RDRAM
+#ifdef USE_EXPANSION
+   for (i=0; i<(0x800000/4); i++) rdram[i]=0;
+   for (i=0; i<0x80; i++)	//TODO: set at runtime based on 4MB/8MB DRAM size
+#else
    for (i=0; i<(0x800000/4/2); i++) rdram[i]=0;
    for (i=0; i<0x40/*0x80*/; i++)	//TODO: set at runtime based on 4MB/8MB DRAM size
+#endif
      {
 	readmem[(0x8000+i)] = read_rdram;
 	readmem[(0xa000+i)] = read_rdram;
@@ -178,8 +187,11 @@ int init_memory()
 	writememd[(0x8000+i)] = write_rdramd;
 	writememd[(0xa000+i)] = write_rdramd;
      }
-   
+#ifdef USE_EXPANSION
+   for (i=0x80; i<0x3F0; i++)	//TODO: set at runtime based on 4MB/8MB DRAM size
+#else   
    for (i=0x40/*0x80*/; i<0x3F0; i++)	//TODO: set at runtime based on 4MB/8MB DRAM size 
+#endif
      {
 	readmem[0x8000+i] = read_nothing;
 	readmem[0xa000+i] = read_nothing;

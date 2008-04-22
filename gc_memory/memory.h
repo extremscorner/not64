@@ -51,7 +51,11 @@ extern unsigned char *SP_DMEMb;
 extern unsigned long *SP_IMEM;
 extern unsigned long PIF_RAM[0x40/4];
 extern unsigned char *PIF_RAMb;
-extern unsigned long rdram[0x800000/4/2];
+#ifdef USE_EXPANSION
+	extern unsigned long rdram[0x800000/4];
+#else
+	extern unsigned long rdram[0x800000/4/2];
+#endif
 extern unsigned long address, word;
 extern unsigned char byte;
 extern unsigned short hword;
