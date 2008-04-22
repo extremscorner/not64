@@ -5,7 +5,7 @@
 #ifndef DEBUG_H
 #define DEBUG_H
 
-//#define SDPRINT
+#define SDPRINT
 
 #define DBG_DLIST 0
 #define DBG_DLISTTYPE 1

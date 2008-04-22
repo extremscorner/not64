@@ -18,7 +18,7 @@ CFLAGS  = -g -O2 -Wall $(MACHDEP) \
 	  -fno-exceptions -Wno-unused-parameter -pipe \
 	  -DUSE_GUI -DSHOW_DEBUG -DWII -DTHREADED_AUDIO \
 #	  -DPROGRESSIVE_DISPLAY
-#	  -DDEBUGON -DGLN64_SDLOG
+#	  -DDEBUGON -DGLN64_SDLOG -DUSE_EXPANSION
 
 MACHDEP	= -DGEKKO -mcpu=750 -meabi -mhard-float 
 LDFLAGS	=	$(MACHDEP) -mrvl -Wl,-Map,$(notdir $@).map -Wl,--cref
