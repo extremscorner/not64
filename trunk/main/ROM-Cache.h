@@ -6,8 +6,9 @@
 #define ROM_CACHE_H
 
 #include "../fileBrowser/fileBrowser.h"
+#include <gctypes.h>
 
-typedef unsigned int u32;
+//typedef unsigned int u32;
 
 // Note: All length/size/offsets are in bytes
 void ROMCache_init(u32 romSize);

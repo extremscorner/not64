@@ -4,10 +4,9 @@ CC		=powerpc-gekko-gcc
 CXX		=powerpc-gekko-g++
 AS		=powerpc-gekko-as
 
-CFLAGS  = -g -O2 -Wall $(MACHDEP) -fmodulo-sched \
+CFLAGS  = -g -O2 -Wall $(MACHDEP) $(INCLUDE) -fmodulo-sched \
 	  -DCPU_SHUTDOWN -DSPC700_SHUTDOWN -DVAR_CYCLES -DSOUND \
 	  -DNOASM -DNGC -DNOASM -DPIXEL_FORMAT=RGB565  \
-	  -DM_PI=3.14159265359 \
 	  -fno-exceptions -Wno-unused-parameter -pipe \
 	  -DUSE_GUI -DSHOW_DEBUG -DPROFILE -DWII \
 	  -DTHREADED_AUDIO
@@ -17,6 +16,8 @@ CFLAGS  = -g -O2 -Wall $(MACHDEP) -fmodulo-sched \
 MACHDEP	= -DGEKKO -mcpu=750 -meabi -mhard-float 
 LDFLAGS	=	$(MACHDEP) -mrvl -Wl,-Map,$(notdir $@).map -Wl,--cref
 
+INCLUDE = -I$(DEVKITPRO)/libogc/include
+LIBPATHS = -L$(DEVKITPRO)/libogc/lib/wii
 
 CXXFLAGS	=$(CFLAGS)
 
@@ -226,7 +227,7 @@ r4300/ppc/Wrappers.o:		r4300/ppc/Wrappers.s
 
 mupen64_gc.elf:	$(OBJ) $(OBJ_PPC) $(OBJ_INPUT) $(OBJ_GX_GFX) \
 				$(OBJ_AUDIO) $(OBJ_RSPHLE) main/main_gc-menu.o
-				$(LD) $^ $(LDFLAGS) $(LDFLAGS) $(LIB) -Wl -o $@
+				$(LD) $^ $(LDFLAGS) $(LIBPATHS) $(LIB) -Wl -o $@
 		#strip --strip-all $@
 		powerpc-gekko-objcopy -O binary $@ mupen64.dol
 		#dollz3 mupen64.dol mupen6z.dol
