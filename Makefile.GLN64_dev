@@ -11,10 +11,9 @@ AS		=powerpc-gekko-as
 #CFLAGS		=-DX86 -Wall -pipe -g -DEMU64_DEBUG -DCOMPARE_CORE
 #CFLAGS		=-DX86 -Wall -pipe -g
 #CFLAGS  = -g -O2 -Wall $(MACHDEP) $(INCLUDE) -fomit-frame-pointer
-CFLAGS  = -g -O2 -Wall $(MACHDEP) \
+CFLAGS  = -g -O2 -Wall $(MACHDEP) $(INCLUDE) \
 	  -DCPU_SHUTDOWN -DSPC700_SHUTDOWN -DVAR_CYCLES -DSOUND \
 	  -DNOASM -DNGC -DNOASM -DPIXEL_FORMAT=RGB565  \
-	  -DM_PI=3.14159265359  \
 	  -fno-exceptions -Wno-unused-parameter -pipe \
 	  -DUSE_GUI -DSHOW_DEBUG -DTHREADED_AUDIO
 #	  -DDEBUGON -DGLN64_SDLOG -DUSE_EXPANSION
@@ -22,6 +21,8 @@ CFLAGS  = -g -O2 -Wall $(MACHDEP) \
 MACHDEP	= -DGEKKO -mcpu=750 -meabi -mhard-float 
 LDFLAGS	=	$(MACHDEP) -mogc -Wl,-Map,$(notdir $@).map -Wl,--cref
 
+INCLUDE = -I$(DEVKITPRO)/libogc/include
+LIBPATHS = -L$(DEVKITPRO)/libogc/lib/cube
 
 CXXFLAGS	=$(CFLAGS)
 
@@ -367,7 +368,7 @@ r4300/ppc/Wrappers.o:		r4300/ppc/Wrappers.s
 
 
 mupen64_gc.elf:	$(OBJ) $(OBJ_PPC) $(OBJ_INPUT) $(OBJ_GLN64_GX) $(OBJ_AUDIO) $(OBJ_RSPHLE) main/main_gc-menu.o
-		$(LD) $^ $(LDFLAGS) $(LDFLAGS) $(LIB) -Wl -o $@
+		$(LD) $^ $(LDFLAGS) $(LIBPATHS) $(LIB) -Wl -o $@
 		#strip --strip-all $@
 		powerpc-gekko-objcopy -O binary $@ mupen64.dol
 		dollz3 mupen64.dol mupen6z.dol

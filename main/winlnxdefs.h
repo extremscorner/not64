@@ -30,7 +30,8 @@
 #ifndef WINLNXDEFS_H
 #define WINLNXDEFS_H
 
-typedef unsigned int BOOL;
+#include <gctypes.h>
+//typedef unsigned int BOOL;
 typedef unsigned long DWORD;
 typedef unsigned short WORD;
 typedef unsigned char BYTE;
