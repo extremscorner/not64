@@ -605,7 +605,7 @@ static inline void menuStack_push(menu_item*);
 
 /* "Dev Features" menu item */
 
-	extern char showFPS;
+	extern char showFPSonScreen;
 	static char* toggleFPS_func(void);
 	static char toggleFPS_strings[2][14] =
 		{ "Show FPS: Off",
@@ -646,8 +646,8 @@ static inline void menuStack_push(menu_item*);
 		 };
 	
 	static char* toggleFPS_func(void){
-		showFPS ^= 1;
-		devFeatures_submenu[0].caption = &toggleFPS_strings[showFPS][0];
+		showFPSonScreen ^= 1;
+		devFeatures_submenu[0].caption = &toggleFPS_strings[showFPSonScreen][0];
 		return NULL;
 	}
 
