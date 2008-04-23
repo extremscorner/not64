@@ -12,7 +12,7 @@
 //Global variables set by menu
 //Note: DEBUG&FPS functionality is not available in soft_gfx
 char printToScreen;
-char showFPS;
+char showFPSonScreen;
 
 
 VI_GX::VI_GX(GFX_INFO info) : VI(info), width(0), height(0), which_fb(1){

@@ -17,7 +17,7 @@
 
 //Global variables set by menu
 char printToScreen;
-char showFPS;
+char showFPSonScreen;
 
 VI_GX::VI_GX(GFX_INFO info) : VI(info), which_fb(1), width(0), height(0){
 	init_font();
@@ -82,7 +82,7 @@ void VI_GX::showFPS(){
 	if (updateDEBUGflag)
 		frames++;
 	if (diff_sec(lastTick,nowTick)>=1) {
-		sprintf(caption, "%02d VI/s, %02d FPS",frames,VIs);
+		sprintf(caption, "%02d VI/s, %02d FPS",VIs,frames);
 //		sprintf(caption, "%02d FPS",frames);
 		frames = 0;
 		VIs = 0;
@@ -93,7 +93,7 @@ void VI_GX::showFPS(){
 	{
 		GXColor fontColor = {150,255,150,255};
 		write_font_init_GX(fontColor);
-		if(showFPS)
+		if(showFPSonScreen)
 			write_font(10,35,caption, 1.0);
 		//write_font(10,10,caption,xfb,which_fb);
 

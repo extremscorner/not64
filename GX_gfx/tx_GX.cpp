@@ -257,8 +257,8 @@ void TX::loadTile(int tile, float uls, float ult, float lrs, float lrt)
 							   if((i_s+1)<(lrs+1)) c = c & 0xF0;
 						   }
 						   else c = 0;
-						   txl = ((c&10) != 0) ? ((c&0xF0)|0x0F)<<8 : ((c&0xF0)|0x00)<<8;
-						   GXtexture[count^S16] = ((c&1) != 0) ? txl|(((c&0x0F)<<4)|0x0F) : txl|(((c&0x0F)<<4)|0x00);
+						   txl = ((c&0x10) != 0) ? (0xF0|((c&0xF0)>>4))<<8 : (0x00|((c&0xF0)>>4))<<8;
+						   GXtexture[count^S16] = ((c&1) != 0) ? txl|(c&0x0F|0xF0) : txl|(c&0x0F|0x00);
 						   count++;
 					   }
 				   }
@@ -281,10 +281,10 @@ void TX::loadTile(int tile, float uls, float ult, float lrs, float lrt)
 						   i_s = (int)uls + j*8+jj;
 						   if((i_s<(lrs+1))&&(i_t<(lrt+1))) c = p[i_t*tile_width+i_s^S8]; 
 						   else c = 0;
-						   txl = (c&0xFF)<<8;
+						   txl = (((c&0xF0)>>4)|((c&0x0F)<<4))<<8;
 						   if((i_s+1<(lrs+1))&&(i_t<(lrt+1))) c = p[i_t*tile_width+(i_s+1)^S8]; 
 						   else c = 0;
-						   GXtexture[count^S16] = txl|(c&0xFF);
+						   GXtexture[count^S16] = txl|((c&0xF0)>>4)|((c&0x0F)<<4);
 						   count++;
 					   }
 				   }
@@ -302,12 +302,12 @@ void TX::loadTile(int tile, float uls, float ult, float lrs, float lrt)
 				   for (int ii=0;ii<4;ii++) //fill 4x4 IA8 tile to make 32B
 				   {
 					   i_t = (int)ult + i*4+ii;
-					   for(int jj=0;jj<4;jj++) //2 N64 texels for 1 GX
+					   for(int jj=0;jj<4;jj++) //1 N64 texel for 1 GX
 					   {
 						   i_s = (int)uls + j*4+jj;
 						   if((i_s<(lrs+1))&&(i_t<(lrt+1))) c = p16[i_t*tile_width+i_s^S16]; 
 						   else c = 0;
-						   GXtexture[count^S16] = c;
+						   GXtexture[count^S16] = ((c&0xFF00)>>8)|((c&0x00FF)<<8);
 						   count++;
 					   }
 				   }
