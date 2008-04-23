@@ -1,19 +1,27 @@
 README : WiiN64 / mupen64gc
-Alpha - r2xx
+Alpha - r3xx
+
+NOTE: There are several different executables
+	Wii executables have the prefix wii64, GC: mupen64gc
+	*-glN64: port of glN64 graphics plugin: best compatibility/speed
+	*-GX: original plugin using software graphics framework: works well with a few games
+	*-sft: software graphics by Hactarux: extremely slow, but works for more games than GX
 
 USAGE:
  * ROMs must be z64 (big-endian) or v64 (little endian <= 15 MB on GC <= 32 MB on Wii)
  * For SDCARD: Put ROMs in a directory named N64ROMS in the root directory,
                Create a directory for named N64SAVES in the root directory
  * For DVD: ROMs may be anywhere on the disc  
- * Load mupen64.dol (for GX graphics) or mupen64-sft.dol (for software graphics: slow, but more support)
-   Select 'Load ROM' and choose to load from SD or DVD and select the ROM to load
+ * Load your choice of executable in the loader of your choice
+   Select 'Load ROM' and choose the source and select the ROM to load
      (Note: to go up a directory select '..', B will exit the file browser)
-   If there are any saves to load choose 'Load Save File' and select SD or memory card
+   If there are any saves to load choose 'Load Save File' and select source
    Select 'Play Game' to play
    The game can be exited any time by pressing X and Y together or the reset button
      (Note: this must be done to save your game; it will not be done automatically)
-   Save your progress by choosing 'Save Game' and selecting the source
+   Save your progress by choosing 'Save Game' and selecting the destination
+ * You can save your games on the internal memory on the Wii which will behave
+     like a native save game in that it can be copied/deleted via the Wii menu
 
 COMPATIBILITY LIST:
  Please visit http://code.google.com/p/mupen64gc/wiki/CompatibilityList to see what runs
@@ -31,13 +39,18 @@ CREDITS:
  * Visit us on http://code.google.com/p/mupen64gc and www.tehskeen.com
 
 CHANGE LOG:
- r2xx:
+ r3xx:
    + glN64 Port
    + MEM2 ROM Cache for Wii (fits 32MB ROMs)
+   + Save/Load on Wii Filesystem
    + Progressive video support
    + Embedded font support for Qoob users
    * Threaded audio
    * Various GX_gfx fixes
+   * Reworked input plugin
+     + Modular controller input
+   + Developer Features submenu
+     * Toggle FPS/Debug display
  r200:
    * Replaced GUI
      + Menu system
