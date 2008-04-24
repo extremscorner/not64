@@ -8,14 +8,18 @@
 #include <malloc.h>
 #include <ogc/dvd.h>
 
+/* DVD Globals */
 extern unsigned int isWii;
+extern int previously_initd;
+int dvdInitialized;
+
 extern struct
 {
 	char name[128];
 	int flags;
 	int sector, size;
 } file[MAXIMUM_ENTRIES_PER_DIR]; //150 files per dir, MAXIMUM.
-int dvdInitialized;
+
 /* Worked out manually from my original Disc */
 #define OOT_OFFSET 0x54FBEEF4
 #define MQ_OFFSET  0x52CCC5FC
@@ -27,37 +31,36 @@ fileBrowser_file topLevel_DVD =
 	  0,         // offset
 	  0,         // size
 	  FILE_BROWSER_ATTR_DIR
-	 };
-extern int previously_initd;
+	};
+
 int DVD_check_state() {
-#ifdef WII
-	dvdInitialized = 1;
-	return 0;
-#endif
-	if(dvd_get_error() == 0){
-		dvdInitialized = 1;
-		return 0;
-	}
-	else {
-		while(dvd_get_error()) {
-			if(!isWii){
-				DVD_Mount ();	
-				if(dvd_get_error())
-					DVD_Reset(DVD_RESETHARD);
-			}
-			if(isWii) {
-				DVD_Reset(DVD_RESETHARD);
-				dvd_read_id();
-			}
-		}
-	}
-	dvdInitialized = 1;
-	return 0;
+
+    if(dvd_get_error() == 0){
+            dvdInitialized = 1;
+            return 0;
+    }
+    else {
+        while(dvd_get_error()) {
+            if(!isWii){
+                DVD_Mount ();   
+                if(dvd_get_error())
+                    DVD_Reset(DVD_RESETHARD);
+            }
+            if(isWii) {
+                DVD_Reset(DVD_RESETHARD);
+                dvd_read_id();
+            }
+        }
+    }
+    dvdInitialized = 1;
+    return 0;
+
 }
 		 
 	 
 int fileBrowser_DVD_readDir(fileBrowser_file* ffile, fileBrowser_file** dir){	
 	
+	dvd_read_id();
 	DVD_check_state();
 	
 	int num_entries = 0;
@@ -117,9 +120,7 @@ int fileBrowser_DVD_readFile(fileBrowser_file* file, void* buffer, unsigned int 
 }
 
 int fileBrowser_DVD_init(fileBrowser_file* file) {
-#ifdef WII
-	return 0;
-#endif
+
 	dvd_read_id();
 	if(dvd_get_error() == 0)
 		return 0;
@@ -135,7 +136,6 @@ int fileBrowser_DVD_init(fileBrowser_file* file) {
 }
 
 int fileBrowser_DVD_deinit(fileBrowser_file* file) {
-	//dvd_motor_off(); //this should be made into its own menu option to swap DVD..
 	return 0;
 }
 
