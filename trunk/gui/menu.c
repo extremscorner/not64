@@ -274,7 +274,7 @@ static inline void menuStack_push(menu_item*);
 
 /* "Load ROM" menu item */
 #ifdef WII
-#define LOAD_ROM_WAYS 3
+#define LOAD_ROM_WAYS 2
 #else
 #define LOAD_ROM_WAYS 2
 #endif
@@ -299,6 +299,7 @@ static inline void menuStack_push(menu_item*);
 		
 		return NULL;
 	}
+#ifndef WII	
 	static char* loadROMDVD_func(){
 		// Deinit any existing romFile state
 		if(romFile_deinit) romFile_deinit( romFile_topLevel );
@@ -316,6 +317,7 @@ static inline void menuStack_push(menu_item*);
 		
 		return NULL;
 	}
+#endif
 #ifdef WII
 	static char* loadROMWiiFS_func(){
 		// Deinit any existing romFile state
@@ -341,10 +343,12 @@ static inline void menuStack_push(menu_item*);
 		   MENU_ATTR_NONE,
 		   { .func = loadROMSD_func }
 		  },
-		 { "Load from DVD",
+#ifndef WII
+		  { "Load from DVD",
 		   MENU_ATTR_NONE,
 		   { .func = loadROMDVD_func }
 		  },
+#endif
 #ifdef WII
 		 { "Load from Wii Filesystem",
 		   MENU_ATTR_NONE,

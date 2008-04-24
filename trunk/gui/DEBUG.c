@@ -7,7 +7,7 @@
 #include <sdcard.h>
 #include "DEBUG.h"
 #include "TEXT.h"
-#include "usb.h"
+//#include "usb.h"
 
 char text[DEBUG_TEXT_HEIGHT][DEBUG_TEXT_WIDTH];
 char printToSD;
@@ -54,12 +54,12 @@ void DEBUG_print(char* string,int pos){
 		if(pos == DBG_USBGECKO) {
 			#ifdef PRINTGECKO
 			if(!flushed){
-				usb_flush();
+				gecko_init(1);
 				flushed = 1;
 			}
 			int size = strlen(string);
-			usb_sendbuffer (&size,4);
-			usb_sendbuffer (string,size);
+			//usb_sendbuffer(1, &size,4);
+			gecko_sendbuffer(1, string,size);
 			#endif
 		}
 		else if(pos == DBG_SDGECKOOPEN) {
@@ -93,4 +93,3 @@ void DEBUG_print(char* string,int pos){
 	#endif
 	
 }
-

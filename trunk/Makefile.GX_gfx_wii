@@ -29,7 +29,6 @@ OBJ		=main/rom_gc.o \
 		fileBrowser/fileBrowser-DVD.o \
 		fileBrowser/fileBrowser-CARD.o \
 		fileBrowser/fileBrowser.o \
-		gui/usb.o \
 		gui/menu.o \
 		gui/menuFileBrowser.o \
 		gui/background_tex.o \

@@ -24,21 +24,6 @@ int is_unicode;
 int files;
 int dvd_read_id();
 
-#ifdef WII
-int WiiDVD_Init();
-void WiiDVD_Reset();
-unsigned int WiiDVD_GetError();
-void WiiDVD_StopMotor();
-int WiiDVD_ReadID(void *dst);
-int WiiDVDReadUnEncrypted(void* dst, unsigned int len, unsigned int offset);
-int WiiDVDRead(void* dst, unsigned int len, unsigned int offset);
-int WiiDVDSeek(unsigned int offset);
-int WiiDVDSetOffset(unsigned int offset);
-int WiiDVD_LowClosePartition();
-int WiiDVD_LowOpenPartition(unsigned int offset,void *eticket,unsigned int certin_len,void *certificate_in,void *certificate_out);
-
-#endif
-
 struct pvd_s
 {
 	char id[8];

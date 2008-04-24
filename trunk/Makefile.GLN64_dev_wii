@@ -40,7 +40,6 @@ OBJ		=main/rom_gc.o \
 		fileBrowser/HW64/customTitle.o \
 		fileBrowser/HW64/workaround.o \
 		fileBrowser/fileBrowser.o \
-		gui/usb.o \
 		gui/menu.o \
 		gui/menuFileBrowser.o \
 		gui/background_tex.o \

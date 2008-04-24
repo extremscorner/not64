@@ -1,6 +1,4 @@
 #include <ogc/ipc.h>
-typedef unsigned char  u8;
-typedef unsigned short u16;
 
 void killWiimote(void){
 
