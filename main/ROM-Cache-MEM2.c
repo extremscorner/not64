@@ -61,13 +61,14 @@ void ROMCache_read(u32* dest, u32 offset, u32 length){
 	if(ROMTooBig){
 		u32 block = offset>>20;
 		u32 length2 = length;
+		u32 offset2 = offset&0xFFFFF;
 		while(length2){
 			if(!ROMBlocks[block]){
 				// The block we're trying to read isnt in the cache
 				// Find the Least Recently Used Block
 				int i, max_i = 0;
 				for(i=0; i<64; ++i)
-					if(ROMBlocksLRU[i] > ROMBlocksLRU[max_i])
+					if(ROMBlocks[i] && ROMBlocksLRU[i] > ROMBlocksLRU[max_i])
 						max_i = i;
 				ROMBlocks[block] = ROMBlocks[max_i]; // Take its place
 				ROMCache_load_block(ROMBlocks[block], offset&0xFFF00000);
@@ -75,8 +76,8 @@ void ROMCache_read(u32* dest, u32 offset, u32 length){
 			}
 			
 			// Set length to the length for this block
-			if(length2 > BLOCK_SIZE  - (offset&0xFFFFF))
-				length = BLOCK_SIZE - (offset&0xFFFFF);
+			if(length2 > BLOCK_SIZE - offset2)
+				length = BLOCK_SIZE - offset2;
 			else length = length2;
 		
 			// Increment LRU's; set this one to 0
@@ -85,10 +86,10 @@ void ROMCache_read(u32* dest, u32 offset, u32 length){
 			ROMBlocksLRU[block] = 0;
 			
 			// Actually read for this block
-			memcpy(dest, ROMBlocks[block] + offset, length);
+			memcpy(dest, ROMBlocks[block] + offset2, length);
 			
 			// In case the read spans multiple blocks
-			++block; length2 -= length; offset = 0; dest += length/4;
+			++block; length2 -= length; offset2 = 0; dest += length/4; offset += length;
 		}
 	} else
 		memcpy(dest, ROMCACHE_LO + offset, length);
@@ -125,6 +126,8 @@ void ROMCache_load(fileBrowser_file* f, int byteSwap){
 			ROMBlocks[i] = ROMCACHE_LO + i*BLOCK_SIZE;
 		for(; i<ROMSize/BLOCK_SIZE; ++i)
 			ROMBlocks[i] = 0;
+		for(i=0; i<ROMSize/BLOCK_SIZE; ++i)
+			ROMBlocksLRU[i] = i;
 	}
 	
 	GUI_setLoadProg( -1.0f );
