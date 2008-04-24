@@ -216,13 +216,13 @@ static void fillInTitleDir(fileBrowser_file* f){
 }
 
 static int identify(void){
-	// TODO: Save the certs on the filesystem for easier access?
 	// Identify as our own title
 	void* dvdCert = NULL, * dvdTMD = NULL, * dvdTicket = NULL;
 	unsigned int dvdCertSize, dvdTMDSize, dvdTicketSize, keyid;
 	int ret;
 	
 	if(!customCert){ // If there's no certificate supplied
+#if 0
 		// Use the one from the DVD
 		ret = getTitle(&dvdCert,   &dvdCertSize,
 		               &dvdTMD,    &dvdTMDSize,
@@ -230,6 +230,9 @@ static int identify(void){
 		customCert = dvdCert;
 		customCertSize = dvdCertSize;
 		if(ret < 0) return ret;
+#else
+		return identified = 0;
+#endif
 	}
 	
 	ret = ES_Identify(customCert,   customCertSize,
@@ -264,7 +267,7 @@ static int identify(void){
 		free(path);
 		return identified = 1;
 	}
-	
+#if 0
 	// If that still fails, try to identify from the discs certs
 	if(!dvdCert || !dvdTMD || !dvdTicket)
 		ret = getTitle(&dvdCert,   &dvdCertSize,
@@ -281,7 +284,7 @@ static int identify(void){
 		ISFS_Initialize();
 		return identified = (ret >= 0);
 	}
-	
+#endif
 	return identified = 0;
 }
 
