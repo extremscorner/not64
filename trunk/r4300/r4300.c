@@ -39,6 +39,7 @@
 #include "recomp.h"
 #include "recomph.h"
 #include "Invalid_Code.h"
+#include "Recomp-Cache.h"
 #include <malloc.h>
 
 #ifdef DBG
@@ -67,7 +68,7 @@ unsigned int next_interupt, CIC_Chip;
 precomp_instr *PC;
 //char invalid_code[0x100000];
 
-#ifdef __PPC__
+#ifdef PPC_DYNAREC
 #include "ppc/Recompile.h"
 PowerPC_block* blocks[0x100000], *actual;
 #else
@@ -81,7 +82,7 @@ void (*code)();
    if (!invalid_code[address>>12]) \
        invalid_code[address>>12] = 1;*/
 
-#ifdef __PPC__
+#ifdef PPC_DYNAREC
 #define check_memory() invalid_code_set(address>>12, 1);
 #else
 #define check_memory() \
@@ -121,7 +122,7 @@ void FIN_BLOCK()
      }
    else
      {
-#ifdef __PPC__
+#ifdef PPC_DYNAREC
 	PowerPC_block* blk = actual;
 #else
 	precomp_block *blk = actual;
@@ -149,7 +150,7 @@ void J()
    PC->ops();
    update_count();
    delay_slot=0;
-#ifndef __PPC__
+#ifndef PPC_DYNAREC
    if (!skip_jump)
      PC=actual->block+
      (((((PC-2)->f.j.inst_index<<2) | ((PC-1)->addr & 0xF0000000))-actual->start)>>2);
@@ -192,7 +193,7 @@ void JAL()
      {
 	reg[31]=PC->addr;
 	sign_extended(reg[31]);
-#ifndef __PPC__	
+#ifndef PPC_DYNAREC	
 	PC=actual->block+
 	  (((((PC-2)->f.j.inst_index<<2) | ((PC-1)->addr & 0xF0000000))-actual->start)>>2);
 #endif
@@ -1352,7 +1353,7 @@ void SD()
 void NOTCOMPILED()
 {
    if ((PC->addr>>16) == 0xa400){
-#ifdef __PPC__
+#ifdef PPC_DYNAREC
      recompile_block(blocks[0xa4000000>>12]);
 #else
      recompile_block(SP_DMEM, blocks[0xa4000000>>12], PC->addr);
@@ -1368,7 +1369,7 @@ void NOTCOMPILED()
 	     if ((paddr & 0x1FFFFFFF) >= 0x10000000)
 	       {
 		  //printf("not compiled rom:%x\n", paddr);
-#ifdef __PPC__
+#ifdef PPC_DYNAREC
 		  // FIXME: We need to read from the romcache into a buffer and recompile the buffer
 		  recompile_block(blocks[PC->addr>>12]);
 #else
@@ -1377,7 +1378,7 @@ void NOTCOMPILED()
 #endif
 	       }
 	     else
-#ifdef __PPC__
+#ifdef PPC_DYNAREC
 		recompile_block(blocks[PC->addr>>12]);
 #else
 	       recompile_block(rdram+(((paddr-(PC->addr-blocks[PC->addr>>12]->start)) & 0x1FFFFFFF)>>2),
@@ -1388,7 +1389,7 @@ void NOTCOMPILED()
      }
    PC->ops();
    if (dynacore)
-#ifdef __PPC__
+#ifdef PPC_DYNAREC
      jump_to(PC->addr);
 #else
      dyna_jump();
@@ -1435,7 +1436,7 @@ inline unsigned long update_invalid_addr(unsigned long addr)
 
 #define addr jump_to_address
 unsigned long jump_to_address;
-#ifdef __PPC__
+#ifdef PPC_DYNAREC
 #define jump_to_func() jump_to(addr)
 #else
 inline void jump_to_func()
@@ -1460,6 +1461,9 @@ inline void jump_to_func()
 	init_block(rdram+(((paddr-(addr-blocks[addr>>12]->start)) & 0x1FFFFFFF)>>2),
 		   blocks[addr>>12]);
      }
+#ifdef USE_RECOMP_CACHE
+	else RecompCache_Update(addr>>12);
+#endif
    PC=actual->block+((addr-actual->start)>>2);
    
    //if (dynacore) dyna_jump();
@@ -1478,7 +1482,7 @@ int check_cop1_unusable()
    return 0;
 }
 
-#ifdef __PPC__
+#ifdef PPC_DYNAREC
 unsigned int instructionCount;
 #endif
 
@@ -1486,12 +1490,14 @@ void update_count()
 {
    if (interpcore)
      {
+     	//sprintf(txtbuffer, "trace: addr = 0x%08x\n", interp_addr);
+	//DEBUG_print
 	Count = Count + (interp_addr - last_addr)/2;
 	last_addr = interp_addr;
      }
    else
      {
-#ifdef __PPC__
+#ifdef PPC_DYNAREC
 	// FIXME: divide by 2 or 3 instead of multiply by 1000
 	Count += instructionCount*10000;
 #else	
@@ -1520,7 +1526,7 @@ void init_blocks()
 	invalid_code_set(i, 1);
 	blocks[i] = NULL;
      }
-#ifndef __PPC__
+#ifndef PPC_DYNAREC
    blocks[0xa4000000>>12] = malloc(sizeof(precomp_block));
    blocks[0xa4000000>>12]->code = NULL;
    blocks[0xa4000000>>12]->block = NULL;
@@ -1537,7 +1543,7 @@ void init_blocks()
    invalid_code_set(0xa4000000>>12, 1);
    actual=blocks[0xa4000000>>12];
    init_block(SP_DMEM, blocks[0xa4000000>>12]);
-#ifdef __PPC__
+#ifdef PPC_DYNAREC
 	PC = malloc(sizeof(precomp_instr));
 #else
    PC=actual->block+(0x40/4);
@@ -1549,6 +1555,7 @@ void init_blocks()
 #endif
 }
 
+static int cpu_inited;
 void go()
 {
 #if 0
@@ -1785,12 +1792,17 @@ void go()
    interpcore = 0;
    
 #endif   
-
+	
+	stop = 0;
+	
    if (!dynacore)
      {
 	//printf ("interpreter\n");
-	init_blocks();
-	last_addr = PC->addr;
+	if(cpu_inited){
+		init_blocks();
+		last_addr = PC->addr;
+		cpu_inited = 0;
+	}
 	while (!stop)
 	  {
 	     //if ((debug_count+Count) >= 0x78a8091) break; // obj 0x16aeb8a
@@ -1812,7 +1824,7 @@ void go()
 			 (unsigned int)hi,
 			 (unsigned int)(lo >> 32),
 			 (unsigned int)lo);
-		  printf("après %d instructions soit %x\n",(unsigned int)(debug_count+Count)
+		  printf("aprï¿½s %d instructions soit %x\n",(unsigned int)(debug_count+Count)
 			 ,(unsigned int)(debug_count+Count));
 		  getchar();
 	       }*/
@@ -1851,7 +1863,7 @@ void go()
 	dynacore = 1;
 	//printf("dynamic recompiler\n");
 	init_blocks();
-#ifdef __PPC__
+#ifdef PPC_DYNAREC
 	jump_to(0xa4000040);
 #else
 	code = (void *)(actual->code+(actual->block[0x40/4].local_addr));
@@ -1878,17 +1890,21 @@ void go()
 	  (unsigned int)hi,
 	  (unsigned int)(lo >> 32),
 	  (unsigned int)lo);
-   printf("après %d instructions soit %x\n",(unsigned int)debug_count
+   printf("aprï¿½s %d instructions soit %x\n",(unsigned int)debug_count
 	  ,(unsigned int)debug_count);*/
    for (i=0; i<0x100000; i++)
      {
 	if (blocks[i])
 	  {
-#ifdef __PPC__
+#ifdef PPC_DYNAREC
 		deinit_block(blocks[i]);
 #else
 	     if (blocks[i]->block) {
+#ifdef USE_RECOMP_CACHE
+		RecompCache_Free(i);
+#else
 		free(blocks[i]->block);
+#endif
 		blocks[i]->block = NULL;
 	     }
 	     if (blocks[i]->code) {
@@ -2144,35 +2160,43 @@ void cpu_init(void){
    interp_addr = 0xa4000040;
    // FIXME: I'm making an assumption:
    //          worst case is probably this will leak mem
-   PC = malloc(sizeof(precomp_instr));
+   if(dynacore == 2)
+   	PC = malloc(sizeof(precomp_instr));
+   // Hack for the interpreter
+   cpu_inited = 1;
 }
 
 void cpu_deinit(void){
-    for (i=0; i<0x100000; i++)
-     {
-	if (blocks[i])
-	  {
-#ifdef __PPC__
-		deinit_block(blocks[i]);
+	// No need to check these if we were in the pure interp
+	if(dynacore != 2){
+		for (i=0; i<0x100000; i++) {
+		if (blocks[i]) {
+#ifdef PPC_DYNAREC
+			deinit_block(blocks[i]);
 #else
-	     if (blocks[i]->block) {
-		free(blocks[i]->block);
-		blocks[i]->block = NULL;
-	     }
-	     if (blocks[i]->code) {
-		free(blocks[i]->code);
-		blocks[i]->code = NULL;
-	     }
-	     if (blocks[i]->jumps_table) {
-		free(blocks[i]->jumps_table);
-		blocks[i]->jumps_table = NULL;
-	     }
+			if (blocks[i]->block) {
+#ifdef USE_RECOMP_CACHE
+				RecompCache_Free(i);
+#else
+				free(blocks[i]->block);
 #endif
-	     free(blocks[i]);
-	     blocks[i] = NULL;
-	  }
-     }
+				blocks[i]->block = NULL;
+			}
+			if (blocks[i]->code) {
+				free(blocks[i]->code);
+				blocks[i]->code = NULL;
+			}
+			if (blocks[i]->jumps_table) {
+				free(blocks[i]->jumps_table);
+				blocks[i]->jumps_table = NULL;
+			}
+#endif
+			free(blocks[i]);
+			blocks[i] = NULL;
+		}
+		}
+	}
    // tehpola: modified condition from !dynacore && interpcore
-   if (dynacore != 1) free(PC);
+   if (dynacore == 2) free(PC);
 }
 

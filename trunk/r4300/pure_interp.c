@@ -1186,7 +1186,7 @@ static void MTC0()
       case 13:   // Cause
 	if (rrt!=0)
 	  {
-	     printf("écriture dans Cause\n");
+	     printf("ï¿½criture dans Cause\n");
 	     stop = 1;
 	  }
 	else Cause = rrt;
@@ -3197,7 +3197,7 @@ void prefetch()
 	  }
 	else
 	  {
-	     printf("execution à l'addresse :%x\n", (int)interp_addr);
+	     printf("execution ï¿½ l'addresse :%x\n", (int)interp_addr);
 	     stop=1;
 	  }
      }
@@ -3223,6 +3223,7 @@ void pure_interpreter()
 {
    //interp_addr = 0xa4000040;
    stop=0;
+   // FIXME: Do I have to adjust this now?
    //PC = malloc(sizeof(precomp_instr));
    last_addr = interp_addr;
    while (!stop)

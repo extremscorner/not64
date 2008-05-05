@@ -34,7 +34,10 @@
 #include "r4300.h"
 #include "ops.h"
 #include "../gc_memory/memory.h"
+#include "Recomp-Cache.h"
 #include "recomph.h"
+
+#include "../gui/DEBUG.h"
 
 // global variables :
 precomp_instr *dst; // destination structure for the recompiled instruction
@@ -2457,7 +2460,7 @@ static void (*recomp_ops[64])(void) =
 /**********************************************************************
  ******************** initialize an empty block ***********************
  **********************************************************************/
-#ifndef __PPC__
+#ifndef PPC_DYNAREC
 void init_block(long *source, precomp_block *block)
 {
    int i, length, already_exist = 1;
@@ -2469,7 +2472,15 @@ void init_block(long *source, precomp_block *block)
    
    if (!block->block)
      {
+    sprintf(txtbuffer, "Allocating block @ %08x of %dkB\n",
+            block->start, (((length+1)+(length>>2))*sizeof(precomp_instr))/1024);
+    DEBUG_print(txtbuffer, DBG_USBGECKO);
+#ifdef USE_RECOMP_CACHE
+	block->block = RecompCache_Alloc(((length+1)+(length>>2)) * sizeof(precomp_instr),
+	                                 block->start>>12);
+#else
 	block->block = malloc(((length+1)+(length>>2)) * sizeof(precomp_instr));
+#endif
 	already_exist = 0;
      }
 #if 0 //if(dynacore)
@@ -2811,7 +2822,6 @@ void recompile_opcode()
 /**********************************************************************
  ************** decode one opcode (for the interpreter) ***************
  **********************************************************************/
-#include "../gui/DEBUG.h"
 extern unsigned long op;
 void prefetch_opcode(unsigned long instr)
 {
