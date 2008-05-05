@@ -87,7 +87,7 @@ typedef struct _precomp_block
    unsigned long adler32;
 } precomp_block;
 
-#ifndef __PPC__
+#ifndef PPC_DYNAREC
 void recompile_block(long *source, precomp_block *block, unsigned long func);
 void init_block(long *source, precomp_block *block);
 #endif

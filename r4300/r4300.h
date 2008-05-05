@@ -37,7 +37,7 @@
 #include "recomp.h"
 
 extern precomp_instr *PC;
-#ifdef __PPC__
+#ifdef PPC_DYNAREC
 #include "ppc/Recompile.h"
 extern PowerPC_block* blocks[0x100000], *actual;
 #else
@@ -62,7 +62,7 @@ extern unsigned long interpcore;
 extern unsigned int next_interupt, CIC_Chip;
 extern int rounding_mode, trunc_mode, round_mode, ceil_mode, floor_mode;
 extern unsigned long last_addr, interp_addr;
-extern char invalid_code[0x100000];
+//extern char invalid_code[0x100000];
 extern unsigned long jump_to_address;
 extern int no_audio_delay;
 extern int no_compiled_jump;
@@ -74,10 +74,16 @@ inline void jump_to_func();
 void update_count();
 int check_cop1_unusable();
 
-#ifndef __PPC__
+#ifndef PPC_DYNAREC
 #define jump_to(a) { jump_to_address = a; jump_to_func(); }
 #else
 void jump_to(unsigned int);
+#endif
+
+#ifdef __PPC__
+#define dyna_start(x)
+#define dyna_jump()
+#define dyna_stop()
 #endif
 
 // profiling
