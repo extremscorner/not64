@@ -58,6 +58,22 @@ static void release(int minNeeded){
 		blocks[n->blockNum]->code = NULL;
 #else
 		blocks[n->blockNum]->block = NULL;
+		if(n->blockNum < 0x80000 || n->blockNum >= 0xc0000){	
+			unsigned long paddr;
+			paddr = virtual_to_physical_address(n->blockNum<<12, 2);
+			if(blocks[paddr>>12])
+				blocks[paddr>>12]->block = NULL;
+			paddr += 0xFFC;
+			if(blocks[paddr>>12])
+				blocks[paddr>>12]->block = NULL;
+		} else {
+			if(n->blockNum >= 0x80000 && n->blockNum < 0xa0000
+			   && blocks[n->blockNum+0x20000])
+				blocks[n->blockNum+0x20000]->block = NULL;
+			if(n->blockNum >= 0xa0000 && n->blockNum < 0xc0000
+			   && blocks[n->blockNum-0x20000])
+				blocks[n->blockNum-0x20000]->block = NULL;
+		}
 #endif
 		free(n);
 	}
@@ -101,18 +117,28 @@ void RecompCache_Free(unsigned int blockNum){
 void RecompCache_Update(unsigned int blockNum){
 	sprintf(txtbuffer, "RecompCache_Update(%05x)\n", blockNum);
 	DEBUG_print(txtbuffer, DBG_USBGECKO);
+	// Update any equivalent addresses as well
+	unsigned int blockNum2 = 0, blockNum3 = 0;
+	if(blockNum < 0x80000 || blockNum >= 0xc0000){
+		blockNum2 = virtual_to_physical_address(blockNum<<12, 2);
+		blockNum3 = blockNum2 + 0xFFC;
+	} else {
+		if(blockNum >= 0x80000 && blockNum < 0xa0000)
+			blockNum2 = blockNum + 0x20000;
+		else if(blockNum >= 0xa0000 && blockNum < 0xc0000)
+			blockNum2 = blockNum - 0x20000;
+	}
 	// We use the linked list to keep track of LRU
 	// So move this block to the head of the list
 	// Find it
 	CacheMetaNode* n;
 	for(n = head; n != NULL; n = n->next)
-		if(n->blockNum == n->blockNum){
+		if(n->blockNum == blockNum || n->blockNum == blockNum2
+		   || n->blockNum == blockNum3){
 			// Remove it
 			nodeRemove(n);
-			break;
+			// Add it back at the head
+			nodeAdd(n);
 		}
-	if(!n) return;
-	// Add it back at the head
-	nodeAdd(n);
 }
 

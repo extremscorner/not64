@@ -34,6 +34,7 @@
 #include "r4300.h"
 #include "ops.h"
 #include "../gc_memory/memory.h"
+#include "Invalid_Code.h"
 #include "Recomp-Cache.h"
 #include "recomph.h"
 
@@ -2482,6 +2483,24 @@ void init_block(long *source, precomp_block *block)
 	block->block = malloc(((length+1)+(length>>2)) * sizeof(precomp_instr));
 #endif
 	already_exist = 0;
+	// Update corresponding blocks if they've already been created
+	if(block->end < 0x80000000 || block->start >= 0xc0000000){	
+		unsigned long paddr;
+		paddr = virtual_to_physical_address(block->start, 2);
+		if(blocks[paddr>>12])
+			blocks[paddr>>12]->block = block->block;
+		paddr += block->end - block->start - 4;
+		if(blocks[paddr>>12])
+			blocks[paddr>>12]->block = block->block;
+	} else {
+		if(block->start >= 0x80000000 && block->end < 0xa0000000
+		   && blocks[(block->start+0x20000000)>>12])
+			blocks[(block->start+0x20000000)>>12]->block = block->block;
+		if(block->start >= 0xa0000000 && block->end < 0xc0000000
+		   && blocks[(block->start-0x20000000)>>12])
+			blocks[(block->start-0x20000000)>>12]->block = block->block;
+	}
+		
      }
 #if 0 //if(dynacore)
      {
@@ -2556,7 +2575,7 @@ void init_block(long *source, precomp_block *block)
 	  {
 	     blocks[paddr>>12] = malloc(sizeof(precomp_block));
 	     blocks[paddr>>12]->code = NULL;
-	     blocks[paddr>>12]->block = NULL;
+	     blocks[paddr>>12]->block = block->block;
 	     blocks[paddr>>12]->jumps_table = NULL;
 	     blocks[paddr>>12]->start = paddr & ~0xFFF;
 	     blocks[paddr>>12]->end = (paddr & ~0xFFF) + 0x1000;
@@ -2569,7 +2588,7 @@ void init_block(long *source, precomp_block *block)
 	  {
 	     blocks[paddr>>12] = malloc(sizeof(precomp_block));
 	     blocks[paddr>>12]->code = NULL;
-	     blocks[paddr>>12]->block = NULL;
+	     blocks[paddr>>12]->block = block->block;
 	     blocks[paddr>>12]->jumps_table = NULL;
 	     blocks[paddr>>12]->start = paddr & ~0xFFF;
 	     blocks[paddr>>12]->end = (paddr & ~0xFFF) + 0x1000;
@@ -2585,7 +2604,7 @@ void init_block(long *source, precomp_block *block)
 	       {
 		  blocks[(block->start+0x20000000)>>12] = malloc(sizeof(precomp_block));
 		  blocks[(block->start+0x20000000)>>12]->code = NULL;
-		  blocks[(block->start+0x20000000)>>12]->block = NULL;
+		  blocks[(block->start+0x20000000)>>12]->block = block->block;
 		  blocks[(block->start+0x20000000)>>12]->jumps_table = NULL;
 		  blocks[(block->start+0x20000000)>>12]->start = (block->start+0x20000000) & ~0xFFF;
 		  blocks[(block->start+0x20000000)>>12]->end = ((block->start+0x20000000) & ~0xFFF) + 0x1000;
@@ -2599,7 +2618,7 @@ void init_block(long *source, precomp_block *block)
 	       {
 		  blocks[(block->start-0x20000000)>>12] = malloc(sizeof(precomp_block));
 		  blocks[(block->start-0x20000000)>>12]->code = NULL;
-		  blocks[(block->start-0x20000000)>>12]->block = NULL;
+		  blocks[(block->start-0x20000000)>>12]->block = block->block;
 		  blocks[(block->start-0x20000000)>>12]->jumps_table = NULL;
 		  blocks[(block->start-0x20000000)>>12]->start = (block->start-0x20000000) & ~0xFFF;
 		  blocks[(block->start-0x20000000)>>12]->end = ((block->start-0x20000000) & ~0xFFF) + 0x1000;

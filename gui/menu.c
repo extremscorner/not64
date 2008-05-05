@@ -72,33 +72,43 @@ extern BOOL hasLoadedROM;
 
 	extern unsigned long dynacore;
 	static char* choose_PureInterpreter(){
+		int needInit = 2;
+		if(dynacore != 2){ cpu_deinit(); needInit = 1; }
 		dynacore = 2;
+		if(needInit) cpu_init();
 		return "Running Pure Interpreter Mode";
 	}
 	static char* choose_Dynarec(){
+		int needInit = 0;
+		if(dynacore != 1){ cpu_deinit(); needInit = 1; }
 		dynacore = 1;
+		if(needInit) cpu_init();
 		return "Running Dynarec Mode";
 	}
 	static char* choose_Interpreter(){
+		int needInit = 0;
+		if(dynacore != 0){ cpu_deinit(); needInit = 1; }
 		dynacore = 0;
+		if(needInit) cpu_init();
 		return "Running Interpreter Mode";
 	}
-	
-	static menu_item selectCPU_subMenu[3] =
+
+	static menu_item selectCPU_subMenu[2] =
 		{{ "Pure Interpreter",
 		   MENU_ATTR_SPECIAL,
 		   { .func = choose_PureInterpreter }
 		  },
-		  
+#ifdef PPC_DYNAREC
 		 { "Dynamic Recompiler",
 		   MENU_ATTR_NONE,
 		   { .func = choose_Dynarec }
 		  },
-		 
+#else
 		 { "Interpreter",
 		   MENU_ATTR_NONE,
 		   { .func = choose_Interpreter }
 		  }
+#endif
 		 };
 
 #define SELECT_CPU_INDEX 3
@@ -106,7 +116,7 @@ extern BOOL hasLoadedROM;
 	{ "Select CPU Core", /* caption */ \
 	  MENU_ATTR_HASSUBMENU, /* attr */ \
 	  /* subMenu */ \
-	  { 3, /* num_items */ \
+	  { 2, /* num_items */ \
 	    &selectCPU_subMenu[0] /* items */ \
 	   } \
 	 }	
