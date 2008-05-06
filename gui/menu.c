@@ -73,23 +73,23 @@ extern BOOL hasLoadedROM;
 	extern unsigned long dynacore;
 	static char* choose_PureInterpreter(){
 		int needInit = 2;
-		if(dynacore != 2){ cpu_deinit(); needInit = 1; }
+		if(hasLoadedROM && dynacore != 2){ cpu_deinit(); needInit = 1; }
 		dynacore = 2;
-		if(needInit) cpu_init();
+		if(hasLoadedROM && needInit) cpu_init();
 		return "Running Pure Interpreter Mode";
 	}
 	static char* choose_Dynarec(){
 		int needInit = 0;
-		if(dynacore != 1){ cpu_deinit(); needInit = 1; }
+		if(hasLoadedROM && dynacore != 1){ cpu_deinit(); needInit = 1; }
 		dynacore = 1;
-		if(needInit) cpu_init();
+		if(hasLoadedROM && needInit) cpu_init();
 		return "Running Dynarec Mode";
 	}
 	static char* choose_Interpreter(){
 		int needInit = 0;
-		if(dynacore != 0){ cpu_deinit(); needInit = 1; }
+		if(hasLoadedROM && dynacore != 0){ cpu_deinit(); needInit = 1; }
 		dynacore = 0;
-		if(needInit) cpu_init();
+		if(hasLoadedROM && needInit) cpu_init();
 		return "Running Interpreter Mode";
 	}
 
