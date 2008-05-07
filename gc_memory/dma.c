@@ -44,6 +44,12 @@
 #include "../r4300/ops.h"
 #include "Saves.h"
 
+#ifdef USE_EXPANSION
+	#define MEMMASK 0x7FFFFF
+#else
+	#define MEMMASK 0x3FFFFF
+#endif
+
 #ifdef USE_GUI
 #include "../gui/GUI.h"
 #define PRINT GUI_print
@@ -184,10 +190,10 @@ void dma_pi_write()
    i = (pi_register.pi_cart_addr_reg-0x10000000)&0x3FFFFFF;
    longueur = (i + longueur) > rom_length ?
      (rom_length - i) : longueur;
-   longueur = (pi_register.pi_dram_addr_reg + longueur) > 0x7FFFFF ?
-     (0x7FFFFF - pi_register.pi_dram_addr_reg) : longueur;
+   longueur = (pi_register.pi_dram_addr_reg + longueur) > MEMMASK ?
+     (MEMMASK - pi_register.pi_dram_addr_reg) : longueur;
    
-   if(i>rom_length || pi_register.pi_dram_addr_reg > 0x7FFFFF)
+   if(i>rom_length || pi_register.pi_dram_addr_reg > MEMMASK)
      {
 	pi_register.read_pi_status_reg |= 3;
 	update_count();

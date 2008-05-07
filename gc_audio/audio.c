@@ -63,9 +63,9 @@ AiDacrateChanged( int SystemType )
 	}
 	
 	if      ( f == 32000 )
-		AUDIO_SetStreamSampleRate(AI_SAMPLERATE_32KHZ);
+		AUDIO_SetDSPSampleRate(AI_SAMPLERATE_32KHZ);
 	else if ( f == 48000 )
-		AUDIO_SetStreamSampleRate(AI_SAMPLERATE_48KHZ);
+		AUDIO_SetDSPSampleRate(AI_SAMPLERATE_48KHZ);
 	else {
 		 sprintf(txtbuffer,"error initializing frequency: %d", f);
 	   	 DEBUG_print(txtbuffer,DBG_AUDIOINFO); 

@@ -71,8 +71,10 @@ DPS_register dps_register;
 //         memory when we can alloc only 4MB
 #ifdef USE_EXPANSION
 	unsigned long rdram[0x800000/4];
+	#define MEMMASK 0x7FFFFF
 #else
 	unsigned long rdram[0x800000/4/2];
+	#define MEMMASK 0x3FFFFF
 #endif
 unsigned char *rdramb = (unsigned char *)(rdram);
 unsigned long SP_DMEM[0x1000/4*2];
@@ -1183,7 +1185,7 @@ void update_SP()
 		       if(frameBufferInfos[i].addr)
 			 {
 			    int j;
-			    int start = frameBufferInfos[i].addr & 0x7FFFFF;
+			    int start = frameBufferInfos[i].addr & MEMMASK;
 			    int end = start + frameBufferInfos[i].width*
 			                      frameBufferInfos[i].height*
 			                      frameBufferInfos[i].size - 1;
@@ -1237,7 +1239,7 @@ void update_SP()
 		       if(frameBufferInfos[i].addr)
 			 {
 			    int j;
-			    int start = frameBufferInfos[i].addr & 0x7FFFFF;
+			    int start = frameBufferInfos[i].addr & MEMMASK;
 			    int end = start + frameBufferInfos[i].width*
 			                      frameBufferInfos[i].height*
 			                      frameBufferInfos[i].size - 1;
@@ -1451,24 +1453,24 @@ void write_nomemd()
 }
 
 void read_rdram()
-{;
-   *rdword = *((unsigned long *)(rdramb + (address & 0xFFFFFF)));
+{
+   *rdword = *((unsigned long *)(rdramb + (address & MEMMASK)));
 }
 
 void read_rdramb()
 {
-   *rdword = *(rdramb + ((address & 0xFFFFFF)^S8));
+   *rdword = *(rdramb + ((address & MEMMASK)^S8));
 }
 
 void read_rdramh()
 {
-   *rdword = *((unsigned short *)(rdramb + ((address & 0xFFFFFF)^S16)));
+   *rdword = *((unsigned short *)(rdramb + ((address & MEMMASK)^S16)));
 }
 
 void read_rdramd()
 {
-   *rdword = ((unsigned long long int)(*(unsigned long *)(rdramb + (address & 0xFFFFFF))) << 32) |
-     ((*(unsigned long *)(rdramb + (address & 0xFFFFFF) + 4)));
+   *rdword = ((unsigned long long int)(*(unsigned long *)(rdramb + (address & MEMMASK))) << 32) |
+     ((*(unsigned long *)(rdramb + (address & MEMMASK) + 4)));
 }
 
 void read_rdramFB()
@@ -1478,15 +1480,15 @@ void read_rdramFB()
      {
 	if(frameBufferInfos[i].addr)
 	  {
-	     int start = frameBufferInfos[i].addr & 0x7FFFFF;
+	     int start = frameBufferInfos[i].addr & MEMMASK;
 	     int end = start + frameBufferInfos[i].width*
 	       frameBufferInfos[i].height*
 	       frameBufferInfos[i].size - 1;
-	     if((address & 0x7FFFFF) >= start && (address & 0x7FFFFF) <= end &&
-		framebufferRead[(address & 0x7FFFFF)>>12])
+	     if((address & MEMMASK) >= start && (address & MEMMASK) <= end &&
+		framebufferRead[(address & MEMMASK)>>12])
 	       {
 		  fBRead(address);
-		  framebufferRead[(address & 0x7FFFFF)>>12] = 0;
+		  framebufferRead[(address & MEMMASK)>>12] = 0;
 	       }
 	  }
      }
@@ -1500,15 +1502,15 @@ void read_rdramFBb()
      {
 	if(frameBufferInfos[i].addr)
 	  {
-	     int start = frameBufferInfos[i].addr & 0x7FFFFF;
+	     int start = frameBufferInfos[i].addr & MEMMASK;
 	     int end = start + frameBufferInfos[i].width*
 	       frameBufferInfos[i].height*
 	       frameBufferInfos[i].size - 1;
-	     if((address & 0x7FFFFF) >= start && (address & 0x7FFFFF) <= end &&
-		framebufferRead[(address & 0x7FFFFF)>>12])
+	     if((address & MEMMASK) >= start && (address & MEMMASK) <= end &&
+		framebufferRead[(address & MEMMASK)>>12])
 	       {
 		  fBRead(address);
-		  framebufferRead[(address & 0x7FFFFF)>>12] = 0;
+		  framebufferRead[(address & MEMMASK)>>12] = 0;
 	       }
 	  }
      }
@@ -1522,15 +1524,15 @@ void read_rdramFBh()
      {
 	if(frameBufferInfos[i].addr)
 	  {
-	     int start = frameBufferInfos[i].addr & 0x7FFFFF;
+	     int start = frameBufferInfos[i].addr & MEMMASK;
 	     int end = start + frameBufferInfos[i].width*
 	       frameBufferInfos[i].height*
 	       frameBufferInfos[i].size - 1;
-	     if((address & 0x7FFFFF) >= start && (address & 0x7FFFFF) <= end &&
-		framebufferRead[(address & 0x7FFFFF)>>12])
+	     if((address & MEMMASK) >= start && (address & MEMMASK) <= end &&
+		framebufferRead[(address & MEMMASK)>>12])
 	       {
 		  fBRead(address);
-		  framebufferRead[(address & 0x7FFFFF)>>12] = 0;
+		  framebufferRead[(address & MEMMASK)>>12] = 0;
 	       }
 	  }
      }
@@ -1544,15 +1546,15 @@ void read_rdramFBd()
      {
 	if(frameBufferInfos[i].addr)
 	  {
-	     int start = frameBufferInfos[i].addr & 0x7FFFFF;
+	     int start = frameBufferInfos[i].addr & MEMMASK;
 	     int end = start + frameBufferInfos[i].width*
 	       frameBufferInfos[i].height*
 	       frameBufferInfos[i].size - 1;
-	     if((address & 0x7FFFFF) >= start && (address & 0x7FFFFF) <= end &&
-		framebufferRead[(address & 0x7FFFFF)>>12])
+	     if((address & MEMMASK) >= start && (address & MEMMASK) <= end &&
+		framebufferRead[(address & MEMMASK)>>12])
 	       {
 		  fBRead(address);
-		  framebufferRead[(address & 0x7FFFFF)>>12] = 0;
+		  framebufferRead[(address & MEMMASK)>>12] = 0;
 	       }
 	  }
      }
@@ -1561,23 +1563,23 @@ void read_rdramFBd()
 
 void write_rdram()
 {
-   *((unsigned long *)(rdramb + (address & 0xFFFFFF))) = word;
+   *((unsigned long *)(rdramb + (address & MEMMASK))) = word;
 }
 
 void write_rdramb()
 {
-   *((rdramb + ((address & 0xFFFFFF)^S8))) = byte;
+   *((rdramb + ((address & MEMMASK)^S8))) = byte;
 }
 
 void write_rdramh()
 {
-   *(unsigned short *)((rdramb + ((address & 0xFFFFFF)^S16))) = hword;
+   *(unsigned short *)((rdramb + ((address & MEMMASK)^S16))) = hword;
 }
 
 void write_rdramd()
 {
-   *((unsigned long *)(rdramb + (address & 0xFFFFFF))) = dword >> 32;
-   *((unsigned long *)(rdramb + (address & 0xFFFFFF) + 4 )) = dword & 0xFFFFFFFF;
+   *((unsigned long *)(rdramb + (address & MEMMASK))) = dword >> 32;
+   *((unsigned long *)(rdramb + (address & MEMMASK) + 4 )) = dword & 0xFFFFFFFF;
 }
 
 void write_rdramFB()
@@ -1587,11 +1589,11 @@ void write_rdramFB()
      {
 	if(frameBufferInfos[i].addr)
 	  {
-	     int start = frameBufferInfos[i].addr & 0x7FFFFF;
+	     int start = frameBufferInfos[i].addr & MEMMASK;
 	     int end = start + frameBufferInfos[i].width*
 	       frameBufferInfos[i].height*
 	       frameBufferInfos[i].size - 1;
-	     if((address & 0x7FFFFF) >= start && (address & 0x7FFFFF) <= end)
+	     if((address & MEMMASK) >= start && (address & MEMMASK) <= end)
 	       fBWrite(address, 4);
 	  }
      }
@@ -1605,11 +1607,11 @@ void write_rdramFBb()
      {
 	if(frameBufferInfos[i].addr)
 	  {
-	     int start = frameBufferInfos[i].addr & 0x7FFFFF;
+	     int start = frameBufferInfos[i].addr & MEMMASK;
 	     int end = start + frameBufferInfos[i].width*
 	       frameBufferInfos[i].height*
 	       frameBufferInfos[i].size - 1;
-	     if((address & 0x7FFFFF) >= start && (address & 0x7FFFFF) <= end)
+	     if((address & MEMMASK) >= start && (address & MEMMASK) <= end)
 	       fBWrite(address^S8, 1);
 	  }
      }
@@ -1623,11 +1625,11 @@ void write_rdramFBh()
      {
 	if(frameBufferInfos[i].addr)
 	  {
-	     int start = frameBufferInfos[i].addr & 0x7FFFFF;
+	     int start = frameBufferInfos[i].addr & MEMMASK;
 	     int end = start + frameBufferInfos[i].width*
 	       frameBufferInfos[i].height*
 	       frameBufferInfos[i].size - 1;
-	     if((address & 0x7FFFFF) >= start && (address & 0x7FFFFF) <= end)
+	     if((address & MEMMASK) >= start && (address & MEMMASK) <= end)
 	       fBWrite(address^S16, 2);
 	  }
      }
@@ -1641,11 +1643,11 @@ void write_rdramFBd()
      {
 	if(frameBufferInfos[i].addr)
 	  {
-	     int start = frameBufferInfos[i].addr & 0x7FFFFF;
+	     int start = frameBufferInfos[i].addr & MEMMASK;
 	     int end = start + frameBufferInfos[i].width*
 	       frameBufferInfos[i].height*
 	       frameBufferInfos[i].size - 1;
-	     if((address & 0x7FFFFF) >= start && (address & 0x7FFFFF) <= end)
+	     if((address & MEMMASK) >= start && (address & MEMMASK) <= end)
 	       fBWrite(address, 8);
 	  }
      }
