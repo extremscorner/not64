@@ -67,6 +67,11 @@ Address/Range		Description
 0x5C0..0xF7F		Buffers...
 0xF80..0xFFF		<Unknown>
 ***************************************************/
+#ifdef USE_EXPANSION
+	#define MEMMASK 0x7FFFFF
+#else
+	#define MEMMASK 0x3FFFFF
+#endif
 
 static void SPNOOP () {
 	//MessageBox (NULL, "Unknown Audio Command in ABI 1", "Audio HLE Error", MB_OK);
@@ -663,7 +668,7 @@ static void ADPCM () { // Work in progress! :)
 	if(!(Flags&0x1))
 	{
 		if(Flags&0x2) {
-			memcpy(out,&rsp.RDRAM[loopval&0x7fffff],32);
+			memcpy(out,&rsp.RDRAM[loopval&MEMMASK],32);
 		} else {
 			memcpy(out,&rsp.RDRAM[Address],32);
 		}

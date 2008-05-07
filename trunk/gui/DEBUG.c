@@ -24,10 +24,11 @@ static void check_heap_space(void){
 		else space -= 4096;
 	if(ptr) free(ptr);
 	sprintf(txtbuffer,"At least %dKB or %dMB space available\n", space/1024, space/1024/1024);
-	DEBUG_print(txtbuffer,10);
+	DEBUG_print(txtbuffer,DBG_MEMFREEINFO);
 
 }
 #endif
+
 void DEBUG_update() {
 	#ifdef SHOW_DEBUG
 	int i;
@@ -41,7 +42,6 @@ void DEBUG_update() {
 	check_heap_space();
 	#endif
 }
-
 
 int flushed = 0;
 int writtenbefore = 0;
@@ -93,3 +93,33 @@ void DEBUG_print(char* string,int pos){
 	#endif
 	
 }
+
+
+#define MAX_STATS 20
+unsigned int stats_buffer[MAX_STATS];
+unsigned int avge_counter[MAX_STATS];
+void DEBUG_stats(int stats_id, char *info, unsigned int stats_type, unsigned int adjustment_value) 
+{
+	#ifdef SHOW_DEBUG
+	switch(stats_type)
+	{
+		case STAT_TYPE_ACCUM:	//accumulate
+			stats_buffer[stats_id] += adjustment_value;
+			break;
+		case STAT_TYPE_AVGE:	//average
+			avge_counter[stats_id] += 1;
+			stats_buffer[stats_id] += adjustment_value;
+			stats_buffer[stats_id] = (stats_buffer[stats_id]/avge_counter[stats_id]); // doesn't look right
+			break;
+		case STAT_TYPE_CLEAR:
+			if(stats_type & STAT_TYPE_AVGE)
+				avge_counter[stats_id] = 0;
+			stats_buffer[stats_id] = 0;
+			break;
+		
+	}
+	sprintf(txtbuffer,"%s value = [%i]\n", info, stats_buffer[stats_id]);
+	DEBUG_print(txtbuffer,DBG_STATSBASE+stats_id);
+	#endif
+}
+

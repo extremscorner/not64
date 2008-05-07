@@ -32,7 +32,13 @@
 #include "../r4300/exception.h"
 #include "../r4300/macros.h"
 #include "TLB-Cache.h"
-
+#ifdef USE_EXPANSION
+	#define MEMMASK 0x7FFFFF
+	#define TOPOFMEM 0x80800000
+#else
+	#define MEMMASK 0x3FFFFF
+	#define TOPOFMEM 0x80400000
+#endif
 #define USE_TLB_CACHE
 
 #ifndef USE_TLB_CACHE
@@ -45,11 +51,11 @@ unsigned long virtual_to_physical_address(unsigned long addresse, int w)
    if (addresse >= 0x7f000000 && addresse < 0x80000000) // golden eye hack
      {
 	if (ROM_HEADER->CRC1 == sl(0xDCBC50D1)) // US
-	  return 0xb0034b30 + (addresse & 0xFFFFFF);
+	  return 0xb0034b30 + (addresse & MEMMASK);
 	if (ROM_HEADER->CRC1 == sl(0x0414CA61)) // E
-	  return 0xb00329f0 + (addresse & 0xFFFFFF);
+	  return 0xb00329f0 + (addresse & MEMMASK);
 	if (ROM_HEADER->CRC1 == sl(0xA24F4CF1)) // J
-	  return 0xb0034b70 + (addresse & 0xFFFFFF);
+	  return 0xb0034b70 + (addresse & MEMMASK);
      }
    if (w == 1)
      {
@@ -161,9 +167,9 @@ int probe_nop(unsigned long address)
 	if (!SP_DMEM[(a&0xFFF)/4]) return 1;
 	else return 0;
      }
-   else if (a >= 0x80000000 && a < 0x80800000)
+   else if (a >= 0x80000000 && a < TOPOFMEM)
      {
-	if (!rdram[(a&0x7FFFFF)/4]) return 1;
+	if (!rdram[(a&MEMMASK)/4]) return 1;
 	else return 0;
      }
    else return 0;
