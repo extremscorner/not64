@@ -1,5 +1,11 @@
 /* ROM-Cache-MEM2.c - ROM Cache utilizing MEM2 on Wii
    by Mike Slegeir for Mupen64-GC
+ ******************************************************
+   Optimization: Store whatever blocks that don't fit
+                   in MEM2 cache on the filesystem
+                   under /tmp; keep an extra block for
+                   asynchronous write-back
+                 Create a L1 cache in MEM1
  */
 
 #include <stdio.h>
@@ -14,6 +20,7 @@
 #else
 #define PRINT printf
 #endif
+#include "../gui/DEBUG.h"
 
 #define BLOCK_SIZE (1024*1024)
 #define LOAD_SIZE  (4*1024)
@@ -28,10 +35,17 @@ static void byte_swap(char* buffer, u32 length);
 void* memcpy(void* dst, void* src, int len);
 void showLoadProgress(float);
 
+#ifdef USE_ROM_CACHE_L1
+static u8 L1[256*1024];
+static unsigned int L1tag;
+#endif
 
 void ROMCache_init(u32 size){
 	ROMSize = size;
 	ROMTooBig = size > ROMCACHE_SIZE;
+#ifdef USE_ROM_CACHE_L1
+	L1tag = -1;
+#endif
 	
 	//romFile_init( romFile_topLevel );
 }
@@ -58,13 +72,23 @@ void ROMCache_load_block(char* dst, u32 rom_offset){
 }
 
 void ROMCache_read(u32* dest, u32 offset, u32 length){
+	// Display stats for reads
+	static int last_block = -1;
+	if( offset>>18 == last_block )
+		DEBUG_stats(3, "ROMCache same block", STAT_TYPE_ACCUM, 1);
+	else
+		DEBUG_stats(4, "ROMCache different block", STAT_TYPE_ACCUM, 1);
+	last_block = offset >> 18;
+	DEBUG_stats(5, "ROMCache avg length", STAT_TYPE_AVGE, length);
+	
 	if(ROMTooBig){
 		u32 block = offset>>20;
 		u32 length2 = length;
 		u32 offset2 = offset&0xFFFFF;
+		
 		while(length2){
 			if(!ROMBlocks[block]){
-				// The block we're trying to read isnt in the cache
+				// The block we're trying to read isn't in the cache
 				// Find the Least Recently Used Block
 				int i, max_i = 0;
 				for(i=0; i<64; ++i)
@@ -88,11 +112,27 @@ void ROMCache_read(u32* dest, u32 offset, u32 length){
 			// Actually read for this block
 			memcpy(dest, ROMBlocks[block] + offset2, length);
 			
-			// In case the read spans multiple blocks
+			// In case the read spans multiple blocks, increment state
 			++block; length2 -= length; offset2 = 0; dest += length/4; offset += length;
 		}
-	} else
-		memcpy(dest, ROMCACHE_LO + offset, length);
+	} else {
+#ifdef USE_ROM_CACHE_L1
+		if(offset >> 18 == (offset+length-1) >> 18){
+			// Only worry about using L1 cache if the read falls
+			//   within only one block for the L1 for now
+			if(offset >> 18 != L1tag){
+				DEBUG_stats(6, "ROMCache L1 misses", STAT_TYPE_ACCUM, 1);
+				memcpy(L1, ROMCACHE_LO + (offset&(~0x3FFFF)), 256*1024);
+				L1tag = offset >> 18;
+			}
+			DEBUG_stats(7, "ROMCache L1 transfers", STAT_TYPE_ACCUM, 1);
+			memcpy(dest, L1 + (offset&0x3FFFF), length);
+		} else
+#endif
+		{
+			memcpy(dest, ROMCACHE_LO + offset, length);
+		}
+	}
 }
 
 void ROMCache_load(fileBrowser_file* f, int byteSwap){
