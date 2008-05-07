@@ -36,7 +36,7 @@
 
 #define STATS_RECOMPCACHE 	0
 #define STATS_CACHEMISSES	1
-#define STATS_TWO			2
+#define STATS_FCOUNTER		2	//FRAME counter
 #define STATS_THREE			3
 
 extern char txtbuffer[1024];

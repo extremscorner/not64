@@ -23,7 +23,7 @@ static void check_heap_space(void){
 		if(ptr = malloc(space)) break;
 		else space -= 4096;
 	if(ptr) free(ptr);
-	sprintf(txtbuffer,"At least %dKB or %dMB space available\n", space/1024, space/1024/1024);
+	sprintf(txtbuffer,"At least %dKB or %dMB space available", space/1024, space/1024/1024);
 	DEBUG_print(txtbuffer,DBG_MEMFREEINFO);
 
 }
@@ -118,7 +118,7 @@ void DEBUG_stats(int stats_id, char *info, unsigned int stats_type, unsigned int
 			break;
 		
 	}
-	sprintf(txtbuffer,"%s value = [%i]\n", info, stats_buffer[stats_id]);
+	sprintf(txtbuffer,"%s [ %i ]", info, stats_buffer[stats_id]);
 	DEBUG_print(txtbuffer,DBG_STATSBASE+stats_id);
 	#endif
 }
