@@ -290,6 +290,7 @@ static void Initialise (void){
   static int whichfb = 0;        /*** Frame buffer toggle ***/
   VIDEO_Init ();
   PAD_Init ();
+  PAD_Reset(0xf0000000);
   switch (VIDEO_GetCurrentTvMode ())
     {
     case VI_NTSC:
