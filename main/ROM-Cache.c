@@ -14,6 +14,7 @@
 #else
 #define PRINT printf
 #endif
+#include "../gui/DEBUG.h"
 
 static char ROM_too_big;
 static char* ROM, * ROM_blocks[64];
@@ -21,6 +22,11 @@ static u32 ROM_size;
 //static char ROM_filename[SDCARD_MAX_PATH_LEN];
 static fileBrowser_file* ROM_file;
 static int ROM_byte_swap;
+
+#ifdef USE_ROM_CACHE_L1
+static u8  L1[256*1024];
+static u32 L1tag;
+#endif
 
 static ARQRequest ARQ_request;
 //extern unsigned int rom_offsetDVD;	//dvd
@@ -33,6 +39,10 @@ void ROMCache_init(u32 romSize){
 	ARQ_Init();
 	ROM_too_big = romSize > (ARAM_block_available_contiguous() * BLOCK_SIZE);
 	ROM_size = romSize;
+#ifdef USE_ROM_CACHE_L1
+	L1tag = -1;
+#endif
+	
 	//romFile_init( romFile_topLevel );
 }
 
@@ -48,61 +58,6 @@ void ROMCache_deinit(){
 }
 
 static void inline ROMCache_load_block(char* block, int rom_offset){
-#if 0
-	if(isFromDVD) {
-		unsigned int tempDVDOffset = rom_offsetDVD+rom_offset;
-		//printf("Loading ROM block %08x from DVD with offset %08x\n", block, rom_offset);
-		int bytes_read, offset=0, bytes_to_read=ARQ_GetChunkSize();
-		char* buffer = memalign(32, bytes_to_read);
-		int loads_til_update = 0;
-		do {
-			bytes_read = read_safe(buffer, tempDVDOffset, bytes_to_read);
-			byte_swap(buffer, bytes_read);
-			DCFlushRange(buffer, bytes_read);
-			ARQ_PostRequest(&ARQ_request, 0x10AD, AR_MRAMTOARAM, ARQ_PRIO_HI,
-			                block + offset, buffer, bytes_read);
-			offset += bytes_read;
-			tempDVDOffset+=bytes_read;
-			
-			if(!loads_til_update){
-				showLoadProgress( (float)offset/BLOCK_SIZE );
-				loads_til_update = 16;
-			}
-			--loads_til_update;
-			
-		} while(offset != BLOCK_SIZE && bytes_read == bytes_to_read);
-		free(buffer);
-		showLoadProgress(1.0f);
-		//printf("Success\n", block);
-	}
-	else {
-		//printf("Loading ROM block %08x from SD-Card with offset %08x\n", block, rom_offset);
-		sd_file* rom = SDCARD_OpenFile(ROM_filename, "rb");
-		SDCARD_SeekFile(rom, rom_offset, SDCARD_SEEK_SET);
-		int bytes_read, offset=0, bytes_to_read=ARQ_GetChunkSize();
-		char* buffer = memalign(32, bytes_to_read);
-		int loads_til_update = 0;
-		do {
-			bytes_read = SDCARD_ReadFile(rom, buffer, bytes_to_read);
-			byte_swap(buffer, bytes_read);
-			DCFlushRange(buffer, bytes_read);
-			ARQ_PostRequest(&ARQ_request, 0x10AD, AR_MRAMTOARAM, ARQ_PRIO_HI,
-			                block + offset, buffer, bytes_read);
-			offset += bytes_read;
-			
-			if(!loads_til_update){
-				showLoadProgress( (float)offset/BLOCK_SIZE );
-				loads_til_update = 16;
-			}
-			--loads_til_update;
-			
-		} while(offset != BLOCK_SIZE && bytes_read == bytes_to_read);
-		free(buffer);
-		SDCARD_CloseFile(rom);
-		showLoadProgress(1.0f);
-		//printf("Success\n", block);
-	}
-#endif
 	romFile_seekFile(ROM_file, rom_offset, FILE_BROWSER_SEEK_SET);
 	int bytes_read, offset=0, bytes_to_read=ARQ_GetChunkSize();
 	char* buffer = memalign(32, bytes_to_read);
@@ -185,10 +140,27 @@ void ROMCache_read(u32* ram_dest, u32 rom_offset, u32 length){
 			ARAM_block_update_LRU(&ROM_blocks[(rom_offset+length)>>20]);
 		}
 	} else { // The entire ROM is in ARAM contiguously
-		ARQ_PostRequest(&ARQ_request, 0x2EAD, AR_ARAMTOMRAM, ARQ_PRIO_LO,
-		                ROM + adjusted_offset, buffer, buffer_length);
-		DCInvalidateRange(buffer, buffer_length);
-		memcpy(ram_dest, (char*)buffer+buffer_offset, length);
+#ifdef USE_ROM_CACHE_L1
+		if(rom_offset >> 18 == (rom_offset+length-1) >> 18){
+			// Only worry about using L1 cache if the read falls
+			//   within only one block for the L1 for now
+			if(rom_offset >> 18 != L1tag){
+				DEBUG_stats(6, "ROMCache L1 misses", STAT_TYPE_ACCUM, 1);
+				ARQ_PostRequest(&ARQ_request, 0x2EAD, AR_ARAMTOMRAM, ARQ_PRIO_LO,
+				                ROM + (rom_offset&(~0x3FFFF)), L1, 256*1024);
+				DCInvalidateRange(L1, 256*1024);
+				L1tag = offset >> 18;
+			}
+			DEBUG_stats(7, "ROMCache L1 transfers", STAT_TYPE_ACCUM, 1);
+			memcpy(ram_dest, L1 + (offset&0x3FFFF), length);
+		} else
+#endif
+		{
+			ARQ_PostRequest(&ARQ_request, 0x2EAD, AR_ARAMTOMRAM, ARQ_PRIO_LO,
+			                ROM + adjusted_offset, buffer, buffer_length);
+			DCInvalidateRange(buffer, buffer_length);
+			memcpy(ram_dest, (char*)buffer+buffer_offset, length);
+		}
 	}
 	
 	free(buffer);
