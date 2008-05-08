@@ -90,10 +90,10 @@ static int detectByteSwapping(void){
 	romFile_readFile(rom_file, magicWord, 4);
 	
 	switch(magicWord[0]){
-	case 0x37:
-		return BYTE_SWAP_HALF;
-	case 0x40:
+	case 0x37:					//37804012 aka byteswapped
 		return BYTE_SWAP_BYTE;
+	case 0x40:					//40123780 aka little endian, aka halfswapped
+		return BYTE_SWAP_HALF;
 	case 0x80:
 		return BYTE_SWAP_NONE;
 	default:
