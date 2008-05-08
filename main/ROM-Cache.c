@@ -364,22 +364,29 @@ static void byte_swap(char* buffer, unsigned int length){
 	if(ROM_byte_swap == BYTE_SWAP_NONE || ROM_byte_swap == BYTE_SWAP_BAD)
 		return;
 	
-	int i, temp;
-	if(ROM_byte_swap == BYTE_SWAP_HALF){
-		for(i=0; i<length/2; i+=2){
-			temp                  = ((short*)buffer)[i];
-			((short*)buffer)[i]   = ((short*)buffer)[i+1];
-			((short*)buffer)[i+1] = temp;
+	int i = 0;
+	u8 aByte = 0;
+	u16 aShort = 0;
+	u16 *buffer_short = buffer;
+	
+	if(ROM_byte_swap == BYTE_SWAP_HALF){	//aka little endian (40123780) vs (80371240)
+		for(i=0; i<length; i+=2) 	//get it from (40123780) to (12408037)
+		{
+			aByte 		= buffer[i];
+			buffer[i] 	= buffer[i+1];
+			buffer[i+1] = aByte;
 		}
-	} else if(ROM_byte_swap == BYTE_SWAP_BYTE){
-		for(i=0; i<length/4; i+=4){
-			temp        = buffer[i];
-			buffer[i]   = buffer[i+3];
-			buffer[i+3] = temp;
-			
-			temp        = buffer[i+1];
-			buffer[i+1] = buffer[i+2];
-			buffer[i+2] = temp;
+		for(i=0; i<length/2; i+=2)	//get it from (12408037) to (80371240)
+		{ 
+			aShort        		= buffer_short[i];
+			buffer_short[i]   	= buffer_short[i+1];
+			buffer_short[i+1] 	= aShort;
+		}
+	} else if(ROM_byte_swap == BYTE_SWAP_BYTE){	// (37804012) vs (80371240)
+		for(i=0; i<length; i+=2){
+			aByte 		= buffer[i];
+			buffer[i] 	= buffer[i+1];
+			buffer[i+1] = aByte;
 		}
 	}
 }
