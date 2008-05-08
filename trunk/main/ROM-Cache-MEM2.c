@@ -36,8 +36,8 @@ void* memcpy(void* dst, void* src, int len);
 void showLoadProgress(float);
 
 #ifdef USE_ROM_CACHE_L1
-static u8 L1[256*1024];
-static unsigned int L1tag;
+static u8  L1[256*1024];
+static u32 L1tag;
 #endif
 
 void ROMCache_init(u32 size){
