@@ -104,13 +104,14 @@ void RecompCache_Free(unsigned int blockNum){
 	// Remove from the linked list
 	CacheMetaNode* n;
 	for(n = head; n != NULL; n = n->next)
-		if(n->blockNum == n->blockNum){
+		if(n->blockNum == blockNum){
 			nodeRemove(n);
 			break;
 		}
 	if(!n) return;
 	// Free n's memory
 	free(n->memory);
+	cacheSize -= n->size;
 	free(n);
 }
 
