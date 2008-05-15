@@ -8,20 +8,22 @@
 #include "../fileBrowser/fileBrowser.h"
 #include <gctypes.h>
 
-//typedef unsigned int u32;
-
+/* Rom Cache stuff */
 // Note: All length/size/offsets are in bytes
 void ROMCache_init(u32 romSize);
 void ROMCache_deinit();
-
 void ROMCache_read(u32* ram_dest, u32 rom_offset, u32 length);
+void ROMCache_load(fileBrowser_file* file, int byteSwap);
 
+/* Byteswapping stuff */
+extern int ROM_byte_swap;
+void byte_swap(char* buffer, unsigned int length);
 #define BYTE_SWAP_BAD -1
 #define BYTE_SWAP_NONE 0
 #define BYTE_SWAP_HALF 1
 #define BYTE_SWAP_BYTE 2
 
-void ROMCache_load(fileBrowser_file* file, int byteSwap);
+
 
 #endif
 

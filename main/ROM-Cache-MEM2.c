@@ -31,7 +31,6 @@ static char* ROMBlocks[64];
 static int   ROMBlocksLRU[64];
 static fileBrowser_file* ROMFile;
 
-static void byte_swap(char* buffer, u32 length);
 void* memcpy(void* dst, void* src, int len);
 void showLoadProgress(float);
 
@@ -173,34 +172,5 @@ void ROMCache_load(fileBrowser_file* f, int byteSwap){
 	GUI_setLoadProg( -1.0f );
 }
 
-static void byte_swap(char* buffer, unsigned int length){
-	if(ROM_byte_swap == BYTE_SWAP_NONE || ROM_byte_swap == BYTE_SWAP_BAD)
-		return;
-	
-	int i = 0;
-	u8 aByte = 0;
-	u16 aShort = 0;
-	u16 *buffer_short = buffer;
-	
-	if(ROM_byte_swap == BYTE_SWAP_HALF){	//aka little endian (40123780) vs (80371240)
-		for(i=0; i<length; i+=2) 	//get it from (40123780) to (12408037)
-		{
-			aByte 		= buffer[i];
-			buffer[i] 	= buffer[i+1];
-			buffer[i+1] = aByte;
-		}
-		for(i=0; i<length/2; i+=2)	//get it from (12408037) to (80371240)
-		{ 
-			aShort        		= buffer_short[i];
-			buffer_short[i]   	= buffer_short[i+1];
-			buffer_short[i+1] 	= aShort;
-		}
-	} else if(ROM_byte_swap == BYTE_SWAP_BYTE){	// (37804012) vs (80371240)
-		for(i=0; i<length; i+=2){
-			aByte 		= buffer[i];
-			buffer[i] 	= buffer[i+1];
-			buffer[i+1] = aByte;
-		}
-	}
-}
+
 
