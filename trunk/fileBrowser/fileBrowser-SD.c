@@ -2,6 +2,11 @@
    by Mike Slegeir for Mupen64-GC
  */
 
+#include <stdio.h>
+#include <string.h>
+#include <gccore.h>
+#include <malloc.h>
+#include <ogc/card.h>
 #include <sdcard.h>
 #include "fileBrowser.h"
 
@@ -40,7 +45,7 @@ fileBrowser_file saveDir_SD_SlotB =
 int fileBrowser_SD_readDir(fileBrowser_file* file, fileBrowser_file** dir){
 	DIR* sddir = NULL;
 	// Call the corresponding SDCARD function
-	int num_entries = SDCARD_ReadDir(&file->name, &sddir);
+	int num_entries = SDCARD_ReadDir((const char*)file->name, &sddir);
 	
 	// If it was not successful, just return the error
 	if(num_entries <= 0) return num_entries;
@@ -68,7 +73,7 @@ int fileBrowser_SD_seekFile(fileBrowser_file* file, unsigned int where, unsigned
 
 int fileBrowser_SD_readFile(fileBrowser_file* file, void* buffer, unsigned int length){
 	sd_file* f;
-	f = SDCARD_OpenFile( &file->name, "rb");
+	f = SDCARD_OpenFile( (const char*)file->name, "rb");
 	if(!f) return FILE_BROWSER_ERROR;
 	
 	SDCARD_SeekFile(f, file->offset, SDCARD_SEEK_SET);
@@ -81,7 +86,7 @@ int fileBrowser_SD_readFile(fileBrowser_file* file, void* buffer, unsigned int l
 
 int fileBrowser_SD_writeFile(fileBrowser_file* file, void* buffer, unsigned int length){
 	sd_file* f;
-	f = SDCARD_OpenFile( &file->name, "wb");
+	f = SDCARD_OpenFile( (const char*)file->name, "wb");
 	if(!f) return FILE_BROWSER_ERROR;
 	
 	SDCARD_SeekFile(f, file->offset, SDCARD_SEEK_SET);
@@ -92,9 +97,9 @@ int fileBrowser_SD_writeFile(fileBrowser_file* file, void* buffer, unsigned int 
 	return bytes_read;
 }
 
-int fileBrowser_SD_init(fileBrowser_file* f){ }
+int fileBrowser_SD_init(fileBrowser_file* f){ return 0; }
 
-int fileBrowser_SD_deinit(fileBrowser_file* f){ }
+int fileBrowser_SD_deinit(fileBrowser_file* f){ return 0; }
 
 
 /* Special for ROM loading only */
@@ -109,7 +114,7 @@ int fileBrowser_SDROM_deinit(fileBrowser_file* f){
 	
 int fileBrowser_SDROM_readFile(fileBrowser_file* file, void* buffer, unsigned int length){
 	if(!fd)
-	fd = SDCARD_OpenFile( &file->name, "rb");
+	fd = SDCARD_OpenFile( (const char*)file->name, "rb");
 	SDCARD_SeekFile(fd, file->offset, SDCARD_SEEK_SET);
 	int bytes_read = SDCARD_ReadFile(fd, buffer, length);
 	if(bytes_read > 0) file->offset += bytes_read;

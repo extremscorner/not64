@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <gccore.h>
+#include <malloc.h>
 #include <ogc/card.h>
 #include "fileBrowser.h"
 
@@ -60,7 +61,7 @@ int fileBrowser_CARD_readFile(fileBrowser_file* file, void* buffer, unsigned int
 	unsigned int SectorSize = 0;
     CARD_GetSectorSize (slot, &SectorSize);
     
-	if(CARD_Open(slot, &file->name, &CardFile) != CARD_ERROR_NOFILE){
+	if(CARD_Open(slot, (const char*)file->name, &CardFile) != CARD_ERROR_NOFILE){
 		int size = length;
 	    if((size % SectorSize) != 0)
 	      	size = ((length/SectorSize)+1) * SectorSize;
@@ -93,9 +94,9 @@ int fileBrowser_CARD_writeFile(fileBrowser_file* file, void* buffer, unsigned in
 		memcardLength = (((length/SectorSize)*SectorSize) + SectorSize);
 	else
 		memcardLength = length;
-	status = CARD_Open(slot, &file->name, &CardFile);
+	status = CARD_Open(slot, (const char*)file->name, &CardFile);
 	if(status == CARD_ERROR_NOFILE){
-		status = CARD_Create(slot, &file->name, memcardLength, &CardFile);
+		status = CARD_Create(slot, (const char*)file->name, memcardLength, &CardFile);
 	}
 	
 	if(status == CARD_ERROR_READY) {
