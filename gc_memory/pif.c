@@ -73,11 +73,11 @@ int loadEeprom(fileBrowser_file* savepath){
 	for(i = strlen(ROM_SETTINGS.goodname); i>0; i--)
 	{
 		if(ROM_SETTINGS.goodname[i-1] != ' ') {
-			strncat(&saveFile.name, ROM_SETTINGS.goodname,i);
+			strncat((char*)saveFile.name, ROM_SETTINGS.goodname,i);
 			break;
 		}
 	}
-	strcat(&saveFile.name, ".eep");
+	strcat((char*)saveFile.name, ".eep");
 
 	if( !(saveFile_readFile(&saveFile, &i, 4) <= 0) ){
 		PRINT("Loading EEPROM, please be patient...\n");
@@ -107,11 +107,11 @@ int saveEeprom(fileBrowser_file* savepath){
 	for(i = strlen(ROM_SETTINGS.goodname); i>0; i--)
 	{
 		if(ROM_SETTINGS.goodname[i-1] != ' ') {
-			strncat(&saveFile.name, ROM_SETTINGS.goodname,i);
+			strncat((char*)saveFile.name, ROM_SETTINGS.goodname,i);
 			break;
 		}
 	}
-	strcat(&saveFile.name, ".eep");
+	strcat((char*)saveFile.name, ".eep");
 	
 	saveFile_writeFile(&saveFile, eeprom, 0x800);
 	
@@ -233,11 +233,11 @@ int loadMempak(fileBrowser_file* savepath){
 	for(i = strlen(ROM_SETTINGS.goodname); i>0; i--)
 	{
 		if(ROM_SETTINGS.goodname[i-1] != ' ') {
-			strncat(&saveFile.name, ROM_SETTINGS.goodname,i);
+			strncat((char*)saveFile.name, ROM_SETTINGS.goodname,i);
 			break;
 		}
 	}
-	strcat(&saveFile.name, ".mpk");
+	strcat((char*)saveFile.name, ".mpk");
 	
 	if( !(saveFile_readFile(&saveFile, &i, 4) <= 0) ){
 		PRINT("Loading mempak, please be patient...\n");
@@ -265,11 +265,11 @@ int saveMempak(fileBrowser_file* savepath){
 	for(i = strlen(ROM_SETTINGS.goodname); i>0; i--)
 	{
 		if(ROM_SETTINGS.goodname[i-1] != ' ') {
-			strncat(&saveFile.name, ROM_SETTINGS.goodname,i);
+			strncat((char*)saveFile.name, ROM_SETTINGS.goodname,i);
 			break;
 		}
 	}
-	strcat(&saveFile.name, ".mpk");
+	strcat((char*)saveFile.name, ".mpk");
 	
 	saveFile_writeFile(&saveFile, mempack, 0x8000 * 4);
 	
@@ -301,14 +301,14 @@ void internal_ReadController(int Control, BYTE *Command)
 	if (Controls[Control].Present)
 	  {
 	     if (Controls[Control].Plugin == PLUGIN_RAW)
-	       if (controllerCommand) readController(Control, Command);
+	       if (controllerCommand != NULL) readController(Control, Command);
 	  }
 	break;
       case 3: // write controller pack
 	if (Controls[Control].Present)
 	  {
 	     if (Controls[Control].Plugin == PLUGIN_RAW)
-	       if (controllerCommand) readController(Control, Command);
+	       if (controllerCommand != NULL) readController(Control, Command);
 	  }
 	break;
      }
@@ -375,7 +375,7 @@ void internal_ControllerCommand(int Control, BYTE *Command)
 		    }
 		  break;
 		case PLUGIN_RAW:
-		  if (controllerCommand) controllerCommand(Control, Command);
+		  if (controllerCommand != NULL) controllerCommand(Control, Command);
 		  break;
 		default:
 		  memset(&Command[5], 0, 0x20);
@@ -407,7 +407,7 @@ void internal_ControllerCommand(int Control, BYTE *Command)
 		    }
 		  break;
 		case PLUGIN_RAW:
-		  if (controllerCommand) controllerCommand(Control, Command);
+		  if (controllerCommand != NULL) controllerCommand(Control, Command);
 		  break;
 		default:
 		  Command[0x25] = mempack_crc(&Command[5]);

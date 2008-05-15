@@ -8,6 +8,8 @@
 
 #include "../main/winlnxdefs.h"
 #include <stdio.h>
+#include <gccore.h>
+#include <string.h>
 #include <ogc/audio.h>
 #include <ogc/cache.h>
 #ifdef THREADED_AUDIO
@@ -96,7 +98,7 @@ static void inline play_buffer(void){
 #endif
 	
 	DCFlushRange (buffer[thread_buffer], BUFFER_SIZE);
-	AUDIO_InitDMA(buffer[thread_buffer], BUFFER_SIZE);
+	AUDIO_InitDMA((unsigned int)&buffer[thread_buffer], BUFFER_SIZE);
 	AUDIO_StartDMA();
 #ifdef THREADED_AUDIO
 	NEXT(thread_buffer);
@@ -223,7 +225,7 @@ EXPORT void CALL RomOpen()
 	LWP_SemInit(&buffer_empty, NUM_BUFFERS, NUM_BUFFERS);
 	LWP_SemInit(&audio_free, 0, 1);
 	thread_running = 1;
-	LWP_CreateThread(&audio_thread, play_buffer, NULL, audio_stack, AUDIO_STACK_SIZE, AUDIO_PRIORITY);
+	LWP_CreateThread(&audio_thread, (void*)play_buffer, NULL, audio_stack, AUDIO_STACK_SIZE, AUDIO_PRIORITY);
 	AUDIO_RegisterDMACallback(done_playing);
 	thread_buffer = which_buffer = 0;
 	audio_paused = 1;
