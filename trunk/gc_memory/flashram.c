@@ -72,11 +72,11 @@ int loadFlashram(fileBrowser_file* savepath){
 	for(i = strlen(ROM_SETTINGS.goodname); i>0; i--)
 	{
 		if(ROM_SETTINGS.goodname[i-1] != ' ') {
-			strncat(&saveFile.name, ROM_SETTINGS.goodname,i);
+			strncat((char*)saveFile.name, ROM_SETTINGS.goodname,i);
 			break;
 		}
 	}
-	strcat(&saveFile.name, ".fla");
+	strcat((char*)saveFile.name, ".fla");
 	
 	if( !(saveFile_readFile(&saveFile, &i, 4) <= 0) ){
 		PRINT("Loading flashram, please be patient...\n");
@@ -104,11 +104,11 @@ int saveFlashram(fileBrowser_file* savepath){
 	for(i = strlen(ROM_SETTINGS.goodname); i>0; i--)
 	{
 		if(ROM_SETTINGS.goodname[i-1] != ' ') {
-			strncat(&saveFile.name, ROM_SETTINGS.goodname,i);
+			strncat((char*)saveFile.name, ROM_SETTINGS.goodname,i);
 			break;
 		}
 	}
-	strcat(&saveFile.name, ".fla");
+	strcat((char*)saveFile.name, ".fla");
 	
 	saveFile_writeFile(&saveFile, flashram, 0x20000);
 	

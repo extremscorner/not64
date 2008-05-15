@@ -37,6 +37,7 @@
 #include "../r4300/r4300.h"
 #include "../r4300/interupt.h"
 #include "../r4300/macros.h"
+#include "../r4300/Invalid_Code.h"
 #include <malloc.h>
 #include "pif.h"
 #include "flashram.h"
@@ -69,11 +70,11 @@ int loadSram(fileBrowser_file* savepath){
 	for(i = strlen(ROM_SETTINGS.goodname); i>0; i--)
 	{
 		if(ROM_SETTINGS.goodname[i-1] !=  ' ') {
-			strncat(&saveFile.name, ROM_SETTINGS.goodname,i);
+			strncat((char*)saveFile.name,ROM_SETTINGS.goodname,i);
 			break;
 		}
 	}
-	strcat(&saveFile.name, ".sra");
+	strcat((char*)saveFile.name, ".sra");
 	
 	if( !(saveFile_readFile(&saveFile, &i, 4) <= 0) ){
 		PRINT("Loading SRAM, please be patient...\n");
@@ -101,11 +102,11 @@ int saveSram(fileBrowser_file* savepath){
 	for(i = strlen(ROM_SETTINGS.goodname); i>0; i--)
 	{
 		if(ROM_SETTINGS.goodname[i-1] != ' ') {
-			strncat(&saveFile.name, ROM_SETTINGS.goodname,i);
+			strncat((char*)saveFile.name, ROM_SETTINGS.goodname,i);
 			break;
 		}
 	}
-	strcat(&saveFile.name, ".sra");
+	strcat((char*)saveFile.name, ".sra");
 	
 	saveFile_writeFile(&saveFile, sram, 0x8000);
 	
@@ -204,7 +205,7 @@ void dma_pi_write()
    if(!interpcore)
      {
      	// FIXME: This must be adjusted for GC
-     	ROMCache_read((char*)rdram + ((unsigned int)(pi_register.pi_dram_addr_reg)^S8), ((pi_register.pi_cart_addr_reg-0x10000000)&0x3FFFFFF)^S8, longueur);
+     	ROMCache_read((unsigned int*)((char*)rdram + ((unsigned int)(pi_register.pi_dram_addr_reg)^S8)), ((pi_register.pi_cart_addr_reg-0x10000000)&0x3FFFFFF)^S8, longueur);
 	for (i=0; i<longueur; i++)
 	  {
 	     unsigned long rdram_address1 = pi_register.pi_dram_addr_reg+i+0x80000000;
@@ -230,7 +231,7 @@ void dma_pi_write()
      	       ((pi_register.pi_cart_addr_reg-0x10000000)&0x3FFFFFF)^S8,
      	       ((unsigned int)(pi_register.pi_dram_addr_reg)^S8),
      	       longueur);*/
-	ROMCache_read((char*)rdram + ((unsigned int)(pi_register.pi_dram_addr_reg)^S8),
+	ROMCache_read((unsigned int*)((char*)rdram + ((unsigned int)(pi_register.pi_dram_addr_reg)^S8)),
 	              (((pi_register.pi_cart_addr_reg-0x10000000)&0x3FFFFFF))^S8, longueur);
 	/*for (i=0; i<longueur; i++)
 	  {
