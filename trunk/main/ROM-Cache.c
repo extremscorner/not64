@@ -19,9 +19,8 @@
 static char ROM_too_big;
 static char* ROM, * ROM_blocks[64];
 static u32 ROM_size;
-//static char ROM_filename[SDCARD_MAX_PATH_LEN];
 static fileBrowser_file* ROM_file;
-static int ROM_byte_swap;
+
 
 #ifdef USE_ROM_CACHE_L1
 static u8  L1[256*1024];
@@ -29,9 +28,6 @@ static u32 L1tag;
 #endif
 
 static ARQRequest ARQ_request;
-//extern unsigned int rom_offsetDVD;	//dvd
-//extern int isFromDVD;			//dvd
-static void byte_swap(char* buffer, unsigned int length);
 void showLoadProgress(float progress);
 
 void ROMCache_init(u32 romSize){
@@ -243,151 +239,6 @@ void ROMCache_load(fileBrowser_file* file, int byteSwap){
 	free(buffer);
 }
 
-#if 0
-// TODO: Support byte-swapped ROMs
-void ROMCache_load_SDCard(char* filename, int byteSwap){
-	char txt[64];
-	
-	if(byteSwap == BYTE_SWAP_BAD) return;
-	ROM_byte_swap = byteSwap;
-	if(byteSwap == BYTE_SWAP_BYTE) PRINT("Byte swapped\n");
-	else if(byteSwap == BYTE_SWAP_HALF) PRINT("Halfword swapped\n");
-	
-	sprintf(txt, "Loading ROM into ARAM %s\n", ROM_too_big ? "(ROM_too_big)" : "");
-	PRINT(txt);
-	if(ROM_too_big) sprintf(txt, "%d blocks available\n", ARAM_block_available());
-	else            sprintf(txt, "%d contiguous blocks available\n", ARAM_block_available_contiguous());
-	PRINT(txt);
-	
-	strncpy(ROM_filename, filename, SDCARD_MAX_PATH_LEN);
-	sd_file* rom = SDCARD_OpenFile(filename, "rb");
-	SDCARD_SeekFile(rom, 0, SDCARD_SEEK_SET);
 
-	int bytes_to_read = ARQ_GetChunkSize();
-	int* buffer = memalign(32, bytes_to_read);
-	if(ROM_too_big){ // We can't load the entire ROM
-		int i, block, available = ARAM_block_available();
-		for(i=0; i<available; ++i){
-			block = ARAM_block_alloc(&ROM_blocks[i], 'R');
-			sprintf(txt, "ROM_blocks[%d] = 0x%08x\n", i, block);
-			PRINT(txt);
-			int bytes_read, offset=0;
-			do {
-				bytes_read = SDCARD_ReadFile(rom, buffer, bytes_to_read);
-				byte_swap(buffer, bytes_read);
-				DCFlushRange(buffer, bytes_read);
-				ARQ_PostRequest(&ARQ_request, 0x10AD, AR_MRAMTOARAM, ARQ_PRIO_HI,
-				                block + offset, buffer, bytes_read);
-				offset += bytes_read;
-			} while(offset != BLOCK_SIZE);
-		}
-	} else {
-		ARAM_block_alloc_contiguous(&ROM, 'R', ROM_size / BLOCK_SIZE);
-		sprintf(txt, "ROM = 0x%08x using %d blocks\n", ROM, ROM_size/BLOCK_SIZE);
-		PRINT(txt);
-		int bytes_read, offset=0;
-		do {
-			bytes_read = SDCARD_ReadFile(rom, buffer, bytes_to_read);
-			byte_swap(buffer, bytes_read);
-			DCFlushRange(buffer, bytes_read);
-			ARQ_PostRequest(&ARQ_request, 0x10AD, AR_MRAMTOARAM, ARQ_PRIO_HI,
-			                ROM + offset, buffer, bytes_read);
-			offset += bytes_read;
-		} while(bytes_read == bytes_to_read && offset != ROM_size);
-	}
-	free(buffer);
-	SDCARD_CloseFile(rom);
-}
 
-// TODO: Support byte-swapped ROMs
-void ROMCache_load_DVD(char* filename, int byteSwap){
-	char txt[64];
-	
-	if(byteSwap == BYTE_SWAP_BAD) return;
-	ROM_byte_swap = byteSwap;
-	if(byteSwap == BYTE_SWAP_BYTE) PRINT("Byte swapped\n");
-	else if(byteSwap == BYTE_SWAP_HALF) PRINT("Halfword swapped\n");
-	
-	sprintf(txt, "Loading ROM into ARAM %s\n", ROM_too_big ? "(ROM_too_big)" : "");
-	PRINT(txt);
-	if(ROM_too_big) sprintf(txt, "%d blocks available\n", ARAM_block_available());
-	else            sprintf(txt, "%d contiguous blocks available\n", ARAM_block_available_contiguous());
-	PRINT(txt);
-	
-	strncpy(ROM_filename, filename, SDCARD_MAX_PATH_LEN);
-
-	int bytes_to_read = ARQ_GetChunkSize();
-	int* buffer = memalign(32, bytes_to_read);
-	unsigned int tempDVDOffset = rom_offsetDVD;
-	if(ROM_too_big){ // We can't load the entire ROM
-		int i, block, available = ARAM_block_available();
-		for(i=0; i<available; ++i){
-			block = ARAM_block_alloc(&ROM_blocks[i], 'R');
-			sprintf(txt, "ROM_blocks[%d] = 0x%08x\n", i, block);
-			PRINT(txt);
-			int bytes_read, offset=0;
-			do {
-				bytes_read = read_safe(buffer,tempDVDOffset, bytes_to_read);
-				byte_swap(buffer, bytes_read);
-				DCFlushRange(buffer, bytes_read);
-				ARQ_PostRequest(&ARQ_request, 0x10AD, AR_MRAMTOARAM, ARQ_PRIO_HI,
-				                block + offset, buffer, bytes_read);
-				offset += bytes_read;
-				tempDVDOffset +=bytes_read;
-			} while(offset != BLOCK_SIZE);
-		}
-	} else {
-		ARAM_block_alloc_contiguous(&ROM, 'R', ROM_size / BLOCK_SIZE);
-		sprintf(txt, "ROM = 0x%08x using %d blocks\n", ROM, ROM_size/BLOCK_SIZE);
-		PRINT(txt);
-		int bytes_read, offset=0;
-		do {
-			bytes_read = read_safe(buffer, tempDVDOffset, bytes_to_read);
-			byte_swap(buffer, bytes_read);
-			DCFlushRange(buffer, bytes_read);
-			ARQ_PostRequest(&ARQ_request, 0x10AD, AR_MRAMTOARAM, ARQ_PRIO_HI,
-			                ROM + offset, buffer, bytes_read);
-			offset += bytes_read;
-			tempDVDOffset +=bytes_read;
-		}
-		 while(bytes_read == bytes_to_read && offset != ROM_size);
-		 PRINT("Stopping motor, as you wont need it :)\n");
-		dvd_motor_off();
-	}
-	free(buffer);
-	//SDCARD_CloseFile(rom);
-
-}
-#endif
-
-static void byte_swap(char* buffer, unsigned int length){
-	if(ROM_byte_swap == BYTE_SWAP_NONE || ROM_byte_swap == BYTE_SWAP_BAD)
-		return;
-	
-	int i = 0;
-	u8 aByte = 0;
-	u16 aShort = 0;
-	u16 *buffer_short = buffer;
-	
-	if(ROM_byte_swap == BYTE_SWAP_HALF){	//aka little endian (40123780) vs (80371240)
-		for(i=0; i<length; i+=2) 	//get it from (40123780) to (12408037)
-		{
-			aByte 		= buffer[i];
-			buffer[i] 	= buffer[i+1];
-			buffer[i+1] = aByte;
-		}
-		for(i=0; i<length/2; i+=2)	//get it from (12408037) to (80371240)
-		{ 
-			aShort        		= buffer_short[i];
-			buffer_short[i]   	= buffer_short[i+1];
-			buffer_short[i+1] 	= aShort;
-		}
-	} else if(ROM_byte_swap == BYTE_SWAP_BYTE){	// (37804012) vs (80371240)
-		for(i=0; i<length; i+=2){
-			aByte 		= buffer[i];
-			buffer[i] 	= buffer[i+1];
-			buffer[i+1] = aByte;
-		}
-	}
-}
 

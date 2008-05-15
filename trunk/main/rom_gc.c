@@ -1,6 +1,7 @@
 /**
- * Mupen64 - rom.c
- * Copyright (C) 2002 Hacktarux
+ * Mupen64 - rom_gc.c
+ * Copyright (C) 2002 Hacktarux, 
+ * Wii/GC Additional code by tehpola, emu_kidid
  *
  * Mupen64 homepage: http://mupen64.emulation64.com
  * email address: hacktarux@yahoo.fr
@@ -59,27 +60,10 @@ static fileBrowser_file* rom_file;
  
 int rom_length;
 unsigned char* rom;
+int ROM_byte_swap;
 rom_header* ROM_HEADER = NULL;
 rom_settings ROM_SETTINGS;
-/*
-//DVD
-extern int isFromDVD;
-extern int rom_sizeDVD;
-extern unsigned int rom_offsetDVD;
-*/
 
-/*
-static void findsize(){
-	SDSTAT s;
-	SDCARD_GetStats(rom_file, &s);
-	SDCARD_SeekFile(rom_file, 0, SDCARD_SEEK_SET);
-	rom_length = s.size;
-	char buffer[96];
-	sprintf(buffer, "rom size: %d bytes (or %d Mb or %d Megabits)\n", 
-		rom_length, rom_length/1024/1024, rom_length/1024/1024*8);
-	PRINT(buffer);
-}
-*/
 
 static int detectByteSwapping(void){
 	if(!rom_file) return BYTE_SWAP_BAD;
@@ -101,22 +85,36 @@ static int detectByteSwapping(void){
 	}
 }
 
-/*static int detectByteSwappingDVD(){
-
-	char magicWord[4];
-	read_safe(magicWord, rom_offsetDVD, 4);
+void byte_swap(char* buffer, unsigned int length){
+	if(ROM_byte_swap == BYTE_SWAP_NONE || ROM_byte_swap == BYTE_SWAP_BAD)
+		return;
 	
-	switch(magicWord[0]){
-	case 0x37:
-		return BYTE_SWAP_HALF;
-	case 0x40:
-		return BYTE_SWAP_BYTE;
-	case 0x80:
-		return BYTE_SWAP_NONE;
-	default:
-		return BYTE_SWAP_BAD;
+	int i = 0;
+	u8 aByte = 0;
+	u16 aShort = 0;
+	u16 *buffer_short = (unsigned short*)buffer;
+	
+	if(ROM_byte_swap == BYTE_SWAP_HALF){	//aka little endian (40123780) vs (80371240)
+		for(i=0; i<length; i+=2) 	//get it from (40123780) to (12408037)
+		{
+			aByte 		= buffer[i];
+			buffer[i] 	= buffer[i+1];
+			buffer[i+1] = aByte;
+		}
+		for(i=0; i<length/2; i+=2)	//get it from (12408037) to (80371240)
+		{ 
+			aShort        		= buffer_short[i];
+			buffer_short[i]   	= buffer_short[i+1];
+			buffer_short[i+1] 	= aShort;
+		}
+	} else if(ROM_byte_swap == BYTE_SWAP_BYTE){	// (37804012) vs (80371240)
+		for(i=0; i<length; i+=2){
+			aByte 		= buffer[i];
+			buffer[i] 	= buffer[i+1];
+			buffer[i+1] = aByte;
+		}
 	}
-}*/
+}
 
 //int rom_read(const char *argv){
 int rom_read(fileBrowser_file* file){
@@ -128,30 +126,6 @@ int rom_read(fileBrowser_file* file){
    char buffer[1024];
    rom_file = file;
    rom_length = file->size;
-
-#if 0 
-   if(!isFromDVD) {
-	   rom_file = SDCARD_OpenFile(argv, "rb");
-	   if(rom_file) PRINT("file found\n");
-	   else { sprintf(buffer, "ERROR COULD NOT OPEN: %s\n", argv); PRINT(buffer); return -1; }
-	   findsize();
-	   SDCARD_CloseFile(rom_file);
-	   sprintf(buffer, "Loading ROM: %s, please be patient...\n", arg);
-	   PRINT(buffer);
-   	   ROMCache_init(rom_length);
-   	   ROMCache_load_SDCard(arg, detectByteSwapping(arg));
-	}
-	else {
-   		rom_length = rom_sizeDVD;  
-   		sprintf(buffer, "rom size: %d bytes (or %d Mb or %d Megabits)\n", 
-		        rom_length, rom_length/1024/1024, rom_length/1024/1024*8);
-		PRINT(buffer);
-   	   	sprintf(buffer, "Loading ROM: %s, please be patient...\n", arg);
-   	   	PRINT(buffer);
-   	   	ROMCache_init(rom_length);
-   	   	ROMCache_load_DVD(arg, detectByteSwappingDVD());
-	}
-#endif
    
    CLEAR();
    sprintf(buffer, "Loading ROM: %s, please be patient...\n", file->name);
