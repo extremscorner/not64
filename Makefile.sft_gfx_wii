@@ -14,8 +14,8 @@ CFLAGS  = -g -O2 -Wall $(MACHDEP) $(INCLUDE) \
 MACHDEP	= -DGEKKO -mcpu=750 -meabi -mhard-float 
 LDFLAGS	=	$(MACHDEP) -mrvl -Wl,-Map,$(notdir $@).map -Wl,--cref
 
-INCLUDE = -I$(DEVKITPRO)/libogc/include
-LIBPATHS = -L$(DEVKITPRO)/libogc/lib/wii
+INCLUDE = -I$(DEVKITPRO)/libogc/include -I$(DEVKITPRO)/libfat/libogc/include
+LIBPATHS = -L$(DEVKITPRO)/libogc/lib/wii -L$(DEVKITPRO)/libfat/libogc/lib/wii
 
 CXXFLAGS	=$(CFLAGS)
 
@@ -142,7 +142,7 @@ HEADER		=main/rom.h \
 		r4300/recomp.h \
 		gc_memory/pif.h
 
-LIB		=	-logc -lm -lfat -ldb -lwiiuse -lbte -logc
+LIB		=	-lm -lfat -ldb -lwiiuse -lbte -logc
 
 ifeq ($(strip mupen64_soft_gfx/main.cpp),)
 	export LD	:=	$(CC)
@@ -150,7 +150,7 @@ else
 	export LD	:=	$(CXX)
 endif
 
-all:	mupen64_gc.elf
+all:	wii64-sft.elf
 
 r4300/interupt.o:	r4300/interupt.c
 			$(CC) $(CFLAGS) -c -o $@ $<
@@ -225,9 +225,11 @@ r4300/ppc/Wrappers.o:		r4300/ppc/Wrappers.s
 				$(CC) $(CFLAGS) -c -o $@ $<
 
 
-mupen64_gc.elf:	$(OBJ) $(OBJ_INPUT) $(OBJ_SOFT_GFX) $(OBJ_AUDIO) $(OBJ_RSPHLE) main/main_gc-menu.o #$(OBJ_PPC)
+wii64-sft.elf:	$(OBJ) $(OBJ_INPUT) $(OBJ_SOFT_GFX) $(OBJ_AUDIO) $(OBJ_RSPHLE) main/main_gc-menu.o #$(OBJ_PPC)
 		$(LD) $^ $(LDFLAGS) $(LIBPATHS) $(LIB) -Wl -o $@
-		powerpc-gekko-objcopy -O binary $@ mupen64-sft.dol
+		powerpc-gekko-objcopy -O binary $@ wii64-sft.dol
+		powerpc-gekko-objcopy -O binary $@ mupen64.dol
+		dollz3 wii64-sft.dol wii64z.dol
 
 
 
