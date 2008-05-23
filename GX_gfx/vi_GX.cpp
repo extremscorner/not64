@@ -9,7 +9,6 @@
 #include <ogc/video.h>
 #include <ogc/gx.h>
 #include <ogc/gu.h>
-#include <sdcard.h>
 //#include <png/pngogc.h>
 #include "vi_GX.h"
 #include "../gui/font.h"

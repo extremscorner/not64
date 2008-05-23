@@ -5,7 +5,6 @@
 #include "menu.h"
 #include "GUI.h"
 #include "../fileBrowser/fileBrowser.h"
-#include "../fileBrowser/fileBrowser-SD.h"
 #include "../fileBrowser/fileBrowser-libfat.h"
 #include "../fileBrowser/fileBrowser-DVD.h"
 #include "../fileBrowser/fileBrowser-CARD.h"

@@ -25,7 +25,6 @@ OBJ		=main/rom_gc.o \
 		main/main_gc-menu.o \
 		main/gc_dvd.o \
 		main/ROM-Cache-MEM2.o \
-		fileBrowser/fileBrowser-SD.o \
 		fileBrowser/fileBrowser-DVD.o \
 		fileBrowser/fileBrowser-CARD.o \
 		fileBrowser/fileBrowser.o \

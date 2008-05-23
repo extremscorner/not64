@@ -32,8 +32,8 @@ OBJ		=main/rom_gc.o \
 		main/main_gc-menu.o \
 		main/gc_dvd.o \
 		main/ROM-Cache.o \
-		fileBrowser/fileBrowser-SD.o \
 		fileBrowser/fileBrowser-DVD.o \
+		fileBrowser/fileBrowser-libfat.o \
 		fileBrowser/fileBrowser-CARD.o \
 		fileBrowser/fileBrowser.o \
 		gui/menu.o \
@@ -155,7 +155,7 @@ HEADER		=main/rom.h \
 		gc_memory/pif.h
 
 #LIB		=	-logc -lm -logcsys -lsdcard -lpngogc -lpng -lz
-LIB		=	-logc -lm -lsdcard 
+LIB		=	-logc -lm -lfat -logc -lm 
 
 ifeq ($(strip mupen64_GX_gfx/main.cpp),)
 	export LD	:=	$(CC)
@@ -240,8 +240,8 @@ r4300/ppc/Wrappers.o:		r4300/ppc/Wrappers.s
 				$(CC) $(CFLAGS) -c -o $@ $<
 
 
-mupen64_gc.elf:	$(OBJ) $(OBJ_PPC) $(OBJ_INPUT) $(OBJ_GX_GFX) $(OBJ_AUDIO) $(OBJ_RSPHLE) main/main_gc-menu.o
-		$(LD) $^ $(LDFLAGS) $(LIBPATHS) $(LIB) -Wl -o $@
+mupen64_gc.elf:	$(OBJ) $(OBJ_INPUT) $(OBJ_GX_GFX) $(OBJ_AUDIO) $(OBJ_RSPHLE) main/main_gc-menu.o #$(OBJ_PPC)
+		$(LD) $^ $(LDFLAGS) $(LIBPATHS) $(LIB) -Wl -o $@ 
 		#strip --strip-all $@
 		powerpc-gekko-objcopy -O binary $@ mupen64.dol
 		dollz3 mupen64.dol mupen6z.dol
