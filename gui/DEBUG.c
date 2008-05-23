@@ -59,7 +59,7 @@ void DEBUG_print(char* string,int pos){
 			}
 			int size = strlen(string);
 			//usb_sendbuffer(1, &size,4);
-			gecko_sendbuffer(1, string,size);
+			gecko_sendbuffer_safe(1, string,size);
 			#endif
 		}
 		else if(pos == DBG_SDGECKOOPEN) {
@@ -109,7 +109,6 @@ void DEBUG_stats(int stats_id, char *info, unsigned int stats_type, unsigned int
 		case STAT_TYPE_AVGE:	//average
 			avge_counter[stats_id] += 1;
 			stats_buffer[stats_id] += adjustment_value;
-			stats_buffer[stats_id] = (stats_buffer[stats_id]/avge_counter[stats_id]); // doesn't look right
 			break;
 		case STAT_TYPE_CLEAR:
 			if(stats_type & STAT_TYPE_AVGE)
@@ -118,7 +117,10 @@ void DEBUG_stats(int stats_id, char *info, unsigned int stats_type, unsigned int
 			break;
 		
 	}
-	sprintf(txtbuffer,"%s [ %i ]", info, stats_buffer[stats_id]);
+	unsigned int value = stats_buffer[stats_id];
+	if(stats_type == STAT_TYPE_AVGE) value /= avge_counter[stats_id];
+	
+	sprintf(txtbuffer,"%s [ %i ]", info, value);
 	DEBUG_print(txtbuffer,DBG_STATSBASE+stats_id);
 	#endif
 }
