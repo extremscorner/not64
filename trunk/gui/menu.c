@@ -6,10 +6,12 @@
 #include "GUI.h"
 #include "../fileBrowser/fileBrowser.h"
 #include "../fileBrowser/fileBrowser-SD.h"
+#include "../fileBrowser/fileBrowser-libfat.h"
 #include "../fileBrowser/fileBrowser-DVD.h"
 #include "../fileBrowser/fileBrowser-CARD.h"
 #ifdef WII
 #include "../fileBrowser/fileBrowser-WiiFS.h"
+#include <wiiuse/wpad.h>
 #endif
 #include "menuFileBrowser.h"
 #include <ogc/dvd.h>
@@ -18,7 +20,11 @@
 
 // -- ACTUAL MENU LAYOUT --
 
+#ifdef WII
+#define MAIN_MENU_SIZE 11
+#else
 #define MAIN_MENU_SIZE 13
+#endif
 
 
 /* Message menu_item: used for feedback, set the caption to what you want it to say */
@@ -72,7 +78,7 @@ extern BOOL hasLoadedROM;
 
 	extern unsigned long dynacore;
 	static char* choose_PureInterpreter(){
-		int needInit = 2;
+		int needInit = 0;
 		if(hasLoadedROM && dynacore != 2){ cpu_deinit(); needInit = 1; }
 		dynacore = 2;
 		if(hasLoadedROM && needInit) cpu_init();
@@ -284,7 +290,11 @@ static inline void menuStack_push(menu_item*);
 
 /* "Load ROM" menu item */
 #ifdef WII
+#ifdef RELEASE
+#define LOAD_ROM_WAYS 1
+#else
 #define LOAD_ROM_WAYS 2
+#endif
 #else
 #define LOAD_ROM_WAYS 2
 #endif
@@ -296,12 +306,13 @@ static inline void menuStack_push(menu_item*);
 		// Deinit any existing romFile state
 		if(romFile_deinit) romFile_deinit( romFile_topLevel );
 		// Change all the romFile pointers
-		romFile_topLevel = &topLevel_SD_SlotA;
-		romFile_readDir  = fileBrowser_SD_readDir;
-		romFile_readFile = fileBrowser_SDROM_readFile;
-		romFile_seekFile = fileBrowser_SD_seekFile;
-		romFile_init     = fileBrowser_SD_init;
-		romFile_deinit   = fileBrowser_SDROM_deinit;
+		romFile_topLevel = &topLevel_libfat_Default;
+		romFile_readDir  = fileBrowser_libfat_readDir;
+		romFile_readFile = fileBrowser_libfatROM_readFile;
+		romFile_seekFile = fileBrowser_libfat_seekFile;
+		romFile_init     = fileBrowser_libfat_init;
+		romFile_deinit   = fileBrowser_libfatROM_deinit;
+		
 		// Make sure the romFile system is ready before we browse the filesystem
 		romFile_init( romFile_topLevel );
 		// Then push the file browser onto the menu
@@ -359,7 +370,7 @@ static inline void menuStack_push(menu_item*);
 		   { .func = loadROMDVD_func }
 		  },
 #endif
-#ifdef WII
+#if defined(WII) && !defined(RELEASE)
 		 { "Load from Wii Filesystem",
 		   MENU_ATTR_NONE,
 		   { . func = loadROMWiiFS_func }
@@ -381,20 +392,21 @@ static inline void menuStack_push(menu_item*);
 /* "Load Save File" item */
 #include "../gc_memory/Saves.h"
 #ifdef WII
-#define WAYS_TO_SAVE 5
-#else
+//#define WAYS_TO_SAVE 5
 #define WAYS_TO_SAVE 4
+#else
+//#define WAYS_TO_SAVE 4
+#define WAYS_TO_SAVE 3
 #endif
 
-	// NOTE: I assume an even item # = Slot A, OW = B
 	static char* loadSaveSD_func(int item_num){
 		if(!hasLoadedROM) return "Please load a ROM first";
 		// Adjust saveFile pointers
-		saveFile_dir = (item_num%2) ? &saveDir_SD_SlotB : &saveDir_SD_SlotA;
-		saveFile_readFile  = fileBrowser_SD_readFile;
-		saveFile_writeFile = fileBrowser_SD_writeFile;
-		saveFile_init      = 0;
-		saveFile_deinit    = 0;
+		saveFile_dir = &saveDir_libfat_Default;
+		saveFile_readFile  = fileBrowser_libfat_readFile;
+		saveFile_writeFile = fileBrowser_libfat_writeFile;
+		saveFile_init      = fileBrowser_libfat_init;
+		saveFile_deinit    = fileBrowser_libfat_deinit;
 		
 		// Try loading everything
 		int result = 0;
@@ -450,21 +462,17 @@ static inline void menuStack_push(menu_item*);
 #endif
 
 	static menu_item loadSave_submenu[] =
-		{{ "SD in Slot A",
-		   MENU_ATTR_NONE,
-		   { .func = loadSaveSD_func }
-		  },
-		 { "SD in Slot B",
-		   MENU_ATTR_NONE,
-		   { .func = loadSaveSD_func }
-		  },
-		 { "Memory Card in Slot A",
+		{{ "Memory Card in Slot A",
 		   MENU_ATTR_NONE,
 		   { .func = loadSaveCARD_func }
 		  },
 		 { "Memory Card in Slot B",
 		   MENU_ATTR_NONE,
 		   { .func = loadSaveCARD_func }
+		  },
+		 { "SD Card",
+		   MENU_ATTR_NONE,
+		   { .func = loadSaveSD_func }
 		  },
 #ifdef WII
 		 { "Wii Filesystem",
@@ -490,11 +498,11 @@ static inline void menuStack_push(menu_item*);
 	// NOTE: I assume an even item # = Slot A, OW = B
 	static char* saveGameSD_func(int item_num){
 		// Adjust saveFile pointers
-		saveFile_dir = (item_num%2) ? &saveDir_SD_SlotB : &saveDir_SD_SlotA;
-		saveFile_readFile  = fileBrowser_SD_readFile;
-		saveFile_writeFile = fileBrowser_SD_writeFile;
-		saveFile_init      = fileBrowser_SD_init;
-		saveFile_deinit    = fileBrowser_SD_deinit;
+		saveFile_dir = &saveDir_libfat_Default;
+		saveFile_readFile  = fileBrowser_libfat_readFile;
+		saveFile_writeFile = fileBrowser_libfat_writeFile;
+		saveFile_init      = fileBrowser_libfat_init;
+		saveFile_deinit    = fileBrowser_libfat_deinit;
 		
 		// Try loading everything
 		int result = 0;
@@ -548,21 +556,17 @@ static inline void menuStack_push(menu_item*);
 #endif
 
 	static menu_item saveGame_submenu[] =
-		{{ "SD in Slot A",
-		   MENU_ATTR_NONE,
-		   { .func = saveGameSD_func }
-		  },
-		 { "SD in Slot B",
-		   MENU_ATTR_NONE,
-		   { .func = saveGameSD_func }
-		  },
-		 { "Memory Card in Slot A",
+		{{ "Memory Card in Slot A",
 		   MENU_ATTR_NONE,
 		   { .func = saveGameCARD_func }
 		  },
 		 { "Memory Card in Slot B",
 		   MENU_ATTR_NONE,
 		   { .func = saveGameCARD_func }
+		  },
+		 { "SD Card",
+		   MENU_ATTR_NONE,
+		   { .func = saveGameSD_func }
 		  },
 #ifdef WII
 		 { "Wii Filesystem",
@@ -702,8 +706,10 @@ static menu_item main_menu[MAIN_MENU_SIZE] =
 	  
 	  SHOW_CREDITS_ITEM,
 	  
+#ifndef WII
 	  STOP_DVD_ITEM,
 	  SWAP_DVD_ITEM,
+#endif
 	 
 	  DEV_FEATURES_ITEM,
 	  CONTROLLER_PAKS_ITEM,
