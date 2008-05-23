@@ -18,6 +18,8 @@ typedef struct {
 	void (*configure)(int);
 	// Initialize the controllers, filling out available
 	void (*init)(void);
+	// Assign actual controller to virtual controller
+	void (*assign)(int,int);
 	// Pause/Resume a controller
 	void (*pause)(int);
 	void (*resume)(int);

@@ -173,20 +173,60 @@ EXPORT void CALL GetKeys(int Control, BUTTONS * Keys )
 *******************************************************************/  
 EXPORT void CALL InitiateControllers (CONTROL_INFO ControlInfo)
 {
+	int i,t,w;
 	control_info = ControlInfo;
 	
-	// FIXME: This needs to work for all controller_t's
+	// List of all the defined controller_t's
+#ifdef WII
+	#define num_controller_t 2
 	extern controller_t controller_GC;
+	extern controller_t controller_Classic;
+	controller_t* controller_ts[num_controller_t] =
+		{ &controller_GC, &controller_Classic,
+		 };
+	int num_assigned[num_controller_t] = { 0, 0 };
+#else
+	#define num_controller_t 1
+	extern controller_t controller_GC;
+	controller_t* controller_ts[num_controller_t] =
+		{ &controller_GC,
+		 };
+	int num_assigned[num_controller_t] = { 0 };
+#endif
 	
-	controller_GC.init();
-	int i;
+	// Init all our controllers
+	for(i=0; i<num_controller_t; ++i)
+		controller_ts[i]->init();
+	
+	// Map controllers in the priority given
+	// Outer loop: virtual controllers
 	for(i=0; i<4; ++i){
-		// TODO: Use controller type priorities
-		controllers[i].control = &controller_GC;
-		controllers[i].inUse   = controller_GC.available[i];
-		controllers[i].number  = i;
-		control_info.Controls[i].Present = controllers[i].inUse;
-		control_info.Controls[i].Plugin  = PLUGIN_MEMPAK;
+		// Middle loop: controller type
+		for(t=0; t<num_controller_t; ++t){
+			controller_t* type = controller_ts[t];
+			// Inner loop: which controller
+			for(w=num_assigned[t]; w<4 && !type->available[w]; ++w, ++num_assigned[t]);
+			// If we've exhausted this type, move on
+			if(w == 4) continue;
+			
+			controllers[i].control = type;
+			controllers[i].inUse   = 1;
+			controllers[i].number  = w;
+			controllers[i].control->assign(w,i);
+			control_info.Controls[i].Present = 1;
+			control_info.Controls[i].Plugin  = PLUGIN_MEMPAK;
+			// Don't assign the next type over this one or the same controller
+			++num_assigned[t];
+			break; 
+		}
+	}
+	// 'Initialize' the unmapped virtual controllers
+	for(; i<4; ++i){
+		controllers[i].control = NULL;
+		controllers[i].inUse   = 0;
+		controllers[i].number  = -1;
+		control_info.Controls[i].Present = 0;
+		control_info.Controls[i].Plugin  = PLUGIN_NONE;
 	}
 }
 
