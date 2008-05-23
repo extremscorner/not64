@@ -28,6 +28,10 @@
 #include "../gui/GUI.h"
 #include "../gui/menu.h"
 #include "../gui/DEBUG.h"
+#ifdef WII
+#include <ogc/conf.h>
+#include <wiiuse/wpad.h>
+#endif
 
 /* NECESSARY FUNCTIONS AND VARIABLES */
 
@@ -72,17 +76,19 @@ void (*fBWrite)(DWORD addr, DWORD size) = NULL;
 void (*fBGetFrameBufferInfo)(void *p) = NULL;
 void new_frame(){ }
 void new_vi(){ }
+// Read PAD format from Classic if available
+u16 readWPAD(void);
 
 int main(){
 	/* INITIALIZE */
 	Initialise(); // Stock OGC initialization
-	SDCARD_Init();
+	//SDCARD_Init();
 #ifndef WII
 	DVD_Init();
 #endif
 	menuInit();
 #ifdef WII
-	killWiimote();
+	//killWiimote();
 	//SYS_SetPowerCallback(STM_ShutdownToIdle());
 #endif
 #ifdef DEBUGON
@@ -103,10 +109,11 @@ int main(){
 	// 'Page flip' buttons so we know when it released
 	int which_pad = 0;
 	u16 buttons[2];
+	
 	/* MAIN LOOP */
 	while(TRUE){
 		// First read the pads
-		buttons[which_pad] = PAD_ButtonsHeld(0);
+		buttons[which_pad] = PAD_ButtonsHeld(0) | readWPAD();
 		
 // Check whether button is pressed and make sure it wasn't registered last time	
 #define PAD_PRESSED(butt0n) ( buttons[which_pad] & butt0n && !(buttons[which_pad^1] & butt0n) )
@@ -135,6 +142,30 @@ int main(){
 	
 	return 0;
 }
+
+#ifdef WII
+u16 readWPAD(void){
+	WPADData wpad;
+	WPAD_Read(0, &wpad);
+	
+	u16 b = 0;
+	if(wpad.err == WPAD_ERR_NONE &&
+	   wpad.exp.type == WPAD_EXP_CLASSIC){
+	   	u16 w = wpad.exp.classic.btns_d;
+	   	b |= (w & WPAD_CLASSIC_BUTTON_UP)    ? PAD_BUTTON_UP    : 0;
+	   	b |= (w & WPAD_CLASSIC_BUTTON_DOWN)  ? PAD_BUTTON_DOWN  : 0;
+	   	b |= (w & WPAD_CLASSIC_BUTTON_LEFT)  ? PAD_BUTTON_LEFT  : 0;
+	   	b |= (w & WPAD_CLASSIC_BUTTON_RIGHT) ? PAD_BUTTON_RIGHT : 0;
+	   	b |= (w & WPAD_CLASSIC_BUTTON_A) ? PAD_BUTTON_A : 0;
+	   	b |= (w & WPAD_CLASSIC_BUTTON_B) ? PAD_BUTTON_B : 0;
+	}
+	
+	return b;
+}
+#else
+u16 readWPAD(void){ return 0; }
+#endif
+
 extern BOOL eepromWritten;
 extern BOOL mempakWritten;
 extern BOOL sramWritten;
@@ -288,31 +319,15 @@ void ScanPADSandReset() {
 }
 static void Initialise (void){
   static int whichfb = 0;        /*** Frame buffer toggle ***/
-  VIDEO_Init ();
-  PAD_Init ();
+  VIDEO_Init();
+  PAD_Init();
   PAD_Reset(0xf0000000);
-  switch (VIDEO_GetCurrentTvMode ())
-    {
-    case VI_NTSC:
-#ifdef PROGRESSIVE_DISPLAY
-      vmode = &TVNtsc480Prog;
-#else
-      vmode = &TVNtsc480IntDf;
+#ifdef WII
+  CONF_Init();
+  WPAD_Init();
 #endif
-      break;
- 
-    case VI_PAL:
-      vmode = &TVPal528IntDf;
-      break;
- 
-    case VI_MPAL:
-      vmode = &TVMpal480IntDf;
-      break;
- 
-    default:
-      vmode = &TVNtsc480IntDf;
-      break;
-    }
+  
+  vmode = VIDEO_GetPreferredMode(NULL);
     
   if(!((*(u32*)0xCC003000)>>16)) //if you held reset button down, then swap from 50->60hz or 60->50hz
   {
