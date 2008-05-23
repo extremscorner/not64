@@ -12,6 +12,7 @@
 //   Any memory allocated this way can be freed at any time
 //   you must check invalid_code before you can access it
 void* RecompCache_Alloc(unsigned int size, unsigned int blockNum);
+void* RecompCache_Realloc(void*, unsigned int newSize);
 void  RecompCache_Free(unsigned int blockNum);
 // Update the LRU info of the indicated block
 //   (call when the block is accessed)

@@ -100,6 +100,33 @@ void* RecompCache_Alloc(unsigned int size, unsigned int blockNum){
 	return newBlock->memory;
 }
 
+void* RecompCache_Realloc(void* memory, unsigned int size){
+	sprintf(txtbuffer, "RecompCache_Realloc(%08x, %d)\n", memory, size);
+	DEBUG_print(txtbuffer, DBG_USBGECKO);
+	
+	// Find the corresponding node
+	CacheMetaNode* n;
+	for(n = head; n != NULL; n = n->next)
+		if(n->memory == memory) break;
+	if(n == NULL) return NULL;
+	
+	int neededSpace = size - n->size;
+	
+	if(cacheSize + neededSpace > RECOMP_CACHE_SIZE)
+		// Free up at least enough space for it to fit
+		release(cacheSize + neededSpace - RECOMP_CACHE_SIZE);
+	
+	// We have the necessary space for this alloc, so just call malloc
+	cacheSize += neededSpace;
+	n->size = size;
+	n->memory = realloc(n->memory, size);
+	// Update it to the head of the linked list
+	nodeRemove(n);
+	nodeAdd(n);
+	// Return the actual pointer
+	return n->memory;
+}
+
 void RecompCache_Free(unsigned int blockNum){
 	// Remove from the linked list
 	CacheMetaNode* n;
