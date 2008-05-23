@@ -11,10 +11,10 @@
 #endif
 
 enum { STICK_X, STICK_Y };
-static int getStickValue(Joystick j, int axis, int maxAbsValue){
-	double angle = PI * j.ang/180.0f;
-	double magnitude = (j.mag > 1.0f) ? 1.0f :
-	                    (j.mag < -1.0f) ? -1.0f : j.mag;
+static int getStickValue(joystick_t* j, int axis, int maxAbsValue){
+	double angle = PI * j->ang/180.0f;
+	double magnitude = (j->mag > 1.0f) ? 1.0f :
+	                    (j->mag < -1.0f) ? -1.0f : j->mag;
 	double value;
 	if(axis == STICK_X)
 		value = magnitude * sin( angle );
@@ -29,7 +29,7 @@ static int _GetKeys(int Control, BUTTONS * Keys )
 	WPAD_Read(Control, &wpad);
 	BUTTONS* c = Keys;
 	
-	int b = wpad.exp.classic.btns_d;
+	int b = wpad.exp.classic.btns_held;
 	c->R_DPAD       = (b & WPAD_CLASSIC_BUTTON_RIGHT) ? 1 : 0;
 	c->L_DPAD       = (b & WPAD_CLASSIC_BUTTON_LEFT)  ? 1 : 0;
 	c->D_DPAD       = (b & WPAD_CLASSIC_BUTTON_DOWN)  ? 1 : 0;
@@ -42,15 +42,15 @@ static int _GetKeys(int Control, BUTTONS * Keys )
 	c->R_TRIG       = (b & WPAD_CLASSIC_BUTTON_FULL_R) ? 1 : 0;
 	c->L_TRIG       = (b & WPAD_CLASSIC_BUTTON_FULL_L) ? 1 : 0;
 	
-	s8 substickX = getStickValue(wpad.exp.classic.rjs, STICK_X, 7);
+	s8 substickX = getStickValue(&wpad.exp.classic.rjs, STICK_X, 7);
 	c->R_CBUTTON    = (substickX >  4)       ? 1 : 0;
 	c->L_CBUTTON    = (substickX < -4)       ? 1 : 0;
-	s8 substickY = getStickValue(wpad.exp.classic.rjs, STICK_Y, 7);
+	s8 substickY = getStickValue(&wpad.exp.classic.rjs, STICK_Y, 7);
 	c->D_CBUTTON    = (substickY < -4)       ? 1 : 0;
 	c->U_CBUTTON    = (substickY >  4)       ? 1 : 0;
 	
-	c->X_AXIS       = getStickValue(wpad.exp.classic.ljs, STICK_X, 127);
-	c->Y_AXIS       = getStickValue(wpad.exp.classic.ljs, STICK_Y, 127);
+	c->X_AXIS       = getStickValue(&wpad.exp.classic.ljs, STICK_X, 127);
+	c->Y_AXIS       = getStickValue(&wpad.exp.classic.ljs, STICK_Y, 127);
 	
 	// X+Y quits to menu
 	return (b & WPAD_CLASSIC_BUTTON_X) && (b & WPAD_CLASSIC_BUTTON_Y);
