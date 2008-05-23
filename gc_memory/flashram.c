@@ -34,7 +34,7 @@
 #include "memory.h"
 #include "../main/guifuncs.h"
 
-#include <sdcard.h>
+
 #include <ogc/card.h>
 #include "Saves.h"
 

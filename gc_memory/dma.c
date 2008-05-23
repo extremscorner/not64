@@ -27,7 +27,6 @@
  *
 **/
 
-#include <sdcard.h>
 #include <ogc/card.h>
 #include "dma.h"
 #include "memory.h"

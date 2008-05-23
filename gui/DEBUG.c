@@ -4,7 +4,10 @@
 
 #include <string.h>
 #include <stdio.h>
-#include <sdcard.h>
+#include <fat.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/dir.h>
 #include "DEBUG.h"
 #include "TEXT.h"
 //#include "usb.h"
@@ -47,7 +50,7 @@ int flushed = 0;
 int writtenbefore = 0;
 int amountwritten = 0;
 char *dump_filename = "dev0:\\N64ROMS\\debug.txt";
-sd_file* f = NULL;
+FILE* f = NULL;
 void DEBUG_print(char* string,int pos){
 
 	#ifdef SHOW_DEBUG
@@ -65,14 +68,14 @@ void DEBUG_print(char* string,int pos){
 		else if(pos == DBG_SDGECKOOPEN) {
 #ifdef SDPRINT
 			if(!f && printToSD)
-				f = SDCARD_OpenFile( dump_filename, "wb");
+				f = fopen( dump_filename, "wb" );
 #endif
 		}
 		else if(pos == DBG_SDGECKOCLOSE) {
 #ifdef SDPRINT
 			if(f)
 			{
-				SDCARD_CloseFile(f);
+				fclose(f);
 				f = NULL;
 			}
 #endif
@@ -81,7 +84,7 @@ void DEBUG_print(char* string,int pos){
 #ifdef SDPRINT
 			if(!f || (printToSD == 0))
 				return;
-			SDCARD_WriteFile(f, string, strlen(string));
+			fwrite(string, 1, strlen(string), f);
 #endif
 		}
 		else {
