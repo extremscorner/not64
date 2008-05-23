@@ -151,7 +151,7 @@ u16 readWPAD(void){
 	u16 b = 0;
 	if(wpad.err == WPAD_ERR_NONE &&
 	   wpad.exp.type == WPAD_EXP_CLASSIC){
-	   	u16 w = wpad.exp.classic.btns_d;
+	   	u16 w = wpad.exp.classic.btns_held;
 	   	b |= (w & WPAD_CLASSIC_BUTTON_UP)    ? PAD_BUTTON_UP    : 0;
 	   	b |= (w & WPAD_CLASSIC_BUTTON_DOWN)  ? PAD_BUTTON_DOWN  : 0;
 	   	b |= (w & WPAD_CLASSIC_BUTTON_LEFT)  ? PAD_BUTTON_LEFT  : 0;
