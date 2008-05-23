@@ -4,19 +4,26 @@ CC		=powerpc-gekko-gcc
 CXX		=powerpc-gekko-g++
 AS		=powerpc-gekko-as
 
-CFLAGS  = -g -O2 -Wall $(MACHDEP) \
+#CFLAGS		=-DX86 -O3 -mpentium -Wall -DEMU64_DEBUG
+#CFLAGS		=-DX86 -O3 -fexpensive-optimizations -fomit-frame-pointer -funroll-loops -ffast-math -fno-strict-aliasing -mcpu=athlon -Wall -pipe
+#CFLAGS		=-DX86 -O3 -mcpu=pentium -Wall -g -pg
+#CFLAGS		=-DX86 -Wall -pipe -g3 -DEMU64_DEBUG
+#CFLAGS		=-DX86 -Wall -pipe -g -DEMU64_DEBUG -DCOMPARE_CORE
+#CFLAGS		=-DX86 -Wall -pipe -g
+#CFLAGS  = -g -O2 -Wall $(MACHDEP) $(INCLUDE) -fomit-frame-pointer
+CFLAGS  = -g -O2 -Wall $(MACHDEP) $(INCLUDE) \
 	  -DCPU_SHUTDOWN -DSPC700_SHUTDOWN -DVAR_CYCLES -DSOUND \
 	  -DNOASM -DNGC -DNOASM -DPIXEL_FORMAT=RGB565  \
-	  -DM_PI=3.14159265359  \
 	  -fno-exceptions -Wno-unused-parameter -pipe \
-	  -DUSE_GUI -DSHOW_DEBUG -DWII -DTHREADED_AUDIO \
-	  -DUSE_RECOMP_CACHE -DPROGRESSIVE_DISPLAY 
-	  #-DPPC_DYNAREC #-DPRINTGECKO
-	  #-DDEBUGON -DUSE_ROM_CACHE_L1
+	  -DUSE_GUI -DSHOW_DEBUG -DWII -DTHREADED_AUDIO -DUSE_RECOMP_CACHE
+#	  -DPROGRESSIVE_DISPLAY 
+#	  -DDEBUGON -DUSE_ROM_CACHE_L1 -DPRINTGECKO -DGLN64_SDLOG -DEMBEDDED_FONTS -DUSE_EXPANSION -DPPC_DYNAREC
 
 MACHDEP	= -DGEKKO -mcpu=750 -meabi -mhard-float 
 LDFLAGS	=	$(MACHDEP) -mrvl -Wl,-Map,$(notdir $@).map -Wl,--cref
 
+INCLUDE = -I$(DEVKITPRO)/libogc/include -I$(DEVKITPRO)/libfat/libogc/include
+LIBPATHS = -L$(DEVKITPRO)/libogc/lib/wii -L$(DEVKITPRO)/libfat/libogc/lib/wii
 
 CXXFLAGS	=$(CFLAGS)
 
@@ -185,8 +192,8 @@ HEADER		=main/rom.h \
 		r4300/recomp.h \
 		gc_memory/pif.h
 
-LIB		=	-logc -lm -lfat -ldb -lwiiuse -lbte -logc
 #LIB		=	-logc -lm -lsdcard
+LIB		=	-lm -lfat -ldb -lwiiuse -lbte -logc 
 
 ifeq ($(strip mupen64_GX_gfx/main.cpp),)
 	export LD	:=	$(CC)
@@ -196,7 +203,7 @@ endif
 
 #PLUGINS		=plugins/mupen64_input.so plugins/blight_input.so plugins/mupen64_hle_rsp_azimer.so plugins/dummyaudio.so plugins/mupen64_audio.so plugins/jttl_audio.so plugins/mupen64_soft_gfx.so plugins/mupen64_GX_gfx.so plugins/glN64.so
 
-all:	mupen64_wii.elf
+all:	wii64-glN64.elf
 
 r4300/interupt.o:	r4300/interupt.c
 			$(CC) $(CFLAGS) -c -o $@ $<
@@ -365,11 +372,11 @@ r4300/new-ppc/Wrappers.o:	r4300/new-ppc/Wrappers.s
 				$(AS) -o $@ $<
 
 
-mupen64_wii.elf:	$(OBJ) $(OBJ_INPUT) $(OBJ_GLN64_GX) $(OBJ_AUDIO) $(OBJ_RSPHLE) main/main_gc-menu.o #$(OBJ_PPC)
-		$(LD) $^ $(LDFLAGS) $(LDFLAGS) $(LIB) -Wl -o $@
+wii64-glN64.elf:	$(OBJ) $(OBJ_INPUT) $(OBJ_GLN64_GX) $(OBJ_AUDIO) $(OBJ_RSPHLE) main/main_gc-menu.o #$(OBJ_PPC)
+		$(LD) $^ $(LDFLAGS) $(LIBPATHS) $(LIB) -Wl -o $@
 		#strip --strip-all $@
-		powerpc-gekko-objcopy -O binary $@ mupen64.dol
-		dollz3 mupen64.dol mupen6z.dol
+		powerpc-gekko-objcopy -O binary $@ wii64-glN64.dol
+		dollz3 wii64-glN64.dol wii64z.dol
 
 
 
