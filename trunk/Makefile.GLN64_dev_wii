@@ -4,22 +4,15 @@ CC		=powerpc-gekko-gcc
 CXX		=powerpc-gekko-g++
 AS		=powerpc-gekko-as
 
-#CFLAGS		=-DX86 -O3 -mpentium -Wall -DEMU64_DEBUG
-#CFLAGS		=-DX86 -O3 -fexpensive-optimizations -fomit-frame-pointer -funroll-loops -ffast-math -fno-strict-aliasing -mcpu=athlon -Wall -pipe
-#CFLAGS		=-DX86 -O3 -mcpu=pentium -Wall -g -pg
-#CFLAGS		=-DX86 -Wall -pipe -g3 -DEMU64_DEBUG
-#CFLAGS		=-DX86 -Wall -pipe -g -DEMU64_DEBUG -DCOMPARE_CORE
-#CFLAGS		=-DX86 -Wall -pipe -g
-#CFLAGS  = -g -O2 -Wall $(MACHDEP) $(INCLUDE) -fomit-frame-pointer
 CFLAGS  = -g -O2 -Wall $(MACHDEP) \
 	  -DCPU_SHUTDOWN -DSPC700_SHUTDOWN -DVAR_CYCLES -DSOUND \
 	  -DNOASM -DNGC -DNOASM -DPIXEL_FORMAT=RGB565  \
 	  -DM_PI=3.14159265359  \
 	  -fno-exceptions -Wno-unused-parameter -pipe \
 	  -DUSE_GUI -DSHOW_DEBUG -DWII -DTHREADED_AUDIO \
-	  -DUSE_RECOMP_CACHE \
-	  -DPROGRESSIVE_DISPLAY #-DPPC_DYNAREC #-DPRINTGECKO
-#	  -DDEBUGON -DUSE_ROM_CACHE_L1
+	  -DUSE_RECOMP_CACHE -DPROGRESSIVE_DISPLAY 
+	  #-DPPC_DYNAREC #-DPRINTGECKO
+	  #-DDEBUGON -DUSE_ROM_CACHE_L1
 
 MACHDEP	= -DGEKKO -mcpu=750 -meabi -mhard-float 
 LDFLAGS	=	$(MACHDEP) -mrvl -Wl,-Map,$(notdir $@).map -Wl,--cref
