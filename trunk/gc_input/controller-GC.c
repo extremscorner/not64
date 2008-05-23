@@ -5,7 +5,7 @@
 #include <ogc/pad.h>
 #include "controller.h"
 
-static int controller_GC_GetKeys(int Control, BUTTONS * Keys )
+static int _GetKeys(int Control, BUTTONS * Keys )
 {
 	BUTTONS* c = Keys;
 		
@@ -37,34 +37,39 @@ static int controller_GC_GetKeys(int Control, BUTTONS * Keys )
 	return (b & PAD_BUTTON_X) && (b & PAD_BUTTON_Y);
 }
 
-static void controller_GC_pause(int Control){
+static void pause(int Control){
 	PAD_ControlMotor(Control, PAD_MOTOR_STOP);
 }
 
-static void controller_GC_resume(int Control){ }
+static void resume(int Control){ }
 
-static void controller_GC_rumble(int Control, int rumble){
+static void rumble(int Control, int rumble){
 	if(rumble) PAD_ControlMotor(Control, PAD_MOTOR_RUMBLE);
 	else PAD_ControlMotor(Control, PAD_MOTOR_STOP);
 }
 
-static void controller_GC_configure(int Control){
+static void configure(int Control){
 	// Don't know how this should be integrated
 }
 
-static void controller_GC_init(void);
+static void assign(int p, int v){
+	// Nothing to do here
+}
+
+static void init(void);
 
 controller_t controller_GC =
-	{ controller_GC_GetKeys,
-	  controller_GC_configure,
-	  controller_GC_init,
-	  controller_GC_pause,
-	  controller_GC_resume,
-	  controller_GC_rumble,
+	{ _GetKeys,
+	  configure,
+	  init,
+	  assign,
+	  pause,
+	  resume,
+	  rumble,
 	  {0, 0, 0, 0}
 	 };
 
-static void controller_GC_init(void){
+static void init(void){
 	PAD_Init();
 	
 	PADStatus status[4];
