@@ -484,7 +484,7 @@ fp_restore:
 	.globl	_fp_handler
         .type   _fp_handler, @function	
 _fp_handler:
-	mtsprg4	10
+/*	mtsprg4	10*/
 	
 	/* Enable FP */
 	mfsrr1	10
@@ -495,7 +495,7 @@ _fp_handler:
 	la	10, reg_cop1_fgr_64@l(10)
 	RESTORE_FPR
 	
-	mfsprg4	10
+/*	mfsprg4	10*/
 	rfi
 	
 	.size _fp_handler, .-_fp_handler

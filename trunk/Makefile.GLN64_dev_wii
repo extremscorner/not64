@@ -11,20 +11,19 @@ AS		=powerpc-gekko-as
 #CFLAGS		=-DX86 -Wall -pipe -g -DEMU64_DEBUG -DCOMPARE_CORE
 #CFLAGS		=-DX86 -Wall -pipe -g
 #CFLAGS  = -g -O2 -Wall $(MACHDEP) $(INCLUDE) -fomit-frame-pointer
-CFLAGS  = -g -O2 -Wall $(MACHDEP) $(INCLUDE) \
+CFLAGS  = -g -O2 -Wall $(MACHDEP) \
 	  -DCPU_SHUTDOWN -DSPC700_SHUTDOWN -DVAR_CYCLES -DSOUND \
 	  -DNOASM -DNGC -DNOASM -DPIXEL_FORMAT=RGB565  \
+	  -DM_PI=3.14159265359  \
 	  -fno-exceptions -Wno-unused-parameter -pipe \
 	  -DUSE_GUI -DSHOW_DEBUG -DWII -DTHREADED_AUDIO \
-	  -DUSE_RECOMP_CACHE
-	  #-DPROGRESSIVE_DISPLAY -DUSE_RECOMP_CACHE
-#	  -DDEBUGON -DGLN64_SDLOG -DUSE_EXPANSION
+	  -DUSE_RECOMP_CACHE \
+	  -DPROGRESSIVE_DISPLAY #-DPPC_DYNAREC #-DPRINTGECKO
+#	  -DDEBUGON -DUSE_ROM_CACHE_L1
 
 MACHDEP	= -DGEKKO -mcpu=750 -meabi -mhard-float 
 LDFLAGS	=	$(MACHDEP) -mrvl -Wl,-Map,$(notdir $@).map -Wl,--cref
 
-INCLUDE = -I$(DEVKITPRO)/libogc/include
-LIBPATHS = -L$(DEVKITPRO)/libogc/lib/wii
 
 CXXFLAGS	=$(CFLAGS)
 
@@ -34,10 +33,10 @@ OBJ		=main/rom_gc.o \
 		main/main_gc-menu.o \
 		main/gc_dvd.o \
 		main/ROM-Cache-MEM2.o \
-		fileBrowser/fileBrowser-SD.o \
 		fileBrowser/fileBrowser-DVD.o \
 		fileBrowser/fileBrowser-CARD.o \
 		fileBrowser/fileBrowser-WiiFS.o \
+		fileBrowser/fileBrowser-libfat.o \
 		fileBrowser/HW64/customTitle.o \
 		fileBrowser/HW64/workaround.o \
 		fileBrowser/fileBrowser.o \
@@ -117,7 +116,8 @@ OBJ_GTK_GUI	=main/gui_gtk/main_gtk.o \
 		main/gui_gtk/dirbrowser.o
 
 OBJ_INPUT	=gc_input/main.o \
-		gc_input/controller-GC.o
+		gc_input/controller-GC.o \
+		gc_input/controller-Classic.o
 
 OBJ_RSPHLE	=rsp_hle-ppc/main.o \
 		rsp_hle-ppc/jpeg.o \
@@ -192,8 +192,8 @@ HEADER		=main/rom.h \
 		r4300/recomp.h \
 		gc_memory/pif.h
 
-#LIB		=	-logc -lm -lsdcard -ldb
-LIB		=	-logc -lm -lsdcard
+LIB		=	-logc -lm -lfat -ldb -lwiiuse -lbte -logc
+#LIB		=	-logc -lm -lsdcard
 
 ifeq ($(strip mupen64_GX_gfx/main.cpp),)
 	export LD	:=	$(CC)
@@ -368,12 +368,12 @@ glN64_GX/F3DDKR.o:			glN64_GX/F3DDKR.cpp
 glN64_GX/F3DWRUS.o:		glN64_GX/F3DWRUS.cpp
 				$(CXX) $(CFLAGS) -D__LINUX__ -D__GX__ -c -o $@ $<
 
-r4300/ppc/Wrappers.o:		r4300/ppc/Wrappers.s
-				$(CC) $(CFLAGS) -c -o $@ $<
+r4300/new-ppc/Wrappers.o:	r4300/new-ppc/Wrappers.s
+				$(AS) -o $@ $<
 
 
-mupen64_wii.elf:	$(OBJ) $(OBJ_INPUT) $(OBJ_GLN64_GX) $(OBJ_AUDIO) $(OBJ_RSPHLE) main/main_gc-menu.o #$(OBJ_PPC) 
-		$(LD) $^ $(LDFLAGS) $(LIBPATHS) $(LIB) -Wl -o $@
+mupen64_wii.elf:	$(OBJ) $(OBJ_INPUT) $(OBJ_GLN64_GX) $(OBJ_AUDIO) $(OBJ_RSPHLE) main/main_gc-menu.o #$(OBJ_PPC)
+		$(LD) $^ $(LDFLAGS) $(LDFLAGS) $(LIB) -Wl -o $@
 		#strip --strip-all $@
 		powerpc-gekko-objcopy -O binary $@ mupen64.dol
 		dollz3 mupen64.dol mupen6z.dol

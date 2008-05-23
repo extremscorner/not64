@@ -37,7 +37,6 @@
 #include <windows.h>
 #endif
 
-#include <sdcard.h>
 #include <ogc/card.h>
 
 #include "memory.h"

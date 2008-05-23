@@ -4,7 +4,6 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <sdcard.h>
 #include <gccore.h>
 #include "gui_GX-menu.h"
 #include "font.h"
