@@ -151,13 +151,13 @@ u16 readWPAD(void){
 	u16 b = 0;
 	if(wpad.err == WPAD_ERR_NONE &&
 	   wpad.exp.type == WPAD_EXP_CLASSIC){
-	   	u16 w = wpad.exp.classic.btns_held;
-	   	b |= (w & WPAD_CLASSIC_BUTTON_UP)    ? PAD_BUTTON_UP    : 0;
-	   	b |= (w & WPAD_CLASSIC_BUTTON_DOWN)  ? PAD_BUTTON_DOWN  : 0;
-	   	b |= (w & WPAD_CLASSIC_BUTTON_LEFT)  ? PAD_BUTTON_LEFT  : 0;
-	   	b |= (w & WPAD_CLASSIC_BUTTON_RIGHT) ? PAD_BUTTON_RIGHT : 0;
-	   	b |= (w & WPAD_CLASSIC_BUTTON_A) ? PAD_BUTTON_A : 0;
-	   	b |= (w & WPAD_CLASSIC_BUTTON_B) ? PAD_BUTTON_B : 0;
+	   	u16 w = wpad.exp.classic.btns;
+	   	b |= (w & CLASSIC_CTRL_BUTTON_UP)    ? PAD_BUTTON_UP    : 0;
+	   	b |= (w & CLASSIC_CTRL_BUTTON_DOWN)  ? PAD_BUTTON_DOWN  : 0;
+	   	b |= (w & CLASSIC_CTRL_BUTTON_LEFT)  ? PAD_BUTTON_LEFT  : 0;
+	   	b |= (w & CLASSIC_CTRL_BUTTON_RIGHT) ? PAD_BUTTON_RIGHT : 0;
+	   	b |= (w & CLASSIC_CTRL_BUTTON_A) ? PAD_BUTTON_A : 0;
+	   	b |= (w & CLASSIC_CTRL_BUTTON_B) ? PAD_BUTTON_B : 0;
 	}
 	
 	return b;
