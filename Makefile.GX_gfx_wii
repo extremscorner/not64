@@ -26,6 +26,10 @@ OBJ		=main/rom_gc.o \
 		main/gc_dvd.o \
 		main/ROM-Cache-MEM2.o \
 		fileBrowser/fileBrowser-DVD.o \
+		fileBrowser/fileBrowser-libfat.o \
+		fileBrowser/fileBrowser-WiiFS.o \
+		fileBrowser/HW64/customTitle.o \
+		fileBrowser/HW64/workaround.o \
 		fileBrowser/fileBrowser-CARD.o \
 		fileBrowser/fileBrowser.o \
 		gui/menu.o \
@@ -103,28 +107,16 @@ OBJ_GTK_GUI	=main/gui_gtk/main_gtk.o \
 		main/gui_gtk/dirbrowser.o
 
 OBJ_INPUT	=gc_input/main.o \
-		gc_input/controller-GC.o
+		gc_input/controller-GC.o \
+		gc_input/controller-Classic.o
 
 OBJ_RSPHLE	=rsp_hle-ppc/main.o \
 		rsp_hle-ppc/jpeg.o \
 		rsp_hle-ppc/ucode3.o \
 		rsp_hle-ppc/ucode2.o \
 		rsp_hle-ppc/ucode1.o 
-#		rsp_hle-ppc/ucode3mp3.o
 
 OBJ_AUDIO	=gc_audio/main.o
-
-#OBJ_SOFT_GFX	=mupen64_soft_gfx/main.o \
-#		mupen64_soft_gfx/rsp.o \
-#		mupen64_soft_gfx/vi_GX.o \
-#		mupen64_soft_gfx/vi.o \
-#		mupen64_soft_gfx/rdp.o \
-#		mupen64_soft_gfx/tx.o \
-#		mupen64_soft_gfx/rs.o \
-#		mupen64_soft_gfx/tf.o \
-#		mupen64_soft_gfx/cc.o \
-#		mupen64_soft_gfx/bl.o \
-#		mupen64_soft_gfx/font.o
 
 OBJ_GX_GFX	=GX_gfx/main.o \
 		GX_gfx/rsp_GX.o \
@@ -146,7 +138,7 @@ HEADER		=main/rom.h \
 		r4300/recomp.h \
 		gc_memory/pif.h
 
-LIB		=	-logc -lm -lsdcard
+LIB		=	-logc -lm -lfat -ldb -lwiiuse -lbte -logc
 
 ifeq ($(strip mupen64_GX_gfx/main.cpp),)
 	export LD	:=	$(CC)
@@ -223,12 +215,10 @@ r4300/ppc/Wrappers.o:		r4300/ppc/Wrappers.s
 				$(CC) $(CFLAGS) -c -o $@ $<
 
 
-mupen64_gc.elf:	$(OBJ) $(OBJ_PPC) $(OBJ_INPUT) $(OBJ_GX_GFX) \
-				$(OBJ_AUDIO) $(OBJ_RSPHLE) main/main_gc-menu.o
+mupen64_gc.elf:	$(OBJ) $(OBJ_INPUT) $(OBJ_GX_GFX) $(OBJ_AUDIO) $(OBJ_RSPHLE) main/main_gc-menu.o
 				$(LD) $^ $(LDFLAGS) $(LIBPATHS) $(LIB) -Wl -o $@
-		#strip --strip-all $@
 		powerpc-gekko-objcopy -O binary $@ mupen64.dol
-		#dollz3 mupen64.dol mupen6z.dol
+
 
 
 
@@ -244,8 +234,6 @@ install:
 	
 clean:
 	find . -name '*.o' -print0 | xargs -0r rm -f
-#	rm mupen64 mupen64_nogui mupen64_dbg 
-#	rm plugins/mupen64_input.so blight_input/arial.ttf.c blight_input/ttftoh plugins/blight_input.so plugins/mupen64_hle_rsp_azimer.so plugins/dummyaudio.so plugins/mupen64_audio.so plugins/jttl_audio.so plugins/mupen64_GX_gfx.so plugins/mupen64_soft_gfx.so plugins/glN64.so
 
 clean_o:
 	find . -name '*.o' -print0 | xargs -0r rm -f
