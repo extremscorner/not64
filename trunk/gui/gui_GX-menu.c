@@ -732,7 +732,7 @@ void GUI_creditScreen()
 	write_font_init_GX(fontColor);
 
 	fontColor = (GXColor) {69,31,133,255}; //purplish
-	strcpy(string,"Liip Year 2008 Edition!!");
+	strcpy(string,"Wii64 Tiizer Edition!!");
 	pos = (Vector) {319.5F, 130.0F, -250.0};
 	axis1 = (Vector) {0.0F, 1.0F, 0.0F};
 	rot = (Vector) {rotateby-90, 0.0F, 0.0F};
