@@ -158,12 +158,12 @@ int rom_read(fileBrowser_file* file){
    else { sprintf(buffer, "Manufacturer: %x\n", (unsigned int)(ROM_HEADER->Manufacturer_ID)); PRINT(buffer); }
    sprintf(buffer, "Cartridge_ID: %x\n", ROM_HEADER->Cartridge_ID);
    PRINT(buffer);
-   
+#endif   
    // Swap country code since I know it's used
    char temp = ((char*)&ROM_HEADER->Country_code)[0];
    ((char*)&ROM_HEADER->Country_code)[0] = ((char*)&ROM_HEADER->Country_code)[1];
    ((char*)&ROM_HEADER->Country_code)[1] = temp;
-   
+#if 0   
    switch(ROM_HEADER->Country_code)
      {
       case 0x0044:
