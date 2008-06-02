@@ -68,6 +68,7 @@ unsigned int isWii = 0;
 static u32* xfb[2] = { NULL, NULL };	/*** Framebuffers ***/
 //static GXRModeObj *vmode;				/*** Graphics Mode Object ***/
 GXRModeObj *vmode;				/*** Graphics Mode Object ***/
+void ogc_video__reset();
 
 // Dummy functions
 static void dummy_func(){ }
@@ -82,13 +83,11 @@ u16 readWPAD(void);
 int main(){
 	/* INITIALIZE */
 	Initialise(); // Stock OGC initialization
-	//SDCARD_Init();
 #ifndef WII
 	DVD_Init();
 #endif
 	menuInit();
 #ifdef WII
-	//killWiimote();
 	//SYS_SetPowerCallback(STM_ShutdownToIdle());
 #endif
 #ifdef DEBUGON
@@ -215,6 +214,7 @@ void loadROM(fileBrowser_file* rom){
 	romOpen_input();
 	
 	cpu_init();
+	ogc_video__reset();
 }
 
 static void gfx_info_init(void){
@@ -312,11 +312,13 @@ static void rsp_info_init(void){
 	rsp_info.ShowCFB = showCFB;
 	initiateRSP(rsp_info,(DWORD*)&cycle_count);
 }
+
 void ScanPADSandReset() {
 	PAD_ScanPads();
 	if(!((*(u32*)0xCC003000)>>16))
 		stop = 1;
 }
+
 static void Initialise (void){
   static int whichfb = 0;        /*** Frame buffer toggle ***/
   VIDEO_Init();
@@ -329,17 +331,9 @@ static void Initialise (void){
   
   vmode = VIDEO_GetPreferredMode(NULL);
     
-  if(!((*(u32*)0xCC003000)>>16)) //if you held reset button down, then swap from 50->60hz or 60->50hz
-  {
- 	if(VIDEO_GetCurrentTvMode () == VI_PAL)
-		vmode = &TVNtsc480IntDf;
-	if(VIDEO_GetCurrentTvMode () == VI_NTSC)
-		vmode = &TVPal528IntDf;
-  }
-	    	
   VIDEO_Configure (vmode);
-  xfb[0] = (u32 *) MEM_K0_TO_K1 (SYS_AllocateFramebuffer (vmode));
-  xfb[1] = (u32 *) MEM_K0_TO_K1 (SYS_AllocateFramebuffer (vmode));
+  xfb[0] = (u32 *) MEM_K0_TO_K1 (SYS_AllocateFramebuffer (&TVPal528IntDf)); //assume PAL largest
+  xfb[1] = (u32 *) MEM_K0_TO_K1 (SYS_AllocateFramebuffer (&TVPal528IntDf));	//fixme for progressive?
   console_init (xfb[0], 20, 64, vmode->fbWidth, vmode->xfbHeight,
         vmode->fbWidth * 2);
   VIDEO_ClearFrameBuffer (vmode, xfb[0], COLOR_BLACK);
@@ -382,5 +376,44 @@ static void Initialise (void){
 	else
 		isWii = 0;
 	DEBUG_print("Welcome to Mupen64GC :)\n\0",DBG_USBGECKO);
+}
+
+/* Reinitialize GX */ 
+void ogc_video__reset()
+{
+    GXRModeObj *rmode;
+	
+    //clear the old framebuffer
+	VIDEO_ClearFrameBuffer(vmode, xfb[0], COLOR_BLACK);
+	VIDEO_ClearFrameBuffer(vmode, xfb[1], COLOR_BLACK);
+    /* set TV mode for current ROM*/
+	switch(ROM_HEADER->Country_code)
+   	{
+    	case 0x0044:
+			rmode = &TVPal528IntDf;
+			break;
+    	case 0x0045:
+			rmode = &TVNtsc480IntDf;
+			break;
+     	case 0x004A:
+			rmode = &TVNtsc480IntDf;
+			break;
+    	case 0x0050:
+			rmode = &TVPal528IntDf;
+			break;
+    	case 0x0055:
+			rmode = &TVPal528IntDf;
+    	default:
+			rmode = &TVNtsc480IntDf;
+    }
+    vmode = rmode;
+    VIDEO_Configure (vmode);
+    VIDEO_ClearFrameBuffer(vmode, xfb[0], COLOR_BLACK);
+    VIDEO_ClearFrameBuffer(vmode, xfb[1], COLOR_BLACK);
+    VIDEO_Flush();
+    VIDEO_WaitVSync();
+    if (rmode->viTVMode & VI_NON_INTERLACE) VIDEO_WaitVSync();
+    else while (VIDEO_GetNextField())  VIDEO_WaitVSync();
+
 }
 
