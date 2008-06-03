@@ -26,7 +26,7 @@
 #define LOAD_SIZE  (4*1024)
 static u32   ROMSize;
 static int   ROMTooBig;
-static int   ROMByteSwap;
+extern int   ROM_byte_swap;
 static char* ROMBlocks[64];
 static int   ROMBlocksLRU[64];
 static fileBrowser_file* ROMFile;
@@ -141,7 +141,7 @@ void ROMCache_load(fileBrowser_file* f, int byteSwap){
 	sprintf(txt, "Loading ROM %s into MEM2.\n Please be patient...\n", ROMTooBig ? "partially" : "fully");
 	PRINT(txt);
 	
-	ROMByteSwap = byteSwap;
+	ROM_byte_swap = byteSwap;
 	ROMFile = f;
 	romFile_seekFile(f, 0, FILE_BROWSER_SEEK_SET);
 	
