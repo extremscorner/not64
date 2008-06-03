@@ -1452,9 +1452,25 @@ void write_nomemd()
    if (address == 0x00000000) return;
    write_dword_in_memory();
 }
+/*
+	//taken from 1964 source code.
+	//This as well as the 4Mb hack need to be done in a while loop which runs before bootup
+	//i.e. while (N64_ProgramCounter != rom[8]) executeN64(); patch();
+		
+	// Azimer - DK64 Hack to break out of infinite loop £
+	// I believe this memory location is some sort of copyright protection which £
+	// is written to using the RSP on bootup. The only issue I see is if it £
+	// affects any other roms?
+	 	 
+	if(strncmp(ROM_HEADER->nom, "DONKEY KONG 64", 14) == 0)
+		rdram[0x2FE1C0/4] = 0xAD170014;
+*/
 
 void read_rdram()
 {
+#ifndef USE_EXPANSION
+	rdram[0x318/4] = 0x00400000;	//fixme I only need to be done at boot time.
+#endif
    *rdword = *((unsigned long *)(rdramb + (address & MEMMASK)));
 }
 
