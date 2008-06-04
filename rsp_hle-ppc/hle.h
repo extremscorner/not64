@@ -106,7 +106,7 @@ void ucode3(OSTask_t *task);
 void init_ucode1();
 void init_ucode2();
 
-extern u32 inst1, inst2;
+extern unsigned long inst1, inst2;
 extern u16 AudioInBuffer, AudioOutBuffer, AudioCount;
 extern u16 AudioAuxA, AudioAuxC, AudioAuxE;
 extern u32 loopval; // Value set by A_SETLOOP : Possible conflict with SETVOLUME???

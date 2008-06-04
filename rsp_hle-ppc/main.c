@@ -24,7 +24,7 @@
 #include <string.h>
 RSP_INFO rsp;
 
-u32 inst1, inst2;
+unsigned long inst1, inst2;
 
 BOOL AudioHle = FALSE, GraphicsHle = TRUE, SpecificHle = FALSE;
 
@@ -111,14 +111,6 @@ __declspec(dllexport) DWORD DoRspCycles ( DWORD Cycles )
 {
    OSTask_t *task = (OSTask_t*)(rsp.DMEM + 0xFC0);
    unsigned int i, sum=0;
-#ifdef __WIN32__
-   if(firstTime)
-   {
-      firstTime=FALSE;
-      if (SpecificHle)
-            loadPlugin();
-   }
-#endif
    
    if( task->type == 1 && task->data_ptr != 0 && GraphicsHle) {
       if (rsp.ProcessDlistList != NULL) {
@@ -133,11 +125,6 @@ __declspec(dllexport) DWORD DoRspCycles ( DWORD Cycles )
       *rsp.DPC_STATUS_REG &= ~0x0002;
       return Cycles;
    } else if (task->type == 2 && AudioHle) {
-#ifdef __WIN32__
-      if (SpecificHle)
-            processAList();
-      else 
-#endif
       if (rsp.ProcessAlistList != NULL) {
 	 rsp.ProcessAlistList();
       }
@@ -212,15 +199,7 @@ __declspec(dllexport) DWORD DoRspCycles ( DWORD Cycles )
 		  return Cycles;
 		  break;
 		default:
-		    {
-		       char s[1024];
-		       sprintf(s, "unknown audio:\n\tsum:%x", sum);
-#ifdef __WIN32__
-		       MessageBox(NULL, s, "unknown task", MB_OK);
-#else
-		       printf("%s\n", s);
-#endif
-		    }
+			break;
 	       }
 	     break;
 	   case 4: // jpeg
@@ -235,61 +214,18 @@ __declspec(dllexport) DWORD DoRspCycles ( DWORD Cycles )
 		  return Cycles;
 		  break;
 		default:
-		    {
-		       char s[1024];
-		       sprintf(s, "unknown jpeg:\n\tsum:%x", sum);
-#ifdef __WIN32__
-		       MessageBox(NULL, s, "unknown task", MB_OK);
-#else
-		       printf("%s\n", s);
-#endif
-		    }
+			break;
 	       }
 	     break;
 	  }
      }
-   
-     {
-	char s[1024];
-//	FILE *f;
-	sprintf(s, "unknown task:\n\ttype:%d\n\tsum:%x\n\tPC:%x", task->type, sum, rsp.SP_PC_REG);
-#ifdef __WIN32__
-	MessageBox(NULL, s, "unknown task", MB_OK);
-#else
-	printf("%s\n", s);
-#endif
-	
+
 	if (task->ucode_size <= 0x1000)
 	  {
-/*	     f = fopen("imem.dat", "wb");
-	     fwrite(rsp.RDRAM + task->ucode, task->ucode_size, 1, f);
-	     fclose(f);
-	     
-	     f = fopen("dmem.dat", "wb");
-	     fwrite(rsp.RDRAM + task->ucode_data, task->ucode_data_size, 1, f);
-	     fclose(f);
-	     
-	     f = fopen("disasm.txt", "wb");*/
 	     memcpy(rsp.DMEM, rsp.RDRAM+task->ucode_data, task->ucode_data_size);
 	     memcpy(rsp.IMEM+0x80, rsp.RDRAM+task->ucode, 0xF7F);
-	     /*disasm(f, (unsigned long*)(rsp.IMEM));
-	     fclose(f);*/
 	  }
-	else
-	  {
-	     /*f = fopen("imem.dat", "wb");
-	     fwrite(rsp.IMEM, 0x1000, 1, f);
-	     fclose(f);
-	     
-	     f = fopen("dmem.dat", "wb");
-	     fwrite(rsp.DMEM, 0x1000, 1, f);
-	     fclose(f);
-	     
-	     f = fopen("disasm.txt", "wb");
-	     disasm(f, (unsigned long*)(rsp.IMEM));
-	     fclose(f);*/
-	  }
-     }
+
    
    return Cycles;
 }
