@@ -16,13 +16,13 @@
 #include <ogc/dvd.h>
 #include "../main/gc_dvd.h"
 #include "../gui/DEBUG.h"
-
+#include "../main/savestates.h"
 // -- ACTUAL MENU LAYOUT --
 
 #ifdef WII
-#define MAIN_MENU_SIZE 11
+#define MAIN_MENU_SIZE 12
 #else
-#define MAIN_MENU_SIZE 13
+#define MAIN_MENU_SIZE 14
 #endif
 
 
@@ -116,7 +116,7 @@ extern BOOL hasLoadedROM;
 #endif
 		 };
 
-#define SELECT_CPU_INDEX 3
+#define SELECT_CPU_INDEX 4
 #define SELECT_CPU_ITEM \
 	{ "Select CPU Core", /* caption */ \
 	  MENU_ATTR_HASSUBMENU, /* attr */ \
@@ -137,7 +137,7 @@ extern BOOL hasLoadedROM;
 		return "Credits should be scrolling";
 	}
 
-#define SHOW_CREDITS_INDEX 4
+#define SHOW_CREDITS_INDEX 5
 #define SHOW_CREDITS_ITEM \
 	{ "Show Credits", \
 	  MENU_ATTR_NONE, \
@@ -167,7 +167,7 @@ extern BOOL hasLoadedROM;
 		return "Motor Stopped";
 	}
 
-#define STOP_DVD_INDEX 5
+#define STOP_DVD_INDEX 6
 #define STOP_DVD_ITEM \
 	{ "Stop DVD", \
 	  MENU_ATTR_NONE, \
@@ -183,7 +183,7 @@ extern BOOL hasLoadedROM;
 		return "Swap disc now";
 	}
 
-#define SWAP_DVD_INDEX 6
+#define SWAP_DVD_INDEX 7
 #define SWAP_DVD_ITEM \
 	{ "Swap DVD", \
 	  MENU_ATTR_NONE, \
@@ -586,6 +586,45 @@ static inline void menuStack_push(menu_item*);
 
 /* End of "Save Game" item */
 
+/* "State Management" menu item */
+
+	static int which_slot;
+	static char* state_cycleSlot();
+
+	static menu_item state_subMenu[] =
+		{{ "Save State",
+		   MENU_ATTR_SPECIAL,
+		   { .func = savestates_save }
+		  },
+		 { "Load State",
+		   MENU_ATTR_NONE,
+		   { .func = savestates_load }
+		  },
+		 { "Slot: 0",
+		   MENU_ATTR_NONE,
+		   { .func = state_cycleSlot }
+		  }
+		 };
+	
+	static char* state_cycleSlot(){
+		which_slot = (which_slot+1) % 10;
+		savestates_select_slot(which_slot);
+		state_subMenu[2].caption[6] = which_slot + '0';
+		return NULL;
+	}
+
+#define STATE_INDEX 3
+#define STATE_ITEM \
+	{ "State Management", /* caption */ \
+	  MENU_ATTR_HASSUBMENU, /* attr */ \
+	  /* subMenu */ \
+	  { 3, /* num_items */ \
+	    &state_subMenu[0] /* items */ \
+	   } \
+	 }	
+
+/* End of "State Management" item */
+
 /* "Exit to SDLOAD" item */
 
 	static void reload(){
@@ -700,6 +739,7 @@ static menu_item main_menu[MAIN_MENU_SIZE] =
 	
 	  LOAD_SAVE_ITEM,
 	  SAVE_GAME_ITEM,
+	  STATE_ITEM,
 	  
 	  SELECT_CPU_ITEM,
 	  
@@ -815,4 +855,3 @@ void menuBack(){
 }
 
 // -- END MENU IMPLEMENTATION --
-

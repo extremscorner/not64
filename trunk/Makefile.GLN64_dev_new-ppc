@@ -187,7 +187,7 @@ HEADER		=main/rom.h \
 		gc_memory/pif.h
 
 #LIB		=	-logc -lm -lsdcard -ldb
-LIB		=	-logc -lm -lfat -logc
+LIB		=	-logc -lm -lfat -logc -lz
 
 ifeq ($(strip mupen64_GX_gfx/main.cpp),)
 	export LD	:=	$(CC)
