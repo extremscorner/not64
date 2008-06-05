@@ -192,7 +192,7 @@ HEADER		=main/rom.h \
 		r4300/recomp.h \
 		gc_memory/pif.h
 
-LIB		=	-logc -lm -lfat -ldb -lwiiuse -lbte -logc
+LIB		=	-logc -lm -lfat -ldb -lwiiuse -lbte -logc -lz
 #LIB		=	-logc -lm -lsdcard
 
 ifeq ($(strip mupen64_GX_gfx/main.cpp),)
