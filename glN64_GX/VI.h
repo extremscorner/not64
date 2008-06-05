@@ -24,6 +24,7 @@ void VI_GX_updateDEBUG();
 void VI_GX_showDEBUG();
 void VI_GX_showStats();
 void VI_GX_cleanUp();
+void VI_GX_PreRetraceCallback(u32 retraceCnt);
 
 #endif // __GX__
 
