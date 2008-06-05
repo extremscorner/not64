@@ -318,7 +318,7 @@ EXPORT void CALL ProcessDList(void)
 //	TextureCache_Init();
 //	OGL_Stop();
 //	OGL_Start();
-   VI_GX_updateDEBUG();
+	VI_GX_updateDEBUG();
 #endif // __GX__
 }
 
@@ -379,6 +379,10 @@ EXPORT void CALL RomClosed (void)
 	OGL_Stop();
 #endif
 
+#ifdef __GX__
+	VIDEO_SetPreRetraceCallback(NULL);
+#endif // __GX__
+
 #ifdef DEBUG
 	CloseDebugDlg();
 #endif
@@ -426,6 +430,7 @@ EXPORT void CALL RomOpen (void)
 
 #ifdef __GX__
 	VI_GX_init();
+	VIDEO_SetPreRetraceCallback(VI_GX_PreRetraceCallback);
 #endif // __GX__
 }
 

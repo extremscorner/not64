@@ -26,6 +26,7 @@ extern GXRModeObj *vmode;
 
 #ifdef __GX__
 bool updateDEBUGflag;
+bool new_fb;
 char printToScreen;
 char showFPSonScreen;
 
@@ -121,15 +122,22 @@ void VI_UpdateScreen()
 		VI_GX_showStats();
 		VI_GX_showFPS();
 		VI_GX_showDEBUG();
-		GX_DrawDone(); //needed?
-		GX_CopyDisp (xfb[which_fb], GX_FALSE); //TODO: Figure out where the UpdateScreen interrupts are coming from!
-		GX_DrawDone(); //Shagkur's recommendation
-//		doCaptureScreen();
-		updateDEBUGflag = false;
-		VIDEO_SetNextFramebuffer(xfb[which_fb]);
+		if(updateDEBUGflag)
+		{
+			if(new_fb)
+				VIDEO_WaitVSync();
+			GX_DrawDone(); //needed?
+			GX_CopyDisp (xfb[which_fb], GX_FALSE); //TODO: Figure out where the UpdateScreen interrupts are coming from!
+			GX_DrawDone(); //Shagkur's recommendation
+//			doCaptureScreen();
+			updateDEBUGflag = false;
+			new_fb = true;
+		}
+		//The following has been moved to the Pre-Retrace callback
+/*		VIDEO_SetNextFramebuffer(xfb[which_fb]);
 		VIDEO_Flush();
 		which_fb ^= 1;
-		VIDEO_WaitVSync();
+		VIDEO_WaitVSync();*/
 	}
 #endif // __GX__
 
@@ -144,6 +152,7 @@ extern unsigned int diff_sec(long long start,long long end);
 void VI_GX_init() {
 	init_font();
 	updateDEBUGflag = true;
+	new_fb = false;
 	which_fb = 1;
 }
 
@@ -293,5 +302,16 @@ void VI_GX_cleanUp()
 	GX_SetClipMode(GX_CLIP_DISABLE);
 	GX_SetScissor(0,0,vmode->fbWidth,vmode->efbHeight);
 	GX_SetAlphaCompare(GX_ALWAYS,0,GX_AOP_AND,GX_ALWAYS,0);
+}
+
+void VI_GX_PreRetraceCallback(u32 retraceCnt)
+{
+	if(new_fb)
+	{
+		VIDEO_SetNextFramebuffer(xfb[which_fb]);
+		VIDEO_Flush();
+		which_fb ^= 1;
+		new_fb = false;
+	}
 }
 #endif // __GX__
