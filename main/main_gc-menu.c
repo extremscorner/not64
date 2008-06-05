@@ -145,7 +145,7 @@ int main(){
 #ifdef WII
 u16 readWPAD(void){
 	WPADData wpad;
-	WPAD_Read(0, &wpad);
+	WPAD_ReadEvent(0, &wpad);
 	
 	u16 b = 0;
 	if(wpad.err == WPAD_ERR_NONE &&

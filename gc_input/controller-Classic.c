@@ -26,7 +26,7 @@ static int getStickValue(joystick_t* j, int axis, int maxAbsValue){
 static int _GetKeys(int Control, BUTTONS * Keys )
 {
 	WPADData wpad;
-	WPAD_Read(Control, &wpad);
+	WPAD_ReadEvent(Control, &wpad);
 	BUTTONS* c = Keys;
 	
 	int b = wpad.exp.classic.btns;
@@ -87,12 +87,12 @@ static void init(void){
 	int i;
 	for(i=0; i<4; ++i){
 		WPADData wpad;
-		WPAD_Read(i, &wpad);
+		WPAD_ReadEvent(i, &wpad);
 		// Only use a connected classic controller
 		if(wpad.err == WPAD_ERR_NONE &&
 		   wpad.exp.type == WPAD_EXP_CLASSIC){
 			controller_Classic.available[i] = 1;
-			WPAD_SetDataFormat(i, WPAD_FMT_CORE);
+			WPAD_SetDataFormat(i, WPAD_FMT_BTNS);
 		} else
 			controller_Classic.available[i] = 0;
 	}
