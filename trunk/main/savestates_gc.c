@@ -30,7 +30,8 @@
 #include <zlib.h>
 #include <stdlib.h>
 #include <string.h>
-
+#include <unistd.h>
+#include <gccore.h>
 #include "savestates.h"
 #include "guifuncs.h"
 #include "rom.h"
@@ -45,7 +46,7 @@ extern unsigned long interp_addr;
 extern int *autoinc_save_slot;
 
 int savestates_job = 0;
-
+extern BOOL hasLoadedROM;
 static unsigned int slot = 0;
 
 void savestates_select_slot(unsigned int s)
@@ -56,6 +57,8 @@ void savestates_select_slot(unsigned int s)
 
 char* savestates_save()
 {
+	if(!hasLoadedROM)
+		return "A ROM must be loaded first";
    	char *filename, buf[1024];
    	gzFile f;
    	int len, i;
@@ -128,7 +131,8 @@ char* savestates_save()
 
 char* savestates_load()
 {
-
+	if(!hasLoadedROM)
+		return "A ROM must be loaded first";
 	char *filename, buf[1024];
 	gzFile f = NULL;
 	int len, i;
