@@ -37,8 +37,6 @@
 #include "macros.h"
 #include "interupt.h"
 
-#define USE_TLB_CACHE
-
 #ifdef __PPC__
 #include "../main/ROM-Cache.h"
 #endif

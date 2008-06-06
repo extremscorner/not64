@@ -54,9 +54,10 @@ typedef struct _tlb
    unsigned long end_odd;
    unsigned long phys_odd;
 } tlb;
-
-extern unsigned long tlb_LUT_r[0x100000];
-extern unsigned long tlb_LUT_w[0x100000];
+#ifndef USE_TLB_CACHE
+extern unsigned long *tlb_LUT_r;
+extern unsigned long *tlb_LUT_w;
+#endif
 unsigned long virtual_to_physical_address(unsigned long addresse, int w);
 int probe_nop(unsigned long address);
 

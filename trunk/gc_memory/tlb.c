@@ -39,11 +39,11 @@
 	#define MEMMASK 0x3FFFFF
 	#define TOPOFMEM 0x80400000
 #endif
-#define USE_TLB_CACHE
+
 
 #ifndef USE_TLB_CACHE
-unsigned long tlb_LUT_r[0x100000];
-unsigned long tlb_LUT_w[0x100000];
+unsigned long *tlb_LUT_r = (unsigned long*)0x92080000;	//fixme to be Malloc'd from MEM2
+unsigned long *tlb_LUT_w = (unsigned long*)0x92480000;	//me too
 #endif
 extern unsigned long interp_addr;
 unsigned long virtual_to_physical_address(unsigned long addresse, int w)
