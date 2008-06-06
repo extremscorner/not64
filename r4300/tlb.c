@@ -37,8 +37,6 @@
 #include "../gc_memory/memory.h"
 #include "../gc_memory/TLB-Cache.h"
 
-#define USE_TLB_CACHE
-
 #include <zlib.h>
 
 uLong ZEXPORT adler32(uLong adler, const Bytef *buf, uInt len);
@@ -71,8 +69,8 @@ void TLBWI()
 		if(!invalid_code_get(i) && (invalid_code_get(paddr>>12) ||
 		                        invalid_code_get((paddr>>12)+0x20000)))
 #else
-	     if(!invalid_code_get(i) &&(invalid_code[tlb_LUT_r[i]>>12] ||
-				    invalid_code[(tlb_LUT_r[i]>>12)+0x20000]))
+	     if(!invalid_code_get(i) &&(invalid_code_get(tlb_LUT_r[i]>>12) ||
+				    invalid_code_get((tlb_LUT_r[i]>>12)+0x20000)))
 #endif
 	       invalid_code_set(i, 1);
 	     if (!invalid_code_get(i))
@@ -122,8 +120,8 @@ void TLBWI()
 		if(!invalid_code_get(i) && (invalid_code_get(paddr>>12) ||
 		                        invalid_code_get((paddr>>12)+0x20000)))
 #else
-	     if(!invalid_code_get(i) &&(invalid_code[tlb_LUT_r[i]>>12] ||
-				    invalid_code[(tlb_LUT_r[i]>>12)+0x20000]))
+	     if(!invalid_code_get(i) &&(invalid_code_get(tlb_LUT_r[i]>>12) ||
+				    invalid_code_get((tlb_LUT_r[i]>>12)+0x20000)))
 #endif
 	       invalid_code_set(i, 1);
 	     if (!invalid_code_get(i))
@@ -321,8 +319,8 @@ void TLBWR()
 		if(!invalid_code_get(i) && (invalid_code_get(paddr>>12) ||
 		                        invalid_code_get((paddr>>12)+0x20000)))
 #else
-	     if(!invalid_code_get(i) &&(invalid_code[tlb_LUT_r[i]>>12] ||
-				    invalid_code[(tlb_LUT_r[i]>>12)+0x20000]))
+	     if(!invalid_code_get(i) &&(invalid_code_get(tlb_LUT_r[i]>>12) ||
+				    invalid_code_get((tlb_LUT_r[i]>>12)+0x20000)))
 #endif
 	       invalid_code_set(i, 1);
 	     if (!invalid_code_get(i))
@@ -372,8 +370,8 @@ void TLBWR()
 		if(!invalid_code_get(i) && (invalid_code_get(paddr>>12) ||
 		                        invalid_code_get((paddr>>12)+0x20000)))
 #else
-	     if(!invalid_code_get(i) &&(invalid_code[tlb_LUT_r[i]>>12] ||
-				    invalid_code[(tlb_LUT_r[i]>>12)+0x20000]))
+	     if(!invalid_code_get(i) &&(invalid_code_get(tlb_LUT_r[i]>>12) ||
+				    invalid_code_get((tlb_LUT_r[i]>>12)+0x20000)))
 #endif
 	       invalid_code_set(i, 1);
 	     if (!invalid_code_get(i))

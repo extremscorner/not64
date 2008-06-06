@@ -16,6 +16,8 @@
 #include <assert.h>
 #include "TLB-Cache.h"
 
+#ifdef USE_TLB_CACHE
+
 // Num Slots must be a power of 2!
 #define TLB_NUM_SLOTS 64
 // The amount of bits required to represent a page
@@ -123,3 +125,4 @@ void inline TLBCache_set_w(unsigned int page, unsigned int val){
 }
 
 
+#endif

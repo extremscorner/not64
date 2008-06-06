@@ -196,7 +196,9 @@ void loadROM(fileBrowser_file* rom){
 	hasLoadedROM = TRUE;
 	
 	ARAM_manager_init();
+#ifdef USE_TLB_CACHE
 	TLBCache_init();
+#endif
 	//romFile_init(rom);
 	rom_read(rom);
 	

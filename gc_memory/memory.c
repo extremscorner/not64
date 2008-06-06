@@ -1040,7 +1040,9 @@ void free_memory()
 	saveMempak();
 	saveSram();
 	saveFlashram();*/
+#ifdef USE_TLB_CACHE
 	TLBCache_deinit();
+#endif
 }
 
 static void update_MI_init_mode_reg()
