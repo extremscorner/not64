@@ -317,9 +317,8 @@ static void rsp_info_init(void){
 
 void ScanPADSandReset() {
 	PAD_ScanPads();
-	if(!((*(u32*)0xCC003000)>>16))
-		stop = 1;
 }
+void ResetCallBack() {stop = 1;}
 
 static void Initialise (void){
   static int whichfb = 0;        /*** Frame buffer toggle ***/
@@ -377,7 +376,7 @@ static void Initialise (void){
 		isWii = 1;
 	else
 		isWii = 0;
-	DEBUG_print("Welcome to Mupen64GC :)\n\0",DBG_USBGECKO);
+	SYS_SetResetCallback(ResetCallBack);	//untested
 }
 
 /* Reinitialize GX */ 
