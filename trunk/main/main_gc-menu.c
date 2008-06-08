@@ -317,6 +317,8 @@ static void rsp_info_init(void){
 
 void ScanPADSandReset() {
 	PAD_ScanPads();
+	if(!((*(u32*)0xCC003000)>>16))
+		stop = 1;
 }
 void ResetCallBack() {stop = 1;}
 
@@ -376,7 +378,7 @@ static void Initialise (void){
 		isWii = 1;
 	else
 		isWii = 0;
-	SYS_SetResetCallback(ResetCallBack);	//untested
+	//SYS_SetResetCallback(ResetCallBack);	//not working, use old method for now
 }
 
 /* Reinitialize GX */ 
