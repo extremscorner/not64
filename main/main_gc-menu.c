@@ -21,6 +21,7 @@
 #include "../gc_memory/memory.h"
 #include "../gc_memory/ARAM.h"
 #include "../gc_memory/TLB-Cache.h"
+#include "../gc_memory/tlb.h"
 #include "ROM-Cache.h"
 
 #include <gccore.h>
@@ -198,6 +199,8 @@ void loadROM(fileBrowser_file* rom){
 	ARAM_manager_init();
 #ifdef USE_TLB_CACHE
 	TLBCache_init();
+#else
+	tlb_mem2_init();
 #endif
 	//romFile_init(rom);
 	rom_read(rom);
