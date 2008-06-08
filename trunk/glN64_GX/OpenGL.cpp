@@ -1,8 +1,6 @@
 #ifdef __GX__
 #include <gccore.h>
 #include "../gui/DEBUG.h"
-#define GXprojZScale	 0.5
-#define GXprojZOffset	-0.5
 #endif // __GX__
 
 #ifndef __LINUX__
@@ -272,19 +270,7 @@ void OGL_InitStates()
 	glClearColor( 0.0f, 0.0f, 0.0f, 0.0f );
 	glClear( GL_COLOR_BUFFER_BIT );
 #else // !__GX__
-/*	// Init GX variables here...
-	Mtx44 GXprojection;
-	Mtx GXmodelView;
-
-	guMtxIdentity(GXmodelView);
-	GX_LoadPosMtxImm(GXmodelView,GX_PNMTX0);
-	guMtxIdentity(GXprojection);
-	//N64 Z clip space is backwards, so mult z components by -1 (?)
-	//N64 Z [-1,1] whereas GC Z [-1,0], so mult by 0.5 and shift by -0.5
-	GXprojection[2][2] = 0.5;
-	GXprojection[2][3] = -0.5;
-	GX_LoadProjectionMtx(GXprojection, GX_ORTHOGRAPHIC);
-*/
+	// TODO: Init GX variables here...
 #endif // __GX__
 
 	srand( timeGetTime() );
@@ -688,7 +674,8 @@ void OGL_UpdateStates()
 	if ((gDP.changed & CHANGED_ALPHACOMPARE) || (gDP.changed & CHANGED_RENDERMODE))
 	{
 		u8 GXalphaFunc, GXalphaRef;
-		u8 GXZcompLoc = GX_FALSE; //do Z compare after texturing (GX_FALSE)
+//		u8 GXZcompLoc = GX_FALSE; //do Z compare after texturing (GX_FALSE)
+		OGL.GXuseAlphaCompare = true;
 		// Enable alpha test for threshold mode
 		if ((gDP.otherMode.alphaCompare == G_AC_THRESHOLD) && !(gDP.otherMode.alphaCvgSel))
 		{
@@ -711,9 +698,11 @@ void OGL_UpdateStates()
 //			glDisable( GL_ALPHA_TEST );
 			GXalphaFunc = GX_ALWAYS;
 			GXalphaRef = (u8) 0;
-			GXZcompLoc = GX_TRUE; //do Z compare before texturing (GX_TRUE)
+//			GXZcompLoc = GX_TRUE; //do Z compare before texturing (GX_TRUE)
+			OGL.GXuseAlphaCompare = false;
 		}
-		GX_SetZCompLoc(GXZcompLoc);
+		//TODO: Add more code to implement the following line.
+//		GX_SetZCompLoc(GXZcompLoc);
 		GX_SetAlphaCompare(GXalphaFunc,GXalphaRef,GX_AOP_AND,GX_ALWAYS,0);
 
 #ifdef GLN64_SDLOG
@@ -953,7 +942,13 @@ void OGL_AddTriangle( SPVertex *vertices, int v0, int v1, int v2 )
 	{
 		OGL.vertices[OGL.numVertices].x = vertices[v[i]].x;
 		OGL.vertices[OGL.numVertices].y = vertices[v[i]].y;
+#ifndef __GX__
 		OGL.vertices[OGL.numVertices].z = gDP.otherMode.depthSource == G_ZS_PRIM ? gDP.primDepth.z * vertices[v[i]].w : vertices[v[i]].z;
+#else // !__GX__
+		//TODO: primDepthZ should now be handled with a Ztex. Verify this.
+//		OGL.vertices[OGL.numVertices].z = (gDP.otherMode.depthSource == G_ZS_PRIM) && !(OGL.GXuseProj) ? gDP.primDepth.z * vertices[v[i]].w : vertices[v[i]].z;
+		OGL.vertices[OGL.numVertices].z = vertices[v[i]].z;
+#endif // __GX__
 		OGL.vertices[OGL.numVertices].w = vertices[v[i]].w;
 
 		OGL.vertices[OGL.numVertices].color.r = vertices[v[i]].r;
@@ -1042,41 +1037,109 @@ void OGL_DrawTriangles()
 #else // !__GX__
 	//TODO: Implement in GX
 	GXColor GXcol;
+	float invW;
 
 #ifdef GLN64_SDLOG
 	sprintf(txtbuffer,"OGL_DrawTris: numTri %d, numVert %d, useT0 %d, useT1 %d\n", OGL.numTriangles, OGL.numVertices, combiner.usesT0, combiner.usesT1);
 	DEBUG_print(txtbuffer,DBG_SDGECKOPRINT);
 #endif // GLN64_SDLOG
 
+	//Update MV & P Matrices
+	if(OGL.GXupdateMtx)
+	{
+		if(OGL.GXuseProj)
+		{
+			if(OGL.GXproj[3][2] == -1)
+				GX_LoadProjectionMtx(OGL.GXproj, GX_PERSPECTIVE);
+			else
+				GX_LoadProjectionMtx(OGL.GXproj, GX_ORTHOGRAPHIC); 
+			GX_LoadPosMtxImm(OGL.GXmodelView,GX_PNMTX0);
+		}
+		else
+		{
+			if(OGL.GXuseProjW)
+				GX_LoadProjectionMtx(OGL.GXprojW, GX_PERSPECTIVE); 
+			else
+				GX_LoadProjectionMtx(OGL.GXprojIdent, GX_ORTHOGRAPHIC); 
+			GX_LoadPosMtxImm(OGL.GXmodelViewIdent,GX_PNMTX0);
+		}
+		OGL.GXupdateMtx = false;
+	}
+
+	if ((gDP.otherMode.depthSource == G_ZS_PRIM)||OGL.GXuseAlphaCompare)
+	{
+		GX_SetZCompLoc(GX_FALSE);	// Do Z-compare after texturing. (i.e. use Ztex)
+		cache.GXZTexPrimCnt++;
+	}
+	else
+	{
+		GX_SetZCompLoc(GX_TRUE);	// Do Z-compare before texturing.
+		cache.GXnoZTexPrimCnt++;
+	}
+
 	//set vertex description here
 	GX_ClearVtxDesc();
-	GX_SetVtxDesc(GX_VA_PTNMTXIDX, GX_PNMTX0);
-	if (combiner.usesT0) GX_SetVtxDesc(GX_VA_TEX0MTXIDX, GX_IDENTITY);
-	if (combiner.usesT1) GX_SetVtxDesc(GX_VA_TEX1MTXIDX, GX_IDENTITY);
+	if (OGL.GXuseProj)	GX_SetVtxDesc(GX_VA_PTNMTXIDX, GX_PNMTX0);
+	else				GX_SetVtxDesc(GX_VA_PTNMTXIDX, GX_PNMTX0);
+//	if (combiner.usesT0) GX_SetVtxDesc(GX_VA_TEX0MTXIDX, GX_TEXMTX0);
+//	if (combiner.usesT1) GX_SetVtxDesc(GX_VA_TEX1MTXIDX, GX_TEXMTX0);
+	GX_SetVtxDesc(GX_VA_TEX0MTXIDX, GX_TEXMTX0);
+	GX_SetVtxDesc(GX_VA_TEX1MTXIDX, GX_TEXMTX0);
+	GX_SetVtxDesc(GX_VA_TEX2MTXIDX, GX_TEXMTX0);
 	GX_SetVtxDesc(GX_VA_POS, GX_DIRECT);
 //	if (lighting) GX_SetVtxDesc(GX_VA_NRM, GX_DIRECT);
 	GX_SetVtxDesc(GX_VA_CLR0, GX_DIRECT);
-	if (combiner.usesT0) GX_SetVtxDesc(GX_VA_TEX0, GX_DIRECT);
-	if (combiner.usesT1) GX_SetVtxDesc(GX_VA_TEX1, GX_DIRECT);
+//	if (combiner.usesT0) GX_SetVtxDesc(GX_VA_TEX0, GX_DIRECT);
+//	if (combiner.usesT1) GX_SetVtxDesc(GX_VA_TEX1, GX_DIRECT);
+	GX_SetVtxDesc(GX_VA_TEX0, GX_DIRECT);
+	GX_SetVtxDesc(GX_VA_TEX1, GX_DIRECT);
+	GX_SetVtxDesc(GX_VA_TEX2, GX_DIRECT);
 
 	//set vertex attribute formats here
+	//TODO: These only need to be set once during init.
 	GX_SetVtxAttrFmt(GX_VTXFMT0, GX_VA_POS, GX_POS_XYZ, GX_F32, 0);
 //	if (lighting) GX_SetVtxAttrFmt(GX_VTXFMT0, GX_VA_NRM, GX_NRM_XYZ, GX_F32, 0);
 	GX_SetVtxAttrFmt(GX_VTXFMT0, GX_VA_CLR0, GX_CLR_RGBA, GX_RGBA8, 0);
-	if (combiner.usesT0) GX_SetVtxAttrFmt(GX_VTXFMT0, GX_VA_TEX0, GX_TEX_ST, GX_F32, 0);
-	if (combiner.usesT1) GX_SetVtxAttrFmt(GX_VTXFMT0, GX_VA_TEX1, GX_TEX_ST, GX_F32, 0);
+//	if (combiner.usesT0) GX_SetVtxAttrFmt(GX_VTXFMT0, GX_VA_TEX0, GX_TEX_ST, GX_F32, 0);
+//	if (combiner.usesT1) GX_SetVtxAttrFmt(GX_VTXFMT0, GX_VA_TEX1, GX_TEX_ST, GX_F32, 0);
+	GX_SetVtxAttrFmt(GX_VTXFMT0, GX_VA_TEX0, GX_TEX_ST, GX_F32, 0);
+	GX_SetVtxAttrFmt(GX_VTXFMT0, GX_VA_TEX1, GX_TEX_ST, GX_F32, 0);
+	GX_SetVtxAttrFmt(GX_VTXFMT0, GX_VA_TEX2, GX_TEX_ST, GX_F32, 0);
+
+
+	if (!OGL.GXuseProj)
+	{
+		sprintf(txtbuffer,"OGL: using software MTX xforms");
+		DEBUG_print(txtbuffer,4);
+	}
 
 	GX_Begin(GX_TRIANGLES, GX_VTXFMT0, OGL.numVertices);
 	for (int i = 0; i < OGL.numVertices; i++) {
+		if(OGL.GXuseProj)
+			GX_Position3f32( OGL.vertices[i].x, OGL.vertices[i].y, OGL.vertices[i].z );
+		else
+		{
+			if(OGL.GXuseProjW)
+				GX_Position3f32( OGL.vertices[i].x, OGL.vertices[i].y, -OGL.vertices[i].w );
+			else
+			{
+				invW = (OGL.vertices[i].w != 0) ? 1/OGL.vertices[i].w : 0.0f;
+				GX_Position3f32( OGL.vertices[i].x*invW, OGL.vertices[i].y*invW, OGL.vertices[i].z*invW );
+			}
+		}
 //		GX_Position3f32(OGL.vertices[i].x/OGL.vertices[i].w, OGL.vertices[i].y/OGL.vertices[i].w, OGL.vertices[i].z/OGL.vertices[i].w);
-		GX_Position3f32(OGL.vertices[i].x/OGL.vertices[i].w, OGL.vertices[i].y/OGL.vertices[i].w, min(OGL.vertices[i].z/OGL.vertices[i].w,1.0));
 		GXcol.r = (u8) (min(OGL.vertices[i].color.r,1.0)*255);
 		GXcol.g = (u8) (min(OGL.vertices[i].color.g,1.0)*255);
 		GXcol.b = (u8) (min(OGL.vertices[i].color.b,1.0)*255);
 		GXcol.a = (u8) (min(OGL.vertices[i].color.a,1.0)*255);
 		GX_Color4u8(GXcol.r, GXcol.g, GXcol.b, GXcol.a); 
+//		if (combiner.usesT0) GX_TexCoord2f32(OGL.vertices[i].s0,OGL.vertices[i].t0);
+//		if (combiner.usesT1) GX_TexCoord2f32(OGL.vertices[i].s1,OGL.vertices[i].t1);
 		if (combiner.usesT0) GX_TexCoord2f32(OGL.vertices[i].s0,OGL.vertices[i].t0);
+		else GX_TexCoord2f32(0.0f,0.0f);
 		if (combiner.usesT1) GX_TexCoord2f32(OGL.vertices[i].s1,OGL.vertices[i].t1);
+		else GX_TexCoord2f32(0.0f,0.0f);
+		GX_TexCoord2f32(0.0f,0.0f);
 #ifdef GLN64_SDLOG
 		sprintf(txtbuffer," Vert%d: Pos x = %.2f, y = %.2f, z = %.2f, w = %.2f, RGBA = %d, %d, %d, %d, VertCol RGBA = %.2f, %.2f, %.2f, %.2f\n", i, OGL.vertices[i].x/OGL.vertices[i].w, OGL.vertices[i].y/OGL.vertices[i].w, OGL.vertices[i].z/OGL.vertices[i].w, OGL.vertices[i].w, GXcol.r, GXcol.g, GXcol.b, GXcol.a, OGL.vertices[i].color.r, OGL.vertices[i].color.g, OGL.vertices[i].color.b, OGL.vertices[i].color.a);
 		DEBUG_print(txtbuffer,DBG_SDGECKOPRINT);
@@ -1126,19 +1189,68 @@ void OGL_DrawLine( SPVertex *vertices, int v0, int v1, float width )
 	GX_SetLineWidth( width * OGL.scaleX, GX_TO_ZERO );
 
 	GXColor GXcol;
+	float invW;
+
+	//Update MV & P Matrices
+	if(OGL.GXupdateMtx)
+	{
+		if(OGL.GXuseProj)
+		{
+			if(OGL.GXproj[3][2] == -1)
+				GX_LoadProjectionMtx(OGL.GXproj, GX_PERSPECTIVE);
+			else
+				GX_LoadProjectionMtx(OGL.GXproj, GX_ORTHOGRAPHIC); 
+			GX_LoadPosMtxImm(OGL.GXmodelView,GX_PNMTX0);
+		}
+		else
+		{
+			if(OGL.GXuseProjW)
+				GX_LoadProjectionMtx(OGL.GXprojW, GX_PERSPECTIVE); 
+			else
+				GX_LoadProjectionMtx(OGL.GXprojIdent, GX_ORTHOGRAPHIC); 
+			GX_LoadPosMtxImm(OGL.GXmodelViewIdent,GX_PNMTX0);
+		}
+		OGL.GXupdateMtx = false;
+	}
+
+	if ((gDP.otherMode.depthSource == G_ZS_PRIM)||OGL.GXuseAlphaCompare)
+	{
+		GX_SetZCompLoc(GX_FALSE);	// Do Z-compare after texturing. (i.e. use Ztex)
+		cache.GXZTexPrimCnt++;
+	}
+	else
+	{
+		GX_SetZCompLoc(GX_TRUE);	// Do Z-compare before texturing.
+		cache.GXnoZTexPrimCnt++;
+	}
 
 	//set vertex description here
 	GX_ClearVtxDesc();
-	GX_SetVtxDesc(GX_VA_PTNMTXIDX, GX_PNMTX0);
+	if (OGL.GXuseProj)	GX_SetVtxDesc(GX_VA_PTNMTXIDX, GX_PNMTX0);
+	else				GX_SetVtxDesc(GX_VA_PTNMTXIDX, GX_PNMTX0);
+	GX_SetVtxDesc(GX_VA_TEX2MTXIDX, GX_TEXMTX0);
 	GX_SetVtxDesc(GX_VA_POS, GX_DIRECT);
 	GX_SetVtxDesc(GX_VA_CLR0, GX_DIRECT);
+	GX_SetVtxDesc(GX_VA_TEX2, GX_DIRECT);
 	//set vertex attribute formats here
 	GX_SetVtxAttrFmt(GX_VTXFMT0, GX_VA_POS, GX_POS_XYZ, GX_F32, 0);
 	GX_SetVtxAttrFmt(GX_VTXFMT0, GX_VA_CLR0, GX_CLR_RGBA, GX_RGBA8, 0);
+	GX_SetVtxAttrFmt(GX_VTXFMT0, GX_VA_TEX2, GX_TEX_ST, GX_F32, 0);
 	GX_Begin(GX_LINES, GX_VTXFMT0, 2);
 		for (int i = 0; i < 2; i++)
 		{
-			GX_Position3f32( vertices[v[i]].x/vertices[v[i]].w, vertices[v[i]].y/vertices[v[i]].w, vertices[v[i]].z/vertices[v[i]].w );
+			if(OGL.GXuseProj)
+				GX_Position3f32( vertices[v[i]].x, vertices[v[i]].y, vertices[v[i]].z );
+			else
+			{
+				if(OGL.GXuseProjW)
+					GX_Position3f32( OGL.vertices[i].x, OGL.vertices[i].y, -OGL.vertices[i].w );
+				else
+				{
+					invW = (OGL.vertices[i].w != 0) ? 1/OGL.vertices[i].w : 0.0f;
+					GX_Position3f32( OGL.vertices[i].x*invW, OGL.vertices[i].y*invW, OGL.vertices[i].z*invW );
+				}
+			}
 			color.r = vertices[v[i]].r;
 			color.g = vertices[v[i]].g;
 			color.b = vertices[v[i]].b;
@@ -1149,6 +1261,7 @@ void OGL_DrawLine( SPVertex *vertices, int v0, int v1, float width )
 			GXcol.b = (u8) (color.b*255);
 			GXcol.a = (u8) (color.a*255);
 			GX_Color4u8(GXcol.r, GXcol.g, GXcol.b, GXcol.a); 
+			GX_TexCoord2f32(0.0f,0.0f);
 		}
 	GX_End();
 #endif // __GX__
@@ -1193,6 +1306,9 @@ void OGL_DrawRect( int ulx, int uly, int lrx, int lry, float *color )
 //	guOrtho(GXprojection, 0, VI.width, 0, VI.height, 0.0f, 1.0f);
 	guOrtho(GXprojection, 0, VI.height, 0, VI.width, 0.0f, 1.0f);
 	GX_LoadProjectionMtx(GXprojection, GX_ORTHOGRAPHIC); 
+
+	GX_LoadPosMtxImm(OGL.GXmodelViewIdent,GX_PNMTX0);
+
 /*	glViewport( 0, OGL.heightOffset, OGL.width, OGL.height );
 	glDepthRange( 0.0f, 1.0f );*/
 //TODO: GX_SetViewport isn't working right - blanks out rendering
@@ -1219,30 +1335,60 @@ void OGL_DrawRect( int ulx, int uly, int lrx, int lry, float *color )
 		glVertex4f( ulx, lry, (gDP.otherMode.depthSource == G_ZS_PRIM) ? gDP.primDepth.z : gSP.viewport.nearz, 1.0f );
 	glEnd();*/
 
+	if ((gDP.otherMode.depthSource == G_ZS_PRIM)||OGL.GXuseAlphaCompare)
+	{
+		GX_SetZCompLoc(GX_FALSE);	// Do Z-compare after texturing. (i.e. use Ztex)
+		cache.GXZTexPrimCnt++;
+	}
+	else
+	{
+		GX_SetZCompLoc(GX_TRUE);	// Do Z-compare before texturing.
+		cache.GXnoZTexPrimCnt++;
+	}
+
 	//set vertex description here
 	GX_ClearVtxDesc();
 	GX_SetVtxDesc(GX_VA_PTNMTXIDX, GX_PNMTX0);
+	GX_SetVtxDesc(GX_VA_TEX2MTXIDX, GX_TEXMTX0);
 	GX_SetVtxDesc(GX_VA_POS, GX_DIRECT);
 	GX_SetVtxDesc(GX_VA_CLR0, GX_DIRECT);
+	GX_SetVtxDesc(GX_VA_TEX2, GX_DIRECT);
+
 	//set vertex attribute formats here
 	GX_SetVtxAttrFmt(GX_VTXFMT0, GX_VA_POS, GX_POS_XYZ, GX_F32, 0);
 	GX_SetVtxAttrFmt(GX_VTXFMT0, GX_VA_CLR0, GX_CLR_RGBA, GX_RGBA8, 0);
-	GX_Begin(GX_QUADS, GX_VTXFMT0, 4);
-		GX_Position3f32( ulx, uly, (gDP.otherMode.depthSource == G_ZS_PRIM) ? gDP.primDepth.z : gSP.viewport.nearz );
+	GX_SetVtxAttrFmt(GX_VTXFMT0, GX_VA_TEX2, GX_TEX_ST, GX_F32, 0);
+	GX_Begin(GX_QUADS, GX_VTXFMT0, 4);	//TODO: This may fail for G_ZS_PRIM... log and fix, maybe with guOrtho
+//		GX_Position3f32( ulx, uly, (gDP.otherMode.depthSource == G_ZS_PRIM) ? gDP.primDepth.z : gSP.viewport.nearz );
+		GX_Position3f32( ulx, uly, gSP.viewport.nearz );
 		GX_Color4u8(GXcol.r, GXcol.g, GXcol.b, GXcol.a); 
-		GX_Position3f32( lrx, uly, (gDP.otherMode.depthSource == G_ZS_PRIM) ? gDP.primDepth.z : gSP.viewport.nearz );
+		GX_TexCoord2f32(0.0f,0.0f);
+//		GX_Position3f32( lrx, uly, (gDP.otherMode.depthSource == G_ZS_PRIM) ? gDP.primDepth.z : gSP.viewport.nearz );
+		GX_Position3f32( lrx, uly, gSP.viewport.nearz );
 		GX_Color4u8(GXcol.r, GXcol.g, GXcol.b, GXcol.a); 
-		GX_Position3f32( lrx, lry, (gDP.otherMode.depthSource == G_ZS_PRIM) ? gDP.primDepth.z : gSP.viewport.nearz );
+		GX_TexCoord2f32(0.0f,0.0f);
+//		GX_Position3f32( lrx, lry, (gDP.otherMode.depthSource == G_ZS_PRIM) ? gDP.primDepth.z : gSP.viewport.nearz );
+		GX_Position3f32( lrx, lry, gSP.viewport.nearz );
 		GX_Color4u8(GXcol.r, GXcol.g, GXcol.b, GXcol.a); 
-		GX_Position3f32( ulx, lry, (gDP.otherMode.depthSource == G_ZS_PRIM) ? gDP.primDepth.z : gSP.viewport.nearz );
+		GX_TexCoord2f32(0.0f,0.0f);
+//		GX_Position3f32( ulx, lry, (gDP.otherMode.depthSource == G_ZS_PRIM) ? gDP.primDepth.z : gSP.viewport.nearz );
+		GX_Position3f32( ulx, lry, gSP.viewport.nearz );
 		GX_Color4u8(GXcol.r, GXcol.g, GXcol.b, GXcol.a); 
+		GX_TexCoord2f32(0.0f,0.0f);
 	GX_End();
 
-//	glLoadIdentity();
-	guMtxIdentity(GXprojection);
-	GXprojection[2][2] = GXprojZScale; //0.5;
-	GXprojection[2][3] = GXprojZOffset; //-0.5;
-	GX_LoadProjectionMtx(GXprojection, GX_ORTHOGRAPHIC); 
+/*	if(OGL.GXuseProj)
+	{
+		if(OGL.GXproj[3][2] == -1)
+			GX_LoadProjectionMtx(OGL.GXproj, GX_PERSPECTIVE);
+		else
+			GX_LoadProjectionMtx(OGL.GXproj, GX_ORTHOGRAPHIC); 
+			GX_LoadPosMtxImm(OGL.GXmodelView,GX_PNMTX0);
+	}
+	else
+		GX_LoadProjectionMtx(OGL.GXprojIdent, GX_ORTHOGRAPHIC); */
+	OGL.GXupdateMtx = true;
+
 	OGL_UpdateCullFace();
 	OGL_UpdateViewport();
 //	glEnable( GL_SCISSOR_TEST );
@@ -1255,7 +1401,7 @@ void OGL_DrawRect( int ulx, int uly, int lrx, int lry, float *color )
 void OGL_DrawTexturedRect( float ulx, float uly, float lrx, float lry, float uls, float ult, float lrs, float lrt, bool flip )
 {
 	GLVertex rect[2] =
-	{
+	{	//TODO: This may fail for G_ZS_PRIM... log and fix, maybe with guOrtho
 		{ ulx, uly, gDP.otherMode.depthSource == G_ZS_PRIM ? gDP.primDepth.z : gSP.viewport.nearz, 1.0f, { /*gDP.blendColor.r, gDP.blendColor.g, gDP.blendColor.b, gDP.blendColor.a */1.0f, 1.0f, 1.0f, 0.0f }, { 1.0f, 1.0f, 1.0f, 1.0f }, uls, ult, uls, ult, 0.0f },
 		{ lrx, lry, gDP.otherMode.depthSource == G_ZS_PRIM ? gDP.primDepth.z : gSP.viewport.nearz, 1.0f, { /*gDP.blendColor.r, gDP.blendColor.g, gDP.blendColor.b, gDP.blendColor.a*/1.0f, 1.0f, 1.0f, 0.0f }, { 1.0f, 1.0f, 1.0f, 1.0f }, lrs, lrt, lrs, lrt, 0.0f },
 	};
@@ -1278,6 +1424,9 @@ void OGL_DrawTexturedRect( float ulx, float uly, float lrx, float lry, float uls
 //	guOrtho(GXprojection, 0, VI.width, 0, VI.height, 0.0f, 1.0f);
 	guOrtho(GXprojection, 0, VI.height, 0, VI.width, 0.0f, 1.0f);
 	GX_LoadProjectionMtx(GXprojection, GX_ORTHOGRAPHIC); 
+
+	GX_LoadPosMtxImm(OGL.GXmodelViewIdent,GX_PNMTX0);
+
 //	glViewport( 0, OGL.heightOffset, OGL.width, OGL.height );
 //TODO: GX_SetViewport isn't working right - blanks out some rendering
 //	GX_SetViewport((f32) 0,(f32) OGL.heightOffset,(f32) OGL.width,(f32) OGL.height, 0.0f, 1.0f);
@@ -1456,26 +1605,41 @@ void OGL_DrawTexturedRect( float ulx, float uly, float lrx, float lry, float uls
 	GX_SetTevOp (GX_TEVSTAGE0,GX_REPLACE);
 */
 
+	if ((gDP.otherMode.depthSource == G_ZS_PRIM)||OGL.GXuseAlphaCompare)
+	{
+		GX_SetZCompLoc(GX_FALSE);	// Do Z-compare after texturing. (i.e. use Ztex)
+		cache.GXZTexPrimCnt++;
+	}
+	else
+	{
+		GX_SetZCompLoc(GX_TRUE);	// Do Z-compare before texturing.
+		cache.GXnoZTexPrimCnt++;
+	}
+
 	//TODO: Change the following for multitexturing.
 	//set vertex description here
 	GX_ClearVtxDesc();
 	GX_SetVtxDesc(GX_VA_PTNMTXIDX, GX_PNMTX0);
-	GX_SetVtxDesc(GX_VA_TEX0MTXIDX, GX_IDENTITY);
-	GX_SetVtxDesc(GX_VA_TEX1MTXIDX, GX_IDENTITY);
+	GX_SetVtxDesc(GX_VA_TEX0MTXIDX, GX_TEXMTX0);
+	GX_SetVtxDesc(GX_VA_TEX1MTXIDX, GX_TEXMTX0);
+	GX_SetVtxDesc(GX_VA_TEX2MTXIDX, GX_TEXMTX0);
 	GX_SetVtxDesc(GX_VA_POS, GX_DIRECT);
 	GX_SetVtxDesc(GX_VA_CLR0, GX_DIRECT);
 	GX_SetVtxDesc(GX_VA_TEX0, GX_DIRECT);
 	GX_SetVtxDesc(GX_VA_TEX1, GX_DIRECT);
+	GX_SetVtxDesc(GX_VA_TEX2, GX_DIRECT);
 	//set vertex attribute formats here
 	GX_SetVtxAttrFmt(GX_VTXFMT0, GX_VA_POS, GX_POS_XYZ, GX_F32, 0);
 	GX_SetVtxAttrFmt(GX_VTXFMT0, GX_VA_CLR0, GX_CLR_RGBA, GX_RGBA8, 0);
 	GX_SetVtxAttrFmt(GX_VTXFMT0, GX_VA_TEX0, GX_TEX_ST, GX_F32, 0);
 	GX_SetVtxAttrFmt(GX_VTXFMT0, GX_VA_TEX1, GX_TEX_ST, GX_F32, 0);
+	GX_SetVtxAttrFmt(GX_VTXFMT0, GX_VA_TEX2, GX_TEX_ST, GX_F32, 0);
 	GX_Begin(GX_QUADS, GX_VTXFMT0, 4);
 		GX_Position3f32( rect[0].x, rect[0].y, rect[0].z );
 		GX_Color4u8( GXcol.r, GXcol.g, GXcol.b, GXcol.a ); 
 		GX_TexCoord2f32( rect[0].s0, rect[0].t0 );
 		GX_TexCoord2f32( rect[0].s1, rect[0].t1 );
+		GX_TexCoord2f32( 0.0, 0.0 );
 		GX_Position3f32( rect[1].x, rect[0].y, rect[0].z );
 		GX_Color4u8(GXcol.r, GXcol.g, GXcol.b, GXcol.a); 
 		if (flip)
@@ -1488,10 +1652,12 @@ void OGL_DrawTexturedRect( float ulx, float uly, float lrx, float lry, float uls
 			GX_TexCoord2f32( rect[1].s0, rect[0].t0 );
 			GX_TexCoord2f32( rect[1].s1, rect[0].t1 );
 		}
+		GX_TexCoord2f32( 0.0, 0.0 );
 		GX_Position3f32( rect[1].x, rect[1].y, rect[0].z );
 		GX_Color4u8( GXcol.r, GXcol.g, GXcol.b, GXcol.a ); 
 		GX_TexCoord2f32( rect[1].s0, rect[1].t0 );
 		GX_TexCoord2f32( rect[1].s1, rect[1].t1 );
+		GX_TexCoord2f32( 0.0, 0.0 );
 		GX_Position3f32( rect[0].x, rect[1].y, rect[0].z );
 		GX_Color4u8(GXcol.r, GXcol.g, GXcol.b, GXcol.a); 
 		if (flip)
@@ -1504,16 +1670,24 @@ void OGL_DrawTexturedRect( float ulx, float uly, float lrx, float lry, float uls
 			GX_TexCoord2f32( rect[0].s0, rect[1].t0 );
 			GX_TexCoord2f32( rect[0].s1, rect[1].t1 );
 		}
+		GX_TexCoord2f32( 0.0, 0.0 );
 	GX_End();
 #endif // __GX__
 
 #ifndef __GX__
 	glLoadIdentity();
 #else // !__GX__
-	guMtxIdentity(GXprojection);
-	GXprojection[2][2] = GXprojZScale; //0.5;
-	GXprojection[2][3] = GXprojZOffset; //-0.5;
-	GX_LoadProjectionMtx(GXprojection, GX_ORTHOGRAPHIC); 
+/*	if(OGL.GXuseProj)
+	{
+		if(OGL.GXproj[3][2] == -1)
+			GX_LoadProjectionMtx(OGL.GXproj, GX_PERSPECTIVE);
+		else
+			GX_LoadProjectionMtx(OGL.GXproj, GX_ORTHOGRAPHIC); 
+		GX_LoadPosMtxImm(OGL.GXmodelView,GX_PNMTX0);
+	}
+	else
+		GX_LoadProjectionMtx(OGL.GXprojIdent, GX_ORTHOGRAPHIC); */
+	OGL.GXupdateMtx = true;
 #endif // __GX__
 	OGL_UpdateCullFace();
 	OGL_UpdateViewport();
@@ -1670,28 +1844,42 @@ void OGL_ReadScreen( void **dest, long *width, long *height )
 void OGL_GXinitDlist()
 {
 	//Clear efb
-	GX_SetCopyClear ((GXColor){0,0,0,255}, 0xFFFFFF);
+	GX_SetCopyClear ((GXColor){0,0,0,255}, 0xFFFFFF);	//TODO: get rid of this GX_CopyDisp as it's unneeded.
 	GX_CopyDisp (VI_GX_getScreenPointer(), GX_TRUE);	//clear the EFB before executing new Dlist
 	GX_DrawDone ();
 
+	// init primeDepthZtex, Ztexture, and AlphaCompare
+	TextureCache_UpdatePrimDepthZtex( 1.0f );
+	GX_SetZTexture(GX_ZT_DISABLE,GX_TF_Z16,0);	//GX_ZT_DISABLE or GX_ZT_REPLACE; set in gDP.cpp
+	OGL.GXuseAlphaCompare = false;
+	GX_SetZCompLoc(GX_TRUE);	// Do Z-compare before texturing.
+
 	//Reset Modelview matrix
-	Mtx GXmodelView;
-	guMtxIdentity(GXmodelView);
-	GX_LoadPosMtxImm(GXmodelView,GX_PNMTX0);
+	guMtxIdentity(OGL.GXmodelView);
+	guMtxIdentity(OGL.GXmodelViewIdent);
+	GX_LoadPosMtxImm(OGL.GXmodelView,GX_PNMTX0);
+	GX_LoadPosMtxImm(OGL.GXmodelViewIdent,GX_PNMTX2);
+	GX_LoadTexMtxImm(OGL.GXmodelViewIdent,GX_TEXMTX0,GX_MTX2x4);
 
 	//Reset projection matrix
-	Mtx44 GXprojection;
-	guMtxIdentity(GXprojection);
+	guMtxIdentity(OGL.GXproj);
+	guMtxIdentity(OGL.GXprojW);
+	guMtxIdentity(OGL.GXprojIdent);
 	//N64 Z clip space is backwards, so mult z components by -1
 	//N64 Z [-1,1] whereas GC Z [-1,0], so mult by 0.5 and shift by -0.5
-//	GXprojection[2][2] = 0.5*GXprojection[2][2] - 0.5*GXprojection[3][2];
-//	GXprojection[2][3] = 0.5*GXprojection[2][3] - 0.5*GXprojection[3][3];
-	GXprojection[2][2] = GXprojZScale; //0.5;
-	GXprojection[2][3] = GXprojZOffset; //-0.5;
-	GX_LoadProjectionMtx(GXprojection, GX_ORTHOGRAPHIC); 
+	OGL.GXproj[2][2] = GXprojZScale; //0.5;
+	OGL.GXproj[2][3] = GXprojZOffset; //-0.5;
+	OGL.GXprojW[3][2] = -1;
+	OGL.GXprojW[3][3] = 0;
+	OGL.GXprojIdent[2][2] = GXprojZScale; //0.5;
+	OGL.GXprojIdent[2][3] = GXprojZOffset; //-0.5;
+	GX_LoadProjectionMtx(OGL.GXprojIdent, GX_ORTHOGRAPHIC);
+
+	OGL.GXnumVtxMP = OGL.GXnumVtx = 0;
+	cache.GXprimDepthCnt = cache.GXZTexPrimCnt = cache.GXnoZTexPrimCnt = 0;
 
 	//Not sure if this is needed.  Clipping is a slow process...
-	GX_SetClipMode(GX_CLIP_ENABLE);
+//	GX_SetClipMode(GX_CLIP_ENABLE);
 //	GX_SetClipMode(GX_CLIP_DISABLE);
 
 	//These are here temporarily until combining/blending is sorted out...

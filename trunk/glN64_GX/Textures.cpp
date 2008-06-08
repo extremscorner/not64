@@ -640,6 +640,19 @@ void TextureCache_Init()
 		((u32*)cache.dummy->GXtexture)[i+3] = (u32) 0xFFFF0000;
 	}
 	DCFlushRange(cache.dummy->GXtexture, cache.dummy->textureBytes);
+
+	//Init GXprimDepthZ textures
+	cache.GXprimDepthZ[0] = (CachedTexture*)malloc( sizeof( CachedTexture ) );
+	cache.GXprimDepthZ[1] = (CachedTexture*)malloc( sizeof( CachedTexture ) );
+	cache.GXprimDepthZ[0]->textureBytes = 32;
+	cache.GXprimDepthZ[1]->textureBytes = 32;
+	cache.GXprimDepthZ[0]->GXtexture = (u16*)memalign(32,cache.GXprimDepthZ[0]->textureBytes);
+	cache.GXprimDepthZ[1]->GXtexture = (u16*)memalign(32,cache.GXprimDepthZ[1]->textureBytes);
+	memset( cache.GXprimDepthZ[0]->GXtexture, 0x00, cache.GXprimDepthZ[0]->textureBytes);
+	memset( cache.GXprimDepthZ[1]->GXtexture, 0x00, cache.GXprimDepthZ[1]->textureBytes);
+	cache.cachedBytes += cache.GXprimDepthZ[0]->textureBytes;
+	cache.cachedBytes += cache.GXprimDepthZ[1]->textureBytes;
+
 #endif // __GX__
 
 	cache.cachedBytes = cache.dummy->textureBytes;
@@ -821,6 +834,16 @@ void TextureCache_Destroy()
 //	glDeleteTextures( 1, &cache.glDummyName );
 #else // !__GX__
 	//For now we're not using Noise textures.
+
+	//De-Init GXprimDepthZ textures
+	cache.cachedBytes -= cache.GXprimDepthZ[0]->textureBytes;
+	cache.cachedBytes -= cache.GXprimDepthZ[1]->textureBytes;
+	if( cache.GXprimDepthZ[0]->GXtexture != NULL )
+		free(cache.GXprimDepthZ[0]->GXtexture);
+	if( cache.GXprimDepthZ[1]->GXtexture != NULL )
+		free(cache.GXprimDepthZ[1]->GXtexture);
+	free( cache.GXprimDepthZ[0] );
+	free( cache.GXprimDepthZ[1] );
 #endif // __GX__
 
 	cache.top = NULL;
@@ -1879,3 +1902,26 @@ void TextureCache_ActivateNoise( u32 t )
 #endif // __GX__
 }
 
+#ifdef __GX__
+void TextureCache_UpdatePrimDepthZtex( f32 z )
+{
+	//This function sets a Ztex to gDP.primDepth.z which is in the range [0,1]
+	//Called from gDPSetPrimDepth()
+
+	// Let GX finish with all previous commands before loading the new tex
+	// TODO: Work around this with tokens.
+	GX_DrawDone();
+
+	u16 primDepthval = (u16) (z * 65535.0f);
+	for (int i = 0; i < 16; i++)
+		cache.GXprimDepthZ[0]->GXtexture[i] = primDepthval;
+	if(cache.GXprimDepthZ[0]->GXtexture != NULL)
+	{
+		DCFlushRange(cache.GXprimDepthZ[0]->GXtexture, cache.GXprimDepthZ[0]->textureBytes);
+		GX_InitTexObj(&cache.GXprimDepthZ[0]->GXtex, cache.GXprimDepthZ[0]->GXtexture, (u16) 4, (u16) 4, GX_TF_Z16, 
+			GX_CLAMP, GX_CLAMP, GX_FALSE); 
+		GX_LoadTexObj(&cache.GXprimDepthZ[0]->GXtex, GX_TEXMAP2);
+	}
+	cache.GXprimDepthCnt++;
+}
+#endif // __GX__

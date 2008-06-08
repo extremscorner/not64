@@ -1,6 +1,8 @@
 #ifdef __GX__
 #include <gccore.h>
 #include <string.h>
+#include <stdio.h>
+#include "../gui/DEBUG.h"
 #endif // __GX__
 
 #include "glN64.h"
@@ -17,6 +19,9 @@
 #include "FrameBuffer.h"
 #include "DepthBuffer.h"
 #include "VI.h"
+#ifdef __GX__
+#include "Textures.h"
+#endif // __GX__
 
 #ifdef __LINUX__
 # ifndef min
@@ -68,6 +73,12 @@ void gDPSetPrimDepth( u16 z, u16 dz )
 {
 	gDP.primDepth.z = min( 1.0f, max( 0.0f, (_FIXED2FLOAT( z, 15 ) - gSP.viewport.vtrans[2]) / gSP.viewport.vscale[2] ) );
 	gDP.primDepth.deltaZ = dz;
+
+#ifdef __GX__
+	sprintf(txtbuffer,"gDP: Setting PrimDepth to %f", gDP.primDepth.z);
+	DEBUG_print(txtbuffer,DBG_RSPINFO1);
+	TextureCache_UpdatePrimDepthZtex(gDP.primDepth.z);
+#endif //__GX__
 
 #ifdef DEBUG
 	DebugMsg( DEBUG_HIGH | DEBUG_HANDLED, "gDPSetPrimDepth( %f, %f );\n",
@@ -203,6 +214,13 @@ void gDPSetAlphaCompare( u32 mode )
 void gDPSetDepthSource( u32 source )
 {
 	gDP.otherMode.depthSource = source;
+
+#ifdef __GX__
+	if (gDP.otherMode.depthSource == G_ZS_PRIM)
+		GX_SetZTexture(GX_ZT_REPLACE,GX_TF_Z16,0);
+	else
+		GX_SetZTexture(GX_ZT_DISABLE,GX_TF_Z16,0);
+#endif // __GX__
 
 #ifdef DEBUG
 	DebugMsg( DEBUG_HIGH | DEBUG_HANDLED, "gDPSetDepthSource( %s );\n",

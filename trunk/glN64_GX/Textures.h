@@ -61,6 +61,10 @@ struct TextureCache
 	//GLuint			glDummyName;
 	CachedTexture	*dummy;
 	u32				enable2xSaI, bitDepth;
+#ifdef __GX__
+	CachedTexture	*(GXprimDepthZ[2]);
+	u32				GXprimDepthCnt,GXZTexPrimCnt,GXnoZTexPrimCnt;
+#endif // __GX__
 };
 
 extern TextureCache cache;
@@ -99,5 +103,8 @@ void TextureCache_ActivateTexture( u32 t, CachedTexture *texture );
 void TextureCache_ActivateNoise( u32 t );
 void TextureCache_ActivateDummy( u32 t );
 BOOL TextureCache_Verify();
+#ifdef __GX__
+void TextureCache_UpdatePrimDepthZtex( f32 z );
+#endif // __GX__
 
 #endif
