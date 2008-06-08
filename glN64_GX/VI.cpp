@@ -302,6 +302,7 @@ void VI_GX_cleanUp()
 	GX_SetClipMode(GX_CLIP_DISABLE);
 	GX_SetScissor(0,0,vmode->fbWidth,vmode->efbHeight);
 	GX_SetAlphaCompare(GX_ALWAYS,0,GX_AOP_AND,GX_ALWAYS,0);
+	GX_SetZCompLoc(GX_TRUE);	// Do Z-compare before texturing.
 }
 
 void VI_GX_PreRetraceCallback(u32 retraceCnt)

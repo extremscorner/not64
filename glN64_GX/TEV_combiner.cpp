@@ -1238,8 +1238,8 @@ void Set_TEV_combine( TEVCombiner *TEVcombiner )	//Called from OGL_UpdateStates(
 
 	//Set TEV environment variables
 	GX_SetNumChans(TEVcombiner->numColChans);
-	GX_SetNumTexGens(TEVcombiner->numTexGens);
-	GX_SetNumTevStages(TEVcombiner->numTevStages);
+	GX_SetNumTexGens(TEVcombiner->numTexGens + 1);		//Add an extra TEV stage/texgen for Ztex.
+	GX_SetNumTevStages(TEVcombiner->numTevStages + 1);	//TODO: Rearrange code to make this smarter.
 
 #ifdef DBGCOMBINE
 #ifdef GLN64_SDLOG
@@ -1271,4 +1271,7 @@ void Set_TEV_combine( TEVCombiner *TEVcombiner )	//Called from OGL_UpdateStates(
 #endif // GLN64_SDLOG
 #endif // DBGCOMBINE
 	}
+	//Configure final stage for Ztexture
+	GX_SetTevOp ((u8) TEVcombiner->numTevStages, GX_PASSCLR);
+	GX_SetTevOrder ((u8) TEVcombiner->numTevStages, GX_TEXMAP2, GX_TEXMAP2, GX_COLORNULL);
 }

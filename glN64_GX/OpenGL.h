@@ -23,6 +23,9 @@
 #include "glATI.h"
 #include "gSP.h"
 
+#define GXprojZScale	 0.5 //0.25 //0.5
+#define GXprojZOffset	-0.5
+
 struct GLVertex
 {
 	float x, y, z, w;
@@ -92,6 +95,20 @@ struct GLInfo
 	BYTE	lastStipple;
 
 	BYTE	combiner;
+
+#ifdef __GX__	//Variables specific to GX
+	Mtx44	GXproj;
+	Mtx44	GXprojW;
+	Mtx44	GXprojIdent;
+	Mtx		GXmodelView;
+	Mtx		GXmodelViewIdent;
+	BOOL	GXuseProj;
+	BOOL	GXuseProjW;
+	BOOL	GXupdateMtx;
+	int		GXnumVtxMP;
+	int		GXnumVtx;
+	bool	GXuseAlphaCompare;
+#endif
 };
 
 extern GLInfo OGL;

@@ -318,6 +318,9 @@ EXPORT void CALL ProcessDList(void)
 //	TextureCache_Init();
 //	OGL_Stop();
 //	OGL_Start();
+//	sprintf(txtbuffer,"RSP: Vtx = %d; VtxMP = %d", OGL.GXnumVtx, OGL.GXnumVtxMP);
+	sprintf(txtbuffer,"RSP: Vtx = %d; VtxMP = %d; pDcnt = %d; Zprim = %d; noZprim = %d", OGL.GXnumVtx, OGL.GXnumVtxMP, cache.GXprimDepthCnt, cache.GXZTexPrimCnt, cache.GXnoZTexPrimCnt);
+	DEBUG_print(txtbuffer,DBG_RSPINFO);
 	VI_GX_updateDEBUG();
 #endif // __GX__
 }
