@@ -42,9 +42,23 @@
 
 
 #ifndef USE_TLB_CACHE
-unsigned long *tlb_LUT_r = (unsigned long*)0x92080000;	//fixme to be Malloc'd from MEM2
-unsigned long *tlb_LUT_w = (unsigned long*)0x92480000;	//me too
+#include "MEM2.h"
+unsigned long *tlb_LUT_r = (unsigned long*)TLBLUT_LO;
+unsigned long *tlb_LUT_w = (unsigned long*)TLBLUT_LO+0x400000;
 #endif
+
+#ifndef USE_TLB_CACHE
+void tlb_mem2_init()
+{
+	int i;
+	for(i = 0; i<0x100000; i++)
+	{	
+		tlb_LUT_r[i] = 0;
+		tlb_LUT_w[i] = 0;
+	}
+}
+#endif
+
 extern unsigned long interp_addr;
 unsigned long virtual_to_physical_address(unsigned long addresse, int w)
 {

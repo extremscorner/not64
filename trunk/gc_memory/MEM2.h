@@ -18,7 +18,12 @@
 #define ROMCACHE_LO   (MEM2_LO)
 #define ROMCACHE_HI   (ROMCACHE_LO + ROMCACHE_SIZE)
 
-// We want 16MB for a Texture Cache
+// We want 8MB for TLB lut's
+#define TLBLUT_SIZE (8*MB)
+#define TLBLUT_LO   (ROMCACHE_HI)
+#define TLBLUT_HI   (TLBLUT_LO + TLBLUT_SIZE)
+
+// We want 16MB for a Texture Cache	//fix me when the time comes
 #define TEXCACHE_SIZE (16*MB)
 #define TEXCACHE_LO   (ROMCACHE_HI)
 #define TEXCACHE_HI   (TEXCACHE_LO + TEXCACHE_SIZE)

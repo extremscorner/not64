@@ -57,6 +57,7 @@ typedef struct _tlb
 #ifndef USE_TLB_CACHE
 extern unsigned long *tlb_LUT_r;
 extern unsigned long *tlb_LUT_w;
+void tlb_mem2_init();
 #endif
 unsigned long virtual_to_physical_address(unsigned long addresse, int w);
 int probe_nop(unsigned long address);
