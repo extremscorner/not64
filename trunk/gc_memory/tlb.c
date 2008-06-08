@@ -43,15 +43,15 @@
 
 #ifndef USE_TLB_CACHE
 #include "MEM2.h"
-unsigned long *tlb_LUT_r = (unsigned long*)TLBLUT_LO;
-unsigned long *tlb_LUT_w = (unsigned long*)TLBLUT_LO+0x400000;
+unsigned long *tlb_LUT_r = (unsigned long*)(TLBLUT_LO);
+unsigned long *tlb_LUT_w = (unsigned long*)(TLBLUT_LO+0x400000);
 #endif
 
 #ifndef USE_TLB_CACHE
 void tlb_mem2_init()
 {
-	int i;
-	for(i = 0; i<0x100000; i++)
+	long i;
+	for(i = 0; i<(0x400000/4); i++)
 	{	
 		tlb_LUT_r[i] = 0;
 		tlb_LUT_w[i] = 0;
