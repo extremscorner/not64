@@ -23,9 +23,9 @@
 #define TLBLUT_LO   (ROMCACHE_HI)
 #define TLBLUT_HI   (TLBLUT_LO + TLBLUT_SIZE)
 
-// We want 16MB for a Texture Cache	//fix me when the time comes
-#define TEXCACHE_SIZE (16*MB)
-#define TEXCACHE_LO   (ROMCACHE_HI)
+// We want 8MB for a Texture Cache
+#define TEXCACHE_SIZE (8*MB)
+#define TEXCACHE_LO   (TLBLUT_HI)
 #define TEXCACHE_HI   (TEXCACHE_LO + TEXCACHE_SIZE)
 
 // Unclaimed MEM2
