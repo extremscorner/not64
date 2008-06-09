@@ -339,6 +339,16 @@ void OGL_ResizeWindow()
 	}
 #else // !__LINUX__
 #endif // __LINUX__
+	// This is mainly initializing OGL.heightOffset because I don't think it's inited otherwise.
+	OGL.fullscreen = true;
+	OGL.fullscreenWidth = 640;
+	OGL.fullscreenHeight = 480;
+	OGL.windowedWidth = 640;
+	OGL.windowedHeight = 480;
+	OGL.heightOffset = 0;
+#ifdef __GX__
+
+#endif // __GX__
 }
 
 bool OGL_Start()
@@ -462,7 +472,11 @@ bool OGL_Start()
 
 	SDL_WM_SetCaption( pluginName, pluginName );
 #endif // __LINUX__
-#endif // !__GX__
+#else // !__GX__
+	//Set 'window height' to efb dimensions
+	OGL.width = 640;
+	OGL.height = 480;
+#endif // __GX__
 	OGL_InitExtensions();
 	OGL_InitStates();
 
@@ -543,11 +557,8 @@ void OGL_UpdateViewport()
 	            (int)(gSP.viewport.width * OGL.scaleX), (int)(gSP.viewport.height * OGL.scaleY) );
 	glDepthRange( 0.0f, 1.0f );//gSP.viewport.nearz, gSP.viewport.farz );
 #else // !__GX__
-//TODO: This does not work right - blanks out rendering but not GUI
-//	GX_SetViewport((f32) (gSP.viewport.x * OGL.scaleX),(f32) ((VI.height - (gSP.viewport.y + gSP.viewport.height)) * OGL.scaleY + OGL.heightOffset),
-//		(f32) (gSP.viewport.width * OGL.scaleX),(f32) (gSP.viewport.height * OGL.scaleY), 0.0f, 1.0f);
-	//GX_SetViewport((f32) (gSP.viewport.x * OGL.scaleX),(f32) ((VI.height - (gSP.viewport.y + gSP.viewport.height)) * OGL.scaleY),
-	//	(f32) (gSP.viewport.width * OGL.scaleX),(f32) (gSP.viewport.height * OGL.scaleY), 0.0f, 1.0f);
+	GX_SetViewport((f32) (gSP.viewport.x * OGL.scaleX),(f32) (gSP.viewport.y * OGL.scaleY),
+		(f32) (gSP.viewport.width * OGL.scaleX),(f32) (gSP.viewport.height * OGL.scaleY), 0.0f, 1.0f);
 #endif // __GX__
 }
 
@@ -727,11 +738,8 @@ void OGL_UpdateStates()
 #else // !__GX__
 	if (gDP.changed & CHANGED_SCISSOR)
 	{
-//TODO: This does not work - blanks out GUI.
-//		GX_SetScissor((u32) (gDP.scissor.ulx * OGL.scaleX),(u32) ((VI.height - gDP.scissor.lry) * OGL.scaleY + OGL.heightOffset),
-//			(u32) ((gDP.scissor.lrx - gDP.scissor.ulx) * OGL.scaleX),(u32) ((gDP.scissor.lry - gDP.scissor.uly) * OGL.scaleY));
-	//	GX_SetScissor((u32) (gDP.scissor.ulx * OGL.scaleX),(u32) (gDP.scissor.uly * OGL.scaleY),
-	//		(u32) ((gDP.scissor.lrx - gDP.scissor.ulx) * OGL.scaleX),(u32) ((gDP.scissor.lry - gDP.scissor.uly) * OGL.scaleY));
+		GX_SetScissor((u32) max(gDP.scissor.ulx * OGL.scaleX,0),(u32) max(gDP.scissor.uly * OGL.scaleY,0),
+			(u32) ((gDP.scissor.lrx - gDP.scissor.ulx) * OGL.scaleX),(u32) ((gDP.scissor.lry - gDP.scissor.uly) * OGL.scaleY));
 	}
 #endif // __GX__
 
@@ -1295,7 +1303,7 @@ void OGL_DrawRect( int ulx, int uly, int lrx, int lry, float *color )
 	glEnable( GL_SCISSOR_TEST );
 #else // !__GX__
 //	glDisable( GL_SCISSOR_TEST );
-//	GX_SetScissor((u32) 0,(u32) 0,(u32) OGL.width,(u32) OGL.height);	//Set to the same size as the viewport.
+	GX_SetScissor((u32) 0,(u32) 0,(u32) OGL.width,(u32) OGL.height);	//Set to the same size as the viewport.
 //	glDisable( GL_CULL_FACE );
 	GX_SetCullMode (GX_CULL_NONE);
 /*	glMatrixMode( GL_PROJECTION );
@@ -1306,14 +1314,11 @@ void OGL_DrawRect( int ulx, int uly, int lrx, int lry, float *color )
 //	guOrtho(GXprojection, 0, VI.width, 0, VI.height, 0.0f, 1.0f);
 	guOrtho(GXprojection, 0, VI.height, 0, VI.width, 0.0f, 1.0f);
 	GX_LoadProjectionMtx(GXprojection, GX_ORTHOGRAPHIC); 
-
 	GX_LoadPosMtxImm(OGL.GXmodelViewIdent,GX_PNMTX0);
 
 /*	glViewport( 0, OGL.heightOffset, OGL.width, OGL.height );
 	glDepthRange( 0.0f, 1.0f );*/
-//TODO: GX_SetViewport isn't working right - blanks out rendering
-//	GX_SetViewport((f32) 0,(f32) OGL.heightOffset,(f32) OGL.width,(f32) OGL.height, 0.0f, 1.0f);
-//	GX_SetViewport((f32) 0,(f32) 0,(f32) OGL.width,(f32) OGL.height, 0.0f, 1.0f);
+	GX_SetViewport((f32) 0,(f32) 0,(f32) OGL.width,(f32) OGL.height, 0.0f, 1.0f);
 
 //	glColor4f( color[0], color[1], color[2], color[3] );
 	GXColor GXcol;
@@ -1393,8 +1398,6 @@ void OGL_DrawRect( int ulx, int uly, int lrx, int lry, float *color )
 	OGL_UpdateViewport();
 //	glEnable( GL_SCISSOR_TEST );
 	gDP.changed &= CHANGED_SCISSOR;	//Restore scissor in OGL_UpdateStates() before drawing next geometry.
-//	GX_SetScissor((u32) (gDP.scissor.ulx * OGL.scaleX),(u32) (gDP.scissor.uly * OGL.scaleY),	//Restored to OGL_UpdateStates() value
-//			(u32) ((gDP.scissor.lrx - gDP.scissor.ulx) * OGL.scaleX),(u32) ((gDP.scissor.lry - gDP.scissor.uly) * OGL.scaleY));
 #endif // __GX__
 }
 
@@ -1428,9 +1431,7 @@ void OGL_DrawTexturedRect( float ulx, float uly, float lrx, float lry, float uls
 	GX_LoadPosMtxImm(OGL.GXmodelViewIdent,GX_PNMTX0);
 
 //	glViewport( 0, OGL.heightOffset, OGL.width, OGL.height );
-//TODO: GX_SetViewport isn't working right - blanks out some rendering
-//	GX_SetViewport((f32) 0,(f32) OGL.heightOffset,(f32) OGL.width,(f32) OGL.height, 0.0f, 1.0f);
-	//GX_SetViewport((f32) 0,(f32) 0,(f32) OGL.width,(f32) OGL.height, 0.0f, 1.0f);
+	GX_SetViewport((f32) 0,(f32) 0,(f32) OGL.width,(f32) OGL.height, 0.0f, 1.0f);
 #endif // __GX__
 
 	if (combiner.usesT0)
