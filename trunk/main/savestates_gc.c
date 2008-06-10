@@ -62,6 +62,7 @@ char* savestates_save()
    	char *filename, buf[1024];
    	gzFile f;
    	int len, i;
+    int curPos;
    
 	filename = malloc(strlen(statespath)+strlen(ROM_SETTINGS.goodname)+4+1);
     strcpy(filename, statespath);
@@ -94,7 +95,8 @@ char* savestates_save()
 	gzwrite(f, rdram, 0x800000);
 #else
 	gzwrite(f, rdram, 0x400000);
-	gzwrite(f, rdram, 0x400000);//half is repeated
+	curPos = gztell(f);
+	gzseek(f,curPos+0x400000,SEEK_SET);	//lets just write 0x400000 zeroes
 #endif
 	gzwrite(f, SP_DMEM, 0x1000);
 	gzwrite(f, SP_IMEM, 0x1000);
@@ -102,10 +104,14 @@ char* savestates_save()
 	
 	save_flashram_infos(buf);
 	gzwrite(f, buf, 24);
-/*	FIXME
-	gzwrite(f, tlb_LUT_r, 0x100000);		//garbage
-	gzwrite(f, tlb_LUT_w, 0x100000);		//garbage
-*/
+#ifndef USE_TLB_CACHE
+	gzwrite(f, tlb_LUT_r, 0x100000);		
+	gzwrite(f, tlb_LUT_w, 0x100000);
+#else
+	curPos = gztell(f);
+	gzseek(f,curPos+0x200000,SEEK_SET);	//until we can save tlb cache, lets just write 0x200000 zeroes
+#endif
+
 	gzwrite(f, &llbit, 4);
 	gzwrite(f, reg, 32*8);
 	for (i=0; i<32; i++) gzwrite(f, reg_cop0+i, 8); // *8 for compatibility with old versions purpose
@@ -136,7 +142,7 @@ char* savestates_load()
 	char *filename, buf[1024];
 	gzFile f = NULL;
 	int len, i;
-	
+	int curPos;
 	
 	filename = malloc(strlen(statespath)+strlen(ROM_SETTINGS.goodname)+4+1);
 	strcpy(filename, statespath);
@@ -178,7 +184,7 @@ char* savestates_load()
 	gzread(f, rdram, 0x800000);
 #else
 	gzread(f, rdram, 0x400000);
-	int curPos = gztell(f);
+	curPos = gztell(f);
 	gzseek(f,curPos+0x400000,SEEK_SET);
 #endif
 	gzread(f, SP_DMEM, 0x1000);
@@ -187,10 +193,13 @@ char* savestates_load()
 	
 	gzread(f, buf, 24);
 	load_flashram_infos(buf);
-/*	//FIX ME
-	gzread(f, tlb_LUT_r, 0x100000);	//garbage
-	gzread(f, tlb_LUT_w, 0x100000);	//garbage
-*/	
+#ifndef USE_TLB_CACHE
+	gzread(f, tlb_LUT_r, 0x100000);
+	gzread(f, tlb_LUT_w, 0x100000);
+#else
+	curPos = gztell(f);
+	gzseek(f,curPos+0x200000,SEEK_SET);		//for now, skip tlb, later, fix me to load the cache again
+#endif
 	gzread(f, &llbit, 4);
 	gzread(f, reg, 32*8);
 	for (i=0; i<32; i++) 
