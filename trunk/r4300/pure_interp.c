@@ -3169,7 +3169,7 @@ void prefetch()
                                              (unsigned int)(debug_count + Count));*/
    // --- OK ---
    
-   if ((interp_addr >= 0x80000000) && (interp_addr < 0xc0000000))
+if ((interp_addr >= 0x80000000) && (interp_addr < 0xc0000000))
      {
 	if ((interp_addr >= 0x80000000) && (interp_addr < 0x80800000))
 	  {
@@ -3195,14 +3195,20 @@ void prefetch()
 	  }
 	else
 	  {
-	     printf("execution � l'addresse :%x\n", (int)interp_addr);
+	     printf("execution &#65533; l'addresse :%x\n", (int)interp_addr);
 	     stop=1;
 	  }
      }
    else
      {
+     	static unsigned long last_addr, last_phys;
 	unsigned long addr = interp_addr, phys;
-	phys = virtual_to_physical_address(interp_addr, 2);
+	if(addr >> 12 != last_addr >> 12)
+		phys = virtual_to_physical_address(interp_addr, 2);
+	else
+		phys = (last_phys&0xFFFFF000) | (addr&0xFFF);
+	last_addr = addr;
+	last_phys = phys;
 	if (phys != 0x00000000) interp_addr = phys;
 	else 
 	  {
