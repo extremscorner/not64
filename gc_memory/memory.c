@@ -167,10 +167,11 @@ int init_memory()
    //init RDRAM
 #ifdef USE_EXPANSION
    for (i=0; i<(0x800000/4); i++) rdram[i]=0;
+   for (i=0; i<0x80; i++)
 #else
    for (i=0; i<(0x800000/4/2); i++) rdram[i]=0;
+   for (i=0; i<0x40; i++)
 #endif
-	for (i=0; i<0x80; i++)
     {
 	readmem[(0x8000+i)] = read_rdram;
 	readmem[(0xa000+i)] = read_rdram;
@@ -189,7 +190,11 @@ int init_memory()
 	writememd[(0x8000+i)] = write_rdramd;
 	writememd[(0xa000+i)] = write_rdramd;
      }
+#ifdef USE_EXPANSION
    for (i=0x80; i<0x3F0; i++)
+#else
+   for (i=0x40; i<0x3F0; i++)
+#endif
     {
 	readmem[0x8000+i] = read_nothing;
 	readmem[0xa000+i] = read_nothing;
