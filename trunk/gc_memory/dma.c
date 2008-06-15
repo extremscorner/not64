@@ -250,12 +250,23 @@ void dma_pi_write()
 	   case 2:
 	   case 3:
 	   case 6:
+#ifdef USE_EXPANSION
 	     rdram[0x318/4] = 0x800000;
+#else
+	     rdram[0x318/4] = 0x400000;
+#endif
 	     break;
 	   case 5:
+#ifdef USE_EXPANSION
 	     rdram[0x3F0/4] = 0x800000;
+#else
+	     rdram[0x3F0/4] = 0x400000;
+#endif
 	     break;
 	  }
+	  /* DK64 Fix */
+	/*if(strncmp(ROM_HEADER->nom, "DONKEY KONG 64", 14) == 0)
+		rdram[0x2FE1C0/4] = 0xAD170014;*/
      }
    
    pi_register.read_pi_status_reg |= 3;
