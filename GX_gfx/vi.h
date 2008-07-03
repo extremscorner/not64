@@ -58,6 +58,7 @@ class VI
    virtual void updateDEBUG() = 0;
    virtual void setCaptureScreen() = 0;
    virtual void doCaptureScreen() = 0;
+   virtual void PreRetraceCallback(u32) = 0;
    void statusChanged();
    void widthChanged();
    void updateScreen();
