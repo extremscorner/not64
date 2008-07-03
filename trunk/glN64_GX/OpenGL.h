@@ -23,8 +23,9 @@
 #include "glATI.h"
 #include "gSP.h"
 
-#define GXprojZScale	 0.5 //0.25 //0.5
-#define GXprojZOffset	-0.5
+#define GXprojZScale		 0.5 //0.25 //0.5
+#define GXprojZOffset		-0.5
+#define GXpolyOffsetFactor	 5.0e-4 //Tweaked for co-planar polygons. Interestingly, Z resolution should be 5.96e-8.
 
 struct GLVertex
 {
@@ -100,6 +101,7 @@ struct GLInfo
 	Mtx44	GXproj;
 	Mtx44	GXprojW;
 	Mtx44	GXprojIdent;
+	Mtx44	GXprojTemp;
 	Mtx		GXmodelView;
 	Mtx		GXmodelViewIdent;
 	BOOL	GXuseProj;
@@ -108,6 +110,12 @@ struct GLInfo
 	int		GXnumVtxMP;
 	int		GXnumVtx;
 	bool	GXuseAlphaCompare;
+	float	GXfogStartZ;
+	float	GXfogEndZ;
+	GXColor	GXfogColor;
+	u8		GXfogType;
+	bool	GXupdateFog;
+	bool	GXpolyOffset;
 #endif
 };
 

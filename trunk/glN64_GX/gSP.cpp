@@ -1101,12 +1101,18 @@ void gSPTriangle( s32 v0, s32 v1, s32 v2, s32 flag )
 			(gSP.vertices[v1].zClip < 0.0f) ||
 			(gSP.vertices[v2].zClip < 0.0f)))
 		{
+//		if(0)
+//		{
 			SPVertex nearVertices[4];
 			SPVertex clippedVertices[4];
 			//s32 numNearTris = 0;
 			//s32 numClippedTris = 0;
 			s32 nearIndex = 0;
 			s32 clippedIndex = 0;
+
+#ifdef __GX__
+			DEBUG_print((char*)"NoN clipping triangles!!!",5);
+#endif // __GX__
 
 			s32 v[3] = { v0, v1, v2 };
 
@@ -1156,9 +1162,9 @@ void gSPTriangle( s32 v0, s32 v1, s32 v2, s32 flag )
 
 //			glDepthFunc( GL_LEQUAL );
 
-			OGL_AddTriangle( nearVertices, 0, 1, 2 );
+/*			OGL_AddTriangle( nearVertices, 0, 1, 2 );
 			if (nearIndex == 4)
-				OGL_AddTriangle( nearVertices, 0, 2, 3 );
+				OGL_AddTriangle( nearVertices, 0, 2, 3 );*/
 
 #ifndef __GX__
 			if (gDP.otherMode.depthMode == ZMODE_DEC)
@@ -1635,6 +1641,15 @@ void gSPFogFactor( s16 fm, s16 fo )
 {
     gSP.fog.multiplier = fm;
 	gSP.fog.offset = fo;
+
+#ifdef __GX__
+	//Adjust the range from 0.1 to 1.0
+//	OGL.GXfogStartZ = -(0.45f * (float)gSP.fog.offset / (float)gSP.fog.multiplier) + 0.55f;
+//	OGL.GXfogEndZ = (0.45f * (255.0f - (float)gSP.fog.offset) / (float)gSP.fog.multiplier) + 0.55f;
+	//Adjust the range from 0.0 to 1.0
+	OGL.GXfogStartZ = -(0.5f * (float)gSP.fog.offset / (float)gSP.fog.multiplier) + 0.5f;
+	OGL.GXfogEndZ = (0.5f * (255.0f - (float)gSP.fog.offset) / (float)gSP.fog.multiplier) + 0.5f;
+#endif // __GX__
 
 	gSP.changed |= CHANGED_FOGPOSITION;
 #ifdef DEBUG

@@ -1,6 +1,8 @@
 #ifdef __GX__
 #include <gccore.h>
 #include "../gui/DEBUG.h"
+#include <math.h>
+#include "3DMath.h"
 #endif // __GX__
 
 #ifndef __LINUX__
@@ -585,7 +587,11 @@ void OGL_UpdateStates()
 		else
 			glDisable( GL_FOG );
 #else // !__GX__
-		//TODO: GX Fog enables
+		if ((gSP.geometryMode & G_FOG) && OGL.fog)
+			OGL.GXfogType = GX_FOG_ORTHO_LIN;
+		else
+			OGL.GXfogType = GX_FOG_NONE;
+		OGL.GXupdateFog = true;
 #endif // __GX__
 
 		gSP.changed &= ~CHANGED_GEOMETRYMODE;
@@ -641,14 +647,19 @@ void OGL_UpdateStates()
 //			glDepthMask( FALSE );
 			GXZupdate = GX_FALSE;
 
-//TODO: Not sure yet how to implement this:
-/*		if (gDP.otherMode.depthMode == ZMODE_DEC)
-			glEnable( GL_POLYGON_OFFSET_FILL );
-		else
+//TODO: Implement with P matrix?
+		if ((gDP.otherMode.depthMode == ZMODE_DEC) && !OGL.GXpolyOffset)
 		{
-//			glPolygonOffset( -3.0f, -3.0f );
-			glDisable( GL_POLYGON_OFFSET_FILL );
-		}*/
+//			GX_SetCoPlanar( GX_TRUE );
+			OGL.GXpolyOffset = true;
+			OGL.GXupdateMtx = true;
+		}
+		else if (!(gDP.otherMode.depthMode == ZMODE_DEC) && OGL.GXpolyOffset)
+		{
+//			GX_SetCoPlanar( GX_FALSE );
+			OGL.GXpolyOffset = false;
+			OGL.GXupdateMtx = true;
+		}
 	}
 	GX_SetZMode(GXenableZmode,GXZfunc,GXZupdate);
 #endif // __GX__
@@ -797,12 +808,26 @@ void OGL_UpdateStates()
 #ifndef __GX__
 	if ((gDP.changed & CHANGED_FOGCOLOR) && OGL.fog)
 		glFogfv( GL_FOG_COLOR, &gDP.fogColor.r );
-
 #else // !__GX__
-//TODO: GX fog implementation
-	if ((gDP.changed & CHANGED_FOGCOLOR) && OGL.fog) {}
-//		glFogfv( GL_FOG_COLOR, &gDP.fogColor.r ); // -> Todo: Implement fog
+	if ((gDP.changed & CHANGED_FOGCOLOR) && OGL.fog) 
+	{
+		OGL.GXfogColor.r = (u8) (gDP.fogColor.r*255);
+		OGL.GXfogColor.g = (u8) (gDP.fogColor.g*255);
+		OGL.GXfogColor.b = (u8) (gDP.fogColor.b*255);
+		OGL.GXfogColor.a = (u8) (gDP.fogColor.a*255);
+		OGL.GXupdateFog = true;
+	}
 
+	if(OGL.GXupdateFog)
+	{
+		GX_SetFog(OGL.GXfogType,OGL.GXfogStartZ,OGL.GXfogEndZ,0.0,1.0,OGL.GXfogColor);
+		OGL.GXupdateFog = false;
+		if(OGL.GXfogType == GX_FOG_ORTHO_LIN)
+		{
+			sprintf(txtbuffer,"SetFog: StartZ %f, EndZ %f, color (%d,%d,%d,%d), fo %f, fm %f", OGL.GXfogStartZ, OGL.GXfogEndZ, OGL.GXfogColor.r, OGL.GXfogColor.g, OGL.GXfogColor.b, OGL.GXfogColor.a, (float)gSP.fog.offset, (float)gSP.fog.multiplier);
+			DEBUG_print(txtbuffer,DBG_RSPINFO1);
+		}
+	}
 #endif // __GX__
 
 #ifndef __GX__
@@ -975,6 +1000,7 @@ void OGL_AddTriangle( SPVertex *vertices, int v0, int v1, int v2 )
 			SetConstant( OGL.vertices[OGL.numVertices].secondaryColor, combiner.vertex.secondaryColor, ONE );
 		}
 
+#ifndef __GX__
 		if ((gSP.geometryMode & G_FOG) && OGL.EXT_fog_coord && OGL.fog)
 		{
 			if (vertices[v[i]].z < -vertices[v[i]].w)
@@ -982,6 +1008,9 @@ void OGL_AddTriangle( SPVertex *vertices, int v0, int v1, int v2 )
 			else
 				OGL.vertices[OGL.numVertices].fog = max( 0.0f, vertices[v[i]].z / vertices[v[i]].w * (float)gSP.fog.multiplier + (float)gSP.fog.offset );
 		}
+#else //!__GX__
+		//Fog is taken care of in hardware with GX.
+#endif //__GX__
 
 		if (combiner.usesT0)
 		{
@@ -1055,21 +1084,58 @@ void OGL_DrawTriangles()
 	//Update MV & P Matrices
 	if(OGL.GXupdateMtx)
 	{
-		if(OGL.GXuseProj)
+		if(OGL.GXpolyOffset)
 		{
-			if(OGL.GXproj[3][2] == -1)
-				GX_LoadProjectionMtx(OGL.GXproj, GX_PERSPECTIVE);
+			if(OGL.GXuseProj)
+			{
+				CopyMatrix( OGL.GXprojTemp, OGL.GXproj );
+				if(OGL.GXprojTemp[3][2] == -1)
+				{
+					OGL.GXprojTemp[2][2] += GXpolyOffsetFactor;
+					GX_LoadProjectionMtx(OGL.GXprojTemp, GX_PERSPECTIVE);
+				}
+				else
+				{
+					OGL.GXprojTemp[2][3] -= GXpolyOffsetFactor;
+					GX_LoadProjectionMtx(OGL.GXprojTemp, GX_ORTHOGRAPHIC); 
+				}
+				GX_LoadPosMtxImm(OGL.GXmodelView,GX_PNMTX0);
+			}
 			else
-				GX_LoadProjectionMtx(OGL.GXproj, GX_ORTHOGRAPHIC); 
-			GX_LoadPosMtxImm(OGL.GXmodelView,GX_PNMTX0);
+			{
+				if(OGL.GXuseProjW)
+				{
+					CopyMatrix( OGL.GXprojTemp, OGL.GXprojW );
+					OGL.GXprojTemp[2][2] += GXpolyOffsetFactor;
+					GX_LoadProjectionMtx(OGL.GXprojTemp, GX_PERSPECTIVE); 
+				}
+				else
+				{
+					CopyMatrix( OGL.GXprojTemp, OGL.GXprojIdent );
+					OGL.GXprojTemp[2][3] -= GXpolyOffsetFactor;
+					GX_LoadProjectionMtx(OGL.GXprojTemp, GX_ORTHOGRAPHIC); 
+				}
+				GX_LoadPosMtxImm(OGL.GXmodelViewIdent,GX_PNMTX0);
+			}
 		}
 		else
 		{
-			if(OGL.GXuseProjW)
-				GX_LoadProjectionMtx(OGL.GXprojW, GX_PERSPECTIVE); 
+			if(OGL.GXuseProj)
+			{
+				if(OGL.GXproj[3][2] == -1)
+					GX_LoadProjectionMtx(OGL.GXproj, GX_PERSPECTIVE);
+				else
+					GX_LoadProjectionMtx(OGL.GXproj, GX_ORTHOGRAPHIC); 
+				GX_LoadPosMtxImm(OGL.GXmodelView,GX_PNMTX0);
+			}
 			else
-				GX_LoadProjectionMtx(OGL.GXprojIdent, GX_ORTHOGRAPHIC); 
-			GX_LoadPosMtxImm(OGL.GXmodelViewIdent,GX_PNMTX0);
+			{
+				if(OGL.GXuseProjW)
+					GX_LoadProjectionMtx(OGL.GXprojW, GX_PERSPECTIVE); 
+				else
+					GX_LoadProjectionMtx(OGL.GXprojIdent, GX_ORTHOGRAPHIC); 
+				GX_LoadPosMtxImm(OGL.GXmodelViewIdent,GX_PNMTX0);
+			}
 		}
 		OGL.GXupdateMtx = false;
 	}
@@ -1202,21 +1268,58 @@ void OGL_DrawLine( SPVertex *vertices, int v0, int v1, float width )
 	//Update MV & P Matrices
 	if(OGL.GXupdateMtx)
 	{
-		if(OGL.GXuseProj)
+		if(OGL.GXpolyOffset)
 		{
-			if(OGL.GXproj[3][2] == -1)
-				GX_LoadProjectionMtx(OGL.GXproj, GX_PERSPECTIVE);
+			if(OGL.GXuseProj)
+			{
+				CopyMatrix( OGL.GXprojTemp, OGL.GXproj );
+				if(OGL.GXprojTemp[3][2] == -1)
+				{
+					OGL.GXprojTemp[2][2] += GXpolyOffsetFactor;
+					GX_LoadProjectionMtx(OGL.GXprojTemp, GX_PERSPECTIVE);
+				}
+				else
+				{
+					OGL.GXprojTemp[2][3] -= GXpolyOffsetFactor;
+					GX_LoadProjectionMtx(OGL.GXprojTemp, GX_ORTHOGRAPHIC); 
+				}
+				GX_LoadPosMtxImm(OGL.GXmodelView,GX_PNMTX0);
+			}
 			else
-				GX_LoadProjectionMtx(OGL.GXproj, GX_ORTHOGRAPHIC); 
-			GX_LoadPosMtxImm(OGL.GXmodelView,GX_PNMTX0);
+			{
+				if(OGL.GXuseProjW)
+				{
+					CopyMatrix( OGL.GXprojTemp, OGL.GXprojW );
+					OGL.GXprojTemp[2][2] += GXpolyOffsetFactor;
+					GX_LoadProjectionMtx(OGL.GXprojTemp, GX_PERSPECTIVE); 
+				}
+				else
+				{
+					CopyMatrix( OGL.GXprojTemp, OGL.GXprojIdent );
+					OGL.GXprojTemp[2][3] -= GXpolyOffsetFactor;
+					GX_LoadProjectionMtx(OGL.GXprojTemp, GX_ORTHOGRAPHIC); 
+				}
+				GX_LoadPosMtxImm(OGL.GXmodelViewIdent,GX_PNMTX0);
+			}
 		}
 		else
 		{
-			if(OGL.GXuseProjW)
-				GX_LoadProjectionMtx(OGL.GXprojW, GX_PERSPECTIVE); 
+			if(OGL.GXuseProj)
+			{
+				if(OGL.GXproj[3][2] == -1)
+					GX_LoadProjectionMtx(OGL.GXproj, GX_PERSPECTIVE);
+				else
+					GX_LoadProjectionMtx(OGL.GXproj, GX_ORTHOGRAPHIC); 
+				GX_LoadPosMtxImm(OGL.GXmodelView,GX_PNMTX0);
+			}
 			else
-				GX_LoadProjectionMtx(OGL.GXprojIdent, GX_ORTHOGRAPHIC); 
-			GX_LoadPosMtxImm(OGL.GXmodelViewIdent,GX_PNMTX0);
+			{
+				if(OGL.GXuseProjW)
+					GX_LoadProjectionMtx(OGL.GXprojW, GX_PERSPECTIVE); 
+				else
+					GX_LoadProjectionMtx(OGL.GXprojIdent, GX_ORTHOGRAPHIC); 
+				GX_LoadPosMtxImm(OGL.GXmodelViewIdent,GX_PNMTX0);
+			}
 		}
 		OGL.GXupdateMtx = false;
 	}
@@ -1302,43 +1405,23 @@ void OGL_DrawRect( int ulx, int uly, int lrx, int lry, float *color )
 	OGL_UpdateViewport();
 	glEnable( GL_SCISSOR_TEST );
 #else // !__GX__
-//	glDisable( GL_SCISSOR_TEST );
 	GX_SetScissor((u32) 0,(u32) 0,(u32) OGL.width,(u32) OGL.height);	//Set to the same size as the viewport.
-//	glDisable( GL_CULL_FACE );
 	GX_SetCullMode (GX_CULL_NONE);
-/*	glMatrixMode( GL_PROJECTION );
-    glLoadIdentity();
-	glOrtho( 0, VI.width, VI.height, 0, 1.0f, -1.0f );*/
 	Mtx44 GXprojection;
 	guMtxIdentity(GXprojection);
-//	guOrtho(GXprojection, 0, VI.width, 0, VI.height, 0.0f, 1.0f);
 	guOrtho(GXprojection, 0, VI.height, 0, VI.width, 0.0f, 1.0f);
+	if(OGL.GXpolyOffset)
+		GXprojection[2][3] -= GXpolyOffsetFactor;
 	GX_LoadProjectionMtx(GXprojection, GX_ORTHOGRAPHIC); 
 	GX_LoadPosMtxImm(OGL.GXmodelViewIdent,GX_PNMTX0);
 
-/*	glViewport( 0, OGL.heightOffset, OGL.width, OGL.height );
-	glDepthRange( 0.0f, 1.0f );*/
 	GX_SetViewport((f32) 0,(f32) 0,(f32) OGL.width,(f32) OGL.height, 0.0f, 1.0f);
 
-//	glColor4f( color[0], color[1], color[2], color[3] );
 	GXColor GXcol;
 	GXcol.r = (u8) (color[0]*255);
 	GXcol.g = (u8) (color[1]*255);
 	GXcol.b = (u8) (color[2]*255);
 	GXcol.a = (u8) (color[3]*255);
-
-/*
-// Set TEV up for pass color.
-	GX_SetNumTevStages (1);
-	GX_SetTevOp (GX_TEVSTAGE0,GX_PASSCLR);
-*/
-
-/*	glBegin( GL_QUADS );
-		glVertex4f( ulx, uly, (gDP.otherMode.depthSource == G_ZS_PRIM) ? gDP.primDepth.z : gSP.viewport.nearz, 1.0f );
-		glVertex4f( lrx, uly, (gDP.otherMode.depthSource == G_ZS_PRIM) ? gDP.primDepth.z : gSP.viewport.nearz, 1.0f );
-		glVertex4f( lrx, lry, (gDP.otherMode.depthSource == G_ZS_PRIM) ? gDP.primDepth.z : gSP.viewport.nearz, 1.0f );
-		glVertex4f( ulx, lry, (gDP.otherMode.depthSource == G_ZS_PRIM) ? gDP.primDepth.z : gSP.viewport.nearz, 1.0f );
-	glEnd();*/
 
 	if ((gDP.otherMode.depthSource == G_ZS_PRIM)||OGL.GXuseAlphaCompare)
 	{
@@ -1382,21 +1465,10 @@ void OGL_DrawRect( int ulx, int uly, int lrx, int lry, float *color )
 		GX_TexCoord2f32(0.0f,0.0f);
 	GX_End();
 
-/*	if(OGL.GXuseProj)
-	{
-		if(OGL.GXproj[3][2] == -1)
-			GX_LoadProjectionMtx(OGL.GXproj, GX_PERSPECTIVE);
-		else
-			GX_LoadProjectionMtx(OGL.GXproj, GX_ORTHOGRAPHIC); 
-			GX_LoadPosMtxImm(OGL.GXmodelView,GX_PNMTX0);
-	}
-	else
-		GX_LoadProjectionMtx(OGL.GXprojIdent, GX_ORTHOGRAPHIC); */
 	OGL.GXupdateMtx = true;
 
 	OGL_UpdateCullFace();
 	OGL_UpdateViewport();
-//	glEnable( GL_SCISSOR_TEST );
 	gDP.changed &= CHANGED_SCISSOR;	//Restore scissor in OGL_UpdateStates() before drawing next geometry.
 #endif // __GX__
 }
@@ -1417,20 +1489,16 @@ void OGL_DrawTexturedRect( float ulx, float uly, float lrx, float lry, float uls
 	glOrtho( 0, VI.width, VI.height, 0, 1.0f, -1.0f );
 	glViewport( 0, OGL.heightOffset, OGL.width, OGL.height );
 #else // !__GX__
-//	glDisable( GL_CULL_FACE );
 	GX_SetCullMode (GX_CULL_NONE);
-/*	glMatrixMode( GL_PROJECTION );
-    glLoadIdentity();
-	glOrtho( 0, VI.width, VI.height, 0, 1.0f, -1.0f );*/
 	Mtx44 GXprojection;
 	guMtxIdentity(GXprojection);
-//	guOrtho(GXprojection, 0, VI.width, 0, VI.height, 0.0f, 1.0f);
 	guOrtho(GXprojection, 0, VI.height, 0, VI.width, 0.0f, 1.0f);
+	if(OGL.GXpolyOffset)
+		GXprojection[2][3] -= GXpolyOffsetFactor;
 	GX_LoadProjectionMtx(GXprojection, GX_ORTHOGRAPHIC); 
 
 	GX_LoadPosMtxImm(OGL.GXmodelViewIdent,GX_PNMTX0);
 
-//	glViewport( 0, OGL.heightOffset, OGL.width, OGL.height );
 	GX_SetViewport((f32) 0,(f32) 0,(f32) OGL.width,(f32) OGL.height, 0.0f, 1.0f);
 #endif // __GX__
 
@@ -1599,13 +1667,6 @@ void OGL_DrawTexturedRect( float ulx, float uly, float lrx, float lry, float uls
 	GXcol.b = (u8) (rect[0].color.b*255);
 	GXcol.a = (u8) (rect[0].color.a*255);
 
-/*
-// Set TEV up for pass texture.
-//TODO: Figure out the correct combining modes for this function.
-	GX_SetNumTevStages (1);
-	GX_SetTevOp (GX_TEVSTAGE0,GX_REPLACE);
-*/
-
 	if ((gDP.otherMode.depthSource == G_ZS_PRIM)||OGL.GXuseAlphaCompare)
 	{
 		GX_SetZCompLoc(GX_FALSE);	// Do Z-compare after texturing. (i.e. use Ztex)
@@ -1617,7 +1678,6 @@ void OGL_DrawTexturedRect( float ulx, float uly, float lrx, float lry, float uls
 		cache.GXnoZTexPrimCnt++;
 	}
 
-	//TODO: Change the following for multitexturing.
 	//set vertex description here
 	GX_ClearVtxDesc();
 	GX_SetVtxDesc(GX_VA_PTNMTXIDX, GX_PNMTX0);
@@ -1678,16 +1738,6 @@ void OGL_DrawTexturedRect( float ulx, float uly, float lrx, float lry, float uls
 #ifndef __GX__
 	glLoadIdentity();
 #else // !__GX__
-/*	if(OGL.GXuseProj)
-	{
-		if(OGL.GXproj[3][2] == -1)
-			GX_LoadProjectionMtx(OGL.GXproj, GX_PERSPECTIVE);
-		else
-			GX_LoadProjectionMtx(OGL.GXproj, GX_ORTHOGRAPHIC); 
-		GX_LoadPosMtxImm(OGL.GXmodelView,GX_PNMTX0);
-	}
-	else
-		GX_LoadProjectionMtx(OGL.GXprojIdent, GX_ORTHOGRAPHIC); */
 	OGL.GXupdateMtx = true;
 #endif // __GX__
 	OGL_UpdateCullFace();
@@ -1845,15 +1895,25 @@ void OGL_ReadScreen( void **dest, long *width, long *height )
 void OGL_GXinitDlist()
 {
 	//Clear efb
-	GX_SetCopyClear ((GXColor){0,0,0,255}, 0xFFFFFF);	//TODO: get rid of this GX_CopyDisp as it's unneeded.
-	GX_CopyDisp (VI_GX_getScreenPointer(), GX_TRUE);	//clear the EFB before executing new Dlist
-	GX_DrawDone ();
+//	GX_SetCopyClear ((GXColor){0,0,0,255}, 0xFFFFFF);	//TODO: get rid of this GX_CopyDisp as it's unneeded.
+//	GX_CopyDisp (VI_GX_getScreenPointer(), GX_TRUE);	//clear the EFB before executing new Dlist
+//	GX_DrawDone ();
+	if(VI.copy_fb)
+		VIDEO_WaitVSync();
 
 	// init primeDepthZtex, Ztexture, and AlphaCompare
 	TextureCache_UpdatePrimDepthZtex( 1.0f );
 	GX_SetZTexture(GX_ZT_DISABLE,GX_TF_Z16,0);	//GX_ZT_DISABLE or GX_ZT_REPLACE; set in gDP.cpp
 	OGL.GXuseAlphaCompare = false;
 	GX_SetZCompLoc(GX_TRUE);	// Do Z-compare before texturing.
+
+	// init fog
+	OGL.GXfogStartZ = 0.0f;
+	OGL.GXfogEndZ = 1.0f;
+	OGL.GXfogColor = (GXColor){0,0,0,255};
+	OGL.GXfogType = GX_FOG_NONE;
+	GX_SetFog(OGL.GXfogType,OGL.GXfogStartZ,OGL.GXfogEndZ,0.0,1.0,OGL.GXfogColor);
+	OGL.GXupdateFog = false;
 
 	//Reset Modelview matrix
 	guMtxIdentity(OGL.GXmodelView);
@@ -1875,6 +1935,7 @@ void OGL_GXinitDlist()
 	OGL.GXprojIdent[2][2] = GXprojZScale; //0.5;
 	OGL.GXprojIdent[2][3] = GXprojZOffset; //-0.5;
 	GX_LoadProjectionMtx(OGL.GXprojIdent, GX_ORTHOGRAPHIC);
+	OGL.GXpolyOffset = false;
 
 	OGL.GXnumVtxMP = OGL.GXnumVtx = 0;
 	cache.GXprimDepthCnt = cache.GXZTexPrimCnt = cache.GXnoZTexPrimCnt = 0;
