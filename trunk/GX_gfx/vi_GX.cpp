@@ -20,11 +20,9 @@ char showFPSonScreen;
 
 VI_GX::VI_GX(GFX_INFO info) : VI(info), which_fb(1), width(0), height(0){
 	init_font();
-	updateDEBUGflag = true;
+	updateOSD = true;
+	copy_fb = false;
 	captureScreenFlag = false;
-	// FIXME: Instead of creating our own fb, we should use main's
-	//xfb[0] = (unsigned int*) MEM_K0_TO_K1(SYS_AllocateFramebuffer(&TVNtsc480IntDf));
-	//xfb[1] = (unsigned int*) MEM_K0_TO_K1(SYS_AllocateFramebuffer(&TVNtsc480IntDf));
 }
 
 void VI_GX::setFB(unsigned int* fb1, unsigned int* fb2){
@@ -33,7 +31,6 @@ void VI_GX::setFB(unsigned int* fb1, unsigned int* fb2){
 }
 
 VI_GX::~VI_GX(){
-	// FIXME: If we create our own fb, we need to free it somehow
 }
 
 void VI_GX::setVideoMode(int w, int h){
@@ -48,19 +45,23 @@ void VI_GX::switchWindowMode(){ }
 unsigned int* VI_GX::getScreenPointer(){ return xfb[which_fb]; }
 
 void VI_GX::blit(){
-	//printf("Should be blitting.");
 	showFPS();
 	showDEBUG();
-    GX_DrawDone(); //needed?
-	GX_CopyDisp (xfb[which_fb], GX_FALSE); //TODO: Figure out where the UpdateScreen interrupts are coming from!
-//    GX_Flush (); //needed?
-    GX_DrawDone(); //Shagkur's recommendation
-	doCaptureScreen();
-	updateDEBUGflag = false;
-	VIDEO_SetNextFramebuffer(xfb[which_fb]);
+	if(updateOSD)
+	{
+		if(copy_fb)
+			VIDEO_WaitVSync();
+		GX_CopyDisp (xfb[which_fb], GX_FALSE); 
+		GX_DrawDone();
+		doCaptureScreen();
+		updateOSD = false;
+		copy_fb = true;
+	}
+	//The following has been moved to the Pre-Retrace callback
+/*	VIDEO_SetNextFramebuffer(xfb[which_fb]);
 	VIDEO_Flush();
 	which_fb ^= 1;
-	VIDEO_WaitVSync();
+	VIDEO_WaitVSync();*/
 }
 
 void VI_GX::setGamma(float gamma){ }
@@ -78,23 +79,21 @@ void VI_GX::showFPS(){
 	
 	long long nowTick = gettime();
 	VIs++;
-	if (updateDEBUGflag)
+	if (updateOSD)
 		frames++;
 	if (diff_sec(lastTick,nowTick)>=1) {
 		sprintf(caption, "%02d VI/s, %02d FPS",VIs,frames);
-//		sprintf(caption, "%02d FPS",frames);
 		frames = 0;
 		VIs = 0;
 		lastTick = nowTick;
 	}
 	
-	if (updateDEBUGflag)
+	if (updateOSD)
 	{
 		GXColor fontColor = {150,255,150,255};
 		write_font_init_GX(fontColor);
 		if(showFPSonScreen)
 			write_font(10,35,caption, 1.0);
-		//write_font(10,10,caption,xfb,which_fb);
 
 		//reset swap table from GUI/DEBUG
 		GX_SetTevSwapModeTable(GX_TEV_SWAP0, GX_CH_RED, GX_CH_GREEN, GX_CH_BLUE, GX_CH_ALPHA);
@@ -169,14 +168,14 @@ void VI_GX::showLoadProg(float percent)
 
 void VI_GX::updateDEBUG()
 {
-	updateDEBUGflag = true;
+	updateOSD = true;
 }
 
 extern char text[DEBUG_TEXT_HEIGHT][DEBUG_TEXT_WIDTH];
 
 void VI_GX::showDEBUG()
 {
-	if (updateDEBUGflag)
+	if (updateOSD)
 	{
 		int i = 0;
 		GXColor fontColor = {150, 255, 150, 255};
@@ -185,7 +184,6 @@ void VI_GX::showDEBUG()
 		if(printToScreen)
 			for (i=0;i<DEBUG_TEXT_HEIGHT;i++)
 				write_font(10,(10*i+60),text[i], 0.5); 
-//				write_font(10,(6*i+60),text[i], 0.5); 
 		
 	   //reset swap table from GUI/DEBUG
 		GX_SetTevSwapModeTable(GX_TEV_SWAP0, GX_CH_RED, GX_CH_GREEN, GX_CH_BLUE, GX_CH_ALPHA);
@@ -202,7 +200,7 @@ extern GXRModeObj *vmode;		/*** Graphics Mode Object declared as global in main_
 
 void VI_GX::doCaptureScreen()
 {
-	if (updateDEBUGflag && captureScreenFlag)
+	if (updateOSD && captureScreenFlag)
 	{
 #if 0	//This code is for future Screen Capture functionality using libPNG
 
@@ -243,5 +241,16 @@ void VI_GX::doCaptureScreen()
 
 #endif
 		captureScreenFlag = false;
+	}
+}
+
+void VI_GX::PreRetraceCallback(u32 retraceCnt)
+{
+	if(copy_fb)
+	{
+		VIDEO_SetNextFramebuffer(xfb[which_fb]);
+		VIDEO_Flush();
+		which_fb ^= 1;
+		copy_fb = false;
 	}
 }

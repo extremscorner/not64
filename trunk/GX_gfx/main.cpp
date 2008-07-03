@@ -27,6 +27,10 @@ static GFX_INFO gfxInfo;
 
 VI *vi;
 
+void gfx_PreRetraceCallback(u32 retraceCnt) {
+	vi->PreRetraceCallback(retraceCnt);
+}
+
 void gfx_set_fb(unsigned int* fb1, unsigned int* fb2){
 	vi->setFB(fb1, fb2);
 }
@@ -255,6 +259,7 @@ EXPORT void CALL ProcessRDPList(void)
 EXPORT void CALL RomClosed (void)
 {
    //vi->setGamma(1.0);
+   VIDEO_SetPreRetraceCallback(NULL);
    delete vi;
 }
 
@@ -269,6 +274,7 @@ EXPORT void CALL RomOpen (void)
 {
 #ifdef __PPC__
    vi = new VI_GX(gfxInfo);
+   VIDEO_SetPreRetraceCallback(gfx_PreRetraceCallback);
 #else // __PPC__
 #ifndef _WIN32
    vi = new VI_SDL(gfxInfo);

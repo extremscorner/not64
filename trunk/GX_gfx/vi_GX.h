@@ -9,7 +9,9 @@
 
 class VI_GX : public VI
 {
-   bool updateDEBUGflag;
+//   bool updateDEBUGflag;
+   bool updateOSD;
+   bool copy_fb;
    bool captureScreenFlag;
    unsigned int* xfb[2];
    int which_fb;
@@ -37,6 +39,7 @@ class VI_GX : public VI
    void updateDEBUG();
    void setCaptureScreen();
    void doCaptureScreen();
+   void PreRetraceCallback(u32 retraceCnt);
 };
 
 #endif
