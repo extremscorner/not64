@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <malloc.h>
 #ifdef DEBUGON
 # include <debug.h>
 #endif

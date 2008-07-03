@@ -6,6 +6,12 @@ struct VIInfo
 {
 	u32 width, height;
 	u32 lastOrigin;
+#ifdef __GX__
+	unsigned int* xfb[2];
+	int which_fb;
+	bool updateOSD;
+	bool copy_fb;
+#endif // __GX__
 };
 
 extern VIInfo VI;

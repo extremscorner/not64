@@ -25,13 +25,13 @@ VIInfo VI;
 extern GXRModeObj *vmode;
 
 #ifdef __GX__
-bool updateDEBUGflag;
-bool new_fb;
 char printToScreen;
 char showFPSonScreen;
 
+/*bool updateDEBUGflag;
+bool new_fb;
 unsigned int* xfb[2];
-int which_fb;
+int which_fb;*/
 #endif // __GX__
 
 void VI_UpdateSize()
@@ -122,16 +122,18 @@ void VI_UpdateScreen()
 		VI_GX_showStats();
 		VI_GX_showFPS();
 		VI_GX_showDEBUG();
-		if(updateDEBUGflag)
+		if(VI.updateOSD)
 		{
-			if(new_fb)
+			if(VI.copy_fb)
 				VIDEO_WaitVSync();
-			GX_DrawDone(); //needed?
-			GX_CopyDisp (xfb[which_fb], GX_FALSE); //TODO: Figure out where the UpdateScreen interrupts are coming from!
+//			GX_DrawDone(); //needed?
+//			GX_CopyDisp (xfb[which_fb], GX_FALSE); //TODO: Figure out where the UpdateScreen interrupts are coming from!
+			GX_SetCopyClear ((GXColor){0,0,0,255}, 0xFFFFFF);	//TODO: get rid of this GX_CopyDisp as it's unneeded.
+			GX_CopyDisp (VI.xfb[VI.which_fb], GX_TRUE);	//clear the EFB before executing new Dlist
 			GX_DrawDone(); //Shagkur's recommendation
 //			doCaptureScreen();
-			updateDEBUGflag = false;
-			new_fb = true;
+			VI.updateOSD = false;
+			VI.copy_fb = true;
 		}
 		//The following has been moved to the Pre-Retrace callback
 /*		VIDEO_SetNextFramebuffer(xfb[which_fb]);
@@ -151,17 +153,20 @@ extern unsigned int diff_sec(long long start,long long end);
 
 void VI_GX_init() {
 	init_font();
-	updateDEBUGflag = true;
+/*	updateDEBUGflag = true;
 	new_fb = false;
-	which_fb = 1;
+	which_fb = 1;*/
+	VI.updateOSD = true;
+	VI.copy_fb = false;
+	VI.which_fb = 1;
 }
 
 void VI_GX_setFB(unsigned int* fb1, unsigned int* fb2){
-	xfb[0] = fb1;
-	xfb[1] = fb2;
+	VI.xfb[0] = fb1;
+	VI.xfb[1] = fb2;
 }
 
-unsigned int* VI_GX_getScreenPointer(){ return xfb[which_fb]; }
+unsigned int* VI_GX_getScreenPointer(){ return VI.xfb[VI.which_fb]; }
 
 void VI_GX_showFPS(){
 	static long long lastTick=0;
@@ -171,7 +176,7 @@ void VI_GX_showFPS(){
 	
 	long long nowTick = gettime();
 	VIs++;
-	if (updateDEBUGflag)
+	if (VI.updateOSD)
 		frames++;
 	if (diff_sec(lastTick,nowTick)>=1) {
 		sprintf(caption, "%02d VI/s, %02d FPS",VIs,frames);
@@ -180,7 +185,7 @@ void VI_GX_showFPS(){
 		lastTick = nowTick;
 	}
 	
-	if (updateDEBUGflag)
+	if (VI.updateOSD)
 	{
 		GXColor fontColor = {150,255,150,255};
 		write_font_init_GX(fontColor);
@@ -253,24 +258,24 @@ void VI_GX_showLoadProg(float percent)
 	GX_End();
 
 //    GX_DrawDone ();
-	GX_CopyDisp (xfb[which_fb], GX_FALSE);
+	GX_CopyDisp (VI.xfb[VI.which_fb], GX_FALSE);
     GX_Flush ();
-	VIDEO_SetNextFramebuffer(xfb[which_fb]);
+	VIDEO_SetNextFramebuffer(VI.xfb[VI.which_fb]);
 	VIDEO_Flush();
-	which_fb ^= 1;
+	VI.which_fb ^= 1;
 	VIDEO_WaitVSync();
 }
 
 void VI_GX_updateDEBUG()
 {
-	updateDEBUGflag = true;
+	VI.updateOSD = true;
 }
 
 extern char text[DEBUG_TEXT_HEIGHT][DEBUG_TEXT_WIDTH];
 
 void VI_GX_showDEBUG()
 {
-	if (updateDEBUGflag)
+	if (VI.updateOSD)
 	{
 		int i = 0;
 		GXColor fontColor = {150, 255, 150, 255};
@@ -288,7 +293,7 @@ void VI_GX_showDEBUG()
 
 void VI_GX_showStats()
 {
-	if (updateDEBUGflag)
+	if (VI.updateOSD)
 	{
 //		sprintf(txtbuffer,"texCache: %d bytes in %d cached textures",cache.cachedBytes,cache.numCached);
 //		DEBUG_print(txtbuffer,DBG_CACHEINFO); 
@@ -297,6 +302,7 @@ void VI_GX_showStats()
 
 void VI_GX_cleanUp()
 {
+	GX_SetFog(GX_FOG_NONE,0,1,0,1,(GXColor){0,0,0,255});
 	GX_SetViewport(0,0,vmode->fbWidth,vmode->efbHeight,0,1);
 	GX_SetCoPlanar(GX_DISABLE);
 	GX_SetClipMode(GX_CLIP_DISABLE);
@@ -307,12 +313,12 @@ void VI_GX_cleanUp()
 
 void VI_GX_PreRetraceCallback(u32 retraceCnt)
 {
-	if(new_fb)
+	if(VI.copy_fb)
 	{
-		VIDEO_SetNextFramebuffer(xfb[which_fb]);
+		VIDEO_SetNextFramebuffer(VI.xfb[VI.which_fb]);
 		VIDEO_Flush();
-		which_fb ^= 1;
-		new_fb = false;
+		VI.which_fb ^= 1;
+		VI.copy_fb = false;
 	}
 }
 #endif // __GX__
