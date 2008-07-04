@@ -15,10 +15,10 @@
 #ifndef __GX__
 # include "NV_register_combiners.h"
 # include "texture_env_combine.h"
+# include "texture_env.h"
 #else // !__GX__
 # include "TEV_combiner.h"
 #endif // __GX__
-#include "texture_env.h"
 #include "Debug.h"
 #include "gDP.h"
 
@@ -34,7 +34,7 @@ void Combiner_Init()
 	else
 		combiner.compiler = TEXTURE_ENV;
 #else // !__GX__
-//	combiner.compiler = TEXTURE_ENV;	//Use simple combining.
+//	combiner.compiler = TEXTURE_ENV;	//Use simple combining. (removed from Makefile)
 	combiner.compiler = TEV_COMBINE;	//Use GX combiner designed by sepp256.
 #endif // __GX__
 
@@ -48,16 +48,15 @@ void Combiner_Init()
 		case NV_REGISTER_COMBINERS:
 			Init_NV_register_combiners();
 			break;
+		case TEXTURE_ENV:
+			Init_texture_env();
+			break;
 #else // !__GX__
 		case TEV_COMBINE:
 			DEBUG_print((char*)"Combiner: TEV_Combiner",DBG_CCINFO);
 			Init_TEV_combine();
 			break;
 #endif // __GX__
-		case TEXTURE_ENV:
-			DEBUG_print((char*)"Combiner: Texture_Env",DBG_CCINFO);
-			Init_texture_env();
-			break;
 	}
 	combiner.root = NULL;
 }
@@ -299,11 +298,11 @@ CachedCombiner *Combiner_Compile( u64 mux )
 	cached->right = NULL;
 
 #ifdef DBGCOMBINE
+#ifdef GLN64_SDLOG
 	u32 mux1 = ((mux >> 32) & 0xFFFFFFFF);
 	u32 mux2 = (mux & 0xFFFFFFFF);
 //	if (mux2 == 0xfffff9fc) 
 //	{
-#ifdef GLN64_SDLOG
 		sprintf(txtbuffer,"Combiner Compile: mux1 = %x, mux2 = %x\n", mux1, mux2);
 //		DEBUG_print(txtbuffer,9);
 		DEBUG_print(txtbuffer,DBG_SDGECKOPRINT);
@@ -337,14 +336,15 @@ CachedCombiner *Combiner_Compile( u64 mux )
 		case NV_REGISTER_COMBINERS:
 			cached->compiled = (void*)Compile_NV_register_combiners( &color, &alpha );
 			break;
+
+		case TEXTURE_ENV:
+			cached->compiled = (void*)Compile_texture_env( &color, &alpha );
+			break;
 #else // !__GX__
 		case TEV_COMBINE:
 			cached->compiled = (void*)Compile_TEV_combine( &color, &alpha );
 			break;
 #endif // __GX__
-		case TEXTURE_ENV:
-			cached->compiled = (void*)Compile_texture_env( &color, &alpha );
-			break;
 	}
 
 #if 0 //def DBGCOMBINE
@@ -476,9 +476,9 @@ void Combiner_SelectCombine( u64 mux )
 	gDP.changed |= CHANGED_COMBINE_COLORS;
 
 #ifdef DBGCOMBINE
+#ifdef GLN64_SDLOG
 	u32 mux1 = ((mux >> 32) & 0xFFFFFFFF);
 	u32 mux2 = (mux & 0xFFFFFFFF);
-#ifdef GLN64_SDLOG
 	sprintf(txtbuffer,"Combiner Select Combine: mux1 = %x, mux2 = %x\n", mux1, mux2);
 //	DEBUG_print(txtbuffer,17);
 	DEBUG_print(txtbuffer,DBG_SDGECKOPRINT);
@@ -498,14 +498,15 @@ void Combiner_SetCombineStates()
 		case NV_REGISTER_COMBINERS:
 			Set_NV_register_combiners( (RegisterCombiners*)combiner.current->compiled );
 			break;
+
+		case TEXTURE_ENV:
+			Set_texture_env( (TexEnv*)combiner.current->compiled );
+			break;
 #else // !__GX__
 		case TEV_COMBINE:
 			Set_TEV_combine( (TEVCombiner*)combiner.current->compiled );
 			break;
 #endif // __GX__
-		case TEXTURE_ENV:
-			Set_texture_env( (TexEnv*)combiner.current->compiled );
-			break;
 	}
 }
 

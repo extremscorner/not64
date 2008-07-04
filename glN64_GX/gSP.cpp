@@ -1111,7 +1111,7 @@ void gSPTriangle( s32 v0, s32 v1, s32 v2, s32 flag )
 			s32 clippedIndex = 0;
 
 #ifdef __GX__
-			DEBUG_print((char*)"NoN clipping triangles!!!",5);
+			DEBUG_print((char*)"NoN clipping triangles!!!",DBG_TXINFO1); //5
 #endif // __GX__
 
 			s32 v[3] = { v0, v1, v2 };
@@ -1157,7 +1157,11 @@ void gSPTriangle( s32 v0, s32 v1, s32 v2, s32 flag )
 #ifndef __GX__
 			glDisable( GL_POLYGON_OFFSET_FILL );
 #else // !__GX__
-	//TODO: Implement this in GX??
+			if (OGL.GXpolyOffset)
+			{
+				OGL.GXpolyOffset = false;
+				OGL.GXupdateMtx = true;
+			}
 #endif // __GX__
 
 //			glDepthFunc( GL_LEQUAL );
@@ -1170,7 +1174,11 @@ void gSPTriangle( s32 v0, s32 v1, s32 v2, s32 flag )
 			if (gDP.otherMode.depthMode == ZMODE_DEC)
 				glEnable( GL_POLYGON_OFFSET_FILL );
 #else // !__GX__
-	//TODO: Implement this in GX??
+			if (gDP.otherMode.depthMode == ZMODE_DEC)
+			{
+				OGL.GXpolyOffset = true;
+				OGL.GXupdateMtx = true;
+			}
 #endif // __GX__
 
 //			if (gDP.otherMode.depthCompare)
@@ -1643,9 +1651,6 @@ void gSPFogFactor( s16 fm, s16 fo )
 	gSP.fog.offset = fo;
 
 #ifdef __GX__
-	//Adjust the range from 0.1 to 1.0
-//	OGL.GXfogStartZ = -(0.45f * (float)gSP.fog.offset / (float)gSP.fog.multiplier) + 0.55f;
-//	OGL.GXfogEndZ = (0.45f * (255.0f - (float)gSP.fog.offset) / (float)gSP.fog.multiplier) + 0.55f;
 	//Adjust the range from 0.0 to 1.0
 	OGL.GXfogStartZ = -(0.5f * (float)gSP.fog.offset / (float)gSP.fog.multiplier) + 0.5f;
 	OGL.GXfogEndZ = (0.5f * (255.0f - (float)gSP.fog.offset) / (float)gSP.fog.multiplier) + 0.5f;
@@ -2000,6 +2005,10 @@ void gSPObjSprite( u32 sp )
 	glOrtho( 0, VI.width, VI.height, 0, 0.0f, 32767.0f );
 #else // !__GX__
 	//TODO: Implement this in GX??
+
+	sprintf(txtbuffer,"gSP: Rendering a Sprite Object!");
+	DEBUG_print(txtbuffer,DBG_VIINFO); //6 
+
 #endif // __GX__
 	OGL_AddTriangle( gSP.vertices, 0, 1, 2 );
 	OGL_AddTriangle( gSP.vertices, 0, 2, 3 );

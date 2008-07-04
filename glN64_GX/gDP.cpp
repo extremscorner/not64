@@ -632,7 +632,6 @@ void gDPLoadTile( u32 tile, u32 uls, u32 ult, u32 lrs, u32 lrt )
 
 	// Line given for 32-bit is half what it seems it should since they split the
 	// high and low words. I'm cheating by putting them together.
-#ifndef __GX__
 	void (*Interleave)( void *mem, u32 numDWords );
 
 	if (gDP.loadTile->size == G_IM_SIZ_32b)
@@ -648,34 +647,16 @@ void gDPLoadTile( u32 tile, u32 uls, u32 ult, u32 lrs, u32 lrt )
 
 	for (y = 0; y < height; y++)
 	{
+#ifndef __GX__
 		UnswapCopy( src, dest, bpl );
+#else // !__GX__
+		memcpy( dest, src, bpl );
+#endif // __GX__
 		if (y & 1) Interleave( dest, line );
 
 		src += gDP.textureImage.bpl;
  		dest += line;
 	}
-#else // !__GX__
-	if (gDP.loadTile->size == G_IM_SIZ_32b)
-	{
-		line = gDP.loadTile->line << 1;
-//		Interleave = QWordInterleave;
-	}
-	else
-	{
-		line = gDP.loadTile->line;
-//		Interleave = DWordInterleave;
-	}
-
-	for (y = 0; y < height; y++)
-	{
-//		UnswapCopy( src, dest, bpl );
-//		if (y & 1) Interleave( dest, line );
-		memcpy( dest, src, bpl );
-
-		src += gDP.textureImage.bpl;
- 		dest += line;
-	}
-#endif // __GX__
 
 	gDP.textureMode = TEXTUREMODE_NORMAL;
 	gDP.loadType = LOADTYPE_TILE;
@@ -725,7 +706,6 @@ void gDPLoadBlock( u32 tile, u32 uls, u32 ult, u32 lrs, u32 dxt )
 	u64* src = (u64*)&RDRAM[address];
 	u64* dest = &TMEM[gDP.loadTile->tmem];
 
-#ifndef __GX__
 	if (dxt > 0)
 	{
 		void (*Interleave)( void *mem, u32 numDWords );
@@ -741,7 +721,11 @@ void gDPLoadBlock( u32 tile, u32 uls, u32 ult, u32 lrs, u32 dxt )
 
 		for (u32 y = 0; y < height; y++)
 		{
+#ifndef __GX__
 			UnswapCopy( src, dest, bpl );
+#else // !__GX__
+			memcpy( dest, src, bpl );
+#endif // __GX__
 			if (y & 1) Interleave( dest, line );
 
 			src += line;
@@ -749,35 +733,10 @@ void gDPLoadBlock( u32 tile, u32 uls, u32 ult, u32 lrs, u32 dxt )
 		}
 	}
 	else
+#ifndef __GX__
 		UnswapCopy( src, dest, bytes );
 #else // !__GX__
-	if (dxt > 0)
-	{
-//		void (*Interleave)( void *mem, u32 numDWords );
-
-		u32 line = (2047 + dxt) / dxt;
-		u32 bpl = line << 3;
-		u32 height = bytes / bpl;
-
-//		if (gDP.loadTile->size == G_IM_SIZ_32b)
-//			Interleave = QWordInterleave;
-//		else
-//			Interleave = DWordInterleave;
-
-		for (u32 y = 0; y < height; y++)
-		{
-//			UnswapCopy( src, dest, bpl );
-//			if (y & 1) Interleave( dest, line );
-			memcpy( dest, src, bpl );
-
-			src += line;
-			dest += line;
-		}
-	}
-	else
-//		UnswapCopy( src, dest, bytes );
 		memcpy( dest, src, bytes );
-
 #endif // __GX__
 
 	gDP.textureMode = TEXTUREMODE_NORMAL;
@@ -807,16 +766,17 @@ void gDPLoadTLUT( u32 tile, u32 uls, u32 ult, u32 lrs, u32 lrt )
 	{
 		for (u16 j = 0; (j < 16) && (i < count); j++, i++)
 		{
-#ifndef __GX__ //TODO: Make this more compact.
+#ifndef __GX__ //TODO: Make sure this is correct.
 			u16 color = swapword( src[i^1] );
-#else // !__GX__
-			u16 color = src[i^0];
-#endif // __GX__
 
 			*dest = color;
 			//dest[1] = color;
 			//dest[2] = color;
 			//dest[3] = color;
+
+#else // !__GX__
+			*dest = src[i];
+#endif // __GX__
 
 			dest += 4;
 		}

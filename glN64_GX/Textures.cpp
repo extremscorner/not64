@@ -43,7 +43,8 @@ inline u32 GetNone( u64 *src, u16 x, u16 i, u8 palette )
 
 inline u32 GXGetIA31_IA4( u64 *src, u16 x, u16 i, u8 palette )
 {
-	u8 color4B = ((u8*)src)[x>>1];
+//	u8 color4B = ((u8*)src)[x>>1];
+	u8 color4B = ((u8*)src)[(x>>1)^(i<<1)];
 	color4B = (x & 1) ? (color4B & 0x0F) : (color4B >> 4);
 	u8 i4 = Three2Four[color4B >> 1];
 	u8 a4 = One2Four[color4B & 0x01];
@@ -76,7 +77,8 @@ inline u16 IA31_RGBA4444( u8 color )
 
 inline u32 GXGetI4_IA4( u64 *src, u16 x, u16 i, u8 palette )
 {
-	u8 color4B = ((u8*)src)[x>>1];
+//	u8 color4B = ((u8*)src)[x>>1];
+	u8 color4B = ((u8*)src)[(x>>1)^(i<<1)];
 	color4B = (x & 1) ? (color4B & 0x0F) : (color4B >> 4);
 	u8 ia = ((color4B << 4) | color4B);
 	return (u32) ia;
@@ -107,7 +109,8 @@ inline u16 I4_RGBA4444( u8 color )
 
 inline u32 GXGetIA44_IA4( u64 *src, u16 x, u16 i, u8 palette )
 {
-	u8 color = ((u8*)src)[x];
+//	u8 color = ((u8*)src)[x];
+	u8 color = ((u8*)src)[x^(i<<1)];
 	color = ((color & 0xf0) >> 4) | ((color & 0x0f) << 4);
 	return (u32) color;
 
@@ -119,7 +122,8 @@ inline u16 IA44_RGBA4444( u8 color )
 
 inline u32 GXGetCI4IA_IA8( u64 *src, u16 x, u16 i, u8 palette )
 {
-	u8 ind4B = ((u8*)src)[x>>1];
+//	u8 ind4B = ((u8*)src)[x>>1];
+	u8 ind4B = ((u8*)src)[(x>>1)^(i<<1)];
 	u16 color = (x & 1) ?	*(u16*)&TMEM[256 + (palette << 4) + (ind4B & 0x0F)] :
 							*(u16*)&TMEM[256 + (palette << 4) + (ind4B >> 4)];
 	color = ((color & 0xff00) >> 8) | ((color & 0x00ff) << 8);
@@ -157,7 +161,8 @@ inline u32 IA88_RGBA8888( u16 color )
 
 inline u32 GXGetCI8IA_IA8( u64 *src, u16 x, u16 i, u8 palette )
 {
-	u16 color = *(u16*)&TMEM[256 + ((u8*)src)[x]];
+//	u16 color = *(u16*)&TMEM[256 + ((u8*)src)[x]];
+	u16 color = *(u16*)&TMEM[256 + ((u8*)src)[x^(i<<1)]];
 	color = ((color & 0xff00) >> 8) | ((color & 0x00ff) << 8);
 	return (u32) color;
 
@@ -177,7 +182,8 @@ inline u32 IA88_RGBA8888( u16 color )
 
 inline u32 GXGetCI4RGBA_RGB5A3( u64 *src, u16 x, u16 i, u8 palette )
 {
-	u8 ind4B = ((u8*)src)[x>>1];
+//	u8 ind4B = ((u8*)src)[x>>1];
+	u8 ind4B = ((u8*)src)[(x>>1)^(i<<1)];
 	u16 c = (x & 1) ?	*(u16*)&TMEM[256 + (palette << 4) + (ind4B & 0x0F)] :
 						*(u16*)&TMEM[256 + (palette << 4) + (ind4B >> 4)];
 	if ((c&1) != 0)		c = 0x8000|(((c>>11)&0x1F)<<10)|(((c>>6)&0x1F)<<5)|((c>>1)&0x1F);   //opaque texel
@@ -218,7 +224,8 @@ inline u16 RGBA5551_RGBA5551( u16 color )
 
 inline u32 GXGetCI8RGBA_RGB5A3( u64 *src, u16 x, u16 i, u8 palette )
 {
-	u16 c = *(u16*)&TMEM[256 + ((u8*)src)[x]];
+//	u16 c = *(u16*)&TMEM[256 + ((u8*)src)[x]];
+	u16 c = *(u16*)&TMEM[256 + ((u8*)src)[x^(i<<1)]];
 	if ((c&1) != 0)	c = 0x8000|(((c>>11)&0x1F)<<10)|(((c>>6)&0x1F)<<5)|((c>>1)&0x1F);   //opaque texel
 	else			c = 0x0000|(((c>>12)&0xF)<<8)|(((c>>7)&0xF)<<4)|((c>>2)&0xF);   //transparent texel
 	return (u32) c;
@@ -241,7 +248,8 @@ inline u16 RGBA5551_RGBA5551( u16 color )
  
 inline u32 GXGetI8_IA8( u64 *src, u16 x, u16 i, u8 palette )
 {
-	u8 color = ((u8*)src)[x];
+//	u8 color = ((u8*)src)[x];
+	u8 color = ((u8*)src)[x^(i<<1)];
 	u16 ia = (color << 8) | color;
 	return (u32) ia;
 
@@ -262,7 +270,8 @@ inline u32 I8_RGBA8888( u8 color )
 
 inline u32 GXGetIA88_IA8( u64 *src, u16 x, u16 i, u8 palette )
 {
-	u16 color = ((u16*)src)[x];
+//	u16 color = ((u16*)src)[x];
+	u16 color = ((u16*)src)[x^i];
 	color = ((color & 0xff00) >> 8) | ((color & 0x00ff) << 8);
 	return (u32) color;
 
@@ -276,7 +285,8 @@ inline u32 IA88_RGBA8888( u16 color )
 
 inline u32 GXGetRGBA5551_RGB5A3( u64 *src, u16 x, u16 i, u8 palette )
 {
-	u16 c = ((u16*)src)[x];
+//	u16 c = ((u16*)src)[x];
+	u16 c = ((u16*)src)[x^i];
 	if ((c&1) != 0)		c = 0x8000|(((c>>11)&0x1F)<<10)|(((c>>6)&0x1F)<<5)|((c>>1)&0x1F);   //opaque texel
 	else				c = 0x0000|(((c>>12)&0xF)<<8)|(((c>>7)&0xF)<<4)|((c>>2)&0xF);   //transparent texel
 	return (u32) c;
@@ -300,7 +310,8 @@ inline u16 RGBA5551_RGBA5551( u16 color )
 inline u32 GXGetRGBA8888_RGBA8( u64 *src, u16 x, u16 i, u8 palette )
 {
 //set palette = 0 for AR texels and palette = 1 for GB texels
-	u32 c = ((u32*)src)[x]; // 0xRRGGBBAA
+//	u32 c = ((u32*)src)[x]; // 0xRRGGBBAA
+	u32 c = ((u32*)src)[x^i]; // 0xRRGGBBAA
 	u16 color = (palette & 1) ? /* GGBB */ (u16) ((c >> 8) & 0x0000FFFF) : /* AARR */ (u16) (((c & 0x000000FF) << 8) | (c >> 24));
 	return (u32) color;
 
