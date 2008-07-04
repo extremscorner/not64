@@ -647,16 +647,13 @@ void OGL_UpdateStates()
 //			glDepthMask( FALSE );
 			GXZupdate = GX_FALSE;
 
-//TODO: Implement with P matrix?
 		if ((gDP.otherMode.depthMode == ZMODE_DEC) && !OGL.GXpolyOffset)
 		{
-//			GX_SetCoPlanar( GX_TRUE );
 			OGL.GXpolyOffset = true;
 			OGL.GXupdateMtx = true;
 		}
 		else if (!(gDP.otherMode.depthMode == ZMODE_DEC) && OGL.GXpolyOffset)
 		{
-//			GX_SetCoPlanar( GX_FALSE );
 			OGL.GXpolyOffset = false;
 			OGL.GXupdateMtx = true;
 		}
