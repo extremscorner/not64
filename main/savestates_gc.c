@@ -180,7 +180,7 @@ char* savestates_load()
 	gzread(f, &dpc_register, sizeof(DPC_register));
 	gzread(f, &dps_register, sizeof(DPS_register));
 	//only read what we can handle
-#ifdef USE_EXANSION	
+#ifdef USE_EXPANSION	
 	gzread(f, rdram, 0x800000);
 #else
 	gzread(f, rdram, 0x400000);
