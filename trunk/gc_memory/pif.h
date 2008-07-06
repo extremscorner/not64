@@ -32,5 +32,5 @@
 
 void update_pif_write();
 void update_pif_read();
-
+void format_mempacks();
 #endif
