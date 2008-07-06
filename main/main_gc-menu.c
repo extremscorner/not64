@@ -23,6 +23,7 @@
 #include "../gc_memory/ARAM.h"
 #include "../gc_memory/TLB-Cache.h"
 #include "../gc_memory/tlb.h"
+#include "../gc_memory/pif.h"
 #include "ROM-Cache.h"
 
 #include <gccore.h>
@@ -195,6 +196,7 @@ void loadROM(fileBrowser_file* rom){
 		free_memory();
 		ARAM_manager_deinit();
 	}
+	format_mempacks();
 	hasLoadedROM = TRUE;
 	
 	ARAM_manager_init();
