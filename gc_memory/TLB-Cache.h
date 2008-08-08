@@ -20,9 +20,6 @@ typedef struct node {
 	struct node* next;
 } TLB_hash_node;
 
-static TLB_hash_node* TLB_LUT_r[TLB_NUM_SLOTS];
-static TLB_hash_node* TLB_LUT_w[TLB_NUM_SLOTS];
-
 void TLBCache_init(void);
 void TLBCache_deinit(void);
 

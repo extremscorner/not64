@@ -43,6 +43,9 @@
 
 char* statespath = "/N64SAVES/";
 
+extern TLB_hash_node* TLB_LUT_r[TLB_NUM_SLOTS];
+extern TLB_hash_node* TLB_LUT_w[TLB_NUM_SLOTS];
+
 extern unsigned long interp_addr;
 extern int *autoinc_save_slot;
 
