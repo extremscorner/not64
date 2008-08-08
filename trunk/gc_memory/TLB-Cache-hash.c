@@ -18,6 +18,9 @@
 
 #ifdef USE_TLB_CACHE
 
+TLB_hash_node* TLB_LUT_r[TLB_NUM_SLOTS];
+TLB_hash_node* TLB_LUT_w[TLB_NUM_SLOTS];
+
 static unsigned int TLB_hash_shift;
 
 void TLBCache_init(void){
