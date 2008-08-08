@@ -39,6 +39,7 @@
 #include "../gc_memory/flashram.h"
 #include "../r4300/r4300.h"
 #include "../r4300/interupt.h"
+#include "../gc_memory/TLB-Cache.h"
 
 char* statespath = "/N64SAVES/";
 
@@ -54,11 +55,12 @@ void savestates_select_slot(unsigned int s)
    if (s > 9) return;
    slot = s;
 }
-
+	
 char* savestates_save()
 {
 	if(!hasLoadedROM)
 		return "A ROM must be loaded first";
+		
    	char *filename, buf[1024];
    	gzFile f;
    	int len, i;
@@ -76,9 +78,8 @@ char* savestates_save()
    	free(filename);
    	if(!f)
    		return "Error Saving State";
-   
-   
-   	gzwrite(f, ROM_SETTINGS.MD5, 32);		//Needs to actually get done
+      
+   	gzwrite(f, ROM_SETTINGS.MD5, 32);		//Since Md5 isn't calc'd, use CRC(?)
    
 	gzwrite(f, &rdram_register, sizeof(RDRAM_register));
 	gzwrite(f, &MI_register, sizeof(mips_register));
@@ -108,8 +109,30 @@ char* savestates_save()
 	gzwrite(f, tlb_LUT_r, 0x100000);		
 	gzwrite(f, tlb_LUT_w, 0x100000);
 #else
+	//Traverse the TLB cache hash	
+	int numNodesWritten_r=0,numNodesWritten_w=0;
 	curPos = gztell(f);
-	gzseek(f,curPos+0x200000,SEEK_SET);	//until we can save tlb cache, lets just write 0x200000 zeroes
+	gzwrite(f, &numNodesWritten_r,4);	//we will overwrite 
+	gzwrite(f, &numNodesWritten_w,4);	//these two later
+	
+	//dump TLB_LUT_r
+	for(i=0; i<TLB_NUM_SLOTS; ++i){
+		TLB_hash_node* node = TLB_LUT_r[i];
+		for(; node != NULL; node = node->next){
+			gzwrite(f, &node->page, 4);
+			gzwrite(f, &node->value, 4);		
+			numNodesWritten_r++;
+		}
+	}
+	//dump TLB_LUT_w
+	for(i=0; i<TLB_NUM_SLOTS; ++i){
+		TLB_hash_node* node = TLB_LUT_w[i];
+		for(; node != NULL; node = node->next){
+			gzwrite(f, &node->page, 4);
+			gzwrite(f, &node->value, 4);
+			numNodesWritten_w++;
+		}
+	}
 #endif
 
 	gzwrite(f, &llbit, 4);
@@ -130,6 +153,12 @@ char* savestates_save()
 	
 	len = save_eventqueue_infos(buf);
 	gzwrite(f, buf, len);
+
+#ifdef USE_TLB_CACHE
+	gzseek(f,curPos,SEEK_SET);
+	gzwrite(f, &numNodesWritten_r,4);	//write out the proper TLB amounts
+	gzwrite(f, &numNodesWritten_w,4);
+#endif
 	
 	gzclose(f);
 	return "Save Successful";
@@ -139,6 +168,7 @@ char* savestates_load()
 {
 	if(!hasLoadedROM)
 		return "A ROM must be loaded first";
+		
 	char *filename, buf[1024];
 	gzFile f = NULL;
 	int len, i;
@@ -155,12 +185,10 @@ char* savestates_load()
 	free(filename);
 	
 	if (f == NULL)
-	  {
 		return "Save doesn't exist";
-	  }
 	
 	gzread(f, buf, 32);
-	//don't care for now
+	//don't care for now and maybe never
 /*	if (memcmp(buf, ROM_SETTINGS.MD5, 32))
 	{
 			warn_savestate_from_another_rom();
@@ -179,6 +207,7 @@ char* savestates_load()
 	gzread(f, &ai_register, sizeof(AI_register));
 	gzread(f, &dpc_register, sizeof(DPC_register));
 	gzread(f, &dps_register, sizeof(DPS_register));
+	
 	//only read what we can handle
 #ifdef USE_EXPANSION	
 	gzread(f, rdram, 0x800000);
@@ -190,16 +219,33 @@ char* savestates_load()
 	gzread(f, SP_DMEM, 0x1000);
 	gzread(f, SP_IMEM, 0x1000);
 	gzread(f, PIF_RAM, 0x40);
-	
 	gzread(f, buf, 24);
 	load_flashram_infos(buf);
+	
 #ifndef USE_TLB_CACHE
 	gzread(f, tlb_LUT_r, 0x100000);
 	gzread(f, tlb_LUT_w, 0x100000);
 #else
-	curPos = gztell(f);
-	gzseek(f,curPos+0x200000,SEEK_SET);		//for now, skip tlb, later, fix me to load the cache again
+	int numNodesWritten_r=0,numNodesWritten_w=0,cntr,tlbpage,tlbvalue;	
+	TLBCache_deinit();
+	TLBCache_init();
+	//Load number of them..
+	gzread(f, &numNodesWritten_r, 4);
+	gzread(f, &numNodesWritten_w, 4);
+	for(cntr=0;cntr<numNodesWritten_r;cntr++)
+	{
+		gzread(f, &tlbpage, 4);
+		gzread(f, &tlbvalue, 4);
+		TLBCache_set_r(tlbpage,tlbvalue);
+	}
+	for(cntr=0;cntr<numNodesWritten_w;cntr++)
+	{
+		gzread(f, &tlbpage, 4);
+		gzread(f, &tlbvalue, 4);
+		TLBCache_set_w(tlbpage,tlbvalue);
+	}
 #endif
+
 	gzread(f, &llbit, 4);
 	gzread(f, reg, 32*8);
 	for (i=0; i<32; i++) 
