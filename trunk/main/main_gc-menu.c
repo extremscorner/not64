@@ -222,7 +222,7 @@ void loadROM(fileBrowser_file* rom){
 	romOpen_input();
 	
 	cpu_init();
-	ogc_video__reset();
+	//ogc_video__reset();
 }
 
 static void gfx_info_init(void){
