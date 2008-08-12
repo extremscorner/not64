@@ -61,30 +61,34 @@ void savestates_select_slot(unsigned int s)
 	
 char* savestates_save()
 {
+	gzFile f;
+	char *filename, buf[1024];
+   	int len, i,curPos;
+	
 	if(!hasLoadedROM)
 		return "A ROM must be loaded first";
-		
-   	char *filename, buf[1024];
-   	gzFile f;
-   	int len, i;
-    int curPos;
-   
+		     
 	filename = malloc(strlen(statespath)+strlen(ROM_SETTINGS.goodname)+4+1);
     strcpy(filename, statespath);
-	strcat(filename, ROM_SETTINGS.goodname);
+	for(i = strlen(ROM_SETTINGS.goodname); i>0; i--)	//cut off trailing spaces from the end
+	{
+		if(ROM_SETTINGS.goodname[i-1] != ' ') {
+			strncat(filename, ROM_SETTINGS.goodname,i);
+			break;
+		}
+	}
 	strcat(filename, ".st");
 	sprintf(buf, "%d", slot);
 	strcat(filename, buf);
 
-
 	f = gzopen(filename, "wb");
    	free(filename);
+   	
    	if(!f)
    		return "Error Saving State";
       
    	gzwrite(f, ROM_SETTINGS.MD5, 32);		//Since Md5 isn't calc'd, use CRC(?)
-   
-	gzwrite(f, &rdram_register, sizeof(RDRAM_register));
+    gzwrite(f, &rdram_register, sizeof(RDRAM_register));
 	gzwrite(f, &MI_register, sizeof(mips_register));
 	gzwrite(f, &pi_register, sizeof(PI_register));
 	gzwrite(f, &sp_register, sizeof(SP_register));
@@ -98,9 +102,9 @@ char* savestates_save()
 #ifdef USE_EXPANSION	
 	gzwrite(f, rdram, 0x800000);
 #else
-	gzwrite(f, rdram, 0x400000);
+	gzwrite(f, rdram, 0x400000);		//Write RDRAM (4mb of it)
 	curPos = gztell(f);
-	gzseek(f,curPos+0x400000,SEEK_SET);	//lets just write 0x400000 zeroes
+	gzseek(f,curPos+0x400000,SEEK_SET);	//Fill out the rest with 0's
 #endif
 	gzwrite(f, SP_DMEM, 0x1000);
 	gzwrite(f, SP_IMEM, 0x1000);
@@ -169,17 +173,22 @@ char* savestates_save()
 
 char* savestates_load()
 {
+	gzFile f = NULL;
+	char *filename, buf[1024];
+	int len, i, curPos;
+
 	if(!hasLoadedROM)
 		return "A ROM must be loaded first";
 		
-	char *filename, buf[1024];
-	gzFile f = NULL;
-	int len, i;
-	int curPos;
-	
 	filename = malloc(strlen(statespath)+strlen(ROM_SETTINGS.goodname)+4+1);
 	strcpy(filename, statespath);
-	strcat(filename, ROM_SETTINGS.goodname);
+	for(i = strlen(ROM_SETTINGS.goodname); i>0; i--)	//cut off trailing spaces
+	{
+		if(ROM_SETTINGS.goodname[i-1] != ' ') {
+			strncat(filename, ROM_SETTINGS.goodname,i);
+			break;
+		}
+	}
 	strcat(filename, ".st");
 	sprintf(buf, "%d", slot);
 	strcat(filename, buf);
@@ -187,7 +196,7 @@ char* savestates_load()
 	f = gzopen(filename, "rb");
 	free(filename);
 	
-	if (f == NULL)
+	if (!f)
 		return "Save doesn't exist";
 	
 	gzread(f, buf, 32);
@@ -213,11 +222,11 @@ char* savestates_load()
 	
 	//only read what we can handle
 #ifdef USE_EXPANSION	
-	gzread(f, rdram, 0x800000);
+	gzread(f, rdram, 0x800000);	//Load 8MB
 #else
-	gzread(f, rdram, 0x400000);
+	gzread(f, rdram, 0x400000);	//Load 4MB
 	curPos = gztell(f);
-	gzseek(f,curPos+0x400000,SEEK_SET);
+	gzseek(f,curPos+0x400000,SEEK_SET);	//Skip the 4MB of 0's
 #endif
 	gzread(f, SP_DMEM, 0x1000);
 	gzread(f, SP_IMEM, 0x1000);
@@ -252,10 +261,10 @@ char* savestates_load()
 	gzread(f, &llbit, 4);
 	gzread(f, reg, 32*8);
 	for (i=0; i<32; i++) 
-	  {
+	{
 		gzread(f, reg_cop0+i, 4);
 		gzread(f, buf, 4); // for compatibility with old versions purpose
-	  }
+	}
 	gzread(f, &lo, 8);
 	gzread(f, &hi, 8);
 	gzread(f, reg_cop1_fgr_64, 32*8);
@@ -277,18 +286,18 @@ char* savestates_load()
 	
 	len = 0;
 	while(1)
-	  {
+	{
 		gzread(f, buf+len, 4);
 		if (*((unsigned long*)&buf[len]) == 0xFFFFFFFF) break;
 		gzread(f, buf+len+4, 4);
 		len += 8;
-	  }
+	}
 	load_eventqueue_infos(buf);
 	
 	gzclose(f);
 	if (!dynacore && interpcore)
-	  last_addr = interp_addr;
+		last_addr = interp_addr;
 	else
-	  last_addr = PC->addr;
+		last_addr = PC->addr;
 	return "Load Successful";
 }
