@@ -7,6 +7,8 @@
 
 #ifdef USE_TLB_CACHE
 
+#include <zlib.h>
+
 // Num Slots must be a power of 2!
 #define TLB_NUM_SLOTS 64
 
@@ -28,6 +30,10 @@ unsigned int inline TLBCache_get_w(unsigned int page);
 
 void inline TLBCache_set_r(unsigned int page, unsigned int val);
 void inline TLBCache_set_w(unsigned int page, unsigned int val);
+
+// for savestates
+int TLBCache_dump_r(gzFile *f);
+int TLBCache_dump_w(gzFile *f);
 
 #endif
 

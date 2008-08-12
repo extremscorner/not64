@@ -43,9 +43,6 @@
 
 char* statespath = "/N64SAVES/";
 
-extern TLB_hash_node* TLB_LUT_r[TLB_NUM_SLOTS];
-extern TLB_hash_node* TLB_LUT_w[TLB_NUM_SLOTS];
-
 extern unsigned long interp_addr;
 extern int *autoinc_save_slot;
 
@@ -123,23 +120,9 @@ char* savestates_save()
 	gzwrite(f, &numNodesWritten_w,4);	//these two later
 	
 	//dump TLB_LUT_r
-	for(i=0; i<TLB_NUM_SLOTS; ++i){
-		TLB_hash_node* node = TLB_LUT_r[i];
-		for(; node != NULL; node = node->next){
-			gzwrite(f, &node->page, 4);
-			gzwrite(f, &node->value, 4);		
-			numNodesWritten_r++;
-		}
-	}
+	numNodesWritten_r = TLBCache_dump_r(f);
 	//dump TLB_LUT_w
-	for(i=0; i<TLB_NUM_SLOTS; ++i){
-		TLB_hash_node* node = TLB_LUT_w[i];
-		for(; node != NULL; node = node->next){
-			gzwrite(f, &node->page, 4);
-			gzwrite(f, &node->value, 4);
-			numNodesWritten_w++;
-		}
-	}
+	numNodesWritten_w = TLBCache_dump_w(f);
 #endif
 
 	gzwrite(f, &llbit, 4);
