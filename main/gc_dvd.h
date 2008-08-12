@@ -9,7 +9,7 @@
 #define NO_FILES -1
 #define NO_ISO9660_DISC -2
 #define FATAL_ERROR -3
-#define MAXIMUM_ENTRIES_PER_DIR 150
+#define MAXIMUM_ENTRIES_PER_DIR 1024
 
 void dvd_motor_off();
 unsigned int dvd_get_error(void);
