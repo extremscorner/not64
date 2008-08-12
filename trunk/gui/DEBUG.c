@@ -61,7 +61,7 @@ void DEBUG_print(char* string,int pos){
 				flushed = 1;
 			}
 			int size = strlen(string);
-			usb_sendbuffer_safe(1, &size,4);
+			//usb_sendbuffer_safe(1, &size,4);
 			usb_sendbuffer_safe(1, string,size);
 			#endif
 		}

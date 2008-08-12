@@ -16,17 +16,17 @@
 #include <string.h>
 #include <assert.h>
 #include "TLB-Cache.h"
+#include <stdio.h>
+#include <zlib.h>
 
 #ifdef USE_TLB_CACHE
 
-TLB_hash_node* TLB_LUT_r[TLB_NUM_SLOTS];
-TLB_hash_node* TLB_LUT_w[TLB_NUM_SLOTS];
+static TLB_hash_node* TLB_LUT_r[TLB_NUM_SLOTS];
+static TLB_hash_node* TLB_LUT_w[TLB_NUM_SLOTS];
 
 static unsigned int TLB_hash_shift;
 
 void TLBCache_init(void){
-	memset(TLB_LUT_r, NULL, sizeof(TLB_LUT_r));
-	memset(TLB_LUT_w, NULL, sizeof(TLB_LUT_w));
 	unsigned int temp = TLB_NUM_SLOTS;
 	while(temp){
 		temp >>= 1;
@@ -115,5 +115,32 @@ void inline TLBCache_set_w(unsigned int page, unsigned int val){
 		}
 }
 
+int TLBCache_dump_r(gzFile *f)
+{
+	int i = 0,j=0;
+	for(i=0; i<TLB_NUM_SLOTS; ++i){
+		TLB_hash_node* node = TLB_LUT_r[i];
+		for(; node != NULL; node = node->next){
+			gzwrite(f, &node->page, 4);
+			gzwrite(f, &node->value, 4);		
+			j++;
+		}
+	}
+	return j;	
+}
+
+int TLBCache_dump_w(gzFile *f)
+{
+	int i = 0,j=0;
+	for(i=0; i<TLB_NUM_SLOTS; ++i){
+		TLB_hash_node* node = TLB_LUT_w[i];
+		for(; node != NULL; node = node->next){
+			gzwrite(f, &node->page, 4);
+			gzwrite(f, &node->value, 4);		
+			j++;
+		}
+	}
+	return j;	
+}
 
 #endif
