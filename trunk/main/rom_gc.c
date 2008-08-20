@@ -65,24 +65,23 @@ rom_header* ROM_HEADER = NULL;
 rom_settings ROM_SETTINGS;
 
 
-static int detectByteSwapping(void){
-	if(!rom_file) return BYTE_SWAP_BAD;
+int init_byte_swap(u32 magicWord){
 	
-	unsigned char magicWord[4];
-	
-	romFile_seekFile(rom_file, 0, FILE_BROWSER_SEEK_SET);
-	romFile_readFile(rom_file, magicWord, 4);
-	
-	switch(magicWord[0]){
+	switch(magicWord >> 24){
 	case 0x37:					//37804012 aka byteswapped
-		return BYTE_SWAP_BYTE;
+		ROM_byte_swap = BYTE_SWAP_BYTE;
+		break;
 	case 0x40:					//40123780 aka little endian, aka halfswapped
-		return BYTE_SWAP_HALF;
+		ROM_byte_swap = BYTE_SWAP_HALF;
+		break;
 	case 0x80:
-		return BYTE_SWAP_NONE;
+		ROM_byte_swap = BYTE_SWAP_NONE;
+		break;
 	default:
-		return BYTE_SWAP_BAD;
+		ROM_byte_swap = BYTE_SWAP_BAD;
+		break;
 	}
+	return ROM_byte_swap;
 }
 
 void byte_swap(char* buffer, unsigned int length){
@@ -130,15 +129,25 @@ int rom_read(fileBrowser_file* file){
    CLEAR();
    sprintf(buffer, "Loading ROM: %s, please be patient...\n", file->name);
    PRINT(buffer);
+#ifdef WII   
+   ROMCache_init(rom_file);
+   int ret = ROMCache_load(rom_file);
+#else
+   int ret = 0,magicByte=0;
    ROMCache_init(rom_length);
-   ROMCache_load(rom_file, detectByteSwapping());
+   romFile_readFile(rom_file, &magicByte, 4);
+   romFile_seekFile(rom_file, 0, FILE_BROWSER_SEEK_SET);
+   ROMCache_load(rom_file,init_byte_swap(magicByte));
+#endif
    CLEAR();
   
    if(!ROM_HEADER) ROM_HEADER = malloc(sizeof(rom_header));
    ROMCache_read(ROM_HEADER, 0, sizeof(rom_header));
    
    //display_loading_progress(100);
+
    sprintf(buffer, "ROM (%s) loaded succesfully\n", ROM_HEADER->nom);
+
    PRINT(buffer);
 #if 0
    sprintf(buffer, "%x %x %x %x\n", ROM_HEADER->init_PI_BSB_DOM1_LAT_REG,
@@ -274,7 +283,7 @@ int rom_read(fileBrowser_file* file){
    printf("eeprom type:%d\n", ROM_SETTINGS.eeprom_16kb);
 #endif
    */
-   return 0;
+   return ret;
 }
 /*
 int fill_header(const char *argv)

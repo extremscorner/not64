@@ -24,6 +24,7 @@ CXXFLAGS	=$(CFLAGS)
 OBJ		=main/rom_gc.o \
 		main/main_gc-menu.o \
 		main/gc_dvd.o \
+		main/gczip.o \
 		main/ROM-Cache-MEM2.o \
 		fileBrowser/fileBrowser-DVD.o \
 		fileBrowser/fileBrowser-libfat.o \
@@ -138,7 +139,7 @@ HEADER		=main/rom.h \
 		r4300/recomp.h \
 		gc_memory/pif.h
 
-LIB		=	-lm -lfat -ldb -lwiiuse -lbte -logc -lz
+LIB		=	-ldi -lm -lfat -ldb -lwiiuse -lbte -logc -lz
 
 ifeq ($(strip mupen64_GX_gfx/main.cpp),)
 	export LD	:=	$(CC)

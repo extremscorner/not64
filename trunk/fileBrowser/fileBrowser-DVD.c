@@ -21,18 +21,19 @@ extern struct
 } file[MAXIMUM_ENTRIES_PER_DIR]; //150 files per dir, MAXIMUM.
 
 /* Worked out manually from my original Disc */
-#define OOT_OFFSET 0x54FBEEF4
-#define MQ_OFFSET  0x52CCC5FC
+#define OOT_OFFSET 0x54FBEEF4ULL
+#define MQ_OFFSET  0x52CCC5FCULL
 #define ZELDA_SIZE 0x2000000
 
 fileBrowser_file topLevel_DVD =
 	{ "\\", // file name
-	  0,         // discoffset
+	  0ULL,      // discoffset (u64)
 	  0,         // offset
 	  0,         // size
 	  FILE_BROWSER_ATTR_DIR
 	};
 
+#ifndef HW_RVL
 int DVD_check_state() {
 
     if(dvd_get_error() == 0){
@@ -41,12 +42,12 @@ int DVD_check_state() {
     }
     else {
         while(dvd_get_error()) {
-            if(!isWii){
+            if(!isWii){	//gamecube
                 DVD_Mount ();   
                 if(dvd_get_error())
                     DVD_Reset(DVD_RESETHARD);
             }
-            if(isWii) {
+            if(isWii) {	//GC mode on Wii
                 DVD_Reset(DVD_RESETHARD);
                 dvd_read_id();
             }
@@ -56,6 +57,12 @@ int DVD_check_state() {
     return 0;
 
 }
+#else
+int DVD_check_state(){
+    dvdInitialized = 1;
+    return 0;
+}
+#endif
 		 
 	 
 int fileBrowser_DVD_readDir(fileBrowser_file* ffile, fileBrowser_file** dir){	
@@ -92,7 +99,7 @@ int fileBrowser_DVD_readDir(fileBrowser_file* ffile, fileBrowser_file** dir){
 	int i;
 	for(i=0; i<num_entries; ++i){
 		strcpy( (*dir)[i].name, file[i].name );
-		(*dir)[i].discoffset = ((file[i].sector)*2048);
+		(*dir)[i].discoffset = (uint64_t)(((uint64_t)file[i].sector)*2048);
 		(*dir)[i].offset = 0;
 		(*dir)[i].size   = file[i].size;
 		(*dir)[i].attr	 = 0;
@@ -118,18 +125,20 @@ int fileBrowser_DVD_seekFile(fileBrowser_file* file, unsigned int where, unsigne
 int fileBrowser_DVD_readFile(fileBrowser_file* file, void* buffer, unsigned int length){
 	DVD_check_state();
 	int bytesread = read_safe(buffer,file->discoffset+file->offset,length);
-	file->offset += bytesread;
+	if(bytesread > 0)
+		file->offset += bytesread;
 	return bytesread;
 }
 
+#ifndef HW_RVL
 int fileBrowser_DVD_init(fileBrowser_file* file) {
 
 	dvd_read_id();
 	if(dvd_get_error() == 0)
 		return 0;
-	if(!isWii)
+	if(!isWii)	//gamecube
 		DVD_Mount ();
-	if(isWii) {
+	if(isWii) {	//GC mode on Wii
 		DVD_Reset(DVD_RESETHARD);
 		dvd_read_id();
 	}
@@ -137,6 +146,11 @@ int fileBrowser_DVD_init(fileBrowser_file* file) {
 		return 0;
 	return dvd_get_error();
 }
+#else
+int fileBrowser_DVD_init(fileBrowser_file* file){
+	return 0;
+}
+#endif
 
 int fileBrowser_DVD_deinit(fileBrowser_file* file) {
 	return 0;
