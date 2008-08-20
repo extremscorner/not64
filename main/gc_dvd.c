@@ -1,10 +1,14 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <ogc/dvd.h>
 #include <malloc.h>
 #include <string.h>
 #include <gccore.h>
 #include "gc_dvd.h"
+#ifdef WII
+#include <di/di.h>
+#endif
 
 int last_current_dir = -1;
 volatile unsigned long* dvd = (volatile unsigned long*)0xCC006000;
@@ -13,9 +17,11 @@ struct
 	char name[128];
 	int flags;
 	int sector, size;
-} file[MAXIMUM_ENTRIES_PER_DIR] __attribute__((aligned(32))); //150 files per dir, MAXIMUM.
+} file[MAXIMUM_ENTRIES_PER_DIR] __attribute__((aligned(32))); //1024 files per dir, MAXIMUM.
+
 unsigned char sector_buffer[2048] __attribute__((aligned(32)));
 
+#ifndef HW_RVL
 int dvd_read_id()
 {
 	dvd[0] = 0x2E;
@@ -32,6 +38,14 @@ int dvd_read_id()
 	return 0;
 }
 
+#else
+
+int dvd_read_id(){
+	return 0;
+}
+#endif
+
+#ifndef HW_RVL
 unsigned int dvd_get_error(void)
 {
 	dvd[2] = 0xE0000000;
@@ -40,8 +54,16 @@ unsigned int dvd_get_error(void)
 	while (dvd[7] & 1);
 	return dvd[8];
 }
+#else
+unsigned int dvd_get_error(void)
+{
+	unsigned int val;
+	DI_GetError(&val);
+	return val;
+}
+#endif
 
-
+#ifndef HW_RVL
 void dvd_motor_off()
 {
 	dvd[0] = 0x2E;
@@ -54,7 +76,13 @@ void dvd_motor_off()
 	dvd[7] = 1; // IMM
 	while (dvd[7] & 1);
 }
+#else
+void dvd_motor_off(){
+}
+#endif
 
+
+#ifndef HW_RVL
 int dvd_read(void* dst, unsigned int len, unsigned int offset)
 {
 	if ((((int)dst) & 0xC0000000) == 0x80000000) // cached?
@@ -72,24 +100,40 @@ int dvd_read(void* dst, unsigned int len, unsigned int offset)
 
 	if (dvd[0] & 0x4)
 		return 1;
-		
 	return 0;
 }
+#endif
 
-int read_sector(void* buffer, int sector)
+#ifndef HW_RVL
+int read_sector(void* buffer, uint32_t sector)
 {
 	return dvd_read(buffer, 2048, sector * 2048);
 }
+#else
+int read_sector(void* buffer, uint32_t sector){
+	static uint8_t read_buf[0x800] __attribute__((aligned(32)));
+	int ret;
+	int retrycount = 0x20;
 
-int read_safe(void* dst, int offset, int len)
+	while(DI_GetStatus() & DVD_INIT);
+
+	ret = DI_ReadDVD(read_buf, 1, sector);
+
+	memcpy(buffer, read_buf, 0x800);
+	return ret;
+}
+#endif
+
+int read_safe(void* dst, uint64_t offset, int len)
 {
 	int ol = len;
-	
+	int ret = 0;	
+
 	while (len)
 	{
-		int sector = offset / 2048;
-		read_sector(sector_buffer, sector);
-		int off = offset & 2047;
+		uint32_t sector = offset / 2048;
+		ret |= read_sector(sector_buffer, sector);
+		uint32_t off = offset & 2047;
 
 		int rl = 2048 - off;
 		if (rl > len)
@@ -100,6 +144,9 @@ int read_safe(void* dst, int offset, int len)
 		len -= rl;
 		dst += rl;
 	}
+	if(ret)
+		return -1;
+
 	return ol;
 }
 
@@ -204,19 +251,19 @@ void read_directory(int sector, int len)
        while (len > 0)
        {
                ptr += read_direntry(sector_buffer + ptr);
-               if (!sector_buffer[ptr])
+               if (ptr >= 2048 || !sector_buffer[ptr])
                {
-                       len -= 2048;
-                       read_sector(sector_buffer, ++sector);
-                       ptr = 0;
+			len -= 2048;
+			sector++;
+			read_sector(sector_buffer, sector);
+			ptr = 0;
                }
        }
 }
 
-int dvd_read_directoryentries(unsigned int offset, int size) {
+int dvd_read_directoryentries(uint64_t offset, int size) {
        int sector = 16;
        static unsigned char bufferDVD[2048] __attribute__((aligned(32)));
-       
        struct pvd_s* pvd = 0;
        struct pvd_s* svd = 0;
        while (sector < 32)

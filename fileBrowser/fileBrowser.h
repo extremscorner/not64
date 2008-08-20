@@ -5,6 +5,8 @@
 #ifndef FILE_BROWSER_H
 #define FILE_BROWSER_H
 
+#include <stdint.h>
+
 #define FILE_BROWSER_MAX_PATH_LEN 128
 
 #define FILE_BROWSER_ATTR_DIR     0x10
@@ -18,7 +20,7 @@
 
 typedef struct {
 	char         name[FILE_BROWSER_MAX_PATH_LEN];
-	unsigned int discoffset; // Only necessary for DVD
+	uint64_t discoffset; // Only necessary for DVD
 	unsigned int offset; // Keep track of our offset in the file
 	unsigned int size;
 	unsigned int attr;

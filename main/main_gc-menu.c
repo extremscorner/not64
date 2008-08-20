@@ -34,6 +34,7 @@
 #ifdef WII
 #include <ogc/conf.h>
 #include <wiiuse/wpad.h>
+#include <di/di.h>
 #endif
 
 /* NECESSARY FUNCTIONS AND VARIABLES */
@@ -85,6 +86,10 @@ u16 readWPAD(void);
 
 int main(){
 	/* INITIALIZE */
+#ifdef HW_RVL
+	DI_Init();
+	DI_Mount();
+#endif
 	Initialise(); // Stock OGC initialization
 #ifndef WII
 	DVD_Init();
@@ -173,7 +178,7 @@ extern BOOL mempakWritten;
 extern BOOL sramWritten;
 extern BOOL flashramWritten;
 BOOL hasLoadedROM = FALSE;
-void loadROM(fileBrowser_file* rom){
+int loadROM(fileBrowser_file* rom){
 	
 	// First, if there's already a loaded ROM
 	if(hasLoadedROM){
@@ -206,7 +211,11 @@ void loadROM(fileBrowser_file* rom){
 	tlb_mem2_init();
 #endif
 	//romFile_init(rom);
-	rom_read(rom);
+
+	if(rom_read(rom)){	// Something failed while trying to read the ROM.
+		hasLoadedROM = FALSE;
+		return -1;
+	}
 	
 	// Init everything for this ROM
 	init_memory();
@@ -223,6 +232,7 @@ void loadROM(fileBrowser_file* rom){
 	
 	cpu_init();
 	//ogc_video__reset();
+	return 0;
 }
 
 static void gfx_info_init(void){

@@ -51,7 +51,8 @@ static char* filenameFromAbsPath(char* absPath){
 	return filename;
 }
 
-void loadROM(fileBrowser_file*);
+int loadROM(fileBrowser_file*);
+
 static char* recurseOrSelect(int i){
 	if(dir_entries[i].attr & FILE_BROWSER_ATTR_DIR){
 		// Here we are 'recursing' into a subdirectory
@@ -66,13 +67,19 @@ static char* recurseOrSelect(int i){
 		// TODO: Probably some sort of feedback via GUI if possible
 		// FIXME: I've 'hardwired' loadROM into this function
 		//          but it'd be relatively simple to adapt
-		loadROM( &dir_entries[i] );
+		int ret = loadROM( &dir_entries[i] );
 		// And a simple hack to get back out of the file browser
 		menuBack();
 		
 		static char feedback_string[36];
-		strcpy(&feedback_string, "Loaded ");
-		strncat(&feedback_string, filenameFromAbsPath(dir_entries[i].name), 36-7);
+		if(!ret){	// If the read succeeded.
+			strcpy(feedback_string, "Loaded ");
+			strncat(feedback_string, filenameFromAbsPath(dir_entries[i].name), 36-7);
+		}
+		else		// If not.
+		{
+			strcpy(feedback_string,"A read error occured");
+		}
 	}
 }
 

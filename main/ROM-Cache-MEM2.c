@@ -9,9 +9,14 @@
  */
 
 #include <stdio.h>
+#include <stdint.h>
+#include <malloc.h>
 #include "ROM-Cache.h"
 #include "../gc_memory/MEM2.h"
 #include "../fileBrowser/fileBrowser.h"
+#include "gczip.h"
+#include "zlib.h"
+
 
 #ifdef USE_GUI
 #include "../gui/GUI.h"
@@ -26,7 +31,8 @@
 #define LOAD_SIZE  (4*1024)
 static u32   ROMSize;
 static int   ROMTooBig;
-extern int   ROM_byte_swap;
+static int   ROMCompressed;
+static int   ROMHeaderSize;
 static char* ROMBlocks[64];
 static int   ROMBlocksLRU[64];
 static fileBrowser_file* ROMFile;
@@ -39,13 +45,28 @@ static u8  L1[256*1024];
 static u32 L1tag;
 #endif
 
-void ROMCache_init(u32 size){
-	ROMSize = size;
-	ROMTooBig = size > ROMCACHE_SIZE;
+PKZIPHEADER pkzip;
+
+void ROMCache_init(fileBrowser_file* f){
+	romFile_readFile(f, &pkzip, sizeof(PKZIPHEADER));
+	if(pkzip.zipid != PKZIPID){		//PKZIP magic
+		ROMSize = f->size;
+		ROMTooBig = ROMSize > ROMCACHE_SIZE;
+		ROMCompressed = 0;
+	}
+	else	// Compressed file found.
+	{
+		ROMCompressed = 1;
+		ROMTooBig = 0;		// Currently no way to swap out compressed ROMs from filesystem.
+		ROMSize = FLIP32(pkzip.uncompressedSize);
+		ROMHeaderSize = (sizeof(PKZIPHEADER) + FLIP16(pkzip.filenameLength) + FLIP16(pkzip.extraDataLength));
+		inflate_init(&pkzip);
+	}
+
+	romFile_seekFile(f, 0, FILE_BROWSER_SEEK_SET);	// Lets be nice and keep the file at 0.
 #ifdef USE_ROM_CACHE_L1
 	L1tag = -1;
-#endif
-	
+#endif	
 	//romFile_init( romFile_topLevel );
 }
 
@@ -134,30 +155,69 @@ void ROMCache_read(u32* dest, u32 offset, u32 length){
 	}
 }
 
-void ROMCache_load(fileBrowser_file* f, int byteSwap){
+int ROMCache_load(fileBrowser_file* f){
 	char txt[128];
+	void* buf;
+	int ret;
 	GUI_clear();
 	GUI_centerText(true);
-	sprintf(txt, "Loading ROM %s into MEM2.\n Please be patient...\n", ROMTooBig ? "partially" : "fully");
+	sprintf(txt, "%s ROM %s into MEM2.\n Please be patient...\n", ROMCompressed ? "Uncompressing" : "Loading",ROMTooBig ? "partially" : "fully");
 	PRINT(txt);
-	
-	ROM_byte_swap = byteSwap;
+
 	ROMFile = f;
 	romFile_seekFile(f, 0, FILE_BROWSER_SEEK_SET);
 	
-	u32 offset = 0, bytes_read, loads_til_update = 0;
+	u32 offset = 0,loads_til_update = 0;
+	int bytes_read;
 	u32 sizeToLoad = MIN(ROMCACHE_SIZE, ROMSize);
-	while(offset < sizeToLoad){
-		bytes_read = romFile_readFile(f, ROMCACHE_LO + offset, LOAD_SIZE);
-		byte_swap(ROMCACHE_LO + offset, bytes_read);
-		offset += bytes_read;
-		
-		if(!loads_til_update--){
-			GUI_setLoadProg( (float)offset/sizeToLoad );
-			GUI_draw();
-			loads_til_update = 16;
+	if(ROMCompressed){
+		buf = malloc(LOAD_SIZE);
+		do{
+			bytes_read = romFile_readFile(f, buf, LOAD_SIZE);
+
+			if(bytes_read < 0){		// Read fail!
+				GUI_setLoadProg( -1.0f );
+				free(buf);
+				return -1;
+			}
+
+			ret = inflate_chunk(ROMCACHE_LO + offset, buf, bytes_read);
+			if(ret > 0)
+				offset += ret;
+
+			if(!loads_til_update--){
+				GUI_setLoadProg( (float)offset/sizeToLoad );
+				GUI_draw();
+				loads_til_update = 16;
+			}
+		}while(ret > 0);
+		free(buf);
+		if(ret){	// Uh oh, decompression fail!
+			GUI_setLoadProg( -1.0f );
+			return -1;
 		}
 	}
+	else
+	{
+		while(offset < sizeToLoad){
+			bytes_read = romFile_readFile(f, ROMCACHE_LO + offset, LOAD_SIZE);
+
+			if(bytes_read < 0){		// Read fail!
+				GUI_setLoadProg( -1.0f );
+				return -1;
+			}
+
+			offset += bytes_read;
+		
+			if(!loads_til_update--){
+				GUI_setLoadProg( (float)offset/sizeToLoad );
+				GUI_draw();
+				loads_til_update = 16;
+			}
+		}
+	}	
+	init_byte_swap(*((uint32_t*)ROMCACHE_LO));
+	byte_swap(ROMCACHE_LO + offset, sizeToLoad);
 	
 	if(ROMTooBig){ // Set block pointers if we need to
 		int i;
@@ -170,6 +230,7 @@ void ROMCache_load(fileBrowser_file* f, int byteSwap){
 	}
 	
 	GUI_setLoadProg( -1.0f );
+	return 0;
 }
 
 
