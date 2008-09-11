@@ -52,7 +52,6 @@
 #include "flashram.h"
 #include "../main/plugin.h"
 #include "../main/guifuncs.h"
-#include "../main/vcr.h"
 #include "../gui/DEBUG.h"
 #include <assert.h>
 

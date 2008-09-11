@@ -67,6 +67,7 @@ unsigned int isWii = 0;
 #define WII_CPU_VERSION 0x87102
 #define mfpvr()   ({unsigned int rval; \
       asm volatile("mfpvr %0" : "=r" (rval)); rval;})
+extern void gfx_set_fb(unsigned int* fb1, unsigned int* fb2);
 // -- End plugin data --
 
 static u32* xfb[2] = { NULL, NULL };	/*** Framebuffers ***/
@@ -237,7 +238,7 @@ int loadROM(fileBrowser_file* rom){
 
 static void gfx_info_init(void){
 	gfx_info.MemoryBswaped = TRUE;
-	gfx_info.HEADER = ROM_HEADER;
+	gfx_info.HEADER = (BYTE*)ROM_HEADER;
 	gfx_info.RDRAM = (BYTE*)rdram;
 	gfx_info.DMEM = (BYTE*)SP_DMEM;
 	gfx_info.IMEM = (BYTE*)SP_IMEM;
@@ -270,7 +271,7 @@ static void gfx_info_init(void){
 
 static void audio_info_init(void){
 	audio_info.MemoryBswaped = TRUE;
-	audio_info.HEADER = ROM_HEADER;
+	audio_info.HEADER = (BYTE*)ROM_HEADER;
 	audio_info.RDRAM = (BYTE*)rdram;
 	audio_info.DMEM = (BYTE*)SP_DMEM;
 	audio_info.IMEM = (BYTE*)SP_IMEM;
@@ -287,7 +288,7 @@ static void audio_info_init(void){
 
 static void control_info_init(void){
 	control_info.MemoryBswaped = TRUE;
-	control_info.HEADER = ROM_HEADER;
+	control_info.HEADER = (BYTE*)ROM_HEADER;
 	control_info.Controls = Controls;
 	int i;
 	for (i=0; i<4; i++)
@@ -339,7 +340,6 @@ void ScanPADSandReset() {
 void ResetCallBack() {stop = 1;}
 
 static void Initialise (void){
-  static int whichfb = 0;        /*** Frame buffer toggle ***/
   VIDEO_Init();
   PAD_Init();
   PAD_Reset(0xf0000000);

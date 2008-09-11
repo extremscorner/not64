@@ -46,8 +46,6 @@
 #include "../main/plugin.h"
 #include "../main/guifuncs.h"
 #include "../main/savestates.h"
-#include "../main/vcr.h"
-
 
 unsigned long next_vi;
 int vi_field=0;
