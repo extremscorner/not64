@@ -1,16 +1,9 @@
-#Makefile MUPEN64 for Linux
+#Makefile MUPEN64GC for Gamecube with glN64 Graphics
 
 CC		=powerpc-gekko-gcc
 CXX		=powerpc-gekko-g++
 AS		=powerpc-gekko-as
 
-#CFLAGS		=-DX86 -O3 -mpentium -Wall -DEMU64_DEBUG
-#CFLAGS		=-DX86 -O3 -fexpensive-optimizations -fomit-frame-pointer -funroll-loops -ffast-math -fno-strict-aliasing -mcpu=athlon -Wall -pipe
-#CFLAGS		=-DX86 -O3 -mcpu=pentium -Wall -g -pg
-#CFLAGS		=-DX86 -Wall -pipe -g3 -DEMU64_DEBUG
-#CFLAGS		=-DX86 -Wall -pipe -g -DEMU64_DEBUG -DCOMPARE_CORE
-#CFLAGS		=-DX86 -Wall -pipe -g
-#CFLAGS  = -g -O2 -Wall $(MACHDEP) $(INCLUDE) -fomit-frame-pointer
 CFLAGS  = -g -O2 -Wall $(MACHDEP) $(INCLUDE) \
 	  -DCPU_SHUTDOWN -DSPC700_SHUTDOWN -DVAR_CYCLES -DSOUND \
 	  -DNOASM -DNGC -DNOASM -DPIXEL_FORMAT=RGB565  \
@@ -19,14 +12,12 @@ CFLAGS  = -g -O2 -Wall $(MACHDEP) $(INCLUDE) \
 #	  -DDEBUGON  -DGLN64_SDLOG -DUSE_EXPANSION -DEMBEDDED_FONTS -DUSE_RECOMP_CACHE -DPPC_DYNAREC
 
 MACHDEP	= -DGEKKO -mcpu=750 -meabi -mhard-float 
-LDFLAGS	=	$(MACHDEP) -mogc -Wl,-Map,$(notdir $@).map -Wl,--cref
+LDFLAGS	= $(MACHDEP) -mogc -Wl,-Map,$(notdir $@).map -Wl,--cref
 
 INCLUDE = -I$(DEVKITPRO)/libogc/include -I$(DEVKITPRO)/libfat/libogc/include
 LIBPATHS = -L$(DEVKITPRO)/libogc/lib/cube -L$(DEVKITPRO)/libfat/libogc/lib/cube
 
 CXXFLAGS	=$(CFLAGS)
-
-#GL_PATH		=-I/usr/X11R6/include
 
 OBJ		=main/rom_gc.o \
 		main/main_gc-menu.o \
@@ -79,33 +70,6 @@ OBJ_PPC		=r4300/new-ppc/MIPS-to-PPC.o \
 		r4300/new-ppc/Wrappers.o 
 		#r4300/ppc/ppc_disasm.o
 
-OBJ_X86         =r4300/x86/gr4300.o \
-		r4300/x86/gcop0.o \
-		r4300/x86/assemble.o \
-		r4300/x86/gcop1.o \
-		r4300/x86/gcop1_s.o \
-		r4300/x86/gcop1_d.o \
-		r4300/x86/gtlb.o \
-		r4300/x86/gregimm.o \
-		r4300/x86/gspecial.o \
-		r4300/x86/gcop1_w.o \
-		r4300/x86/debug.o \
-		r4300/x86/rjump.o \
-		r4300/x86/gbc.o \
-		r4300/x86/gcop1_l.o \
-		r4300/x86/regcache.o
-
-OBJ_GTK_GUI	=main/gui_gtk/main_gtk.o \
-		main/gui_gtk/translate.o \
-		main/gui_gtk/messagebox.o \
-		main/gui_gtk/aboutdialog.o \
-		main/gui_gtk/configdialog.o \
-		main/gui_gtk/support.o \
-		main/gui_gtk/rombrowser.o \
-		main/gui_gtk/romproperties.o \
-		main/gui_gtk/config.o \
-		main/gui_gtk/dirbrowser.o
-
 OBJ_INPUT	=gc_input/main.o \
 		gc_input/controller-GC.o
 
@@ -114,29 +78,8 @@ OBJ_RSPHLE	=rsp_hle-ppc/main.o \
 		rsp_hle-ppc/ucode3.o \
 		rsp_hle-ppc/ucode2.o \
 		rsp_hle-ppc/ucode1.o
-#		rsp_hle-ppc/ucode3mp3.o
 
 OBJ_AUDIO	=gc_audio/main.o
-
-#OBJ_SOFT_GFX	=mupen64_soft_gfx/main.o \
-#		mupen64_soft_gfx/rsp.o \
-#		mupen64_soft_gfx/vi_GX.o \
-#		mupen64_soft_gfx/vi.o \
-#		mupen64_soft_gfx/rdp.o \
-#		mupen64_soft_gfx/tx.o \
-#		mupen64_soft_gfx/rs.o \
-#		mupen64_soft_gfx/tf.o \
-#		mupen64_soft_gfx/cc.o \
-#		mupen64_soft_gfx/bl.o \
-#		mupen64_soft_gfx/font.o
-
-#OBJ_GX_GFX	=mupen64_GX_gfx/main.o \
-#		mupen64_GX_gfx/rsp_GX.o \
-#		mupen64_GX_gfx/tx_GX.o \
-#		mupen64_GX_gfx/cc_GX.o \
-#		mupen64_GX_gfx/bl_GX.o \
-#		mupen64_GX_gfx/vi_GX.o \
-#		mupen64_GX_gfx/vi.o 
 
 OBJ_GLN64_GX	=glN64_GX/glN64.o \
 		glN64_GX/Config_linux.o \
@@ -167,19 +110,6 @@ OBJ_GLN64_GX	=glN64_GX/glN64.o \
 		glN64_GX/F3DDKR.o \
 		glN64_GX/F3DWRUS.o
 
-HEADER		=main/rom.h \
-		r4300/r4300.h \
-		r4300/ops.h \
-		r4300/macros.h \
-		r4300/exception.h \
-		gc_memory/memory.h \
-		gc_memory/tlb.h \
-		gc_memory/dma.h \
-		r4300/interupt.h \
-		r4300/recomp.h \
-		gc_memory/pif.h
-
-#LIB		=	-logc -lm -lsdcard -ldb
 LIB		=	-lm -lfat -logc -lz
 
 ifeq ($(strip mupen64_GX_gfx/main.cpp),)
@@ -188,190 +118,158 @@ else
 	export LD	:=	$(CXX)
 endif
 
-#PLUGINS		=plugins/mupen64_input.so plugins/blight_input.so plugins/mupen64_hle_rsp_azimer.so plugins/dummyaudio.so plugins/mupen64_audio.so plugins/jttl_audio.so plugins/mupen64_soft_gfx.so plugins/mupen64_GX_gfx.so plugins/glN64.so
-
 all:	mupen64gc-glN64.elf
 
 r4300/interupt.o:	r4300/interupt.c
-			$(CC) $(CFLAGS) -c -o $@ $<
-
-main/main.o:	main/main.c
-		$(CC) $(CFLAGS) -c -o $@ $<
-
-main/main_gtk.o:	main/main_gtk.c
-			$(CC) $(CFLAGS) -c -o $@ $< 
-
-main/gui_gtk/main_gtk.o:	main/gui_gtk/main_gtk.c
-				$(CC) $(CFLAGS) -c -o $@ $< 
-
-main/gui_gtk/translate.o:	main/gui_gtk/translate.c
-				$(CC) $(CFLAGS) -c -o $@ $< 
-
-main/gui_gtk/messagebox.o:	main/gui_gtk/messagebox.c
-				$(CC) $(CFLAGS) -c -o $@ $< 
-
-main/gui_gtk/aboutdialog.o:	main/gui_gtk/aboutdialog.c
-				$(CC) $(CFLAGS) -c -o $@ $< 
-
-main/gui_gtk/configdialog.o:	main/gui_gtk/configdialog.c
-				$(CC) $(CFLAGS) -c -o $@ $< 
-
-main/gui_gtk/support.o:		main/gui_gtk/support.c
-				$(CC) $(CFLAGS) -c -o $@ $< 
-
-main/gui_gtk/rombrowser.o:	main/gui_gtk/rombrowser.c
-				$(CC) $(CFLAGS) -c -o $@ $< 
-
-main/gui_gtk/romproperties.o:	main/gui_gtk/romproperties.c
-				$(CC) $(CFLAGS) -c -o $@ $< 
-
-main/gui_gtk/config.o:		main/gui_gtk/config.c
-				$(CC) $(CFLAGS) -c -o $@ $< 
-
-main/gui_gtk/dirbrowser.o:	main/gui_gtk/dirbrowser.c
-				$(CC) $(CFLAGS) -c -o $@ $< 
+				@echo $<
+				@$(CC) $(CFLAGS) -c -o $@ $<
 
 gui/background_tex.o:		gui/background_tex.s
-				$(CC) $(CFLAGS) -c -o $@ $<
+				@echo $<
+				@$(CC) $(CFLAGS) -c -o $@ $<
 
 gc_input/main.o:		gc_input/input.c
-				$(CC) $(CFLAGS) -c -o $@ $<
+				@echo $<
+				@$(CC) $(CFLAGS) -c -o $@ $<
 
 rsp_hle-ppc/main.o:			rsp_hle-ppc/main.c
-				$(CC) $(CFLAGS) -c -o $@ $<
+				@echo $<
+				@$(CC) $(CFLAGS) -c -o $@ $<
 
 gc_audio/main.o:		gc_audio/audio.c
-				$(CC) $(CFLAGS) -c -o $@ $<
-
-#mupen64_GX_gfx/main.o:	mupen64_GX_gfx/main.cpp
-#				$(CXX) $(CFLAGS) -c -o $@ $<
-
-#mupen64_GX_gfx/vi_GX.o:	mupen64_GX_gfx/vi_GX.cpp
-#				$(CXX) $(CFLAGS) -c -o $@ $<
-
-#mupen64_soft_gfx/main.o:	mupen64_soft_gfx/main.cpp
-#				$(CXX) $(CFLAGS) -c -o $@ $<
-
-#mupen64_soft_gfx/vi_GX.o:	mupen64_soft_gfx/vi_GX.cpp
-#				$(CXX) $(CFLAGS) -c -o $@ $<
+				@echo $<
+				@$(CC) $(CFLAGS) -c -o $@ $<
 
 glN64_GX/glN64.o:			glN64_GX/glN64.cpp
-				$(CXX) $(CFLAGS) -DMAINDEF -D__LINUX__ -D__GX__ -c -o $@ $<
+				@echo $<
+				@$(CXX) $(CFLAGS) -DMAINDEF -D__LINUX__ -D__GX__ -c -o $@ $<
 #				$(CXX) $(CFLAGS) -DMAINDEF -D__LINUX__ -DX86_ASM `sdl-config --cflags` -c -o $@ $<
 
 glN64_GX/Config_linux.o:		glN64_GX/Config_linux.cpp
-				$(CXX) $(CFLAGS) $(GTK_FLAGS) -D__LINUX__ -D__GX__ -c -o $@ $<
+				@echo $<
+				@$(CXX) $(CFLAGS) $(GTK_FLAGS) -D__LINUX__ -D__GX__ -c -o $@ $<
 
 glN64_GX/OpenGL.o:			glN64_GX/OpenGL.cpp
-				$(CXX) $(CFLAGS) -D__LINUX__ -D__GX__ -c -o $@ $<
+				@echo $<
+				@$(CXX) $(CFLAGS) -D__LINUX__ -D__GX__ -c -o $@ $<
 
 glN64_GX/N64.o:			glN64_GX/N64.cpp
-				$(CXX) $(CFLAGS) -D__LINUX__ -D__GX__ -c -o $@ $<
+				@echo $<
+				@$(CXX) $(CFLAGS) -D__LINUX__ -D__GX__ -c -o $@ $<
 
 glN64_GX/RSP.o:			glN64_GX/RSP.cpp
-				$(CXX) $(CFLAGS) -D__LINUX__ -D__GX__ -c -o $@ $<
+				@echo $<
+				@$(CXX) $(CFLAGS) -D__LINUX__ -D__GX__ -c -o $@ $<
 
 glN64_GX/VI.o:			glN64_GX/VI.cpp
-				$(CXX) $(CFLAGS) -D__LINUX__ -D__GX__ -c -o $@ $<
+				@echo $<
+				@$(CXX) $(CFLAGS) -D__LINUX__ -D__GX__ -c -o $@ $<
 
 glN64_GX/Textures.o:		glN64_GX/Textures.cpp
-				$(CXX) $(CFLAGS) -D__LINUX__ -D__GX__ -c -o $@ $<
+				@echo $<
+				@$(CXX) $(CFLAGS) -D__LINUX__ -D__GX__ -c -o $@ $<
 
 glN64_GX/FrameBuffer.o:		glN64_GX/FrameBuffer.cpp
-				$(CXX) $(CFLAGS) -D__LINUX__ -D__GX__ -c -o $@ $<
+				@echo $<
+				@$(CXX) $(CFLAGS) -D__LINUX__ -D__GX__ -c -o $@ $<
 
 glN64_GX/Combiner.o:		glN64_GX/Combiner.cpp
-				$(CXX) $(CFLAGS) -D__LINUX__ -D__GX__ -c -o $@ $<
+				@echo $<
+				@$(CXX) $(CFLAGS) -D__LINUX__ -D__GX__ -c -o $@ $<
 
 glN64_GX/gDP.o:			glN64_GX/gDP.cpp
-				$(CXX) $(CFLAGS) -D__LINUX__ -D__GX__ -c -o $@ $<
+				@echo $<
+				@$(CXX) $(CFLAGS) -D__LINUX__ -D__GX__ -c -o $@ $<
 
 glN64_GX/gSP.o:			glN64_GX/gSP.cpp
-				$(CXX) $(CFLAGS) -D__LINUX__ -D__GX__ -c -o $@ $<
+				@echo $<
+				@$(CXX) $(CFLAGS) -D__LINUX__ -D__GX__ -c -o $@ $<
 
 glN64_GX/GBI.o:			glN64_GX/GBI.cpp
-				$(CXX) $(CFLAGS) -D__LINUX__ -D__GX__ -c -o $@ $<
+				@echo $<
+				@$(CXX) $(CFLAGS) -D__LINUX__ -D__GX__ -c -o $@ $<
 
 glN64_GX/DepthBuffer.o:			glN64_GX/DepthBuffer.cpp
-				$(CXX) $(CFLAGS) -D__LINUX__ -D__GX__ -c -o $@ $<
+				@echo $<
+				@$(CXX) $(CFLAGS) -D__LINUX__ -D__GX__ -c -o $@ $<
 
 glN64_GX/CRC.o:			glN64_GX/CRC.cpp
-				$(CXX) $(CFLAGS) -D__LINUX__ -D__GX__ -c -o $@ $<
+				@echo $<
+				@$(CXX) $(CFLAGS) -D__LINUX__ -D__GX__ -c -o $@ $<
 
 glN64_GX/2xSAI.o:			glN64_GX/2xSAI.cpp
-				$(CXX) $(CFLAGS) -D__LINUX__ -D__GX__ -c -o $@ $<
+				@echo $<
+				@$(CXX) $(CFLAGS) -D__LINUX__ -D__GX__ -c -o $@ $<
 
 glN64_GX/TEV_combiner.o: glN64_GX/TEV_combiner.cpp
-				$(CXX) $(CFLAGS) -D__LINUX__ -D__GX__ -c -o $@ $<
+				@echo $<
+				@$(CXX) $(CFLAGS) -D__LINUX__ -D__GX__ -c -o $@ $<
 
 glN64_GX/RDP.o:			glN64_GX/RDP.cpp
-				$(CXX) $(CFLAGS) -D__LINUX__ -D__GX__ -c -o $@ $<
+				@echo $<
+				@$(CXX) $(CFLAGS) -D__LINUX__ -D__GX__ -c -o $@ $<
 
 glN64_GX/F3D.o:			glN64_GX/F3D.cpp
-				$(CXX) $(CFLAGS) -D__LINUX__ -D__GX__ -c -o $@ $<
+				@echo $<
+				@$(CXX) $(CFLAGS) -D__LINUX__ -D__GX__ -c -o $@ $<
 
 glN64_GX/F3DEX.o:		glN64_GX/F3DEX.cpp
-				$(CXX) $(CFLAGS) -D__LINUX__ -D__GX__ -c -o $@ $<
+				@echo $<
+				@$(CXX) $(CFLAGS) -D__LINUX__ -D__GX__ -c -o $@ $<
 
 glN64_GX/F3DEX2.o:			glN64_GX/F3DEX2.cpp
-				$(CXX) $(CFLAGS) -D__LINUX__ -D__GX__ -c -o $@ $<
+				@echo $<
+				@$(CXX) $(CFLAGS) -D__LINUX__ -D__GX__ -c -o $@ $<
 
 glN64_GX/L3D.o:			glN64_GX/L3D.cpp
-				$(CXX) $(CFLAGS) -D__LINUX__ -D__GX__ -c -o $@ $<
+				@echo $<
+				@$(CXX) $(CFLAGS) -D__LINUX__ -D__GX__ -c -o $@ $<
 
 glN64_GX/L3DEX.o:			glN64_GX/L3DEX.cpp
-				$(CXX) $(CFLAGS) -D__LINUX__ -D__GX__ -c -o $@ $<
+				@echo $<
+				@$(CXX) $(CFLAGS) -D__LINUX__ -D__GX__ -c -o $@ $<
 
 glN64_GX/L3DEX2.o:			glN64_GX/L3DEX2.cpp
-				$(CXX) $(CFLAGS) -D__LINUX__ -D__GX__ -c -o $@ $<
+				@echo $<
+				@$(CXX) $(CFLAGS) -D__LINUX__ -D__GX__ -c -o $@ $<
 
 glN64_GX/S2DEX.o:			glN64_GX/S2DEX.cpp
-				$(CXX) $(CFLAGS) -D__LINUX__ -D__GX__ -c -o $@ $<
+				@echo $<
+				@$(CXX) $(CFLAGS) -D__LINUX__ -D__GX__ -c -o $@ $<
 
 glN64_GX/S2DEX2.o:			glN64_GX/S2DEX2.cpp
-				$(CXX) $(CFLAGS) -D__LINUX__ -D__GX__ -c -o $@ $<
+				@echo $<
+				@$(CXX) $(CFLAGS) -D__LINUX__ -D__GX__ -c -o $@ $<
 
 glN64_GX/F3DPD.o:			glN64_GX/F3DPD.cpp
-				$(CXX) $(CFLAGS) -D__LINUX__ -D__GX__ -c -o $@ $<
+				@echo $<
+				@$(CXX) $(CFLAGS) -D__LINUX__ -D__GX__ -c -o $@ $<
 
 glN64_GX/F3DDKR.o:			glN64_GX/F3DDKR.cpp
-				$(CXX) $(CFLAGS) -D__LINUX__ -D__GX__ -c -o $@ $<
+				@echo $<
+				@$(CXX) $(CFLAGS) -D__LINUX__ -D__GX__ -c -o $@ $<
 
 glN64_GX/F3DWRUS.o:		glN64_GX/F3DWRUS.cpp
-				$(CXX) $(CFLAGS) -D__LINUX__ -D__GX__ -c -o $@ $<
+				@echo $<
+				@$(CXX) $(CFLAGS) -D__LINUX__ -D__GX__ -c -o $@ $<
 
 r4300/ppc/Wrappers.o:		r4300/new-ppc/Wrappers.s
-				$(AS) -o $@ $<
+				@echo $<
+				@$(AS) -o $@ $<
 
+#Default rule to build the rest of the C files
+%.o: %.c
+	@echo $<
+	@$(CC) $(CFLAGS) -c -o $@ $<
+	
 
 mupen64gc-glN64.elf:	$(OBJ) $(OBJ_INPUT) $(OBJ_GLN64_GX) $(OBJ_AUDIO) $(OBJ_RSPHLE) main/main_gc-menu.o #$(OBJ_PPC)
-		$(LD) $^ $(LDFLAGS) $(LIBPATHS) $(LIB) -Wl -o $@
-		#strip --strip-all $@
-		powerpc-gekko-objcopy -O binary $@ mupen64gc-glN64.dol
-		dollz3 mupen64gc-glN64.dol mupen6z.dol
-
-
-
-
-install:
-	cp mupen64 "$(PREFIX)bin"
-	cp mupen64_nogui "$(PREFIX)bin"
-	mkdir "$(SHARE)" | echo
-	cp -rv mupen64.ini "$(SHARE)"
-	cp -rv lang "$(SHARE)"
-	cp -rv plugins "$(SHARE)"
-	cp -rv doc "$(SHARE)"
+						@echo linking ... $(notdir $@)
+						@$(LD) $^ $(LDFLAGS) $(LIBPATHS) $(LIB) -Wl -o $@
+						@echo linking ... mupen64gc-glN64.dol
+						@powerpc-gekko-objcopy -O binary $@ mupen64gc-glN64.dol
 	
 clean:
-	find . -name '*.o' -print0 | xargs -0r rm -f
-#	rm mupen64 mupen64_nogui mupen64_dbg 
-#	rm plugins/mupen64_input.so blight_input/arial.ttf.c blight_input/ttftoh plugins/blight_input.so plugins/mupen64_hle_rsp_azimer.so plugins/dummyaudio.so plugins/mupen64_audio.so plugins/jttl_audio.so plugins/mupen64_GX_gfx.so plugins/mupen64_soft_gfx.so plugins/glN64.so
+	@echo Deleting previously compiled files..
+	@find . -name '*.o' -print0 | xargs -0r rm -f
 
-clean_o:
-	find . -name '*.o' -print0 | xargs -0r rm -f
-
-clean_jed:
-	find . -name '*~' -print0 | xargs -0r rm -f
-
-gprof:
-	gprof mupen64_nogui > stat.txt
