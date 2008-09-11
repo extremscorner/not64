@@ -1,6 +1,15 @@
 README : WiiN64 / mupen64gc
 Alpha - r3xx
 
+LICENSE:
+	This software is licensed under the GNU General Public License v3
+	  which is available at: http://www.gnu.org/licenses/gpl-3.0.txt
+	This requires any released modifications to be licensed similarly,
+	  and to have the source available.
+	
+	We request that any unofficial builds not be posted publicly without our
+	  consent, and that all releases include this README.
+
 NOTE: There are several different executables
 	Wii executables have the prefix wii64, GC: mupen64gc
 	*-glN64: port of glN64 graphics plugin: best compatibility/speed
@@ -78,4 +87,3 @@ CHANGE LOG:
    * Saving to SD card
    * Text UI
    * 4 MB RAM support (no expansion pack)
-
