@@ -47,7 +47,7 @@
 #include "hle.h"
 
 static short *data;
-static char stemp[1024];
+//static char stemp[1024];
 
 static struct
 {
@@ -69,8 +69,8 @@ static struct
    unsigned long mp3_addr;
 } d;
 
-static void NI(void)
-{}
+/*static void NI(void)
+{}*/
 
 static void NOP(void)
 {
@@ -115,11 +115,10 @@ static void adpcm_block(short *out,int src)
    // init tmp buffer with last block
    last2=last[14];
    last1=last[15];
-   
+   int d=0;
    j=1;
    for(i=0;i<16;i++)
      {
-	int d;
         if(!(i&1)) d=buf[j++]<<24;
         else d<<=4;
 	
@@ -153,12 +152,12 @@ static void ADPCM(void)
    else if (flags & 2) // loop
      {
 	for (i=0; i<16; i++)
-	  d.in[(inst2 & 0xFFF)/2 + i] = ((short*)rsp.RDRAM)[d.loop_addr/2 + i^S];
+	  d.in[(inst2 & 0xFFF)/2 + i] = ((short*)rsp.RDRAM)[(d.loop_addr/2) + (i^S)];
      }
    else
      {
 	for (i=0; i<16; i++)
-	  d.in[(inst2 & 0xFFF)/2 + i] = ((short*)rsp.RDRAM)[addr/2 + i^S];
+	  d.in[(inst2 & 0xFFF)/2 + i] = ((short*)rsp.RDRAM)[(addr/2) + (i^S)];
      }
    
    // main loop
@@ -171,7 +170,7 @@ static void ADPCM(void)
    
    // save adpcm state
    for (i=0; i<16; i++)
-     ((short*)rsp.RDRAM)[addr/2 + i^S] = d.in[(inst2 & 0xFFF)/2 + 16*(len0) + i];
+     ((short*)rsp.RDRAM)[(addr/2) + (i^S)] = d.in[(inst2 & 0xFFF)/2 + 16*(len0) + i];
 }
 
 static void CLEARBUFF(void)
@@ -367,7 +366,7 @@ static void LOADBUFF(void)
    unsigned long buf_len = (inst1 >> 12) & 0xFFF;
    unsigned int i;
    for (i=0; i<buf_len/2; i++)
-     d.in[buf_in/2 + i] = ((short*)rsp.RDRAM)[addr + i^S];
+     d.in[(buf_in/2) + i] = ((short*)rsp.RDRAM)[addr + (i^S)];
 }
 
 static void RESAMPLE(void)
@@ -474,7 +473,7 @@ static void SAVEBUFF(void)
    unsigned long buf_len = (inst1 >> 12) & 0xFFF;
    unsigned int i;
    for (i=0; i<buf_len/2; i++)
-     ((short*)rsp.RDRAM)[addr + i^S] = d.in[buf_out/2 +i];
+     ((short*)rsp.RDRAM)[addr + (i^S)] = d.in[(buf_out/2) +i];
 }
 
 static void mp3_func(short *m, short *mem)
@@ -581,7 +580,7 @@ static void MP3(void)
    int r1, r2, r3, r8, r9, r10, r11, r12, r13, r14, r19, r20, r21, r22;
    
    for (i=0; i<8; i++) mem[i] = data[i^S];
-   for (i=0; i<2192/2; i++) mem[8+i] = data[704/2 + i^S];
+   for (i=0; i<2192/2; i++) mem[8+i] = data[(704/2) + (i^S)];
    for (i=0; i<1088/2; i++) mem[2208/2+i] = *(unsigned short*)(rsp.RDRAM + d.mp3_addr + (i^S)*2);
    
    r14 = 2208;
@@ -1209,7 +1208,7 @@ static void LOADADPCM(void)
    unsigned long count = (inst1 & 0xFFF)>>1;
    unsigned int i;
    for (i=0; i<count; i++)
-     d.adpcm[i] = ((short*)rsp.RDRAM)[addr + i^S];
+     d.adpcm[i] = ((short*)rsp.RDRAM)[addr + (i^S)];
 }
 
 static void MIXER(void)
