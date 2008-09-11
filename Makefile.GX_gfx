@@ -94,11 +94,6 @@ OBJ_X86         =r4300/x86/gr4300.o \
 		r4300/x86/gcop1_l.o \
 		r4300/x86/regcache.o
 
-OBJ_VCR		=main/vcr.o \
-		main/vcr_compress.o \
-		main/vcr_resample.o \
-		main/gui_gtk/vcrcomp_dialog.o
-
 OBJ_GTK_GUI	=main/gui_gtk/main_gtk.o \
 		main/gui_gtk/translate.o \
 		main/gui_gtk/messagebox.o \
@@ -205,12 +200,6 @@ main/gui_gtk/config.o:		main/gui_gtk/config.c
 
 main/gui_gtk/dirbrowser.o:	main/gui_gtk/dirbrowser.c
 				$(CC) $(CFLAGS) -c -o $@ $< 
-
-main/gui_gtk/vcrcomp_dialog.o:	main/gui_gtk/vcrcomp_dialog.c
-				$(CC) $(CFLAGS) -c -o $@ $< 
-
-main/vcr_compress.o:		main/vcr_compress.cpp
-				$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 gui/background_tex.o:		gui/background_tex.s
 				$(CC) $(CFLAGS) -c -o $@ $<

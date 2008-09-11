@@ -46,7 +46,6 @@
 #include "../r4300/interupt.h"
 #include "../main/plugin.h"
 #include "../main/guifuncs.h"
-#include "../main/vcr.h"
 #include "Saves.h"
 
 #ifdef USE_GUI
