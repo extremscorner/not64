@@ -63,21 +63,22 @@ int fileBrowser_CARD_readFile(fileBrowser_file* file, void* buffer, unsigned int
   CARD_GetSectorSize (slot, &SectorSize);
     
 	if(CARD_Open(slot, (const char*)file->name, &CardFile) != CARD_ERROR_NOFILE){
-		int size = length+32;
-	  /* Round the size up to the SectorSize */
-		if((size % SectorSize) != 0)
-	    size = ((length/SectorSize)+1) * SectorSize;
-	  tbuffer = memalign(32,size);
+	  /* Allocate a temporary buffer */
+  	tbuffer = memalign(32,CardFile.len);
 	  /* Read the file */
-		if(CARD_Read(&CardFile,tbuffer, size, file->offset+0x40+sizeof(CARDIcon)) == 0){
+		if(CARD_Read(&CardFile,tbuffer, CardFile.len, 0) == 0){
 			file->offset += length;
-			memcpy(buffer,tbuffer,length);
+			memcpy(buffer,tbuffer+0x40+sizeof(CARDIcon),length);
 		}
 		else            /* card removed or read failed */
 		{
+  		if(tbuffer)
+		    free(tbuffer);
       CARD_Close(&CardFile);
       return -1;
 		}
+		if(tbuffer)
+		  free(tbuffer);
     return length;  /* success! */
   }
   return -1;        /* file doesn't exist or other error */
