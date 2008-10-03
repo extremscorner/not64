@@ -69,7 +69,7 @@ int fileBrowser_CARD_readFile(fileBrowser_file* file, void* buffer, unsigned int
 	    size = ((length/SectorSize)+1) * SectorSize;
 	  tbuffer = memalign(32,size);
 	  /* Read the file */
-		if(CARD_Read(&CardFile,tbuffer, size, file->offset+32) == 0){
+		if(CARD_Read(&CardFile,tbuffer, size, file->offset+0x40+sizeof(CARDIcon)) == 0){
 			file->offset += length;
 			memcpy(buffer,tbuffer,length);
 		}
@@ -128,7 +128,7 @@ int fileBrowser_CARD_writeFile(fileBrowser_file* file, void* buffer, unsigned in
   		
 	if(status == CARD_ERROR_READY) {
 		if(CARD_Write(&CardFile, tmpBuffer, newLength, 0) == CARD_ERROR_READY) {
-			file->offset += newLength;
+			file->offset += length;
 			CARD_Close(&CardFile);
 			if(tmpBuffer)
 			  free(tmpBuffer);
