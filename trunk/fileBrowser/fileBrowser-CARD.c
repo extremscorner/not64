@@ -7,6 +7,7 @@
 #include <malloc.h>
 #include <ogc/card.h>
 #include "fileBrowser.h"
+#include "imagedata/mupenIcon.h"  //32x32 icon
 
 unsigned char SysArea[CARD_WORKAREA] ATTRIBUTE_ALIGN (32);
 void card_removed_cb(s32 chn, s32 result){ CARD_Unmount(chn); }
@@ -28,22 +29,22 @@ fileBrowser_file topLevel_CARD_SlotB =
 	 };
 	 
 int mount_card(int slot) {
-	/*** Pass company identifier and number ***/
-    CARD_Init ("N64E", "OS");
+  /* Pass company identifier and number */
+  CARD_Init ("N64E", "OS");
 	
-    int Slot_error = CARD_Mount (slot, SysArea, card_removed_cb);
- 
+  int Slot_error = CARD_Mount (slot, SysArea, card_removed_cb);
     
-    if (Slot_error < 0) {
-    	int i = 0;
-    	for(i = 0; i<50; i++)
-    		Slot_error = CARD_Mount (slot, SysArea, card_removed_cb);
+  /* Lets try 50 times to mount it. Sometimes it takes a while */
+  if (Slot_error < 0) {
+   	int i = 0;
+   	for(i = 0; i<50; i++)
+   		Slot_error = CARD_Mount (slot, SysArea, card_removed_cb);
 	}
 	return Slot_error;
 }
 
 int fileBrowser_CARD_readDir(fileBrowser_file* file, fileBrowser_file** dir){
-	return 0;
+  return 0; /* Not required, use IPL to delete/copy files */
 }
 
 int fileBrowser_CARD_seekFile(fileBrowser_file* file, unsigned int where, unsigned int type){
@@ -59,54 +60,86 @@ int fileBrowser_CARD_readFile(fileBrowser_file* file, void* buffer, unsigned int
 	card_file CardFile;
 	int slot = file->discoffset;
 	unsigned int SectorSize = 0;
-    CARD_GetSectorSize (slot, &SectorSize);
+  CARD_GetSectorSize (slot, &SectorSize);
     
 	if(CARD_Open(slot, (const char*)file->name, &CardFile) != CARD_ERROR_NOFILE){
-		int size = length;
-	    if((size % SectorSize) != 0)
-	      	size = ((length/SectorSize)+1) * SectorSize;
-	    tbuffer = memalign(32,size);
-		if(CARD_Read(&CardFile,tbuffer, size, file->offset) == 0){
+		int size = length+32;
+	  /* Round the size up to the SectorSize */
+		if((size % SectorSize) != 0)
+	    size = ((length/SectorSize)+1) * SectorSize;
+	  tbuffer = memalign(32,size);
+	  /* Read the file */
+		if(CARD_Read(&CardFile,tbuffer, size, file->offset+32) == 0){
 			file->offset += length;
 			memcpy(buffer,tbuffer,length);
 		}
-		else 
+		else            /* card removed or read failed */
 		{
-			CARD_Close(&CardFile);
-			return -1;
+      CARD_Close(&CardFile);
+      return -1;
 		}
-		return length;
-   }
-	return -1;
+    return length;  /* success! */
+  }
+  return -1;        /* file doesn't exist or other error */
 }
 
 int fileBrowser_CARD_writeFile(fileBrowser_file* file, void* buffer, unsigned int length){
 	
 	card_file CardFile;
+	card_stat CardStat;
 	int slot = file->discoffset;
-	int status = 0;
+	char *tmpBuffer = NULL;
+	unsigned int status,SectorSize,newLength;
 	
-	//sectorsize stuff to keep memcard filesizes and writes happy
-	unsigned int SectorSize = 0;
-    CARD_GetSectorSize (slot, &SectorSize);
-	int memcardLength = length % SectorSize;
-	if(memcardLength)
-		memcardLength = (((length/SectorSize)*SectorSize) + SectorSize);
-	else
-		memcardLength = length;
+	newLength = length + sizeof(CARDIcon) + 0x40;
+	
+	CARD_GetSectorSize (slot, &SectorSize);
+
+	/* Round the size up to the SectorSize if needed, else leave it */
+	if(newLength % SectorSize)
+		newLength = (((newLength/SectorSize)*SectorSize) + SectorSize);
+
 	status = CARD_Open(slot, (const char*)file->name, &CardFile);
-	if(status == CARD_ERROR_NOFILE){
-		status = CARD_Create(slot, (const char*)file->name, memcardLength, &CardFile);
-	}
+	/* if the open failed, then try to create it */
+	if(status == CARD_ERROR_NOFILE)
+		status = CARD_Create(slot, (const char*)file->name, newLength, &CardFile);
 	
+	if(status == CARD_ERROR_READY) { 
+	  /* Clear out the status */
+	  memset(&CardStat, 0, sizeof(card_stat));
+	  /* update status from the new file */
+	  CARD_GetStatus(slot,CardFile.filenum,&CardStat);	
+	  
+	  time_t gc_time;
+	  gc_time = time (NULL);
+  	CardStat.icon_fmt = 2;
+	  CardStat.icon_speed = 1;
+	  CardStat.comment_addr = 0;
+	  CardStat.banner_fmt = 0;
+	  CardStat.icon_addr = 0x40;
+	  tmpBuffer = memalign(32,newLength);
+	  memset(tmpBuffer,0,sizeof(tmpBuffer));
+	  strcpy(tmpBuffer,ctime (&gc_time));
+	  strcpy(tmpBuffer+0x20,file->name);
+	  memcpy(tmpBuffer+0x40,CARDIcon,sizeof(CARDIcon));       // copy icon
+	  memcpy(tmpBuffer+0x40+sizeof(CARDIcon),buffer,length);  // copy file data
+	  status = CARD_SetStatus(slot,CardFile.filenum,&CardStat);
+  }
+  		
 	if(status == CARD_ERROR_READY) {
-		if(CARD_Write(&CardFile, buffer, length, 0) == CARD_ERROR_READY) {
-			file->offset += length;
+		if(CARD_Write(&CardFile, tmpBuffer, newLength, 0) == CARD_ERROR_READY) {
+			file->offset += newLength;
 			CARD_Close(&CardFile);
+			if(tmpBuffer)
+			  free(tmpBuffer);
 			return length;
 		}
+		if(tmpBuffer)
+		  free(tmpBuffer);
 	}
-	return -1;
+	if(tmpBuffer)
+		free(tmpBuffer);
+	return -1;  /* failed to find or create a new file */
 }
 
 int fileBrowser_CARD_init(fileBrowser_file* file) {
