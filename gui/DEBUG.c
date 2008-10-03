@@ -23,7 +23,7 @@ extern unsigned int diff_sec(long long start,long long end);
 static void check_heap_space(void){
 	int space = 16 * 1024 * 1024, *ptr=NULL;
 	while(space > 0)
-		if(ptr = malloc(space)) break;
+		if((ptr = malloc(space))) break;
 		else space -= 4096;
 	if(ptr) free(ptr);
 	sprintf(txtbuffer,"At least %dKB or %dMB space available", space/1024, space/1024/1024);
