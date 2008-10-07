@@ -47,7 +47,7 @@ void ipl_set_config(unsigned char c)
 	exi[0 * 5 + 4] = addr;
 	exi[0 * 5 + 3] = ((4 - 1) << 4) | (1 << 2) | 1;
 	while (exi[0 * 5 + 3] & 1);
-	
+	//write the ipl we want to send
 	exi[0 * 5 + 4] = val;
 	exi[0 * 5 + 3] = ((4 - 1) << 4) | (1 << 2) | 1;
 	while (exi[0 * 5 + 3] & 1);
@@ -155,7 +155,9 @@ void init_font(void)
 
 	// dont read system rom fonts because this breaks on qoob modchip
 	memset(fontFont,0,0x3000);
+	#ifndef WII
 	ipl_set_config(6);
+	#endif
 	__SYS_ReadROM(( unsigned char *)&fontFont,0x3000,0x1FCF00);
 	yay0_decode((unsigned char *)&fontFont, (unsigned char *)&fontWork);
 	FONT_HEADER *fnt;
