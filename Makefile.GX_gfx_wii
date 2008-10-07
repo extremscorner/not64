@@ -11,7 +11,6 @@ CFLAGS  = -g -O2 -Wall $(MACHDEP) $(INCLUDE) -fmodulo-sched \
 	  -DUSE_GUI -DSHOW_DEBUG -DPROFILE -DWII \
 	  -DTHREADED_AUDIO -DUSE_TLB_CACHE
 	  #-DPRINTGECKO
-	  #-DEMBEDDED_FONTS
 
 MACHDEP	= -DGEKKO -mcpu=750 -meabi -mhard-float 
 LDFLAGS	=	$(MACHDEP) -mrvl -Wl,-Map,$(notdir $@).map -Wl,--cref

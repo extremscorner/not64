@@ -35,6 +35,25 @@ typedef struct
 //unsigned char* GXfontTexture;
 static unsigned char fontFont[ 0x40000 ] __attribute__((aligned(32)));
 
+//lowlevel Qoob Modchip disable
+void ipl_set_config(unsigned char c)
+{
+	volatile unsigned long* exi = (volatile unsigned long*)0xCC006800;
+	unsigned long val,addr;
+	addr=0xc0000000;
+	val = c << 24;
+	exi[0] = ((((exi[0]) & 0x405) | 256) | 48);	//select IPL
+	//write addr of IPL
+	exi[0 * 5 + 4] = addr;
+	exi[0 * 5 + 3] = ((4 - 1) << 4) | (1 << 2) | 1;
+	while (exi[0 * 5 + 3] & 1);
+	
+	exi[0 * 5 + 4] = val;
+	exi[0 * 5 + 3] = ((4 - 1) << 4) | (1 << 2) | 1;
+	while (exi[0 * 5 + 3] & 1);
+	
+	exi[0] &= 0x405;	//deselect IPL
+}
 /****************************************************************************
  * YAY0 Decoding
  ****************************************************************************/
@@ -129,10 +148,6 @@ void TF_I2toI4(unsigned char *dst, unsigned char *src, int xres, int yres)
 CHAR_INFO fontChars;
 extern void __SYS_ReadROM(void *buf,u32 len,u32 offset);
 
-#ifdef EMBEDDED_FONTS
-	#include "ARIAL.H"
-#endif
-
 void init_font(void)
 {
 	static unsigned char fontWork[ 0x20000 ] __attribute__((aligned(32)));
@@ -140,11 +155,8 @@ void init_font(void)
 
 	// dont read system rom fonts because this breaks on qoob modchip
 	memset(fontFont,0,0x3000);
-#ifdef EMBEDDED_FONTS
-	memcpy(&fontFont, &arial[0], ARIAL_LEN);
-#else
+	ipl_set_config(6);
 	__SYS_ReadROM(( unsigned char *)&fontFont,0x3000,0x1FCF00);
-#endif
 	yay0_decode((unsigned char *)&fontFont, (unsigned char *)&fontWork);
 	FONT_HEADER *fnt;
 
