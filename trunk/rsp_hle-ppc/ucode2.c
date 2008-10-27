@@ -112,6 +112,11 @@ static void adpcm_block(short *out,int src)
    mul2>>=2;
    downshift-=2;
    
+   // decrease volume to 50%
+   mul2*=2;
+   mul1*=2;
+   downshift+=1;
+   
    // init tmp buffer with last block
    last2=last[14];
    last1=last[15];
