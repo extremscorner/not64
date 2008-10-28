@@ -197,7 +197,7 @@ int loadROM(fileBrowser_file* rom){
 		closeDLL_input();
 		closeDLL_audio();
 		closeDLL_gfx();
-		TLBCache_deinit();
+		
 		ROMCache_deinit();
 		free_memory();
 		ARAM_manager_deinit();
