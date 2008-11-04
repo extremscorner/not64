@@ -152,24 +152,8 @@ void ROMCache_read(u32* ram_dest, u32 rom_offset, u32 length){
 		} else
 #endif
 		{
-  		// Start of the transfer must be 32-byte aligned
-    	// and the length must be a multiple of 32-bytes
-    	u32 adjusted_offset = rom_offset, buffer_length = length;
-    	u32 buffer_offset = 0;
-    	if(rom_offset % 32 != 0){
-    		adjusted_offset -= rom_offset % 32;
-    		buffer_length   += rom_offset % 32;
-    		buffer_offset    = rom_offset % 32;
-    	}
-    	if(buffer_length % 32 != 0)
-    		buffer_length += 32 - (buffer_length % 32);
-    	
-    	int* buffer = memalign(32, buffer_length);
-			ARQ_PostRequest(&ARQ_request, 0x2EAD, AR_ARAMTOMRAM, ARQ_PRIO_LO,
-			                ROM + adjusted_offset, buffer, buffer_length);
-			DCInvalidateRange(buffer, buffer_length);
-			memcpy(ram_dest, (char*)buffer+buffer_offset, length);
-			free(buffer);
+  		//just read
+  		ARAM_ReadFromBlock(ROM,rom_offset,length,(char*)ram_dest);
 		}
 	}
 	
