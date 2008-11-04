@@ -71,4 +71,6 @@ typedef struct _rom_settings
 } rom_settings;
 extern rom_settings ROM_SETTINGS;
 
+int init_byte_swap(unsigned int magicWord);
+
 #endif

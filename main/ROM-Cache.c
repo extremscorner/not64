@@ -4,18 +4,16 @@
 
 #include <ogc/arqueue.h>
 #include <gccore.h>
-#include "../gc_memory/ARAM.h"
-#include "ROM-Cache.h"
+#include <malloc.h>
+#include <string.h>
+#include <stdio.h>
 #include "../fileBrowser/fileBrowser.h"
-
-#ifdef USE_GUI
+#include "../gui/gui_GX-menu.h"
+#include "../gc_memory/ARAM.h"
 #include "../gui/GUI.h"
+#include "ROM-Cache.h"
+#include "rom.h"
 #define PRINT GUI_print
-#else
-#define PRINT printf
-#endif
-#include "../gui/DEBUG.h"
-
 
 #define BLOCK_MASK  (BLOCK_SIZE-1)
 #define OFFSET_MASK (0xFFFFFFFF-BLOCK_MASK)
@@ -27,7 +25,7 @@ static char ROM_too_big;
 static char* ROM, * ROM_blocks[NUM_BLOCKS];
 static u32 ROM_size;
 static fileBrowser_file* ROM_file;
-
+static char readBefore = 0;
 
 #ifdef USE_ROM_CACHE_L1
 static u8  L1[256*1024];
@@ -37,11 +35,12 @@ static u32 L1tag;
 static ARQRequest ARQ_request;
 void showLoadProgress(float progress);
 
-void ROMCache_init(u32 romSize){
+void ROMCache_init(fileBrowser_file* file){
+  readBefore = 0; //de-init byteswapping
 	ARQ_Reset();
 	ARQ_Init();
-	ROM_too_big = romSize > (ARAM_block_available_contiguous() * BLOCK_SIZE);
-	ROM_size = romSize;
+	ROM_too_big = (file->size) > (ARAM_block_available_contiguous() * BLOCK_SIZE);
+	ROM_size = (file->size);
 #ifdef USE_ROM_CACHE_L1
 	L1tag = -1;
 #endif
@@ -57,7 +56,7 @@ void ROMCache_deinit(){
 				ARAM_block_free(&ROM_blocks[i]);
 	} else
 		if(ROM) ARAM_block_free_contiguous(&ROM, ROM_size / BLOCK_SIZE);
-	//romFile_deinit( romFile_topLevel );
+	//we don't de-init the romFile here because it takes too much time to fopen/fseek/fread/fclose
 }
 
 static void inline ROMCache_load_block(char* block, int rom_offset){
@@ -169,21 +168,8 @@ void ROMCache_read(u32* ram_dest, u32 rom_offset, u32 length){
 	free(buffer);
 }
 
-void ROMCache_load(fileBrowser_file* file, int byteSwap){
+int ROMCache_load(fileBrowser_file* file){
 	char txt[64];
-	
-	if(byteSwap == BYTE_SWAP_BAD) return;
-	ROM_byte_swap = byteSwap;
-	if(byteSwap == BYTE_SWAP_BYTE) PRINT("Byte swapped\n");
-	else if(byteSwap == BYTE_SWAP_HALF) PRINT("Halfword swapped\n");
-	
-	/*
-	sprintf(txt, "Loading ROM into ARAM %s\n", ROM_too_big ? "(ROM_too_big)" : "");
-	PRINT(txt);
-	if(ROM_too_big) sprintf(txt, "%d blocks available\n", ARAM_block_available());
-	else            sprintf(txt, "%d contiguous blocks available\n", ARAM_block_available_contiguous());
-	PRINT(txt);
-	*/
 	
 	GUI_clear();
 	GUI_centerText(true);
@@ -197,15 +183,20 @@ void ROMCache_load(fileBrowser_file* file, int byteSwap){
 	int* buffer = memalign(32, bytes_to_read);
 	if(ROM_too_big){ // We can't load the entire ROM
 		int i, block, available = ARAM_block_available();
-		for(i=0; i<available; ++i){
+		for(i=0; i<available; ++i)
+		{
 			block = ARAM_block_alloc(&ROM_blocks[i], 'R');
-			//sprintf(txt, "ROM_blocks[%d] = 0x%08x\n", i, block);
-			//PRINT(txt);
 			int bytes_read, offset=0;
 			int loads_til_update = 0;
 			do {
 				bytes_read = romFile_readFile(ROM_file, buffer, bytes_to_read);
-				byte_swap(buffer, bytes_read);
+				//initialize byteswapping
+			  if(!readBefore)
+			  {
+  			  init_byte_swap(*(unsigned int*)buffer);
+  			  readBefore = 1;
+			  }
+				byte_swap((char*)buffer, bytes_read);
 				DCFlushRange(buffer, bytes_read);
 				ARQ_PostRequest(&ARQ_request, 0x10AD, AR_MRAMTOARAM, ARQ_PRIO_HI,
 				                block + offset, buffer, bytes_read);
@@ -222,13 +213,17 @@ void ROMCache_load(fileBrowser_file* file, int byteSwap){
 		}
 	} else {
 		ARAM_block_alloc_contiguous(&ROM, 'R', ROM_size / BLOCK_SIZE);
-		//sprintf(txt, "ROM = 0x%08x using %d blocks\n", ROM, ROM_size/BLOCK_SIZE);
-		//PRINT(txt);
 		int bytes_read, offset=0;
 		int loads_til_update = 0;
 		do {
 			bytes_read = romFile_readFile(ROM_file, buffer, bytes_to_read);
-			byte_swap(buffer, bytes_read);
+			//initialize byteswapping
+			if(!readBefore)
+			{
+  			init_byte_swap(*(unsigned int*)buffer);
+  			readBefore = 1;
+			}
+			byte_swap((char*)buffer, bytes_read);
 			DCFlushRange(buffer, bytes_read);
 			ARQ_PostRequest(&ARQ_request, 0x10AD, AR_MRAMTOARAM, ARQ_PRIO_HI,
 			                ROM + offset, buffer, bytes_read);
@@ -244,6 +239,7 @@ void ROMCache_load(fileBrowser_file* file, int byteSwap){
 		GUI_setLoadProg( -1.0f );
 	}
 	free(buffer);
+	return 0; //should fix to return if reads were successful
 }
 
 
