@@ -28,37 +28,21 @@
  *
 **/
 
-/* This is the functions that load a rom into memory, it loads a roms
- * in multiple formats, gzipped or not. It searches the rom, in the roms
- * subdirectory or in the path specified in the path.cfg file.
- */
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-
 #include "rom.h"
-#include "gc_dvd.h"
 #include "ROM-Cache.h" 
 #include "../gc_memory/memory.h"
-#include "md5.h"
-
 #include "../fileBrowser/fileBrowser.h"
-
-#ifdef USE_GUI
 #include "../gui/GUI.h"
-#define PRINT GUI_print
-#define CLEAR()
-#else
-#define PRINT printf
-#define CLEAR() GUI_clear()
-#endif
 
-static fileBrowser_file* rom_file;
- 
-int rom_length;
+#define PRINT GUI_print
+
 unsigned char* rom;
+static fileBrowser_file* rom_file;
+int rom_length;
 int ROM_byte_swap;
 rom_header* ROM_HEADER = NULL;
 rom_settings ROM_SETTINGS;
@@ -113,29 +97,19 @@ void byte_swap(char* buffer, unsigned int length){
 	}
 }
 
+/* Loads the ROM into the ROM cache */
 int rom_read(fileBrowser_file* file){
 
    char buffer[1024];
    rom_file = file;
    rom_length = file->size;
    
-   CLEAR();
    sprintf(buffer, "Loading ROM: %s, please be patient...\n", file->name);
    PRINT(buffer);
    
-   // FIXME: This should be the same once zip support is added to GC
-#ifdef WII   
    ROMCache_init(rom_file);
    int ret = ROMCache_load(rom_file);
-#else
-   int ret = 0,magicByte=0;
-   ROMCache_init(rom_length);
-   romFile_readFile(rom_file, &magicByte, 4);
-   romFile_seekFile(rom_file, 0, FILE_BROWSER_SEEK_SET);
-   ROMCache_load(rom_file,init_byte_swap(magicByte));
-#endif
 
-   CLEAR();
    if(!ROM_HEADER) ROM_HEADER = malloc(sizeof(rom_header));
    ROMCache_read((u32*)ROM_HEADER, 0, sizeof(rom_header));
 

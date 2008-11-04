@@ -11,21 +11,17 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <malloc.h>
-#include "ROM-Cache.h"
-#include "../gc_memory/MEM2.h"
 #include "../fileBrowser/fileBrowser.h"
+#include "../gui/gui_GX-menu.h"
+#include "../gc_memory/MEM2.h"
+#include "../gui/DEBUG.h"
+#include "../gui/GUI.h"
+#include "ROM-Cache.h"
 #include "gczip.h"
 #include "zlib.h"
 
-
-#ifdef USE_GUI
-#include "../gui/GUI.h"
-#include "../gui/gui_GX-menu.h"
 #define PRINT GUI_print
-#else
-#define PRINT printf
-#endif
-#include "../gui/DEBUG.h"
+
 
 #define BLOCK_SIZE (1024*1024)
 #define LOAD_SIZE  (4*1024)
@@ -36,6 +32,7 @@ static int   ROMHeaderSize;
 static char* ROMBlocks[64];
 static int   ROMBlocksLRU[64];
 static fileBrowser_file* ROMFile;
+static char readBefore = 0;
 
 void* memcpy(void* dst, void* src, int len);
 void showLoadProgress(float);
@@ -48,6 +45,7 @@ static u32 L1tag;
 PKZIPHEADER pkzip;
 
 void ROMCache_init(fileBrowser_file* f){
+  readBefore = 0; //de-init byteswapping
 	romFile_readFile(f, &pkzip, sizeof(PKZIPHEADER));
 	if(pkzip.zipid != PKZIPID){		//PKZIP magic
 		ROMSize = f->size;
@@ -67,11 +65,10 @@ void ROMCache_init(fileBrowser_file* f){
 #ifdef USE_ROM_CACHE_L1
 	L1tag = -1;
 #endif	
-	//romFile_init( romFile_topLevel );
 }
 
 void ROMCache_deinit(){
-	//romFile_deinit( romFile_topLevel );
+	//we don't de-init the romFile here because it takes too much time to fopen/fseek/fread/fclose
 }
 
 void ROMCache_load_block(char* dst, u32 rom_offset){
@@ -182,6 +179,16 @@ int ROMCache_load(fileBrowser_file* f){
 			}
 
 			ret = inflate_chunk(ROMCACHE_LO + offset, buf, bytes_read);
+			
+			//initialize byteswapping
+			if(!readBefore)
+			{
+  			init_byte_swap(*(unsigned int*)ROMCACHE_LO);
+  			readBefore = 1;
+			}
+			//byteswap
+			byte_swap(ROMCACHE_LO + offset, bytes_read);
+			
 			if(ret > 0)
 				offset += ret;
 
@@ -201,12 +208,20 @@ int ROMCache_load(fileBrowser_file* f){
 	{
 		while(offset < sizeToLoad){
 			bytes_read = romFile_readFile(f, ROMCACHE_LO + offset, LOAD_SIZE);
-
+			
 			if(bytes_read < 0){		// Read fail!
 				GUI_setLoadProg( -1.0f );
 				return -1;
 			}
-
+			//initialize byteswapping if it isn't already
+			if(!readBefore)
+			{
+  			init_byte_swap(*(unsigned int*)ROMCACHE_LO);
+  			readBefore = 1;
+			}
+			//byteswap
+			byte_swap(ROMCACHE_LO + offset, bytes_read);
+			
 			offset += bytes_read;
 		
 			if(!loads_til_update--){
@@ -216,8 +231,6 @@ int ROMCache_load(fileBrowser_file* f){
 			}
 		}
 	}	
-	init_byte_swap(*((uint32_t*)ROMCACHE_LO));
-	byte_swap(ROMCACHE_LO + offset, sizeToLoad);
 	
 	if(ROMTooBig){ // Set block pointers if we need to
 		int i;

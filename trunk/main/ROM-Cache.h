@@ -10,17 +10,12 @@
 
 /* Rom Cache stuff */
 // Note: All length/size/offsets are in bytes
-#ifdef WII
+
 void ROMCache_init(fileBrowser_file*);
 void ROMCache_deinit();
 void ROMCache_read(u32* ram_dest, u32 rom_offset, u32 length);
 int ROMCache_load(fileBrowser_file* file);
-#else
-void ROMCache_init(u32 romSize);
-void ROMCache_deinit();
-void ROMCache_read(u32* ram_dest, u32 rom_offset, u32 length);
-void ROMCache_load(fileBrowser_file* file, int byteSwap);
-#endif
+
 /* Byteswapping stuff */
 extern int ROM_byte_swap;
 void byte_swap(char* buffer, unsigned int length);
