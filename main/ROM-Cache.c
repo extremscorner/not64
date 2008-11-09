@@ -10,6 +10,8 @@
 #include "../fileBrowser/fileBrowser.h"
 #include "../gui/gui_GX-menu.h"
 #include "../gc_memory/ARAM.h"
+#include "../r4300/r4300.h"
+#include "../gui/DEBUG.h"
 #include "../gui/GUI.h"
 #include "ROM-Cache.h"
 #include "rom.h"
@@ -28,8 +30,14 @@ static fileBrowser_file* ROM_file;
 static char readBefore = 0;
 
 #ifdef USE_ROM_CACHE_L1
-static u8  L1[256*1024];
-static u32 L1tag;
+#define L1_BLOCK_SIZE  (4*1024)
+#define L1_BLOCK_MASK  (0xFFF)
+#define L1_BLOCK_SHIFT (12)
+#define L1_NUM_BLOCKS  (8)
+static u8  L1[L1_NUM_BLOCKS][L1_BLOCK_SIZE];
+static int L1tag[L1_NUM_BLOCKS];
+static u32 L1LRU[L1_NUM_BLOCKS];
+static u32 nextL1LRUValue;
 #endif
 
 static ARQRequest ARQ_request;
@@ -42,7 +50,9 @@ void ROMCache_init(fileBrowser_file* file){
 	ROM_too_big = (file->size) > (ARAM_block_available_contiguous() * BLOCK_SIZE);
 	ROM_size = (file->size);
 #ifdef USE_ROM_CACHE_L1
-	L1tag = -1;
+	nextL1LRUValue = 0;
+	int i;
+	for(i=0; i<L1_NUM_BLOCKS; ++i) L1tag[i] = -1;
 #endif
 	
 	//romFile_init( romFile_topLevel );
@@ -110,6 +120,8 @@ void ARAM_ReadFromBlock(char *block,int startOffset, int bytes, char *dest)
 
 void ROMCache_read(u32* ram_dest, u32 rom_offset, u32 length){
 	
+  start_section(ROM_SECTION);
+  
 	if(ROM_too_big){ // The whole ROM isn't in ARAM, we might have to move blocks in/out
 		u32 length2 = length;
 		u32 offset2 = rom_offset&BLOCK_MASK;
@@ -137,18 +149,26 @@ void ROMCache_read(u32* ram_dest, u32 rom_offset, u32 length){
 	  
 	} else { // The entire ROM is in ARAM contiguously
 #ifdef USE_ROM_CACHE_L1
-		if(rom_offset >> 18 == (rom_offset+length-1) >> 18){
+		if(rom_offset >> L1_BLOCK_SHIFT == (rom_offset+length-1) >> L1_BLOCK_SHIFT){
 			// Only worry about using L1 cache if the read falls
 			//   within only one block for the L1 for now
-			if(rom_offset >> 18 != L1tag){
-				DEBUG_stats(6, "ROMCache L1 misses", STAT_TYPE_ACCUM, 1);
-				ARQ_PostRequest(&ARQ_request, 0x2EAD, AR_ARAMTOMRAM, ARQ_PRIO_LO,
-				                ROM + (rom_offset&(~0x3FFFF)), L1, 256*1024);
-				DCInvalidateRange(L1, 256*1024);
-				L1tag = offset >> 18;
+			int i, min_i = 0;
+			for(i=0; i<L1_NUM_BLOCKS; ++i){
+				if(rom_offset >> L1_BLOCK_SHIFT == L1tag[i]){
+					DEBUG_stats(7, "ROMCache L1 transfers", STAT_TYPE_ACCUM, 1);
+					memcpy(ram_dest, L1[i] + (rom_offset&L1_BLOCK_MASK), length);
+					return;
+				} else if(L1tag[i] < 0 || L1LRU[i] < L1LRU[min_i])
+					min_i = i;
 			}
+			
+			DEBUG_stats(6, "ROMCache L1 misses", STAT_TYPE_ACCUM, 1);
+			L1tag[min_i] = rom_offset >> L1_BLOCK_SHIFT;
+			ARAM_ReadFromBlock(ROM,(rom_offset&(~L1_BLOCK_MASK)),L1_BLOCK_SIZE,(char*)L1[min_i]);
+			L1LRU[min_i] = nextL1LRUValue++;
+			
 			DEBUG_stats(7, "ROMCache L1 transfers", STAT_TYPE_ACCUM, 1);
-			memcpy(ram_dest, L1 + (offset&0x3FFFF), length);
+			memcpy(ram_dest, L1[min_i] + (rom_offset&L1_BLOCK_MASK), length);
 		} else
 #endif
 		{
@@ -156,6 +176,7 @@ void ROMCache_read(u32* ram_dest, u32 rom_offset, u32 length){
   		ARAM_ReadFromBlock(ROM,rom_offset,length,(char*)ram_dest);
 		}
 	}
+	end_section(ROM_SECTION);
 	
 }
 
