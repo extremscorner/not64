@@ -130,7 +130,7 @@ void ROMCache_read(u32* ram_dest, u32 rom_offset, u32 length){
 					
 			// Actually read for this block
 			ARAM_ReadFromBlock(block,offset2,length,dest);
-			
+			ARAM_block_update_LRU(&block);
 			// In case the read spans multiple blocks, increment state
 			length2 -= length; offset2 = 0; dest += length; rom_offset += length;
 		}
