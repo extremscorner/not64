@@ -94,7 +94,7 @@ void jump_to(unsigned int);
 #define GFX_SECTION 1
 #define AUDIO_SECTION 2
 #define COMPILER_SECTION 3
-#define IDLE_SECTION 4
+#define ROM_SECTION 4
 #define TLB_SECTION 5
 #define FP_SECTION 6
 #define NUM_SECTIONS 6
