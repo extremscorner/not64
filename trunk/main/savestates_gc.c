@@ -66,14 +66,8 @@ char* savestates_save()
 		return "A ROM must be loaded first";
 		     
 	filename = malloc(strlen(statespath)+strlen(ROM_SETTINGS.goodname)+4+1);
-    strcpy(filename, statespath);
-	for(i = strlen(ROM_SETTINGS.goodname); i>0; i--)	//cut off trailing spaces from the end
-	{
-		if(ROM_SETTINGS.goodname[i-1] != ' ') {
-			strncat(filename, ROM_SETTINGS.goodname,i);
-			break;
-		}
-	}
+  strcpy(filename, statespath);
+  strcat(filename, ROM_SETTINGS.goodname);
 	strcat(filename, ".st");
 	sprintf(buf, "%d", slot);
 	strcat(filename, buf);
@@ -165,13 +159,7 @@ char* savestates_load()
 		
 	filename = malloc(strlen(statespath)+strlen(ROM_SETTINGS.goodname)+4+1);
 	strcpy(filename, statespath);
-	for(i = strlen(ROM_SETTINGS.goodname); i>0; i--)	//cut off trailing spaces
-	{
-		if(ROM_SETTINGS.goodname[i-1] != ' ') {
-			strncat(filename, ROM_SETTINGS.goodname,i);
-			break;
-		}
-	}
+  strcat(filename, ROM_SETTINGS.goodname);
 	strcat(filename, ".st");
 	sprintf(buf, "%d", slot);
 	strcat(filename, buf);
