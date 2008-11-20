@@ -81,6 +81,7 @@ static char* recurseOrSelect(int i){
 		{
 			strcpy(feedback_string,"A read error occured");
 		}
+		return &feedback_string[0];
 	}
 }
 
