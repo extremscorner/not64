@@ -65,14 +65,7 @@ int loadSram(fileBrowser_file* savepath){
 	int i, result = 0;
 	fileBrowser_file saveFile;
 	memcpy(&saveFile, savepath, sizeof(fileBrowser_file));
-	//strcat(&saveFile.name, ROM_SETTINGS.goodname);
-	for(i = strlen(ROM_SETTINGS.goodname); i>0; i--)
-	{
-		if(ROM_SETTINGS.goodname[i-1] !=  ' ') {
-			strncat((char*)saveFile.name,ROM_SETTINGS.goodname,i);
-			break;
-		}
-	}
+	strcat((char*)saveFile.name, ROM_SETTINGS.goodname);
 	strcat((char*)saveFile.name, ".sra");
 	
 	if( !(saveFile_readFile(&saveFile, &i, 4) <= 0) ){
@@ -94,17 +87,9 @@ int loadSram(fileBrowser_file* savepath){
 int saveSram(fileBrowser_file* savepath){
 	if(!sramWritten) return 0;
 	PRINT("Saving SRAM, do not turn off the console...\n");
-	int i;
 	fileBrowser_file saveFile;
 	memcpy(&saveFile, savepath, sizeof(fileBrowser_file));
-	//strcat(&saveFile.name, ROM_SETTINGS.goodname);
-	for(i = strlen(ROM_SETTINGS.goodname); i>0; i--)
-	{
-		if(ROM_SETTINGS.goodname[i-1] != ' ') {
-			strncat((char*)saveFile.name, ROM_SETTINGS.goodname,i);
-			break;
-		}
-	}
+	strcat((char*)saveFile.name, ROM_SETTINGS.goodname);
 	strcat((char*)saveFile.name, ".sra");
 	
 	saveFile_writeFile(&saveFile, sram, 0x8000);

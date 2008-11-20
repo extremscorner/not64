@@ -67,14 +67,7 @@ int loadEeprom(fileBrowser_file* savepath){
 	int i, result = 0;
 	fileBrowser_file saveFile;
 	memcpy(&saveFile, savepath, sizeof(fileBrowser_file));
-	//strcat(&saveFile.name, ROM_SETTINGS.goodname);
-	for(i = strlen(ROM_SETTINGS.goodname); i>0; i--)
-	{
-		if(ROM_SETTINGS.goodname[i-1] != ' ') {
-			strncat((char*)saveFile.name, ROM_SETTINGS.goodname,i);
-			break;
-		}
-	}
+	strcat((char*)saveFile.name, ROM_SETTINGS.goodname);
 	strcat((char*)saveFile.name, ".eep");
 
 	if( !(saveFile_readFile(&saveFile, &i, 4) <= 0) ){
@@ -100,15 +93,7 @@ int saveEeprom(fileBrowser_file* savepath){
 	
 	fileBrowser_file saveFile;
 	memcpy(&saveFile, savepath, sizeof(fileBrowser_file));
-	//strcat(&saveFile.name, ROM_SETTINGS.goodname);
-	int i;
-	for(i = strlen(ROM_SETTINGS.goodname); i>0; i--)
-	{
-		if(ROM_SETTINGS.goodname[i-1] != ' ') {
-			strncat((char*)saveFile.name, ROM_SETTINGS.goodname,i);
-			break;
-		}
-	}
+	strcat((char*)saveFile.name, ROM_SETTINGS.goodname);
 	strcat((char*)saveFile.name, ".eep");
 	
 	saveFile_writeFile(&saveFile, eeprom, 0x800);
@@ -224,17 +209,11 @@ unsigned char mempack_crc(unsigned char *data)
 }
 
 int loadMempak(fileBrowser_file* savepath){
-	fileBrowser_file saveFile;
-	memcpy(&saveFile, savepath, sizeof(fileBrowser_file));
-//	strcat(&saveFile.name, ROM_SETTINGS.goodname);
 	int i, result = 0;
-	for(i = strlen(ROM_SETTINGS.goodname); i>0; i--)
-	{
-		if(ROM_SETTINGS.goodname[i-1] != ' ') {
-			strncat((char*)saveFile.name, ROM_SETTINGS.goodname,i);
-			break;
-		}
-	}
+  fileBrowser_file saveFile;
+		
+	memcpy(&saveFile, savepath, sizeof(fileBrowser_file));
+	strcat((char*)saveFile.name, ROM_SETTINGS.goodname);
 	strcat((char*)saveFile.name, ".mpk");
 	
 	if( !(saveFile_readFile(&saveFile, &i, 4) <= 0) ){
@@ -258,15 +237,7 @@ int saveMempak(fileBrowser_file* savepath){
 
 	fileBrowser_file saveFile;
 	memcpy(&saveFile, savepath, sizeof(fileBrowser_file));
-//	strcat(&saveFile.name, ROM_SETTINGS.goodname);
-	int i;
-	for(i = strlen(ROM_SETTINGS.goodname); i>0; i--)
-	{
-		if(ROM_SETTINGS.goodname[i-1] != ' ') {
-			strncat((char*)saveFile.name, ROM_SETTINGS.goodname,i);
-			break;
-		}
-	}
+	strcat((char*)saveFile.name, ROM_SETTINGS.goodname);
 	strcat((char*)saveFile.name, ".mpk");
 	
 	saveFile_writeFile(&saveFile, mempack, 0x8000 * 4);

@@ -101,11 +101,12 @@ void byte_swap(char* buffer, unsigned int length){
 int rom_read(fileBrowser_file* file){
 
    char buffer[1024];
+   int i;
    rom_file = file;
    rom_length = file->size;
    
-   sprintf(buffer, "Loading ROM: %s, please be patient...\n", file->name);
-   PRINT(buffer);
+   /*sprintf(buffer, "Loading ROM: %s, please be patient...\n", file->name);
+   PRINT(buffer);*/
    
    ROMCache_init(rom_file);
    int ret = ROMCache_load(rom_file);
@@ -113,16 +114,27 @@ int rom_read(fileBrowser_file* file){
    if(!ROM_HEADER) ROM_HEADER = malloc(sizeof(rom_header));
    ROMCache_read((u32*)ROM_HEADER, 0, sizeof(rom_header));
 
-   sprintf(buffer, "ROM (%s) loaded succesfully\n", ROM_HEADER->nom);
-   PRINT(buffer);
+   /*sprintf(buffer, "ROM (%s) loaded succesfully\n", ROM_HEADER->nom);
+   PRINT(buffer);*/
 
    // Swap country code since I know it's used
    char temp = ((char*)&ROM_HEADER->Country_code)[0];
    ((char*)&ROM_HEADER->Country_code)[0] = ((char*)&ROM_HEADER->Country_code)[1];
    ((char*)&ROM_HEADER->Country_code)[1] = temp;
+  
+  //Copy header name as Goodname (in the .ini we can use CRC to identify ROMS)
+  memset((char*)buffer,0,1024);
+  strcpy(buffer, (char*)ROM_HEADER->nom);
+  //Maximum ROM name is 32 bytes. Lets make sure we cut off trailing spaces
+  for(i = strlen(buffer); i>0; i--)
+  {
+    if(buffer[i-1] !=  ' ') {
+  		strncpy(&ROM_SETTINGS.goodname[0],&buffer[0],i);
+  		ROM_SETTINGS.goodname[i] = 0; //terminate it too
+  		break;
+    }
+  }
 
-   // FIXME: ROM_SETTINGS.goodname needs to be filled out
-   strcpy(ROM_SETTINGS.goodname, (char*)ROM_HEADER->nom);
    return ret;
 }
 
