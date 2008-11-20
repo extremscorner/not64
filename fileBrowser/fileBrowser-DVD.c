@@ -13,13 +13,6 @@ extern unsigned int isWii;
 extern int previously_initd;
 int dvdInitialized;
 
-extern struct
-{
-	char name[128];
-	int flags;
-	int sector, size;
-} file[MAXIMUM_ENTRIES_PER_DIR]; //150 files per dir, MAXIMUM.
-
 /* Worked out manually from my original Disc */
 #define OOT_OFFSET 0x54FBEEF4ULL
 #define MQ_OFFSET  0x52CCC5FCULL
@@ -98,16 +91,19 @@ int fileBrowser_DVD_readDir(fileBrowser_file* ffile, fileBrowser_file** dir){
 	*dir = malloc( num_entries * sizeof(fileBrowser_file) );
 	int i;
 	for(i=0; i<num_entries; ++i){
-		strcpy( (*dir)[i].name, file[i].name );
-		(*dir)[i].discoffset = (uint64_t)(((uint64_t)file[i].sector)*2048);
+		strcpy( (*dir)[i].name, DVDToc->file[i].name );
+		(*dir)[i].discoffset = (uint64_t)(((uint64_t)DVDToc->file[i].sector)*2048);
 		(*dir)[i].offset = 0;
-		(*dir)[i].size   = file[i].size;
+		(*dir)[i].size   = DVDToc->file[i].size;
 		(*dir)[i].attr	 = 0;
-		if(file[i].flags == 2)//on DVD, 2 is a dir
+		if(DVDToc->file[i].flags == 2)//on DVD, 2 is a dir
 			(*dir)[i].attr   = FILE_BROWSER_ATTR_DIR; 
 		if((*dir)[i].name[strlen((*dir)[i].name)-1] == '/' )
 			(*dir)[i].name[strlen((*dir)[i].name)-1] = 0;	//get rid of trailing '/'
 	}
+	//kill the large TOC so we can have a lot more memory ingame (256k more)
+	free(DVDToc);
+  DVDToc = NULL;
 		
 	if(strlen((*dir)[0].name) == 0)
 		strcpy( (*dir)[0].name, ".." );
