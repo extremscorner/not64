@@ -19,8 +19,6 @@ struct
 	int sector, size;
 } file[MAXIMUM_ENTRIES_PER_DIR] __attribute__((aligned(32))); //1024 files per dir, MAXIMUM.
 
-unsigned char sector_buffer[2048] __attribute__((aligned(32)));
-
 #ifndef HW_RVL
 int dvd_read_id()
 {
@@ -111,7 +109,7 @@ int read_sector(void* buffer, uint32_t sector)
 }
 #else
 int read_sector(void* buffer, uint32_t sector){
-	static uint8_t read_buf[0x800] __attribute__((aligned(32)));
+	uint8_t *read_buf = (uint8_t*)memalign(32,0x800);
 	int ret;
 	int retrycount = 0x20;
 
@@ -120,6 +118,7 @@ int read_sector(void* buffer, uint32_t sector){
 	ret = DI_ReadDVD(read_buf, 1, sector);
 
 	memcpy(buffer, read_buf, 0x800);
+	free(read_buf);
 	return ret;
 }
 #endif
@@ -128,7 +127,7 @@ int read_safe(void* dst, uint64_t offset, int len)
 {
 	int ol = len;
 	int ret = 0;	
-
+  unsigned char* sector_buffer = (unsigned char*)memalign(32,2048);
 	while (len)
 	{
 		uint32_t sector = offset / 2048;
@@ -144,6 +143,7 @@ int read_safe(void* dst, uint64_t offset, int len)
 		len -= rl;
 		dst += rl;
 	}
+	free(sector_buffer);
 	if(ret)
 		return -1;
 
@@ -242,88 +242,95 @@ int read_direntry(unsigned char* direntry)
 
 void read_directory(int sector, int len)
 {
-       read_sector(sector_buffer, sector);
-
-       
-       int ptr = 0;
-       files = 0;
-       memset(file,0,sizeof(file));
-       while (len > 0)
-       {
-               ptr += read_direntry(sector_buffer + ptr);
-               if (ptr >= 2048 || !sector_buffer[ptr])
-               {
-			len -= 2048;
-			sector++;
-			read_sector(sector_buffer, sector);
-			ptr = 0;
-               }
-       }
+  int ptr = 0;
+  unsigned char *sector_buffer = (unsigned char*)memalign(32,2048);
+  read_sector(sector_buffer, sector);
+  
+  files = 0;
+  memset(file,0,sizeof(file));
+  while (len > 0)
+  {
+    ptr += read_direntry(sector_buffer + ptr);
+    if (ptr >= 2048 || !sector_buffer[ptr])
+    {
+      len -= 2048;
+      sector++;
+      read_sector(sector_buffer, sector);
+      ptr = 0;
+    }
+  }
+  free(sector_buffer);
 }
 
 int dvd_read_directoryentries(uint64_t offset, int size) {
-       int sector = 16;
-       static unsigned char bufferDVD[2048] __attribute__((aligned(32)));
-       struct pvd_s* pvd = 0;
-       struct pvd_s* svd = 0;
-       while (sector < 32)
-       {
-               if (read_sector(bufferDVD, sector))
-                       return FATAL_ERROR;
-               if (!memcmp(((struct pvd_s *)bufferDVD)->id, "\2CD001\1", 8))
-               {
-                       svd = (void*)bufferDVD;
-                       break;
-               }
-               ++sector;
-       }
+  int sector = 16;
+  unsigned char *bufferDVD = (unsigned char*)memalign(32,2048);
+  struct pvd_s* pvd = 0;
+  struct pvd_s* svd = 0;
+  
+  while (sector < 32)
+  {
+    if (read_sector(bufferDVD, sector))
+    {
+      free(bufferDVD);
+      return FATAL_ERROR;
+    }
+    if (!memcmp(((struct pvd_s *)bufferDVD)->id, "\2CD001\1", 8))
+    {
+      svd = (void*)bufferDVD;
+      break;
+    }
+    ++sector;
+  }
+  
+  
+  if (!svd)
+  {
+    sector = 16;
+    while (sector < 32)
+    {
+      if (read_sector(bufferDVD, sector))
+      {
+        free(bufferDVD);
+        return FATAL_ERROR;
+      }
+      
+      if (!memcmp(((struct pvd_s *)bufferDVD)->id, "\1CD001\1", 8))
+      {
+        pvd = (void*)bufferDVD;
+        break;
+      }
+      ++sector;
+    }
+  }
+  
+  if ((!pvd) && (!svd))
+  {
+    free(bufferDVD);
+    return NO_ISO9660_DISC;
+  }
+  
+  files = 0;
+  if (svd)
+  {
+    is_unicode = 1;
+    read_direntry(svd->root_direntry);
+  }
+  else
+  {
+    is_unicode = 0;
+    read_direntry(pvd->root_direntry);
+  }
+  
+  if((size + offset) == 0)  // enter root
+    read_directory(file[0].sector, file[0].size);
+  else
+    read_directory((offset/2048), size);
 
-
-       if (!svd)
-       {
-               sector = 16;
-               while (sector < 32)
-               {
-                       if (read_sector(bufferDVD, sector))
-                               return FATAL_ERROR;
-
-                       if (!memcmp(((struct pvd_s *)bufferDVD)->id, "\1CD001\1", 8))
-                       {
-                               pvd = (void*)bufferDVD;
-                               break;
-                       }
-                       ++sector;
-               }
-       }
-
-       if ((!pvd) && (!svd))
-       {
-               return NO_ISO9660_DISC;
-       }
-
-       files = 0;
-       if (svd)
-       {
-               is_unicode = 1;
-               read_direntry(svd->root_direntry);
-       }
-       else
-       {
-               is_unicode = 0;
-               read_direntry(pvd->root_direntry);
-       }
-       if((size + offset) == 0) {
-               // enter root
-               read_directory(file[0].sector, file[0].size);
-       }
-       else
-               read_directory((offset/2048), size);
-               
-
-       
-       if(files>0)
-               return files;
-       return NO_FILES;
+  free(bufferDVD);
+  if(files>0)
+    return files;
+  return NO_FILES;
 }
 
 

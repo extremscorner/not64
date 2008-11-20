@@ -3,6 +3,7 @@
  */
 
 #include <string.h>
+#include <malloc.h>
 #include "menu.h"
 #include "../fileBrowser/fileBrowser.h"
 #include "../fileBrowser/fileBrowser-libfat.h"
