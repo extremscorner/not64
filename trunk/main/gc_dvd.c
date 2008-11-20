@@ -12,12 +12,7 @@
 
 int last_current_dir = -1;
 volatile unsigned long* dvd = (volatile unsigned long*)0xCC006000;
-struct
-{
-	char name[128];
-	int flags;
-	int sector, size;
-} file[MAXIMUM_ENTRIES_PER_DIR] __attribute__((aligned(32))); //1024 files per dir, MAXIMUM.
+file_entries *DVDToc = NULL; //Dynamically allocate this
 
 #ifndef HW_RVL
 int dvd_read_id()
@@ -179,15 +174,15 @@ int read_direntry(unsigned char* direntry)
 
        int nl = *direntry++;
 
-       char* name = file[files].name;
+       char* name = DVDToc->file[files].name;
 
-       file[files].sector = sector;
-       file[files].size = size;
-       file[files].flags = flags;
+       DVDToc->file[files].sector = sector;
+       DVDToc->file[files].size = size;
+       DVDToc->file[files].flags = flags;
 
        if ((nl == 1) && (direntry[0] == 1)) // ".."
        {
-               file[files].name[0] = 0;
+               DVDToc->file[files].name[0] = 0;
                if (last_current_dir != sector)
                        files++;
        }
@@ -247,7 +242,7 @@ void read_directory(int sector, int len)
   read_sector(sector_buffer, sector);
   
   files = 0;
-  memset(file,0,sizeof(file));
+  memset(DVDToc,0,sizeof(file_entries));
   while (len > 0)
   {
     ptr += read_direntry(sector_buffer + ptr);
@@ -268,11 +263,20 @@ int dvd_read_directoryentries(uint64_t offset, int size) {
   struct pvd_s* pvd = 0;
   struct pvd_s* svd = 0;
   
+  if(DVDToc)
+  {
+    free(DVDToc);
+    DVDToc = NULL;
+  }
+  DVDToc = memalign(32,sizeof(file_entries));
+  
   while (sector < 32)
   {
     if (read_sector(bufferDVD, sector))
     {
       free(bufferDVD);
+      free(DVDToc);
+      DVDToc = NULL;
       return FATAL_ERROR;
     }
     if (!memcmp(((struct pvd_s *)bufferDVD)->id, "\2CD001\1", 8))
@@ -292,6 +296,8 @@ int dvd_read_directoryentries(uint64_t offset, int size) {
       if (read_sector(bufferDVD, sector))
       {
         free(bufferDVD);
+        free(DVDToc);
+        DVDToc = NULL;
         return FATAL_ERROR;
       }
       
@@ -307,6 +313,8 @@ int dvd_read_directoryentries(uint64_t offset, int size) {
   if ((!pvd) && (!svd))
   {
     free(bufferDVD);
+    free(DVDToc);
+    DVDToc = NULL;
     return NO_ISO9660_DISC;
   }
   
@@ -323,7 +331,7 @@ int dvd_read_directoryentries(uint64_t offset, int size) {
   }
   
   if((size + offset) == 0)  // enter root
-    read_directory(file[0].sector, file[0].size);
+    read_directory(DVDToc->file[0].sector, DVDToc->file[0].size);
   else
     read_directory((offset/2048), size);
 

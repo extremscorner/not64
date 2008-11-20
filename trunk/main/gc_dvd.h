@@ -10,7 +10,21 @@
 #define NO_FILES -1
 #define NO_ISO9660_DISC -2
 #define FATAL_ERROR -3
-#define MAXIMUM_ENTRIES_PER_DIR 1024
+#define MAXIMUM_ENTRIES_PER_DIR 2048
+
+typedef struct
+{
+	char name[128];
+	int flags;
+	int sector, size;
+} file_entry; 
+
+typedef struct
+{
+	file_entry file[MAXIMUM_ENTRIES_PER_DIR];
+} file_entries; 
+
+extern file_entries *DVDToc;
 
 void dvd_motor_off();
 unsigned int dvd_get_error(void);
