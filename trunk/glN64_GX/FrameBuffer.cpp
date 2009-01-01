@@ -1,5 +1,6 @@
 #ifdef __GX__
 #include <gccore.h>
+#include <malloc.h>
 #endif // __GX__
 
 #ifndef __LINUX__
@@ -171,7 +172,11 @@ void FrameBuffer_SaveBuffer( u32 address, u16 size, u16 width, u16 height )
 			glBindTexture( GL_TEXTURE_2D, current->texture->glName );
 			glCopyTexSubImage2D( GL_TEXTURE_2D, 0, 0, 0, 0, OGL.height - current->texture->height + OGL.heightOffset, current->texture->width, current->texture->height );
 #else // !__GX__
-	//TODO: Implement this in GX??
+			//Note: texture realWidth and realHeight should be multiple of 2!
+			GX_SetTexCopySrc(0, 0,(u16) current->texture->realWidth,(u16) current->texture->realHeight);
+			GX_SetTexCopyDst((u16) current->texture->GXrealWidth,(u16) current->texture->GXrealHeight, GX_TF_RGBA8, GX_FALSE);
+			GX_CopyTex(current->texture->GXtexture, GX_FALSE);
+			GX_PixModeSync();
 #endif // __GX__
 
 			*(u32*)&RDRAM[current->startAddress] = current->startAddress;
@@ -209,16 +214,45 @@ void FrameBuffer_SaveBuffer( u32 address, u16 size, u16 width, u16 height )
 	current->texture->maskT = 0;
 	current->texture->mirrorS = 0;
 	current->texture->mirrorT = 0;
+#ifndef __GX__
 	current->texture->realWidth = pow2( (unsigned long)(current->width * OGL.scaleX) );
 	current->texture->realHeight = pow2( (unsigned long)(current->height * OGL.scaleY) );
 	current->texture->textureBytes = current->texture->realWidth * current->texture->realHeight * 4;
 	cache.cachedBytes += current->texture->textureBytes;
+#else //!__GX__
+	//realWidth & realHeight should be multiple of 2 for EFB->Texture Copy
+	if(current->texture->width % 2 || current->texture->width == 0)
+		current->texture->realWidth = current->texture->width + 2 - (current->texture->width % 2);
+	else
+		current->texture->realWidth = current->texture->width;
+	if(current->texture->height % 2 || current->texture->height == 0)
+		current->texture->realHeight = current->texture->height + 2 - (current->texture->height % 2);
+	else
+		current->texture->realHeight = current->texture->height;
+	//GXrealWidth and GXrealHeight should be multiple of 4 for GXtexture
+	if(current->texture->realWidth % 4)
+		current->texture->GXrealWidth = current->texture->realWidth + 4 - (current->texture->realWidth % 4);
+	else
+		current->texture->GXrealWidth = current->texture->realWidth;
+	if(current->texture->realHeight % 4)
+		current->texture->GXrealHeight = current->texture->realHeight + 4 - (current->texture->realHeight % 4);
+	else
+		current->texture->GXrealHeight = current->texture->realHeight;
+	current->texture->textureBytes = (current->texture->GXrealWidth * current->texture->GXrealHeight) * 4;
+	cache.cachedBytes += current->texture->textureBytes;
+	current->texture->GXtexture = (u16*) memalign(32,current->texture->textureBytes);
+	current->texture->GXtexfmt = GX_TF_RGBA8;
+#endif //__GX__
 
 #ifndef __GX__
 	glBindTexture( GL_TEXTURE_2D, current->texture->glName );
 	glCopyTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA8, 0, OGL.height - current->texture->height + OGL.heightOffset, current->texture->realWidth, current->texture->realHeight, 0 );
 #else // !__GX__
-	//TODO: Implement this in GX??
+	//Note: texture realWidth and realHeight should be multiple of 2!
+	GX_SetTexCopySrc(0, 0,(u16) current->texture->realWidth,(u16) current->texture->realHeight);
+	GX_SetTexCopyDst((u16) current->texture->GXrealWidth,(u16) current->texture->GXrealHeight, GX_TF_RGBA8, GX_FALSE);
+	GX_CopyTex(current->texture->GXtexture, GX_FALSE);
+	GX_PixModeSync();
 #endif // __GX__
 
 	*(u32*)&RDRAM[current->startAddress] = current->startAddress;
@@ -239,8 +273,6 @@ void FrameBuffer_RenderBuffer( u32 address )
 		{
 #ifndef __GX__
 			glPushAttrib( GL_ENABLE_BIT | GL_VIEWPORT_BIT );
-#else // !__GX__
-	//TODO: Implement this in GX??
 #endif // __GX__
 
 			Combiner_BeginTextureUpdate();
@@ -302,15 +334,64 @@ void FrameBuffer_RenderBuffer( u32 address )
 			glTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE_ARB );*/
 			glPopAttrib();
 #else // !__GX__
-	//TODO: Implement this in GX??
+
+			GX_SetBlendMode(GX_BM_NONE, GX_BL_ONE, GX_BL_ZERO, GX_LO_CLEAR); 
+			GX_SetAlphaCompare(GX_ALWAYS,0,GX_AOP_AND,GX_ALWAYS,0);
+			GX_SetZMode(GX_DISABLE,GX_ALWAYS,GX_FALSE);
+			GX_SetCullMode (GX_CULL_NONE);
+			GX_SetFog(GX_FOG_NONE,0.1,1.0,0.0,1.0,(GXColor) {0,0,0,255});
+
+			Mtx44 GXprojection;
+			guMtxIdentity(GXprojection);
+			guOrtho(GXprojection, 0, OGL.height, 0, OGL.width, 0.0f, 1.0f);
+			GX_LoadProjectionMtx(GXprojection, GX_ORTHOGRAPHIC); 
+			GX_LoadPosMtxImm(OGL.GXmodelViewIdent,GX_PNMTX0);
+			GX_SetViewport((f32) 0,(f32) 0,(f32) OGL.width,(f32) OGL.height, 0.0f, 1.0f);
+			GX_SetScissor((u32) 0,(u32) 0,(u32) OGL.width,(u32) OGL.height);	//Set to the same size as the viewport.
+
+			float u1, v1;
+
+			u1 = (float)current->texture->width / (float)current->texture->realWidth;
+			v1 = (float)current->texture->height / (float)current->texture->realHeight;
+
+//			glDrawBuffer( GL_FRONT );
+
+			//set vertex description here
+			GX_ClearVtxDesc();
+			GX_SetVtxDesc(GX_VA_PTNMTXIDX, GX_PNMTX0);
+			GX_SetVtxDesc(GX_VA_TEX0MTXIDX, GX_TEXMTX0);
+			GX_SetVtxDesc(GX_VA_POS, GX_DIRECT);
+			GX_SetVtxDesc(GX_VA_TEX0, GX_DIRECT);
+			//set vertex attribute formats here
+			GX_SetVtxAttrFmt(GX_VTXFMT0, GX_VA_POS, GX_POS_XY, GX_F32, 0);
+			GX_SetVtxAttrFmt(GX_VTXFMT0, GX_VA_TEX0, GX_TEX_ST, GX_F32, 0);
+			GX_Begin(GX_QUADS, GX_VTXFMT0, 4);
+				GX_Position2f32( 0.0f, 0.0f );
+				GX_TexCoord2f32( 0.0f, 0.0f );
+				GX_Position2f32( current->texture->width, 0.0f );
+				GX_TexCoord2f32( u1, 0.0f );
+				GX_Position2f32( current->texture->width, current->texture->height );
+				GX_TexCoord2f32( u1, v1 );
+				GX_Position2f32( 0.0f, current->texture->height );
+				GX_TexCoord2f32( 0.0f, v1 );
+			GX_End();
+
+//			glDrawBuffer( GL_BACK );
+
+			OGL.GXupdateMtx = true;
+
 #endif // __GX__
 
 			current->changed = FALSE;
 
 			FrameBuffer_MoveToTop( current );
-
+#ifndef __GX__
 			gSP.changed |= CHANGED_TEXTURE | CHANGED_VIEWPORT;
 			gDP.changed |= CHANGED_COMBINE;
+#else //!__GX__
+			gSP.changed |= CHANGED_TEXTURE | CHANGED_VIEWPORT | CHANGED_GEOMETRYMODE;
+			gDP.changed |= CHANGED_COMBINE | CHANGED_SCISSOR | CHANGED_RENDERMODE;
+#endif //__GX__
 			return;
 		}
 		current = current->lower;
@@ -329,8 +410,6 @@ void FrameBuffer_RestoreBuffer( u32 address, u16 size, u16 width )
 		{
 #ifndef __GX__
 			glPushAttrib( GL_ENABLE_BIT | GL_VIEWPORT_BIT );
-#else // !__GX__
-	//TODO: Implement this in GX??
 #endif // __GX__
 
 /*			if (OGL.ARB_multitexture)
@@ -389,14 +468,60 @@ void FrameBuffer_RestoreBuffer( u32 address, u16 size, u16 width )
 
 			glLoadIdentity();
 			glPopAttrib();
-#else // !__GX__
-	//TODO: Implement this in GX??
+#else //!__GX__
+
+			GX_SetBlendMode(GX_BM_NONE, GX_BL_ONE, GX_BL_ZERO, GX_LO_CLEAR); 
+			GX_SetAlphaCompare(GX_ALWAYS,0,GX_AOP_AND,GX_ALWAYS,0);
+			GX_SetZMode(GX_DISABLE,GX_ALWAYS,GX_FALSE);
+			GX_SetCullMode (GX_CULL_NONE);
+			GX_SetFog(GX_FOG_NONE,0.1,1.0,0.0,1.0,(GXColor) {0,0,0,255});
+
+			Mtx44 GXprojection;
+			guMtxIdentity(GXprojection);
+			guOrtho(GXprojection, 0, OGL.height, 0, OGL.width, 0.0f, 1.0f);
+			GX_LoadProjectionMtx(GXprojection, GX_ORTHOGRAPHIC); 
+			GX_LoadPosMtxImm(OGL.GXmodelViewIdent,GX_PNMTX0);
+			GX_SetViewport((f32) 0,(f32) 0,(f32) OGL.width,(f32) OGL.height, 0.0f, 1.0f);
+			GX_SetScissor((u32) 0,(u32) 0,(u32) OGL.width,(u32) OGL.height);	//Set to the same size as the viewport.
+
+			float u1, v1;
+
+			u1 = (float)current->texture->width / (float)current->texture->realWidth;
+			v1 = (float)current->texture->height / (float)current->texture->realHeight;
+
+			//set vertex description here
+			GX_ClearVtxDesc();
+			GX_SetVtxDesc(GX_VA_PTNMTXIDX, GX_PNMTX0);
+			GX_SetVtxDesc(GX_VA_TEX0MTXIDX, GX_TEXMTX0);
+			GX_SetVtxDesc(GX_VA_POS, GX_DIRECT);
+			GX_SetVtxDesc(GX_VA_TEX0, GX_DIRECT);
+			//set vertex attribute formats here
+			GX_SetVtxAttrFmt(GX_VTXFMT0, GX_VA_POS, GX_POS_XY, GX_F32, 0);
+			GX_SetVtxAttrFmt(GX_VTXFMT0, GX_VA_TEX0, GX_TEX_ST, GX_F32, 0);
+			GX_Begin(GX_QUADS, GX_VTXFMT0, 4);
+				GX_Position2f32( 0.0f, 0.0f );
+				GX_TexCoord2f32( 0.0f, 0.0f );
+				GX_Position2f32( current->texture->width, 0.0f );
+				GX_TexCoord2f32( u1, 0.0f );
+				GX_Position2f32( current->texture->width, current->texture->height );
+				GX_TexCoord2f32( u1, v1 );
+				GX_Position2f32( 0.0f, current->texture->height );
+				GX_TexCoord2f32( 0.0f, v1 );
+			GX_End();
+
+			OGL.GXupdateMtx = true;
+
 #endif // __GX__
 
 			FrameBuffer_MoveToTop( current );
 
+#ifndef __GX__
 			gSP.changed |= CHANGED_TEXTURE | CHANGED_VIEWPORT;
 			gDP.changed |= CHANGED_COMBINE;
+#else //!__GX__
+			gSP.changed |= CHANGED_TEXTURE | CHANGED_VIEWPORT | CHANGED_GEOMETRYMODE;
+			gDP.changed |= CHANGED_COMBINE | CHANGED_SCISSOR | CHANGED_RENDERMODE;
+#endif //__GX__
 			return;
 		}
 		current = current->lower;

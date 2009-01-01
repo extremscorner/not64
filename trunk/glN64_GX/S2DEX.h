@@ -9,7 +9,7 @@
 
 struct uObjScaleBg
 {
-#ifndef __GX__
+#ifndef _BIG_ENDIAN
   u16 imageW;     /* Texture width (8-byte alignment, u10.2) */
   u16 imageX;     /* x-coordinate of upper-left 
                   position of texture (u10.5) */ 
@@ -51,7 +51,7 @@ struct uObjScaleBg
   s32 imageYorig;  /* image drawing origin (s20.5)*/
   
   u8  padding[4];  /* Padding */
-#else // !__GX__ -> This should fix an endian issue.
+#else // !_BIG_ENDIAN -> This should fix an endian issue.
   u16 imageX;     /* x-coordinate of upper-left 
                   position of texture (u10.5) */ 
   u16 imageW;     /* Texture width (8-byte alignment, u10.2) */
@@ -93,12 +93,12 @@ struct uObjScaleBg
   s32 imageYorig;  /* image drawing origin (s20.5)*/
   
   u8  padding[4];  /* Padding */
-#endif // __GX__
+#endif // _BIG_ENDIAN
 };   /* 40 bytes */
 
 struct uObjBg
 {
-#ifndef __GX__
+#ifndef _BIG_ENDIAN
 	u16 imageW;     /* Texture width (8-byte alignment, u10.2) */
 	u16 imageX;     /* x-coordinate of upper-left position of texture (u10.5) */ 
 	u16 frameW;     /* Transfer destination frame width (u10.2) */
@@ -141,7 +141,7 @@ struct uObjBg
 	u16 tmemLoadSH; /* SH value */
 	u16 tmemSize;   /* imagePtr skip value for a single load  */
 	u16 tmemSizeW;  /* imagePtr skip value for one image line */
-#else // !__GX__ -> This should fix an endian issue.
+#else // !_BIG_ENDIAN -> This should fix an endian issue.
 	u16 imageX;     /* x-coordinate of upper-left position of texture (u10.5) */ 
 	u16 imageW;     /* Texture width (8-byte alignment, u10.2) */
     s16 frameX;     /* x-coordinate of upper-left position of 
@@ -184,12 +184,12 @@ struct uObjBg
 	u16 tmemLoadTH; /* TH value or Stride value */
 	u16 tmemSizeW;  /* imagePtr skip value for one image line */
 	u16 tmemSize;   /* imagePtr skip value for a single load  */
-#endif // __GX__
+#endif // _BIG_ENDIAN
 };      /* 40 bytes */
 
 struct uObjSprite
 {
-#ifndef __GX__
+#ifndef _BIG_ENDIAN
 	u16 scaleW;      /* Width-direction scaling (u5.10) */
 	s16 objX;        /* x-coordinate of upper-left corner of OBJ (s10.2) */
 	u16 paddingX;    /* Unused (always 0) */
@@ -217,7 +217,7 @@ struct uObjSprite
                       G_IM_FMT_CI (CI format)
                       G_IM_FMT_IA (IA format)
                       G_IM_FMT_I  (I format) */
-#else // !__GX__ -> This should fix an endian issue.
+#else // !_BIG_ENDIAN -> This should fix an endian issue.
 	s16 objX;        /* x-coordinate of upper-left corner of OBJ (s10.2) */
 	u16 scaleW;      /* Width-direction scaling (u5.10) */
 	u16 imageW;      /* Texture width (length in s direction, u10.5)  */
@@ -245,12 +245,12 @@ struct uObjSprite
                       0 (Normal display (no inversion))
                       G_OBJ_FLAG_FLIPS (s-direction (x) inversion)
                       G_OBJ_FLAG_FLIPT (t-direction (y) inversion)  */
-#endif // __GX__
+#endif // _BIG_ENDIAN
 };    /* 24 bytes */
 
 struct uObjTxtrBlock
 {
-#ifndef __GX__
+#ifndef _BIG_ENDIAN
 	u32   type;   /* Structure identifier (G_OBJLT_TXTRBLOCK) */
 	u32   image; /* Texture source address in DRAM (8-byte alignment) */
 	u16   tsize;  /* Texture size (specified by GS_TB_TSIZE) */
@@ -259,7 +259,7 @@ struct uObjTxtrBlock
 	u16   tline;  /* Texture line width (specified by GS_TB_TLINE) */
 	u32   flag;   /* Status flag */
 	u32   mask;   /* Status mask */
-#else // !__GX__ -> This should fix an endian issue.
+#else // !_BIG_ENDIAN -> This should fix an endian issue.
 	u32   type;   /* Structure identifier (G_OBJLT_TXTRBLOCK) */
 	u32   image; /* Texture source address in DRAM (8-byte alignment) */
 	u16   tmem;   /* TMEM word address where texture will be loaded (8-byte word) */
@@ -268,12 +268,12 @@ struct uObjTxtrBlock
 	u16   sid;    /* Status ID (multiple of 4: either 0, 4, 8, or 12) */
 	u32   flag;   /* Status flag */
 	u32   mask;   /* Status mask */
-#endif // __GX__
+#endif // _BIG_ENDIAN
 };     /* 24 bytes */
 
 struct uObjTxtrTile
 {
-#ifndef __GX__
+#ifndef _BIG_ENDIAN
 	u32   type;   /* Structure identifier (G_OBJLT_TXTRTILE) */
 	u32   image; /* Texture source address in DRAM (8-byte alignment) */
 	u16   twidth; /* Texture width (specified by GS_TT_TWIDTH) */
@@ -282,7 +282,7 @@ struct uObjTxtrTile
 	u16   theight;/* Texture height (specified by GS_TT_THEIGHT) */
 	u32   flag;   /* Status flag */
 	u32   mask;   /* Status mask  */
-#else // !__GX__ -> This should fix an endian issue.
+#else // !_BIG_ENDIAN -> This should fix an endian issue.
 	u32   type;   /* Structure identifier (G_OBJLT_TXTRTILE) */
 	u32   image; /* Texture source address in DRAM (8-byte alignment) */
 	u16   tmem;   /* TMEM word address where texture will be loaded (8-byte word) */
@@ -291,12 +291,12 @@ struct uObjTxtrTile
 	u16   sid;    /* Status ID (multiple of 4: either 0, 4, 8, or 12) */
 	u32   flag;   /* Status flag */
 	u32   mask;   /* Status mask  */
-#endif // __GX__
+#endif // _BIG_ENDIAN
 };      /* 24 bytes */
 
 struct uObjTxtrTLUT
 {
-#ifndef __GX__
+#ifndef _BIG_ENDIAN
 	u32   type;   /* Structure identifier (G_OBJLT_TLUT) */
 	u32   image; /* Texture source address in DRAM */
 	u16   pnum;   /* Number of palettes to load - 1 */
@@ -305,7 +305,7 @@ struct uObjTxtrTLUT
 	u16   zero;   /* Always assign 0 */
 	u32   flag;   /* Status flag */
 	u32   mask;   /* Status mask */
-#else // !__GX__ -> This should fix an endian issue.
+#else // !_BIG_ENDIAN -> This should fix an endian issue.
 	u32   type;   /* Structure identifier (G_OBJLT_TLUT) */
 	u32   image; /* Texture source address in DRAM */
 	u16   phead;  /* Palette position at start of load (256~511) */
@@ -314,7 +314,7 @@ struct uObjTxtrTLUT
 	u16   sid;    /* Status ID (multiple of 4: either 0, 4, 8, or 12) */
 	u32   flag;   /* Status flag */
 	u32   mask;   /* Status mask */
-#endif // __GX__
+#endif // _BIG_ENDIAN
 };      /* 24 bytes */
 
 typedef union 
@@ -332,17 +332,17 @@ struct uObjTxSprite
 
 struct uObjMtx
 {
-#ifndef __GX__
+#ifndef _BIG_ENDIAN
   s32 A, B, C, D;   /* s15.16 */
   s16 Y, X;         /* s10.2 */
   u16 BaseScaleY;   /* u5.10 */
   u16 BaseScaleX;   /* u5.10 */
-#else // !__GX__ -> This fixes an endian issue.
+#else // !_BIG_ENDIAN -> This fixes an endian issue.
   s32 A, B, C, D;   /* s15.16 */
   s16 X, Y;         /* s10.2 */
   u16 BaseScaleX;   /* u5.10 */
   u16 BaseScaleY;   /* u5.10 */
-#endif // __GX__
+#endif // _BIG_ENDIAN
 };
 
 void S2DEX_BG_1Cyc( u32 w0, u32 w1 );

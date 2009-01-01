@@ -131,11 +131,11 @@ LoadLoop:
 
 	for (i = 0; i < 4; i++)
 		for (j = 0; j < 4; j++)
-#  ifndef __GX__
+#  ifndef _BIG_ENDIAN
 			mtx[i][j] = (GLfloat)(n64Mat->integer[i][j^1]) + (GLfloat)(n64Mat->fraction[i][j^1]) * recip;
-#  else // !__GX__ -> This should fix a Big Endian issue.
+#  else // !_BIG_ENDIAN -> This should fix a Big Endian issue.
 			mtx[i][j] = (GLfloat)(n64Mat->integer[i][j^0]) + (GLfloat)(n64Mat->fraction[i][j^0]) * recip;
-#  endif // __GX__
+#  endif // _BIG_ENDIAN
 # endif // !X86_ASM
 #endif // __LINUX__
 }

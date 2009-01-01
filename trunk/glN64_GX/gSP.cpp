@@ -117,7 +117,7 @@ void gSPProcessVertex( u32 v )
 
 #ifndef __GX__
 	TransformVertex( &gSP.vertices[v].x, gSP.matrix.combined );
-#else
+#else //!__GX__
 	if(!OGL.GXuseProj)
 	{
 		TransformVertex( &gSP.vertices[v].x, gSP.matrix.combined );
@@ -125,7 +125,7 @@ void gSPProcessVertex( u32 v )
 	}
 	else
 		OGL.GXnumVtx++;
-#endif
+#endif //__GX__
 
 	//TODO: Properly implement this.
 	if (gSP.matrix.billboard)
@@ -435,7 +435,7 @@ void gSPViewport( u32 v )
 		return;
 	}
 
-#ifndef __GX__
+#ifndef _BIG_ENDIAN
 	gSP.viewport.vscale[0] = _FIXED2FLOAT( *(s16*)&RDRAM[address +  2], 2 );
 	gSP.viewport.vscale[1] = _FIXED2FLOAT( *(s16*)&RDRAM[address     ], 2 );
 	gSP.viewport.vscale[2] = _FIXED2FLOAT( *(s16*)&RDRAM[address +  6], 10 );// * 0.00097847357f;
@@ -444,7 +444,7 @@ void gSPViewport( u32 v )
 	gSP.viewport.vtrans[1] = _FIXED2FLOAT( *(s16*)&RDRAM[address +  8], 2 );
 	gSP.viewport.vtrans[2] = _FIXED2FLOAT( *(s16*)&RDRAM[address + 14], 10 );// * 0.00097847357f;
 	gSP.viewport.vtrans[3] = *(s16*)&RDRAM[address + 12];
-#else // !__GX__ -> This is to correct for big endian
+#else // !_BIG_ENDIAN -> This is to correct for big endian
 	gSP.viewport.vscale[0] = _FIXED2FLOAT( *(s16*)&RDRAM[address     ], 2 );
 	gSP.viewport.vscale[1] = _FIXED2FLOAT( *(s16*)&RDRAM[address +  2], 2 );
 	gSP.viewport.vscale[2] = _FIXED2FLOAT( *(s16*)&RDRAM[address +  4], 10 );// * 0.00097847357f;
@@ -453,7 +453,7 @@ void gSPViewport( u32 v )
 	gSP.viewport.vtrans[1] = _FIXED2FLOAT( *(s16*)&RDRAM[address + 10], 2 );
 	gSP.viewport.vtrans[2] = _FIXED2FLOAT( *(s16*)&RDRAM[address + 12], 10 );// * 0.00097847357f;
 	gSP.viewport.vtrans[3] = *(s16*)&RDRAM[address + 14];
-#endif // __GX__
+#endif // _BIG_ENDIAN
 
 	gSP.viewport.x		= gSP.viewport.vtrans[0] - gSP.viewport.vscale[0];
 	gSP.viewport.y		= gSP.viewport.vtrans[1] - gSP.viewport.vscale[1];
@@ -500,7 +500,7 @@ void gSPForceMatrix( u32 mptr )
 		else
 			OGL.GXuseProjW = false;
 	}
-#endif
+#endif //__GX__
 
 	gSP.changed &= ~CHANGED_MATRIX;
 
@@ -658,7 +658,7 @@ void gSPCIVertex( u32 v, u32 n, u32 v0 )
 
 			u8 *color = &RDRAM[gSP.vertexColorBase + (vertex->ci & 0xff)];
 
-#ifndef __GX__
+#ifndef _BIG_ENDIAN
 			if (gSP.geometryMode & G_LIGHTING)
 			{
 				gSP.vertices[i].nx = (s8)color[3];
@@ -673,7 +673,7 @@ void gSPCIVertex( u32 v, u32 n, u32 v0 )
 				gSP.vertices[i].b = color[1] * 0.0039215689f;
 				gSP.vertices[i].a = color[0] * 0.0039215689f;
 			}
-#else // !__GX__
+#else // !_BIG_ENDIAN
 			if (gSP.geometryMode & G_LIGHTING)
 			{
 				gSP.vertices[i].nx = (s8)color[0];
@@ -688,7 +688,7 @@ void gSPCIVertex( u32 v, u32 n, u32 v0 )
 				gSP.vertices[i].b = color[2] * 0.0039215689f;
 				gSP.vertices[i].a = color[3] * 0.0039215689f;
 			}
-#endif // __GX__
+#endif // _BIG_ENDIAN
 
 			gSPProcessVertex( i );
 
@@ -724,7 +724,7 @@ void gSPDMAVertex( u32 v, u32 n, u32 v0 )
 	{
 		for (unsigned int i = v0; i < n + v0; i++)
 		{
-#ifndef __GX__
+#ifndef _BIG_ENDIAN
 			gSP.vertices[i].x = *(s16*)&RDRAM[address ^ 2];
 			gSP.vertices[i].y = *(s16*)&RDRAM[(address + 2) ^ 2];
 			gSP.vertices[i].z = *(s16*)&RDRAM[(address + 4) ^ 2];
@@ -743,7 +743,7 @@ void gSPDMAVertex( u32 v, u32 n, u32 v0 )
 				gSP.vertices[i].b = *(u8*)&RDRAM[(address + 8) ^ 3] * 0.0039215689f;
 				gSP.vertices[i].a = *(u8*)&RDRAM[(address + 9) ^ 3] * 0.0039215689f;
 			}
-#else // !__GX__ -> This fixes an endian issue.
+#else // !_BIG_ENDIAN -> This fixes an endian issue.
 			gSP.vertices[i].x = *(s16*)&RDRAM[address ^ 0];
 			gSP.vertices[i].y = *(s16*)&RDRAM[(address + 2) ^ 0];
 			gSP.vertices[i].z = *(s16*)&RDRAM[(address + 4) ^ 0];
@@ -762,7 +762,7 @@ void gSPDMAVertex( u32 v, u32 n, u32 v0 )
 				gSP.vertices[i].b = *(u8*)&RDRAM[(address + 8) ^ 0] * 0.0039215689f;
 				gSP.vertices[i].a = *(u8*)&RDRAM[(address + 9) ^ 0] * 0.0039215689f;
 			}
-#endif // __GX__
+#endif // _BIG_ENDIAN
 
 			gSPProcessVertex( i );
 
@@ -1569,7 +1569,7 @@ void gSPInsertMatrix( u32 where, u32 num )
 		else
 			OGL.GXuseProjW = false;
 	}
-#endif
+#endif //__GX__
 
 #ifdef DEBUG
 	DebugMsg( DEBUG_HIGH | DEBUG_HANDLED | DEBUG_MATRIX, "gSPInsertMatrix( %s, %i );\n",

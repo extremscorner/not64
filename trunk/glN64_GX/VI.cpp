@@ -101,45 +101,50 @@ void VI_UpdateScreen()
 	}
 	glFinish();
 #else // !__GX__
-	//TODO: Finish rendering in GX
-	//		Render loadprog & DEBUG
-	//		Copy efb to xfb
-	//		swap xfb
-	//TODO: update flags and later implement framebuffer textures
 
 	if (OGL.frameBufferTextures)
 	{
-		// Implement fb texture copy here
+		FrameBuffer *current = FrameBuffer_FindBuffer( *REG.VI_ORIGIN );
+
+		if ((*REG.VI_ORIGIN != VI.lastOrigin) || ((current) && current->changed))
+		{
+			if (gDP.colorImage.changed)
+			{
+				if(VI.copy_fb)
+					VIDEO_WaitVSync();
+				FrameBuffer_SaveBuffer( gDP.colorImage.address, gDP.colorImage.size, gDP.colorImage.width, gDP.colorImage.height );
+				gDP.colorImage.changed = FALSE;
+			}
+
+			VI.doFrameBufferRender = true;
+
+			gDP.colorImage.changed = FALSE;
+			VI.lastOrigin = *REG.VI_ORIGIN;
+		}
 	}
 	else
-	{
 		if (gSP.changed & CHANGED_COLORBUFFER)
-		{
 			OGL_SwapBuffers();
-//			VI_GX_updateDEBUG();
-		}
-		VI_GX_cleanUp();
-		VI_GX_showStats();
-		VI_GX_showFPS();
-		VI_GX_showDEBUG();
-		if(VI.updateOSD)
-		{
-			if(VI.copy_fb)
-				VIDEO_WaitVSync();
-//			GX_DrawDone(); //needed?
-//			GX_CopyDisp (xfb[which_fb], GX_FALSE); //TODO: Figure out where the UpdateScreen interrupts are coming from!
-			GX_SetCopyClear ((GXColor){0,0,0,255}, 0xFFFFFF);	//TODO: get rid of this GX_CopyDisp as it's unneeded.
-			GX_CopyDisp (VI.xfb[VI.which_fb], GX_TRUE);	//clear the EFB before executing new Dlist
-			GX_DrawDone(); //Shagkur's recommendation
-//			doCaptureScreen();
-			VI.updateOSD = false;
-			VI.copy_fb = true;
-		}
-		//The following has been moved to the Pre-Retrace callback
-/*		VIDEO_SetNextFramebuffer(xfb[which_fb]);
-		VIDEO_Flush();
-		which_fb ^= 1;
-		VIDEO_WaitVSync();*/
+
+	VI_GX_cleanUp();
+	VI_GX_showStats();
+	VI_GX_showFPS();
+	VI_GX_showDEBUG();
+	if(VI.updateOSD)
+	{
+		if(VI.copy_fb)
+			VIDEO_WaitVSync();
+		GX_SetCopyClear ((GXColor){0,0,0,255}, 0xFFFFFF);
+		GX_CopyDisp (VI.xfb[VI.which_fb], GX_TRUE);	//clear the EFB before executing new Dlist
+		GX_DrawDone(); //Wait until EFB->XFB copy is complete
+//		doCaptureScreen();
+		VI.updateOSD = false;
+		VI.copy_fb = true;
+	}
+	if(VI.doFrameBufferRender)
+	{
+		FrameBuffer_RenderBuffer( *REG.VI_ORIGIN );
+		VI.doFrameBufferRender = false;
 	}
 #endif // __GX__
 
@@ -159,6 +164,7 @@ void VI_GX_init() {
 	VI.updateOSD = true;
 	VI.copy_fb = false;
 	VI.which_fb = 1;
+	VI.doFrameBufferRender = false;
 }
 
 void VI_GX_setFB(unsigned int* fb1, unsigned int* fb2){
@@ -295,8 +301,8 @@ void VI_GX_showStats()
 {
 	if (VI.updateOSD)
 	{
-//		sprintf(txtbuffer,"texCache: %d bytes in %d cached textures",cache.cachedBytes,cache.numCached);
-//		DEBUG_print(txtbuffer,DBG_CACHEINFO); 
+		sprintf(txtbuffer,"texCache: %d bytes in %d cached textures; %d FB textures",cache.cachedBytes,cache.numCached,frameBuffer.numBuffers);
+		DEBUG_print(txtbuffer,DBG_CACHEINFO); 
 	}
 }
 

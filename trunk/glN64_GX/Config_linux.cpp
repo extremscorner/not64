@@ -418,12 +418,16 @@ void Config_LoadConfig()
 	OGL.enable2xSaI = 0;
 	OGL.fog = 1;
 	OGL.textureBitDepth = 1; // normal (16 & 32 bits)
+#ifndef __GX__
 	OGL.frameBufferTextures = 0;
+#else //!__GX__ Temporary!
+	OGL.frameBufferTextures = 0;
+#endif //__GX__
 	OGL.usePolygonStipple = 0;
 #ifndef __GX__
 	cache.maxBytes = 32 * 1048576;	// reduced to 1MB for GC/Wii
 #else // !__GX__
-	cache.maxBytes = (u32) (1024 * 1024);
+	cache.maxBytes = (u32) (4 * 1024 * 1024);
 #endif // __GX__
 
 #ifndef __GX__
