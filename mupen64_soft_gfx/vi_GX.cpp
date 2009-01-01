@@ -80,7 +80,8 @@ void VI_GX::showFPS(){
 	if (updateOSD)
 		frames++;
 	if (diff_sec(lastTick,nowTick)>=1) {
-		sprintf(caption, "%02d VI/s, %02d FPS",VIs,frames);
+		//Note that for soft_gfx we're only counting VI's, not frames (dlists)
+		sprintf(caption, "%02d VI/s",VIs);
 		frames = 0;
 		VIs = 0;
 		lastTick = nowTick;

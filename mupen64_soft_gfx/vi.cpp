@@ -116,7 +116,7 @@ unsigned int convert_pixels(short src1, short src2){
 
 void VI::updateScreen()
 {
-   //printf("Should be updating screen: bpp = %d, width_reg = %d\n", bpp, *gfxInfo.VI_WIDTH_REG);
+//   printf("Should be updating screen: bpp = %d, width_reg = %d\n", bpp, *gfxInfo.VI_WIDTH_REG);
    if (!bpp) return;
    if (!*gfxInfo.VI_WIDTH_REG) return;
    int h_end = *gfxInfo.VI_H_START_REG & 0x3FF;
@@ -269,6 +269,11 @@ void VI::updateScreen()
 			}
 		}
 	}
+
+	GX_SetCopyClear ((GXColor){0,0,0,255}, 0xFFFFFF);
+	GX_CopyDisp (vi->getScreenPointer(), GX_TRUE);	//clear the EFB before executing new Dlist
+	GX_DrawDone ();
+	vi->updateDEBUG();
 
 	//Initialize texture
 	GX_InitTexObj(&FBtexObj, FBtex, 640, 480, GX_TF_RGB5A3, GX_CLAMP, GX_CLAMP, GX_FALSE); 
