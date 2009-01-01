@@ -9,15 +9,20 @@
 
 class VI_GX : public VI
 {
+   bool updateOSD;
+   bool copy_fb;
    unsigned int* xfb[2];
    int which_fb;
    int width;
    int height;
+   Mtx44 GXprojection2D;
+   Mtx GXmodelView2D;
    
    void setFB(unsigned int*, unsigned int*);
    void showFPS();
+   void showDEBUG();
    virtual void setVideoMode(int w, int h);
-   virtual void* getScreenPointer();
+//   virtual void* getScreenPointer();
    virtual void blit();
    
  public:
@@ -27,6 +32,10 @@ class VI_GX : public VI
    virtual void switchFullScreenMode();
    virtual void switchWindowMode();
    virtual void setGamma(float gamma);
+   unsigned int* getScreenPointer();
+   void showLoadProg(float);
+   void updateDEBUG();
+   void PreRetraceCallback(u32 retraceCnt);
 };
 
 #endif

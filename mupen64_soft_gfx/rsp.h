@@ -34,7 +34,7 @@
 #include "Gfx_#1.3.h"
 #include "rdp.h"
 #include "color.h"
-#include "vector.h"
+#include "vektor.h"
 #include "matrix.h"
 
 typedef struct
@@ -83,7 +83,7 @@ typedef struct
 {
    Color32   col; /* Diffuse light value (RGBA) */
    Color32   colc;/* Copy of diffuse light value (RGBA) */
-   Vector<float,4>     dir; /* Direction toward light source (normalized) */
+   Vektor<float,4>     dir; /* Direction toward light source (normalized) */
     /* Important: the size of "dir" must not exceed 127  */
 } Light_t;
 
@@ -95,13 +95,13 @@ typedef struct
 
 typedef struct
 {
-   Vector<float,4> v;
+   Vektor<float,4> v;
    float s;
    float t;
    Color32 c;
-   Vector<float,4> n;
+   Vektor<float,4> n;
    int alpha;
-} Vtx;
+} Vertex;
 
 class RSP;
 typedef void (RSP::*COMMANDS)();
@@ -132,7 +132,7 @@ class RSP
    Matrix<float, 4> modelView;
    Matrix<float, 4> projection;
    Matrix<float, 4> MP;
-   Vtx vtx[16];
+   Vertex vtx[16];
    int fm;
    int fo;
    

@@ -27,13 +27,16 @@ static GFX_INFO gfxInfo;
 
 VI *vi;
 
+void gfx_PreRetraceCallback(u32 retraceCnt) {
+	vi->PreRetraceCallback(retraceCnt);
+}
+
 void gfx_set_fb(unsigned int* fb1, unsigned int* fb2){
 	vi->setFB(fb1, fb2);
 }
 
 void showLoadProgress(float percent){
-	//This function is implemented in the GX_gfx plugin
-	//vi->showLoadProg(percent);
+	vi->showLoadProg(percent);
 }
 
 /******************************************************************
@@ -190,7 +193,12 @@ EXPORT void CALL MoveScreen (int xpos, int ypos)
 *******************************************************************/ 
 EXPORT void CALL ProcessDList(void)
 {
+//   GX_SetCopyClear ((GXColor){0,0,0,255}, 0x000000);
+   GX_SetCopyClear ((GXColor){0,0,0,255}, 0xFFFFFF);
+   GX_CopyDisp (vi->getScreenPointer(), GX_TRUE);	//clear the EFB before executing new Dlist
+   GX_DrawDone ();
    RSP rsp(gfxInfo);
+   vi->updateDEBUG();
    /*static int firstTime=0;
    
    if(firstTime< 1)
@@ -250,6 +258,7 @@ EXPORT void CALL ProcessRDPList(void)
 EXPORT void CALL RomClosed (void)
 {
    //vi->setGamma(1.0);
+   VIDEO_SetPreRetraceCallback(NULL);
    delete vi;
 }
 
@@ -264,6 +273,7 @@ EXPORT void CALL RomOpen (void)
 {
 #ifdef __PPC__
    vi = new VI_GX(gfxInfo);
+   VIDEO_SetPreRetraceCallback(gfx_PreRetraceCallback);
 #else // __PPC__
 #ifndef _WIN32
    vi = new VI_SDL(gfxInfo);

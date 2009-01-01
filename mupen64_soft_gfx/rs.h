@@ -31,7 +31,7 @@
 #define RS_H
 
 #include "color.h"
-#include "vector.h"
+#include "vektor.h"
 
 class RDP;
 
@@ -48,17 +48,17 @@ class RS
    void setScissor(float ulx, float uly, float lrx, float lry, int mode);
    void fillRect(float ulx, float uly, float lrx, float lry, RDP *rdp);
    void texRect(int tile, float ulx, float uly, float lrx, float lry, float s, float t, float dsdx, float dtdy, RDP *rdp);
-   void debug_tri(Vector<float,4>& v0, Vector<float,4>& v1, Vector<float,4>& v2, RDP *rdp);
-   void tri_shade_zbuff(Vector<float,4>& v0, Vector<float,4>& v1, Vector<float,4>& v2, 
+   void debug_tri(Vektor<float,4>& v0, Vektor<float,4>& v1, Vektor<float,4>& v2, RDP *rdp);
+   void tri_shade_zbuff(Vektor<float,4>& v0, Vektor<float,4>& v1, Vektor<float,4>& v2, 
 			Color32& c0, Color32& c1, Color32& c2, float z0, float z1, float z2, RDP *rdp);
-   void tri_shade_txtr_zbuff(Vector<float,4>& v0, Vector<float,4>& v1, Vector<float,4>& v2, 
+   void tri_shade_txtr_zbuff(Vektor<float,4>& v0, Vektor<float,4>& v1, Vektor<float,4>& v2, 
 			     Color32& c0, Color32& c1, Color32& c2,
 			     float s0, float t0, float s1, float t1, float s2, float t2, int tile,
 			     float w0, float w1, float w2, float z0, float z1, float z2, RDP *rdp);
-   void tri_shade_txtr(Vector<float,4>& v0, Vector<float,4>& v1, Vector<float,4>& v2, 
+   void tri_shade_txtr(Vektor<float,4>& v0, Vektor<float,4>& v1, Vektor<float,4>& v2, 
 		       Color32& c0, Color32& c1, Color32& c2,
 		       float s0, float t0, float s1, float t1, float s2, float t2, int tile, float w0, float w1, float w2, RDP *rdp);
-   void tri_shade(Vector<float,4>& v0, Vector<float,4>& v1, Vector<float,4>& v2, 
+   void tri_shade(Vektor<float,4>& v0, Vektor<float,4>& v1, Vektor<float,4>& v2, 
 		  Color32& c0, Color32& c1, Color32& c2, RDP *rdp);
 };
 

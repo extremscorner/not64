@@ -520,14 +520,14 @@ void RSP::TRI1()
    int v1 = ((*(currentCommand+1) >> 8) & 0xFF) / 10;
    int v2 = (*(currentCommand+1) & 0xFF) / 10;
    
-   Vtx cache[140];
+   Vertex cache[140];
    int cache_size = 0;
    
    cache[cache_size++] = vtx[v0];
    cache[cache_size++] = vtx[v1];
    cache[cache_size++] = vtx[v2];
    
-   Vtx copy[140];
+   Vertex copy[140];
    int copy_size = 0;
    
    // clip w
@@ -912,7 +912,7 @@ void RSP::TRI1()
    
    for(int i=2; i<cache_size; i++)
      {
-	Vector<float,4> vx0, vx1, vx2;
+	Vektor<float,4> vx0, vx1, vx2;
 	vx0[0] = cache[a].v[0];
 	vx0[1] = cache[a].v[1];
 	vx1[0] = cache[b].v[0];
