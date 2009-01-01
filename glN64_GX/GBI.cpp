@@ -381,9 +381,9 @@ MicrocodeInfo *GBI_DetectMicrocode( u32 uc_start, u32 uc_dstart, u16 uc_dsize )
 
 	// See if we can identify it by text
 	char uc_data[2048];
-#ifndef __GX__
+#ifndef _BIG_ENDIAN
 	UnswapCopy( &RDRAM[uc_dstart & 0x1FFFFFFF], uc_data, 2048 );
-#else // !__GX__
+#else // !_BIG_ENDIAN
 	memcpy( uc_data, &RDRAM[uc_dstart & 0x1FFFFFFF], 2048 );
 #endif
 	strcpy( uc_str, "Not Found" );

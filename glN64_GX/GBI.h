@@ -654,7 +654,7 @@ extern u32 G_RDPHALF_0;
 
 typedef struct
 {
-#ifndef __GX__
+#ifndef _BIG_ENDIAN
 	s16 y;
 	s16 x;
 
@@ -680,7 +680,7 @@ typedef struct
 			s8 x;	//r
 		} normal;
 	};
-#else // !__GX__ -> This fixes an endian issue.
+#else // !_BIG_ENDIAN -> This fixes an endian issue.
 	s16 x;
 	s16 y;
 
@@ -706,50 +706,50 @@ typedef struct
 			s8 a;
 		} normal;
 	};
-#endif // __GX__
+#endif // _BIG_ENDIAN
 } Vertex;
 
 typedef struct 
 {
-#ifndef __GX__
+#ifndef _BIG_ENDIAN
 	s16 y, x;
 	u16	ci;
 	s16 z;
 	s16 t, s;
-#else // !__GX__ -> This fixes an endian issue.
+#else // !_BIG_ENDIAN -> This fixes an endian issue.
 	s16 x, y;
 	s16 z;
 	u16	ci;
 	s16 s, t;
-#endif // __GX__
+#endif // _BIG_ENDIAN
 } PDVertex;
 
 typedef struct
 {
-#ifndef __GX__
+#ifndef _BIG_ENDIAN
 	u8		v2, v1, v0, flag;
 	s16		t0, s0;
 	s16		t1, s1;
 	s16		t2, s2;
-#else // !__GX__ -> This fixes an endian issue.
+#else // !_BIG_ENDIAN -> This fixes an endian issue.
 	u8		flag, v0, v1, v2;
 	s16		s0, t0;
 	s16		s1, t1;
 	s16		s2, t2;
-#endif // __GX__
+#endif // _BIG_ENDIAN
 } DKRTriangle;
 
 struct Light
 {
-#ifndef __GX__
+#ifndef _BIG_ENDIAN
 	u8 pad0, b, g, r;
 	u8 pad1, b2, g2, r2;
 	s8 pad2, z, y, x;
-#else // !__GX__ -> This fixes an endian problem.
+#else // !_BIG_ENDIAN -> This fixes an endian problem.
 	u8 r, g, b, pad0;
 	u8 r2, g2, b2, pad1;
 	s8 x, y, z, pad2;
-#endif // __GX__
+#endif // _BIG_ENDIAN
 };
 
 // GBI commands

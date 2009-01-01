@@ -442,12 +442,12 @@ Done:
 	while (numDWords--)
 	{
 		u32 dword = *(u32 *)src;
-#ifndef __GX__
+#ifndef _BIG_ENDIAN
 		__asm__ volatile( "bswapl %0\n\t" : "=q"(dword) : "0"(dword) );
-#else // !__GX__
+#else // !_BIG_ENDIAN
 		//TODO: Make sure this is correct...
 		dword = ((dword & 0xFF)<<24)|(((dword>>8) & 0xFF)<<16)|(((dword>>16) & 0xFF)<<8)|((dword>>24)& 0xFF);
-#endif // __GX__
+#endif // _BIG_ENDIAN
 		*(u32 *)dest = dword;
 		dest = (void *)((int)dest+4);
 		src  = (void *)((int)src +4);

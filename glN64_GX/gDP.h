@@ -28,7 +28,7 @@ struct gDPCombine
 	{
 		struct
 		{
-#ifndef __GX__
+#ifndef _BIG_ENDIAN
 			// muxs1
 			unsigned	aA1		: 3;
 			unsigned	sbA1	: 3;
@@ -49,7 +49,7 @@ struct gDPCombine
 			unsigned	mRGB0	: 5;
 			unsigned	saRGB0	: 4;
 			unsigned	pad0	: 8;
-#else // !__GX__ -> This should fix for BE.
+#else // !_BIG_ENDIAN -> This should fix for BE.
 			// muxs0
 			unsigned	pad0	: 8;
 			unsigned	saRGB0	: 4;
@@ -70,16 +70,16 @@ struct gDPCombine
 			unsigned	aRGB1	: 3;
 			unsigned	sbA1	: 3;
 			unsigned	aA1		: 3;
-#endif // __GX__
+#endif // _BIG_ENDIAN
 		};
 
 		struct
 		{
-#ifndef __GX__
+#ifndef _BIG_ENDIAN
 			u32			muxs1, muxs0;
-#else // !__GX__ -> This should fix for BE.
+#else // !_BIG_ENDIAN -> This should fix for BE.
 			u32			muxs0, muxs1;
-#endif // __GX__
+#endif // _BIG_ENDIAN
 		};
 
 		u64				mux;
@@ -94,7 +94,7 @@ struct gDPTile
 	{
 		struct
 		{
-#ifndef __GX__
+#ifndef _BIG_ENDIAN
 			unsigned	mirrort	: 1;
 			unsigned	clampt	: 1;
 			unsigned	pad0	: 30;
@@ -102,7 +102,7 @@ struct gDPTile
 			unsigned	mirrors	: 1;
 			unsigned	clamps	: 1;
 			unsigned	pad1	: 30;
-#else // !__GX__ -> Big Endian fix.
+#else // !_BIG_ENDIAN -> Big Endian fix.
 			unsigned	pad1	: 30;
 			unsigned	clamps	: 1;
 			unsigned	mirrors	: 1;
@@ -110,16 +110,16 @@ struct gDPTile
 			unsigned	pad0	: 30;
 			unsigned	clampt	: 1;
 			unsigned	mirrort	: 1;
-#endif // __GX__
+#endif // _BIG_ENDIAN
 		};
 
 		struct
 		{
-#ifndef __GX__
+#ifndef _BIG_ENDIAN
 			u32 cmt, cms;
-#else // !__GX__ -> Big Endian fix.
+#else // !_BIG_ENDIAN -> Big Endian fix.
 			u32 cms, cmt;
-#endif // __GX__
+#endif // _BIG_ENDIAN
 		};
 	};
 
@@ -138,7 +138,7 @@ struct gDPInfo
 		{
 			struct
 			{
-#ifndef __GX__
+#ifndef _BIG_ENDIAN
 				unsigned int alphaCompare : 2;
 				unsigned int depthSource : 1;
 
@@ -188,7 +188,7 @@ struct gDPInfo
 				unsigned int pipelineMode : 1;
 
 				unsigned int pad : 8;
-#else // !__GX__ - Big Endian fix.
+#else // !_BIG_ENDIAN - Big Endian fix.
 				unsigned int pad : 8;
 
 				unsigned int pipelineMode : 1;
@@ -238,18 +238,18 @@ struct gDPInfo
 
 				unsigned int depthSource : 1;
 				unsigned int alphaCompare : 2;
-#endif // __GX__
+#endif // _BIG_ENDIAN
 			};
 
 			u64			_u64;
 
 			struct
 			{
-#ifndef __GX__
+#ifndef _BIG_ENDIAN
 				u32			l, h;
-#else // !__GX__ - Big Endian fix.
+#else // !_BIG_ENDIAN - Big Endian fix.
 				u32			h, l;
-#endif // __GX__
+#endif // _BIG_ENDIAN
 			};
 		};
 	} otherMode;

@@ -647,11 +647,11 @@ void gDPLoadTile( u32 tile, u32 uls, u32 ult, u32 lrs, u32 lrt )
 
 	for (y = 0; y < height; y++)
 	{
-#ifndef __GX__
+#ifndef _BIG_ENDIAN
 		UnswapCopy( src, dest, bpl );
-#else // !__GX__
+#else // !_BIG_ENDIAN
 		memcpy( dest, src, bpl );
-#endif // __GX__
+#endif // _BIG_ENDIAN
 		if (y & 1) Interleave( dest, line );
 
 		src += gDP.textureImage.bpl;
@@ -721,11 +721,11 @@ void gDPLoadBlock( u32 tile, u32 uls, u32 ult, u32 lrs, u32 dxt )
 
 		for (u32 y = 0; y < height; y++)
 		{
-#ifndef __GX__
+#ifndef _BIG_ENDIAN
 			UnswapCopy( src, dest, bpl );
-#else // !__GX__
+#else // !_BIG_ENDIAN
 			memcpy( dest, src, bpl );
-#endif // __GX__
+#endif // _BIG_ENDIAN
 			if (y & 1) Interleave( dest, line );
 
 			src += line;
@@ -733,11 +733,11 @@ void gDPLoadBlock( u32 tile, u32 uls, u32 ult, u32 lrs, u32 dxt )
 		}
 	}
 	else
-#ifndef __GX__
+#ifndef _BIG_ENDIAN
 		UnswapCopy( src, dest, bytes );
-#else // !__GX__
+#else // !_BIG_ENDIAN
 		memcpy( dest, src, bytes );
-#endif // __GX__
+#endif // _BIG_ENDIAN
 
 	gDP.textureMode = TEXTUREMODE_NORMAL;
 	gDP.loadType = LOADTYPE_BLOCK;
@@ -766,7 +766,7 @@ void gDPLoadTLUT( u32 tile, u32 uls, u32 ult, u32 lrs, u32 lrt )
 	{
 		for (u16 j = 0; (j < 16) && (i < count); j++, i++)
 		{
-#ifndef __GX__ //TODO: Make sure this is correct.
+#ifndef _BIG_ENDIAN //TODO: Make sure this is correct.
 			u16 color = swapword( src[i^1] );
 
 			*dest = color;
@@ -774,9 +774,9 @@ void gDPLoadTLUT( u32 tile, u32 uls, u32 ult, u32 lrs, u32 lrt )
 			//dest[2] = color;
 			//dest[3] = color;
 
-#else // !__GX__
+#else // !_BIG_ENDIAN
 			*dest = src[i];
-#endif // __GX__
+#endif // _BIG_ENDIAN
 
 			dest += 4;
 		}

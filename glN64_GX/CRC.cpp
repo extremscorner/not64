@@ -44,11 +44,11 @@ DWORD CRC_Calculate( DWORD crc, void *buffer, DWORD count )
 
     p = (BYTE*) buffer;
 	while (count--) 
-#ifndef __GX__
+#ifndef _BIG_ENDIAN
 		crc = (crc >> 8) ^ CRCTable[(crc & 0xFF) ^ *p++];
-#else // !__GX__ -> Big Endian fix - necessary for Ucode detection.
+#else // !_BIG_ENDIAN -> Big Endian fix - necessary for Ucode detection.
 		crc = (crc >> 8) ^ CRCTable[(crc & 0xFF) ^ *(BYTE*)((int)p++ ^ 3)]; //This fixes the endian problem for uc_crc
-#endif // __GX__
+#endif // _BIG_ENDIAN
 
     return crc ^ orig;
 }
@@ -61,13 +61,13 @@ DWORD CRC_CalculatePalette( DWORD crc, void *buffer, DWORD count )
     p = (BYTE*) buffer;
     while (count--)
 	{
-#ifndef __GX__
+#ifndef _BIG_ENDIAN
 		crc = (crc >> 8) ^ CRCTable[(crc & 0xFF) ^ *p++];
 		crc = (crc >> 8) ^ CRCTable[(crc & 0xFF) ^ *p++];
-#else // !__GX__ -> Big Endian fix - maybe not necessary unless using HiRez texture packs...
+#else // !_BIG_ENDIAN -> Big Endian fix - maybe not necessary unless using HiRez texture packs...
 		crc = (crc >> 8) ^ CRCTable[(crc & 0xFF) ^ *(BYTE*)((int)p++ ^ 3)];
 		crc = (crc >> 8) ^ CRCTable[(crc & 0xFF) ^ *(BYTE*)((int)p++ ^ 3)];
-#endif // __GX__
+#endif // _BIG_ENDIAN
 
 		p += 6;
 	}
