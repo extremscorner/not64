@@ -194,11 +194,11 @@ EXPORT void CALL MoveScreen (int xpos, int ypos)
 EXPORT void CALL ProcessDList(void)
 {
 //   GX_SetCopyClear ((GXColor){0,0,0,255}, 0x000000);
-   GX_SetCopyClear ((GXColor){0,0,0,255}, 0xFFFFFF);
-   GX_CopyDisp (vi->getScreenPointer(), GX_TRUE);	//clear the EFB before executing new Dlist
-   GX_DrawDone ();
+//   GX_SetCopyClear ((GXColor){0,0,0,255}, 0xFFFFFF);
+//   GX_CopyDisp (vi->getScreenPointer(), GX_TRUE);	//clear the EFB before executing new Dlist
+//   GX_DrawDone ();
    RSP rsp(gfxInfo);
-   vi->updateDEBUG();
+//   vi->updateDEBUG();
    /*static int firstTime=0;
    
    if(firstTime< 1)
