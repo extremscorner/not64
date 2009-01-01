@@ -195,18 +195,18 @@ void RDP::loadTile(int tile, float uls, float ult, float lrs, float lrt)
    tx->loadTile(tile, uls, ult, lrs, lrt);
 }
 
-void RDP::debug_tri(Vector<float,4>& v0, Vector<float,4>& v1, Vector<float,4>& v2)
+void RDP::debug_tri(Vektor<float,4>& v0, Vektor<float,4>& v1, Vektor<float,4>& v2)
 {
    rs->debug_tri(v0, v1, v2, this);
 }
 
-void RDP::tri_shade_zbuff(Vector<float,4>& v0, Vector<float,4>& v1, Vector<float,4>& v2,
+void RDP::tri_shade_zbuff(Vektor<float,4>& v0, Vektor<float,4>& v1, Vektor<float,4>& v2,
 			  Color32& c0, Color32& c1, Color32& c2, float z0, float z1, float z2)
 {
    rs->tri_shade_zbuff(v0, v1, v2, c0, c1, c2, z0, z1, z2, this);
 }
 
-void RDP::tri_shade_txtr_zbuff(Vector<float,4>& v0, Vector<float,4>& v1, Vector<float,4>& v2,
+void RDP::tri_shade_txtr_zbuff(Vektor<float,4>& v0, Vektor<float,4>& v1, Vektor<float,4>& v2,
 			       Color32& c0, Color32& c1, Color32& c2, 
 			       float s0, float t0, float s1, float t1, float s2, float t2, int tile,
 			       float w0, float w1, float w2, float z0, float z1, float z2)
@@ -214,14 +214,14 @@ void RDP::tri_shade_txtr_zbuff(Vector<float,4>& v0, Vector<float,4>& v1, Vector<
    rs->tri_shade_txtr_zbuff(v0, v1, v2, c0, c1, c2, s0, t0, s1, t1, s2, t2, tile, w0, w1, w2, z0, z1, z2, this);
 }
 
-void RDP::tri_shade_txtr(Vector<float,4>& v0, Vector<float,4>& v1, Vector<float,4>& v2,
+void RDP::tri_shade_txtr(Vektor<float,4>& v0, Vektor<float,4>& v1, Vektor<float,4>& v2,
 			 Color32& c0, Color32& c1, Color32& c2, 
 			 float s0, float t0, float s1, float t1, float s2, float t2, int tile, float w0, float w1, float w2)
 {
    rs->tri_shade_txtr(v0, v1, v2, c0, c1, c2, s0, t0, s1, t1, s2, t2, tile, w0, w1, w2, this);
 }
 
-void RDP::tri_shade(Vector<float,4>& v0, Vector<float,4>& v1, Vector<float,4>& v2,
+void RDP::tri_shade(Vektor<float,4>& v0, Vektor<float,4>& v1, Vektor<float,4>& v2,
 		    Color32& c0, Color32& c1, Color32& c2)
 {
    rs->tri_shade(v0, v1, v2, c0, c1, c2, this);

@@ -32,27 +32,34 @@
 
 #include "../main/winlnxdefs.h"
 #include "Gfx_#1.3.h"
+#include <gccore.h>
 
 class VI
 {
    GFX_INFO gfxInfo;
    int bpp;
+   u16* FBtex;
+   GXTexObj	FBtexObj;
    
    // the plugin assume the class that's implementing these functions 
    // accept 16bpp 5551 mode, maybe conversion is needed on some systems
    // it's also assumed that it's initialized in window mode by default
    virtual void setVideoMode(int w, int h) = 0;
-   virtual void* getScreenPointer() = 0;
+//   virtual void* getScreenPointer() = 0;
    virtual void blit() = 0;
    
  public:
    VI(GFX_INFO);
    virtual ~VI();
    
+   virtual unsigned int* getScreenPointer() = 0;
    virtual void setFB(unsigned int*, unsigned int*) = 0;
    virtual void switchFullScreenMode() = 0;
    virtual void switchWindowMode() = 0;
    virtual void setGamma(float gamma) = 0;
+   virtual void showLoadProg(float) = 0;
+   virtual void updateDEBUG() = 0;
+   virtual void PreRetraceCallback(u32) = 0;
    void statusChanged();
    void widthChanged();
    void updateScreen();

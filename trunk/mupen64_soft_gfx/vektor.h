@@ -27,31 +27,31 @@
  *
 **/
 
-#ifndef VECTOR_H
-#define VECTOR_H
+#ifndef VEKTOR_H
+#define VEKTOR_H
 
-template<class T, int s> class Vector
+template<class T, int s> class Vektor
 {
    T element[s];
    
  public:
-   Vector() {}
-   ~Vector() {}
+   Vektor() {}
+   ~Vektor() {}
    
-   Vector(const Vector<T,s>& v)
+   Vektor(const Vektor<T,s>& v)
      {
 	for (int i=0; i<s; i++)
 	  element[i] = v.element[i];
      }
    
-   Vector<T,s>& operator= (const Vector<T,s>& v)
+   Vektor<T,s>& operator= (const Vektor<T,s>& v)
      {
 	for (int i=0; i<s; i++)
 	  element[i] = v.element[i];
 	return *this;
      }
    
-   T scalar(const Vector<T,s>& v) const
+   T scalar(const Vektor<T,s>& v) const
      {
 	T res = 0;
 	for (int i=0; i<s; i++)
@@ -67,7 +67,7 @@ template<class T, int s> class Vector
 	for(int i=0; i<s; i++) element[i] = element[i] / norm;
      }
    
-   void setVector(T* array)
+   void setVektor(T* array)
      {
 	for (int i=0; i<s; i++)
 	  element[i] = array[i];

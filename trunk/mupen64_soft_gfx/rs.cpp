@@ -131,7 +131,7 @@ void RS::texRect(int tile, float ux, float uy, float lx, float ly, float s, floa
      printf("RS:unknown cycle type in texRect:%d\n", rdp->cycleType);
 }
 
-void RS::tri_shade_txtr_zbuff(Vector<float,4>& v0, Vector<float,4>& v1, Vector<float,4>& v2, 
+void RS::tri_shade_txtr_zbuff(Vektor<float,4>& v0, Vektor<float,4>& v1, Vektor<float,4>& v2, 
 			      Color32& c0, Color32& c1, Color32& c2, 
 			      float s0, float t0, float s1, float t1, float s2, float t2, int tile,
 			      float w0, float w1, float w2, float z0, float z1, float z2, RDP *rdp)
@@ -139,13 +139,13 @@ void RS::tri_shade_txtr_zbuff(Vector<float,4>& v0, Vector<float,4>& v1, Vector<f
    if (rdp->cycleType == 0)
      {
 	// sorting vertex by y values
-	Vector<float,4>* v[3] = { &v0, &v1, &v2 };
+	Vektor<float,4>* v[3] = { &v0, &v1, &v2 };
 	Color32* c[3];
 	float* z[3];
 	float* s[3];
 	float* t[3];
 	float* w[3];
-	Vector<float,4> *temp;
+	Vektor<float,4> *temp;
 	if ((*v[0])[1] > (*v[1])[1]) { temp = v[0]; v[0] = v[1]; v[1] = temp; }
 	if ((*v[1])[1] > (*v[2])[1]) { temp = v[1]; v[1] = v[2]; v[2] = temp; }
 	if ((*v[0])[1] > (*v[1])[1]) { temp = v[0]; v[0] = v[1]; v[1] = temp; }
@@ -367,13 +367,13 @@ void RS::tri_shade_txtr_zbuff(Vector<float,4>& v0, Vector<float,4>& v1, Vector<f
    else if (rdp->cycleType == 1)
      {
 	// sorting vertex by y values
-	Vector<float,4>* v[3] = { &v0, &v1, &v2 };
+	Vektor<float,4>* v[3] = { &v0, &v1, &v2 };
 	Color32* c[3];
 	float* z[3];
 	float* s[3];
 	float* t[3];
 	float* w[3];
-	Vector<float,4> *temp;
+	Vektor<float,4> *temp;
 	if ((*v[0])[1] > (*v[1])[1]) { temp = v[0]; v[0] = v[1]; v[1] = temp; }
 	if ((*v[1])[1] > (*v[2])[1]) { temp = v[1]; v[1] = v[2]; v[2] = temp; }
 	if ((*v[0])[1] > (*v[1])[1]) { temp = v[0]; v[0] = v[1]; v[1] = temp; }
@@ -598,16 +598,16 @@ void RS::tri_shade_txtr_zbuff(Vector<float,4>& v0, Vector<float,4>& v1, Vector<f
      printf("RS:unknown cycle type in tri_shade_txtr_zbuff:%d\n", rdp->cycleType);
 }
 
-void RS::tri_shade_zbuff(Vector<float,4>& v0, Vector<float,4>& v1, Vector<float,4>& v2, 
+void RS::tri_shade_zbuff(Vektor<float,4>& v0, Vektor<float,4>& v1, Vektor<float,4>& v2, 
 			 Color32& c0, Color32& c1, Color32& c2, float z0, float z1, float z2, RDP *rdp)
 {
    if (rdp->cycleType == 0)
      {
 	// sorting vertex by y values
-	Vector<float,4>* v[3] = { &v0, &v1, &v2 };
+	Vektor<float,4>* v[3] = { &v0, &v1, &v2 };
 	Color32* c[3];
 	float* z[3];
-	Vector<float,4> *temp;
+	Vektor<float,4> *temp;
 	if ((*v[0])[1] > (*v[1])[1]) { temp = v[0]; v[0] = v[1]; v[1] = temp; }
 	if ((*v[1])[1] > (*v[2])[1]) { temp = v[1]; v[1] = v[2]; v[2] = temp; }
 	if ((*v[0])[1] > (*v[1])[1]) { temp = v[0]; v[0] = v[1]; v[1] = temp; }
@@ -775,19 +775,19 @@ void RS::tri_shade_zbuff(Vector<float,4>& v0, Vector<float,4>& v1, Vector<float,
      printf("RS:unknown cycle type in tri_shade_zbuff:%d\n", rdp->cycleType);
 }
 
-void RS::tri_shade_txtr(Vector<float,4>& v0, Vector<float,4>& v1, Vector<float,4>& v2, 
+void RS::tri_shade_txtr(Vektor<float,4>& v0, Vektor<float,4>& v1, Vektor<float,4>& v2, 
 			Color32& c0, Color32& c1, Color32& c2, 
 			float s0, float t0, float s1, float t1, float s2, float t2, int tile, float w0, float w1, float w2, RDP *rdp)
 {
    if (rdp->cycleType == 0)
      {
 	// sorting vertex by y values
-	Vector<float,4>* v[3] = { &v0, &v1, &v2 };
+	Vektor<float,4>* v[3] = { &v0, &v1, &v2 };
 	Color32* c[3];
 	float* s[3];
 	float* t[3];
 	float* w[3];
-	Vector<float,4> *temp;
+	Vektor<float,4> *temp;
 	if ((*v[0])[1] > (*v[1])[1]) { temp = v[0]; v[0] = v[1]; v[1] = temp; }
 	if ((*v[1])[1] > (*v[2])[1]) { temp = v[1]; v[1] = v[2]; v[2] = temp; }
 	if ((*v[0])[1] > (*v[1])[1]) { temp = v[0]; v[0] = v[1]; v[1] = temp; }
@@ -992,15 +992,15 @@ void RS::tri_shade_txtr(Vector<float,4>& v0, Vector<float,4>& v1, Vector<float,4
      printf("RS:unknown cycle type in tri_shade_txtr_zbuff:%d\n", rdp->cycleType);
 }
 
-void RS::tri_shade(Vector<float,4>& v0, Vector<float,4>& v1, Vector<float,4>& v2, 
+void RS::tri_shade(Vektor<float,4>& v0, Vektor<float,4>& v1, Vektor<float,4>& v2, 
 		   Color32& c0, Color32& c1, Color32& c2, RDP *rdp)
 {
    if (rdp->cycleType == 0)
      {
 	// sorting vertex by y values
-	Vector<float,4>* v[3] = { &v0, &v1, &v2 };
+	Vektor<float,4>* v[3] = { &v0, &v1, &v2 };
 	Color32* c[3];
-	Vector<float,4> *temp;
+	Vektor<float,4> *temp;
 	if ((*v[0])[1] > (*v[1])[1]) { temp = v[0]; v[0] = v[1]; v[1] = temp; }
 	if ((*v[1])[1] > (*v[2])[1]) { temp = v[1]; v[1] = v[2]; v[2] = temp; }
 	if ((*v[0])[1] > (*v[1])[1]) { temp = v[0]; v[0] = v[1]; v[1] = temp; }
@@ -1148,7 +1148,7 @@ void RS::tri_shade(Vector<float,4>& v0, Vector<float,4>& v1, Vector<float,4>& v2
      printf("RS:unknown cycle type in tri_shade_txtr_zbuff:%d\n", rdp->cycleType);
 }
 
-void RS::debug_tri(Vector<float,4>& v0, Vector<float,4>& v1, Vector<float,4>& v2, RDP *rdp)
+void RS::debug_tri(Vektor<float,4>& v0, Vektor<float,4>& v1, Vektor<float,4>& v2, RDP *rdp)
 {
    // 0 -> 1
    if (v0[1] == v1[1])

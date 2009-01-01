@@ -74,9 +74,9 @@ template<class T, int s> class Matrix
 	return temp;
      }
    
-   Vector<T,s> operator*(Vector<T,s>& v) const
+   Vektor<T,s> operator*(Vektor<T,s>& v) const
      {
-	Vector<T,s> temp;
+	Vektor<T,s> temp;
 	for (int i=0; i<s; i++)
 	  {
 	     temp[i] = 0;
@@ -86,9 +86,9 @@ template<class T, int s> class Matrix
 	return temp;
      }
    
-   friend Vector<T,s> operator*(Vector<T,s>& v, Matrix<T,s>& m)
+   friend Vektor<T,s> operator*(Vektor<T,s>& v, Matrix<T,s>& m)
      {
-	Vector<T,s> temp;
+	Vektor<T,s> temp;
 	for (int i=0; i<s; i++)
 	  {
 	     temp[i] = 0;
