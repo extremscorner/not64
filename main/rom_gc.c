@@ -134,6 +134,10 @@ int rom_read(fileBrowser_file* file){
   		break;
     }
   }
+  if(strncmp(&ROM_SETTINGS.goodname[0], "BANJO TOOIE", 11) == 0)
+    ROM_SETTINGS.eeprom_16kb = 1;
+  else
+    ROM_SETTINGS.eeprom_16kb = 0;
 
    return ret;
 }
