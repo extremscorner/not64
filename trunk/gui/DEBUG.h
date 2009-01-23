@@ -19,10 +19,10 @@
 #define DBG_AUDIOINFO 9
 #define DBG_MEMFREEINFO 10
 #define DBG_CACHEINFO 11
-#define DBG_PROFILE_GFX 12
-#define DBG_PROFILE_AUDIO 13
-#define DBG_PROFILE_TLB 14
-#define DBG_PROFILE_FP 15
+#define DBG_PROFILE_GFX 19
+#define DBG_PROFILE_AUDIO 20
+#define DBG_PROFILE_TLB 21
+#define DBG_PROFILE_FP 22
 #define DBG_STATSBASE 12 // ALL stats print from this line onwards
 #define DBG_SDGECKOOPEN 0xFC
 #define DBG_SDGECKOCLOSE 0xFD

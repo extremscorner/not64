@@ -54,7 +54,7 @@ void end_section(int section_type)
 void refresh_stat()
 {
    long long this_tick = gettime();
-   if(diff_sec(this_tick, last_refresh) >= 2)
+   if(diff_sec(last_refresh, this_tick) >= 1)
      {
 	time_in_section[0] = this_tick - last_start[0];
 	

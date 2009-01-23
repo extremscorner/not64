@@ -135,7 +135,8 @@ void VI_UpdateScreen()
 		if(VI.copy_fb)
 			VIDEO_WaitVSync();
 		GX_SetCopyClear ((GXColor){0,0,0,255}, 0xFFFFFF);
-		GX_CopyDisp (VI.xfb[VI.which_fb], GX_TRUE);	//clear the EFB before executing new Dlist
+//		GX_CopyDisp (VI.xfb[VI.which_fb], GX_TRUE);	//clear the EFB before executing new Dlist
+		GX_CopyDisp (VI.xfb[VI.which_fb], GX_FALSE);
 		GX_DrawDone(); //Wait until EFB->XFB copy is complete
 //		doCaptureScreen();
 		VI.updateOSD = false;
@@ -173,6 +174,12 @@ void VI_GX_setFB(unsigned int* fb1, unsigned int* fb2){
 }
 
 unsigned int* VI_GX_getScreenPointer(){ return VI.xfb[VI.which_fb]; }
+
+void VI_GX_clearEFB(){
+	GX_SetCopyClear ((GXColor){0,0,0,255}, 0xFFFFFF);
+	GX_CopyDisp (VI.xfb[VI.which_fb], GX_TRUE);	//clear the EFB before executing new Dlist
+	GX_DrawDone(); //Wait until EFB->XFB copy is complete
+}
 
 void VI_GX_showFPS(){
 	static long long lastTick=0;
@@ -265,11 +272,12 @@ void VI_GX_showLoadProg(float percent)
 
 //    GX_DrawDone ();
 	GX_CopyDisp (VI.xfb[VI.which_fb], GX_FALSE);
-    GX_Flush ();
-	VIDEO_SetNextFramebuffer(VI.xfb[VI.which_fb]);
-	VIDEO_Flush();
-	VI.which_fb ^= 1;
-	VIDEO_WaitVSync();
+    GX_DrawDone();
+	VI.copy_fb = true;
+//	VIDEO_SetNextFramebuffer(VI.xfb[VI.which_fb]);
+//	VIDEO_Flush();
+//	VI.which_fb ^= 1;
+//	VIDEO_WaitVSync();
 }
 
 void VI_GX_updateDEBUG()
