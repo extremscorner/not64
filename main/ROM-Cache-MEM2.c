@@ -10,6 +10,7 @@
 
 #include <stdio.h>
 #include <stdint.h>
+#include <string.h>
 #include <malloc.h>
 #include "../fileBrowser/fileBrowser.h"
 #include "../gui/gui_GX-menu.h"
@@ -34,8 +35,10 @@ static int   ROMBlocksLRU[64];
 static fileBrowser_file* ROMFile;
 static char readBefore = 0;
 
-void* memcpy(void* dst, void* src, int len);
-void showLoadProgress(float);
+extern void showLoadProgress(float);
+extern void pauseAudio(void);
+extern void resumeAudio(void);
+extern BOOL hasLoadedROM;
 
 #ifdef USE_ROM_CACHE_L1
 static u8  L1[256*1024];
@@ -72,9 +75,10 @@ void ROMCache_deinit(){
 }
 
 void ROMCache_load_block(char* dst, u32 rom_offset){
-	romFile_seekFile(ROMFile, rom_offset, FILE_BROWSER_SEEK_SET);
-	
+  if((hasLoadedROM) && (!stop))
+    pauseAudio();
 	u32 offset = 0, bytes_read, loads_til_update = 0;
+	romFile_seekFile(ROMFile, rom_offset, FILE_BROWSER_SEEK_SET);
 	while(offset < BLOCK_SIZE){
 		bytes_read = romFile_readFile(ROMFile, dst + offset, LOAD_SIZE);
 		byte_swap(dst + offset, bytes_read);
@@ -86,6 +90,8 @@ void ROMCache_load_block(char* dst, u32 rom_offset){
 		}
 	}
 	showLoadProgress( 1.0f );
+	if((hasLoadedROM) && (!stop))
+	  resumeAudio();
 }
 
 void ROMCache_read(u32* dest, u32 offset, u32 length){

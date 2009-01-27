@@ -41,7 +41,10 @@ static u32 nextL1LRUValue;
 #endif
 
 static ARQRequest ARQ_request;
-void showLoadProgress(float progress);
+extern void showLoadProgress(float progress);
+extern void pauseAudio(void);
+extern void resumeAudio(void);
+extern BOOL hasLoadedROM;
 
 void ROMCache_init(fileBrowser_file* file){
   readBefore = 0; //de-init byteswapping
@@ -70,6 +73,8 @@ void ROMCache_deinit(){
 }
 
 static void inline ROMCache_load_block(char* block, int rom_offset){
+  if((hasLoadedROM) && (!stop))
+    pauseAudio();
 	romFile_seekFile(ROM_file, rom_offset, FILE_BROWSER_SEEK_SET);
 	int bytes_read, offset=0, bytes_to_read=ARQ_GetChunkSize();
 	char* buffer = memalign(32, bytes_to_read);
@@ -90,6 +95,8 @@ static void inline ROMCache_load_block(char* block, int rom_offset){
 	} while(offset != BLOCK_SIZE && bytes_read == bytes_to_read);
 	free(buffer);
 	showLoadProgress(1.0f);
+  if((hasLoadedROM) && (!stop))
+    resumeAudio();
 }
 
 
