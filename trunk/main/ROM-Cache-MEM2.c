@@ -15,6 +15,7 @@
 #include "../fileBrowser/fileBrowser.h"
 #include "../gui/gui_GX-menu.h"
 #include "../gc_memory/MEM2.h"
+#include "../r4300/r4300.h"
 #include "../gui/DEBUG.h"
 #include "../gui/GUI.h"
 #include "ROM-Cache.h"
