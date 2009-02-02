@@ -8,7 +8,7 @@ CFLAGS  = -g -O2 -Wall $(MACHDEP) $(INCLUDE) \
 	  -DCPU_SHUTDOWN -DSPC700_SHUTDOWN -DVAR_CYCLES -DSOUND \
 	  -DNOASM -DNGC -DNOASM -DPIXEL_FORMAT=RGB565  \
 	  -fno-exceptions -Wno-unused-parameter -pipe \
-	  -DUSE_GUI -DSHOW_DEBUG -DTHREADED_AUDIO -DUSE_TLB_CACHE -DUSE_RECOMP_CACHE
+	  -DUSE_GUI -DHW_DOL -DSHOW_DEBUG -DTHREADED_AUDIO -DUSE_TLB_CACHE -DUSE_RECOMP_CACHE
 #	  -DDEBUGON  -DGLN64_SDLOG -DUSE_EXPANSION -DUSE_RECOMP_CACHE -DPPC_DYNAREC
 
 MACHDEP	= -DGEKKO -mcpu=750 -meabi -mhard-float 
@@ -23,6 +23,7 @@ OBJ		=main/rom_gc.o \
 		main/main_gc-menu.o \
 		main/gc_dvd.o \
 		main/ROM-Cache.o \
+		main/timers.o \
 		fileBrowser/fileBrowser-DVD.o \
 		fileBrowser/fileBrowser-CARD.o \
 		fileBrowser/fileBrowser-libfat.o \

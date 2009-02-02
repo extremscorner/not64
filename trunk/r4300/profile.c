@@ -64,6 +64,9 @@ void refresh_stat()
 	sprintf(txtbuffer, "audio=%f%%", 100.0f * (float)time_in_section[AUDIO_SECTION] / (float)time_in_section[0]);
 	DEBUG_print(txtbuffer, DBG_PROFILE_AUDIO);
 	
+	sprintf(txtbuffer, "idle=%f%%", 100.0f * (float)time_in_section[IDLE_SECTION] / (float)time_in_section[0]);
+	DEBUG_print(txtbuffer, DBG_PROFILE_IDLE);
+	
 	sprintf(txtbuffer, "tlb=%f%%", 100.0f * (float)time_in_section[TLB_SECTION] / (float)time_in_section[0]);
 	DEBUG_print(txtbuffer, DBG_PROFILE_TLB);
 	

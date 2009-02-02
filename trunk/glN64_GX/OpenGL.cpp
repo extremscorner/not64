@@ -1472,6 +1472,9 @@ void OGL_DrawRect( int ulx, int uly, int lrx, int lry, float *color )
 
 void OGL_DrawTexturedRect( float ulx, float uly, float lrx, float lry, float uls, float ult, float lrs, float lrt, bool flip )
 {
+#ifdef __GX__
+	OGL.GXrenderTexRect = true;
+#endif //__GX__
 	GLVertex rect[2] =
 	{	//TODO: This may fail for G_ZS_PRIM... log and fix, maybe with guOrtho
 		{ ulx, uly, gDP.otherMode.depthSource == G_ZS_PRIM ? gDP.primDepth.z : gSP.viewport.nearz, 1.0f, { /*gDP.blendColor.r, gDP.blendColor.g, gDP.blendColor.b, gDP.blendColor.a */1.0f, 1.0f, 1.0f, 0.0f }, { 1.0f, 1.0f, 1.0f, 1.0f }, uls, ult, uls, ult, 0.0f },
@@ -1479,6 +1482,7 @@ void OGL_DrawTexturedRect( float ulx, float uly, float lrx, float lry, float uls
 	};
 
 	OGL_UpdateStates();
+
 #ifndef __GX__
 	glDisable( GL_CULL_FACE );
 	glMatrixMode( GL_PROJECTION );
@@ -1505,7 +1509,6 @@ void OGL_DrawTexturedRect( float ulx, float uly, float lrx, float lry, float uls
 		rect[0].t0 = rect[0].t0 * cache.current[0]->shiftScaleT - gSP.textureTile[0]->fult;
 		rect[1].s0 = (rect[1].s0 + 1.0f) * cache.current[0]->shiftScaleS - gSP.textureTile[0]->fuls;
 		rect[1].t0 = (rect[1].t0 + 1.0f) * cache.current[0]->shiftScaleT - gSP.textureTile[0]->fult;
-
 		if ((cache.current[0]->maskS) && (fmod( rect[0].s0, cache.current[0]->width ) == 0.0f) && !(cache.current[0]->mirrorS))
 		{
 			rect[1].s0 -= rect[0].s0;
@@ -1537,7 +1540,12 @@ void OGL_DrawTexturedRect( float ulx, float uly, float lrx, float lry, float uls
 
 		if ((rect[0].t0 >= 0.0f) && (rect[1].t0 <= cache.current[0]->height))
 			glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
-#endif // !__GX__
+#else // !__GX__
+		if ((rect[0].s0 >= 0.0f) && (rect[1].s0 <= cache.current[0]->width))
+			OGL.GXforceClampS0 = true;
+		if ((rect[0].t0 >= 0.0f) && (rect[1].t0 <= cache.current[0]->height))
+			OGL.GXforceClampT0 = true;
+#endif // __GX__
 
 //		GLint height;
 
@@ -1584,7 +1592,12 @@ void OGL_DrawTexturedRect( float ulx, float uly, float lrx, float lry, float uls
 
 		if ((rect[0].t1 == 0.0f) && (rect[1].t1 <= cache.current[1]->height))
 			glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
-#endif // !__GX__
+#else // !__GX__
+		if ((rect[0].s1 == 0.0f) && (rect[1].s1 <= cache.current[1]->width))
+			OGL.GXforceClampS1 = true;
+		if ((rect[0].t1 == 0.0f) && (rect[1].t1 <= cache.current[1]->height))
+			OGL.GXforceClampT1 = true;
+#endif // __GX__
 
 		rect[0].s1 *= cache.current[1]->scaleS;
 		rect[0].t1 *= cache.current[1]->scaleT;
@@ -1603,6 +1616,34 @@ void OGL_DrawTexturedRect( float ulx, float uly, float lrx, float lry, float uls
 	}
 #else // !__GX__
 	//TODO: Set LOD texture filter modes here.
+	if ((gDP.otherMode.cycleType == G_CYC_COPY) && !OGL.forceBilinear)
+		OGL.GXuseMinMagNearest = true;
+
+	if (combiner.usesT0 && cache.current[0]->GXtexture != NULL) 
+	{
+		GX_InitTexObj(&cache.current[0]->GXtex, cache.current[0]->GXtexture, (u16) cache.current[0]->realWidth, 
+			(u16) cache.current[0]->realHeight, cache.current[0]->GXtexfmt, 
+			(cache.current[0]->clampS || OGL.GXforceClampS0) ? GX_CLAMP : GX_REPEAT, 
+			(cache.current[0]->clampT || OGL.GXforceClampT0) ? GX_CLAMP : GX_REPEAT, GX_FALSE); 
+		if (OGL.GXuseMinMagNearest) GX_InitTexObjLOD(&cache.current[0]->GXtex, GX_NEAR, GX_NEAR, 0.0f, 0.0f, 0.0f, GX_FALSE, GX_FALSE, GX_ANISO_1);
+		GX_LoadTexObj(&cache.current[0]->GXtex, GX_TEXMAP0); // t = 0 is GX_TEXMAP0 and t = 1 is GX_TEXMAP1
+	}
+
+	if (combiner.usesT1 && OGL.ARB_multitexture && cache.current[1]->GXtexture != NULL)
+	{
+		GX_InitTexObj(&cache.current[1]->GXtex, cache.current[1]->GXtexture, (u16) cache.current[1]->realWidth, 
+			(u16) cache.current[1]->realHeight, cache.current[1]->GXtexfmt, 
+			(cache.current[1]->clampS || OGL.GXforceClampS1) ? GX_CLAMP : GX_REPEAT, 
+			(cache.current[1]->clampT || OGL.GXforceClampT1) ? GX_CLAMP : GX_REPEAT, GX_FALSE); 
+		if (OGL.GXuseMinMagNearest) GX_InitTexObjLOD(&cache.current[1]->GXtex, GX_NEAR, GX_NEAR, 0.0f, 0.0f, 0.0f, GX_FALSE, GX_FALSE, GX_ANISO_1);
+		GX_LoadTexObj(&cache.current[1]->GXtex, GX_TEXMAP1); // t = 0 is GX_TEXMAP0 and t = 1 is GX_TEXMAP1
+	}
+
+	OGL.GXforceClampS0 = false;
+	OGL.GXforceClampT0 = false;
+	OGL.GXforceClampS1 = false;
+	OGL.GXforceClampT1 = false;
+	OGL.GXuseMinMagNearest = false;
 #endif // __GX__
 
 	SetConstant( rect[0].color, combiner.vertex.color, combiner.vertex.alpha );
@@ -1735,6 +1776,7 @@ void OGL_DrawTexturedRect( float ulx, float uly, float lrx, float lry, float uls
 #ifndef __GX__
 	glLoadIdentity();
 #else // !__GX__
+	OGL.GXrenderTexRect = false;
 	OGL.GXupdateMtx = true;
 #endif // __GX__
 	OGL_UpdateCullFace();
@@ -1898,11 +1940,17 @@ void OGL_GXinitDlist()
 	if(VI.copy_fb)
 		VIDEO_WaitVSync();
 
-	// init primeDepthZtex, Ztexture, and AlphaCompare
+	// init primeDepthZtex, Ztexture, AlphaCompare, and Texture Clamping
 	TextureCache_UpdatePrimDepthZtex( 1.0f );
 	GX_SetZTexture(GX_ZT_DISABLE,GX_TF_Z16,0);	//GX_ZT_DISABLE or GX_ZT_REPLACE; set in gDP.cpp
 	OGL.GXuseAlphaCompare = false;
 	GX_SetZCompLoc(GX_TRUE);	// Do Z-compare before texturing.
+	OGL.GXrenderTexRect = false;
+	OGL.GXforceClampS0 = false;
+	OGL.GXforceClampT0 = false;
+	OGL.GXforceClampS1 = false;
+	OGL.GXforceClampT1 = false;
+	OGL.GXuseMinMagNearest = false;
 
 	// init fog
 	OGL.GXfogStartZ = 0.0f;

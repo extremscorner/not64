@@ -15,7 +15,7 @@ CFLAGS  = -g -O2 -Wall $(MACHDEP) $(INCLUDE) \
 	  -DCPU_SHUTDOWN -DSPC700_SHUTDOWN -DVAR_CYCLES -DSOUND \
 	  -DNOASM -DNGC -DNOASM -DPIXEL_FORMAT=RGB565  \
 	  -fno-exceptions -Wno-unused-parameter -pipe \
-	  -DUSE_GUI -DSHOW_DEBUG -DWII -DHW_RVL -DTHREADED_AUDIO -DUSE_RECOMP_CACHE -DUSE_TLB_CACHE
+	  -DUSE_GUI -DSHOW_DEBUG -DWII -DHW_RVL -DTHREADED_AUDIO -DUSE_RECOMP_CACHE -DUSE_TLB_CACHE -DPROFILE
 #	  -DPROGRESSIVE_DISPLAY 
 #	  -DDEBUGON -DUSE_ROM_CACHE_L1 -DPRINTGECKO -DGLN64_SDLOG -DUSE_EXPANSION -DPPC_DYNAREC
 
@@ -34,6 +34,7 @@ OBJ		=main/rom_gc.o \
 		main/gc_dvd.o \
 		main/ROM-Cache-MEM2.o \
 		main/gczip.o \
+		main/timers.o \
 		fileBrowser/fileBrowser-DVD.o \
 		fileBrowser/fileBrowser-CARD.o \
 		fileBrowser/fileBrowser-WiiFS.o \
@@ -354,7 +355,7 @@ wii64-glN64.elf:	$(OBJ) $(OBJ_INPUT) $(OBJ_GLN64_GX) $(OBJ_AUDIO) $(OBJ_RSPHLE) 
 		$(LD) $^ $(LDFLAGS) $(LIBPATHS) $(LIB) -Wl -o $@
 		#strip --strip-all $@
 		powerpc-gekko-objcopy -O binary $@ wii64-glN64.dol
-		dollz3 wii64-glN64.dol wii64z.dol
+#		dollz3 wii64-glN64.dol wii64z.dol
 
 
 

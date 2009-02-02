@@ -21,8 +21,9 @@
 #define DBG_CACHEINFO 11
 #define DBG_PROFILE_GFX 19
 #define DBG_PROFILE_AUDIO 20
-#define DBG_PROFILE_TLB 21
-#define DBG_PROFILE_FP 22
+#define DBG_PROFILE_IDLE 21
+#define DBG_PROFILE_TLB 22
+#define DBG_PROFILE_FP 23
 #define DBG_STATSBASE 12 // ALL stats print from this line onwards
 #define DBG_SDGECKOOPEN 0xFC
 #define DBG_SDGECKOCLOSE 0xFD

@@ -289,7 +289,7 @@ EXPORT void CALL MoveScreen (int xpos, int ypos)
 EXPORT void CALL ProcessDList(void)
 {
 #ifdef DEBUGON
-	_break();
+//	_break();
 #endif
 
 #ifdef RSPTHREAD
@@ -310,7 +310,7 @@ EXPORT void CALL ProcessDList(void)
 #endif
 
 #ifdef DEBUGON
-	_break();
+//	_break();
 #endif
 
 #ifdef __GX__

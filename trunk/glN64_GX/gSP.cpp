@@ -152,7 +152,11 @@ void gSPProcessVertex( u32 v )
 	if (gSP.geometryMode & G_LIGHTING)
 	{
 		TransformVector( &gSP.vertices[v].nx, gSP.matrix.modelView[gSP.matrix.modelViewi] );
+#ifndef __GX__
 		Normalize( &gSP.vertices[v].nx );
+#else //!__GX__
+		guVecNormalize((Vector*) &gSP.vertices[v].nx );
+#endif //__GX__
 
 		r = gSP.lights[gSP.numLights].r;
 		g = gSP.lights[gSP.numLights].g;
@@ -160,7 +164,11 @@ void gSPProcessVertex( u32 v )
 
 		for (int i = 0; i < gSP.numLights; i++)
 		{
+#ifndef __GX__
 			intensity = DotProduct( &gSP.vertices[v].nx, &gSP.lights[i].x );
+#else //!__GX__
+			intensity = guVecDotProduct((Vector*) &gSP.vertices[v].nx,(Vector*) &gSP.lights[i].x );
+#endif //__GX__
 
 			if (intensity < 0.0f) intensity = 0.0f;
 
@@ -182,7 +190,11 @@ void gSPProcessVertex( u32 v )
 		{
 			TransformVector( &gSP.vertices[v].nx, gSP.matrix.projection );
 
+#ifndef __GX__
 			Normalize( &gSP.vertices[v].nx );
+#else //!__GX__
+			guVecNormalize((Vector*) &gSP.vertices[v].nx );
+#endif //__GX__
 
 			if (gSP.geometryMode & G_TEXTURE_GEN_LINEAR)
 			{   
@@ -536,7 +548,11 @@ void gSPLight( u32 l, s32 n )
 		gSP.lights[n].y = light->y;
 		gSP.lights[n].z = light->z;
 
+#ifndef __GX__
 		Normalize( &gSP.lights[n].x );
+#else //!__GX__
+		guVecNormalize((Vector*) &gSP.lights[n].x );
+#endif //__GX__
 	}
 
 #ifdef DEBUG
