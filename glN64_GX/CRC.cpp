@@ -64,12 +64,14 @@ DWORD CRC_CalculatePalette( DWORD crc, void *buffer, DWORD count )
 #ifndef _BIG_ENDIAN
 		crc = (crc >> 8) ^ CRCTable[(crc & 0xFF) ^ *p++];
 		crc = (crc >> 8) ^ CRCTable[(crc & 0xFF) ^ *p++];
-#else // !_BIG_ENDIAN -> Big Endian fix - maybe not necessary unless using HiRez texture packs...
-		crc = (crc >> 8) ^ CRCTable[(crc & 0xFF) ^ *(BYTE*)((int)p++ ^ 3)];
-		crc = (crc >> 8) ^ CRCTable[(crc & 0xFF) ^ *(BYTE*)((int)p++ ^ 3)];
-#endif // _BIG_ENDIAN
 
 		p += 6;
+#else // !_BIG_ENDIAN -> Big Endian fix  //TODO: Fix CRC table instead of messing with indices here and above
+		crc = (crc >> 8) ^ CRCTable[(crc & 0xFF) ^ *(BYTE*)((int)p + 1)];
+		crc = (crc >> 8) ^ CRCTable[(crc & 0xFF) ^ *(BYTE*)((int)p)];
+
+		p += 8;
+#endif // _BIG_ENDIAN
 	}
 
     return crc ^ orig;

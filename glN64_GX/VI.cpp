@@ -3,6 +3,7 @@
 #include <gccore.h>
 #include "../gui/font.h"
 #include "../gui/DEBUG.h"
+#include "../main/timers.h"
 //#include "Textures.h"
 #endif // __GX__
 
@@ -110,8 +111,8 @@ void VI_UpdateScreen()
 		{
 			if (gDP.colorImage.changed)
 			{
-				if(VI.copy_fb)
-					VIDEO_WaitVSync();
+//				if(VI.copy_fb)
+//					VIDEO_WaitVSync();
 				FrameBuffer_SaveBuffer( gDP.colorImage.address, gDP.colorImage.size, gDP.colorImage.width, gDP.colorImage.height );
 				gDP.colorImage.changed = FALSE;
 			}
@@ -132,8 +133,9 @@ void VI_UpdateScreen()
 	VI_GX_showDEBUG();
 	if(VI.updateOSD)
 	{
-		if(VI.copy_fb)
-			VIDEO_WaitVSync();
+//		DEBUG_stats(8, "RecompCache Blocks Freed", STAT_TYPE_CLEAR, 1);
+//		if(VI.copy_fb)
+//			VIDEO_WaitVSync();
 		GX_SetCopyClear ((GXColor){0,0,0,255}, 0xFFFFFF);
 //		GX_CopyDisp (VI.xfb[VI.which_fb], GX_TRUE);	//clear the EFB before executing new Dlist
 		GX_CopyDisp (VI.xfb[VI.which_fb], GX_FALSE);
@@ -181,13 +183,15 @@ void VI_GX_clearEFB(){
 	GX_DrawDone(); //Wait until EFB->XFB copy is complete
 }
 
+extern timers Timers;
+
 void VI_GX_showFPS(){
 	static long long lastTick=0;
 	static int frames=0;
 	static int VIs=0;
-	static char caption[20];
+	static char caption[25];
 	
-	long long nowTick = gettime();
+/*	long long nowTick = gettime();
 	VIs++;
 	if (VI.updateOSD)
 		frames++;
@@ -196,7 +200,9 @@ void VI_GX_showFPS(){
 		frames = 0;
 		VIs = 0;
 		lastTick = nowTick;
-	}
+	}*/
+
+	sprintf(caption, "%.1f VI/s, %.1f FPS",Timers.vis,Timers.fps);
 	
 	if (VI.updateOSD)
 	{

@@ -239,7 +239,38 @@ MultMatrix_Loop:
 	: /* no output */
 	: "S"(m0), "D"(m1), "c"(4)
 	: "memory" );
-# else // X86_ASM
+#elif defined(GEKKO) // X86_ASM
+	int i, j, k;
+	float dst[4][4] = {{0.0f}};
+	
+	for (k = 0; k < 4; k++)
+	{
+		for (i = 0; i < 4; i++)
+		{
+			//dst[i][0] += m1[i][k]*m0[k][0];
+			//dst[i][1] += m1[i][k]*m0[k][1];
+			//dst[i][2] += m1[i][k]*m0[k][2];
+			//dst[i][3] += m1[i][k]*m0[k][3];
+			__asm__ volatile(
+				"psq_lx      2, %1, %0, 1, 0 \n"
+				"ps_merge00  2,  2,  2       \n"
+				
+				"psq_l       3, 0(%2), 0, 0  \n"
+				"psq_l       4, 0(%3), 0, 0  \n"
+				"ps_madd     4,  2,  3, 4    \n"
+				"psq_st      4, 0(%3), 0, 0  \n"
+				
+				"psq_l       3, 8(%2), 0, 0  \n"
+				"psq_l       4, 8(%3), 0, 0  \n"
+				"ps_madd     4,  2,  3, 4    \n"
+				"psq_st      4, 8(%3), 0, 0  \n"
+				:: "r" (m1+i), "r" (k*4),
+				   "r" (m0+k), "r" (dst+i)
+				:  "r0", "fr2", "fr3", "fr4", "memory");
+		}
+	}
+	memcpy( m0, dst, sizeof(float) * 16 );
+# else // GEKKO
 	int i;
 	float dst[4][4];
 
@@ -251,7 +282,7 @@ MultMatrix_Loop:
 		dst[3][i] = m0[3][i]*m1[3][3] + m0[2][i]*m1[3][2] + m0[1][i]*m1[3][1] + m0[0][i]*m1[3][0];
 	}
 	memcpy( m0, dst, sizeof(float) * 16 );
-# endif // !X86_ASM
+# endif // !( X86_ASM || GEKKO )
 #endif // __LINUX__
 }
 

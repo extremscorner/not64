@@ -31,6 +31,7 @@
 #include "../gui/GUI.h"
 #include "../gui/menu.h"
 #include "../gui/DEBUG.h"
+#include "timers.h"
 #ifdef WII
 #include <ogc/conf.h>
 #include <wiiuse/wpad.h>
@@ -61,6 +62,7 @@ extern char audioEnabled;
 extern char printToScreen;
 extern char showFPSonScreen;
 extern char printToSD;
+extern timers Timers;
        char saveEnabled;
        char creditsScrolling;
 unsigned int isWii = 0;
@@ -80,8 +82,8 @@ static void dummy_func(){ }
 void (*fBRead)(DWORD addr) = NULL;
 void (*fBWrite)(DWORD addr, DWORD size) = NULL;
 void (*fBGetFrameBufferInfo)(void *p) = NULL;
-void new_frame(){ }
-void new_vi(){ }
+//void new_frame(){ }
+//void new_vi(){ }
 // Read PAD format from Classic if available
 u16 readWPAD(void);
 
@@ -110,6 +112,7 @@ int main(){
 	showFPSonScreen  = 1; // Show FPS on Screen
 	printToScreen    = 1; // Show DEBUG text on screen
 	printToSD        = 0; // Disable SD logging
+	Timers.limitVIs  = 1; // Limit VI/s
 	saveEnabled      = 0; // Don't save game
 	creditsScrolling = 0; // Normal menu for now
 	dynacore         = 2; // Pure Interpreter

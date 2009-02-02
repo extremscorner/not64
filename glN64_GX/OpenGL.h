@@ -116,6 +116,12 @@ struct GLInfo
 	u8		GXfogType;
 	bool	GXupdateFog;
 	bool	GXpolyOffset;
+	bool	GXrenderTexRect;
+	bool	GXforceClampS0;
+	bool	GXforceClampT0;
+	bool	GXforceClampS1;
+	bool	GXforceClampT1;
+	bool	GXuseMinMagNearest;
 #endif
 };
 

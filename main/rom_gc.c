@@ -201,6 +201,9 @@ int rom_read(fileBrowser_file* file){
   else
     ROM_SETTINGS.eeprom_16kb = 0;
 
+  //Set VI limit based on ROM header
+  InitTimer();
+
    return ret;
 }
 

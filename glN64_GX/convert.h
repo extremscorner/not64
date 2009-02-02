@@ -679,14 +679,17 @@ inline u16 RGBA8888_RGBA4444( u32 color )
 	: "c"(color) );
 	return (u16)color;
 # else // X86_ASM
-/*	return ((color & 0xf0000000) >> 16) |
-	       ((color & 0x00f00000) >> 12) |
-	       ((color & 0x0000f000) >>  8) |
-	       ((color & 0x000000f0) >>  4);*/
+#ifndef _BIG_ENDIAN
 	return ((color & 0x000000f0) <<  8) |	// r
 	       ((color & 0x0000f000) >>  4) |	// g
 	       ((color & 0x00f00000) >> 16) |	// b
 	       ((color & 0xf0000000) >> 28);	// a
+#else //!_BIG_ENDIAN
+	return ((color & 0xf0000000) >> 16) |
+	       ((color & 0x00f00000) >> 12) |
+	       ((color & 0x0000f000) >>  8) |
+	       ((color & 0x000000f0) >>  4);
+#endif //_BIG_ENDIAN
 # endif // !X86_ASM
 #endif // __LINUX__
 }
@@ -758,6 +761,7 @@ inline u32 RGBA5551_RGBA8888( u16 color )
 	return ret;
 # else // X86_ASM
 	// ok
+#ifndef _BIG_ENDIAN
 	color = swapword( color );
 	u8 r, g, b, a;
 	r = Five2Eight[color >> 11];
@@ -765,6 +769,15 @@ inline u32 RGBA5551_RGBA8888( u16 color )
 	b = Five2Eight[(color >> 1) & 0x001f];
 	a = One2Eight [(color     ) & 0x0001];
 	return (a << 24) | (b << 16) | (g << 8) | r;
+#else //!_BIG_ENDIAN
+	//0xR5G5B5A1
+	u8 r, g, b, a;
+	r = Five2Eight[color >> 11];
+	g = Five2Eight[(color >> 6) & 0x001f];
+	b = Five2Eight[(color >> 1) & 0x001f];
+	a = One2Eight [(color     ) & 0x0001];
+	return (r << 24) | (g << 16) | (b << 8) | a;
+#endif //_BIG_ENDIAN
 # endif // !X86_ASM
 #endif // __LINUX__
 }
@@ -783,7 +796,12 @@ inline u16 RGBA5551_RGBA5551( u16 color )
 	__asm__ volatile( "xchgb	%%ah, %%al\n\t" : "=a"(color) : "a"(color) );
 	return color;
 # else
+#ifndef _BIG_ENDIAN
 	return swapword( color );
+#else //!_BIG_ENDIAN
+	//0xR5G5B5A1
+	return color;
+#endif //_BIG_ENDIAN
 # endif
 #endif // __LINUX__
 }
@@ -822,9 +840,16 @@ inline u32 IA88_RGBA8888( u16 color )
 	return ret;
 # else
 	// ok
+#ifndef _BIG_ENDIAN
 	u8 a = color >> 8;
 	u8 i = color & 0x00FF;
 	return (a << 24) | (i << 16) | (i << 8) | i;
+#else //!_BIG_ENDIAN
+	//0xI8A8
+	u8 i = color >> 8;
+	u8 a = color & 0x00FF;
+	return (i << 24) | (i << 16) | (i << 8) | a;
+#endif //_BIG_ENDIAN
 # endif
 #endif // __LINUX__
 }
@@ -862,6 +887,7 @@ inline u16 IA88_RGBA4444( u16 color )
 	: "c"(color) );
 	return color;
 # else // X86_ASM
+	//0xI8A8
 	u8 i = color >> 12;
 	u8 a = (color >> 4) & 0x000F;
 	return (i << 12) | (i << 8) | (i << 4) | a;
@@ -898,6 +924,7 @@ inline u16 IA44_RGBA4444( u8 color )
 	: "c"(color) );
 	return ret;
 # else // X86_ASM
+	//0xI4A4
 	return ((color & 0xf0) << 8) | ((color & 0xf0) << 4) | (color);
 # endif // !X86_ASM
 #endif // __LINUX__
@@ -957,9 +984,14 @@ inline u32 IA44_RGBA8888( u8 color )
 	return ret;
 # else // X86_ASM
 	// ok
+	//0xI4A4
 	u8 i = Four2Eight[color >> 4];
 	u8 a = Four2Eight[color & 0x0F];
+#ifndef _BIG_ENDIAN
 	return (a << 24) | (i << 16) | (i << 8) | i;
+#else //!_BIG_ENDIAN
+	return (i << 24) | (i << 16) | (i << 8) | a;
+#endif //_BIG_ENDIAN
 # endif // !X86_ASM
 #endif // __LINUX__
 }
@@ -1167,6 +1199,7 @@ inline u16 I4_RGBA4444( u8 color )
 	: "c"(color) );
 	return ret;
 # else // X86_ASM
+	//0x0I4
 	u16 ret = color & 0x0f;
 	ret |= ret << 4;
 	ret |= ret << 8;
@@ -1218,6 +1251,7 @@ inline u32 I4_RGBA8888( u8 color )
 	return ret;
 # else // X86_ASM
 	// ok
+	//0x0I4
 	u8 c = Four2Eight[color];
 	c |= c << 4;
 	return (c << 24) | (c << 16) | (c << 8) | c;
