@@ -398,6 +398,25 @@ static void Initialise (void){
 	else
 		isWii = 0;
 	//SYS_SetResetCallback(ResetCallBack);	//not working, use old method for now
+	
+	// Init PS GQRs so I can load signed/unsigned chars/shorts as PS values
+	__asm__ volatile(
+		"lis	3, 4     \n"
+		"addi	3, 3, 4  \n"
+		"mtspr	913, 3   \n" // GQR1 = unsigned char
+		"lis	3, 6     \n"
+		"addi	3, 3, 6  \n"
+		"mtspr	914, 3   \n" // GQR2 = signed char
+		"lis	3, 5     \n"
+		"addi	3, 3, 5  \n"
+		"mtspr	915, 3   \n" // GQR3 = unsigned short
+		"lis	3, 7     \n"
+		"addi	3, 3, 7  \n"
+		"mtspr	916, 3   \n" // GQR4 = signed short
+		"lis	3, %0    \n"
+		"addi	3, 3, %0 \n"
+		"mtspr	917, 3   \n" // GQR5 = unsigned short / (2^16)
+		:: "n" (16<<8 | 5) : "r3");
 }
 
 /* Reinitialize GX */ 
