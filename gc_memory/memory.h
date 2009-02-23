@@ -38,14 +38,19 @@
 
 int init_memory();
 void free_memory();
-#define read_word_in_memory() readmem[address>>16]()
-#define read_byte_in_memory() readmemb[address>>16]()
-#define read_hword_in_memory() readmemh[address>>16]()
-#define read_dword_in_memory() readmemd[address>>16]()
-#define write_word_in_memory() writemem[address>>16]()
-#define write_byte_in_memory() writememb[address >>16]()
-#define write_hword_in_memory() writememh[address >>16]()
-#define write_dword_in_memory() writememd[address >>16]()
+
+enum { MEM_READ_WORD,  MEM_READ_BYTE,  MEM_READ_HALF,  MEM_READ_LONG,
+       MEM_WRITE_WORD, MEM_WRITE_BYTE, MEM_WRITE_HALF, MEM_WRITE_LONG };
+
+#define read_word_in_memory()   rwmem[address>>16][MEM_READ_WORD]()
+#define read_byte_in_memory()   rwmem[address>>16][MEM_READ_BYTE]()
+#define read_hword_in_memory()  rwmem[address>>16][MEM_READ_HALF]()
+#define read_dword_in_memory()  rwmem[address>>16][MEM_READ_LONG]()
+#define write_word_in_memory()  rwmem[address>>16][MEM_WRITE_WORD]()
+#define write_byte_in_memory()  rwmem[address>>16][MEM_WRITE_BYTE]()
+#define write_hword_in_memory() rwmem[address>>16][MEM_WRITE_HALF]()
+#define write_dword_in_memory() rwmem[address>>16][MEM_WRITE_LONG]()
+
 extern unsigned long SP_DMEM[0x1000/4*2];
 extern unsigned char *SP_DMEMb;
 extern unsigned long *SP_IMEM;
@@ -61,14 +66,7 @@ extern unsigned char byte;
 extern unsigned short hword;
 extern unsigned long long int dword, *rdword;
 
-extern void (*readmem[0xFFFF])();
-extern void (*readmemb[0xFFFF])();
-extern void (*readmemh[0xFFFF])();
-extern void (*readmemd[0xFFFF])();
-extern void (*writemem[0xFFFF])();
-extern void (*writememb[0xFFFF])();
-extern void (*writememh[0xFFFF])();
-extern void (*writememd[0xFFFF])();
+extern void (**rwmem[0xFFFF])();
 
 typedef struct _RDRAM_register
 {
