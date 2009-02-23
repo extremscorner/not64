@@ -105,17 +105,97 @@ unsigned long long int* rdword;
 // trash : when we write to unmaped memory it is written here
 static unsigned long trash;
 
-// hash tables of read functions
-void (*readmem[0xFFFF])();
-void (*readmemb[0xFFFF])();
-void (*readmemh[0xFFFF])();
-void (*readmemd[0xFFFF])();
+// hash tables of memory functions
+void (**rwmem[0xFFFF])();
 
-// hash tables of write functions
-void (*writemem[0xFFFF])();
-void (*writememb[0xFFFF])();
-void (*writememd[0xFFFF])();
-void (*writememh[0xFFFF])();
+void (*rw_nothing[8])() =
+	{ read_nothing,  read_nothingb,  read_nothingh,  read_nothingd,
+	  write_nothing, write_nothingb, write_nothingh, write_nothingd };
+
+void (*rw_nomem[8])() =
+	{ read_nomem,  read_nomemb,  read_nomemh,  read_nomemd,
+	  write_nomem, write_nomemb, write_nomemh, write_nomemd };
+
+void (*rw_rdram[8])() =
+	{ read_rdram,  read_rdramb,  read_rdramh,  read_rdramd,
+	  write_rdram, write_rdramb, write_rdramh, write_rdramd };
+
+void (*rw_rdramFB[8])() =
+	{ read_rdramFB,  read_rdramFBb,  read_rdramFBh,  read_rdramFBd,
+	  write_rdramFB, write_rdramFBb, write_rdramFBh, write_rdramFBd };
+
+void (*rw_rdramreg[8])() =
+	{ read_rdramreg,  read_rdramregb,  read_rdramregh,  read_rdramregd,
+	  write_rdramreg, write_rdramregb, write_rdramregh, write_rdramregd };
+
+void (*rw_rsp_mem[8])() =
+	{ read_rsp_mem,  read_rsp_memb,  read_rsp_memh,  read_rsp_memd,
+	  write_rsp_mem, write_rsp_memb, write_rsp_memh, write_rsp_memd };
+
+void (*rw_rsp_reg[8])() =
+	{ read_rsp_reg,  read_rsp_regb,  read_rsp_regh,  read_rsp_regd,
+	  write_rsp_reg, write_rsp_regb, write_rsp_regh, write_rsp_regd };
+
+void (*rw_rsp[8])() =
+	{ read_rsp,  read_rspb,  read_rsph,  read_rspd,
+	  write_rsp, write_rspb, write_rsph, write_rspd };
+
+void (*rw_dp[8])() =
+	{ read_dp,  read_dpb,  read_dph,  read_dpd,
+	  write_dp, write_dpb, write_dph, write_dpd };
+
+void (*rw_dps[8])() =
+	{ read_dps,  read_dpsb,  read_dpsh,  read_dpsd,
+	  write_dps, write_dpsb, write_dpsh, write_dpsd };
+
+void (*rw_mi[8])() =
+	{ read_mi,  read_mib,  read_mih,  read_mid,
+	  write_mi, write_mib, write_mih, write_mid };
+
+void (*rw_vi[8])() =
+	{ read_vi,  read_vib,  read_vih,  read_vid,
+	  write_vi, write_vib, write_vih, write_vid };
+
+void (*rw_ai[8])() =
+	{ read_ai,  read_aib,  read_aih,  read_aid,
+	  write_ai, write_aib, write_aih, write_aid };
+
+void (*rw_pi[8])() =
+	{ read_pi,  read_pib,  read_pih,  read_pid,
+	  write_pi, write_pib, write_pih, write_pid };
+
+void (*rw_ri[8])() =
+	{ read_ri,  read_rib,  read_rih,  read_rid,
+	  write_ri, write_rib, write_rih, write_rid };
+
+void (*rw_si[8])() =
+	{ read_si,  read_sib,  read_sih,  read_sid,
+	  write_si, write_sib, write_sih, write_sid };
+
+void (*rw_flashram0[8])() =
+	{ read_flashram_status,  read_flashram_statusb,
+	  read_flashram_statush, read_flashram_statusd,
+	  write_flashram_dummy,  write_flashram_dummyb,
+	  write_flashram_dummyh, write_flashram_dummyd };
+
+void (*rw_flashram1[8])() =
+	{ read_nothing,            read_nothingb,
+	  read_nothingh,           read_nothingd,
+	  write_flashram_command,  write_flashram_commandb,
+	  write_flashram_commandh, write_flashram_commandd };
+
+void (*rw_rom0[8])() =
+	{ read_rom,      read_romb,      read_romh,      read_romd,
+	  write_nothing, write_nothingb, write_nothingh, write_nothingd };
+
+void (*rw_rom1[8])() =
+	{ read_rom,      read_romb,      read_romh,      read_romd,
+	  write_rom,     write_nothingb, write_nothingh, write_nothingd };
+
+void (*rw_pif[8])() =
+	{ read_pif,  read_pifb,  read_pifh,  read_pifd,
+	  write_pif, write_pifb, write_pifh, write_pifd };
+
 
 // memory sections
 static unsigned long *readrdramreg[0xFFFF];
@@ -153,14 +233,7 @@ int init_memory()
    //init hash tables
    for (i=0; i<(0x10000); i++)
      {
-	readmem[i] = read_nomem;
-	readmemb[i] = read_nomemb;
-	readmemd[i] = read_nomemd;
-	readmemh[i] = read_nomemh;
-	writemem[i] = write_nomem;
-	writememb[i] = write_nomemb;
-	writememd[i] = write_nomemd;
-	writememh[i] = write_nomemh;
+	rwmem[i] = rw_nomem;
      }
    
    //init RDRAM
@@ -171,65 +244,23 @@ int init_memory()
    for (i=0; i<(0x800000/4/2); i++) rdram[i]=0;
    for (i=0; i<0x40; i++)
 #endif
-    {
-	readmem[(0x8000+i)] = read_rdram;
-	readmem[(0xa000+i)] = read_rdram;
-	readmemb[(0x8000+i)] = read_rdramb;
-	readmemb[(0xa000+i)] = read_rdramb;
-	readmemh[(0x8000+i)] = read_rdramh;
-	readmemh[(0xa000+i)] = read_rdramh;
-	readmemd[(0x8000+i)] = read_rdramd;
-	readmemd[(0xa000+i)] = read_rdramd;
-	writemem[(0x8000+i)] = write_rdram;
-	writemem[(0xa000+i)] = write_rdram;
-	writememb[(0x8000+i)] = write_rdramb;
-	writememb[(0xa000+i)] = write_rdramb;
-	writememh[(0x8000+i)] = write_rdramh;
-	writememh[(0xa000+i)] = write_rdramh;
-	writememd[(0x8000+i)] = write_rdramd;
-	writememd[(0xa000+i)] = write_rdramd;
+     {
+	rwmem[(0x8000+i)] = rw_rdram;
+	rwmem[(0xa000+i)] = rw_rdram;
      }
 #ifdef USE_EXPANSION
    for (i=0x80; i<0x3F0; i++)
 #else
    for (i=0x40; i<0x3F0; i++)
 #endif
-    {
-	readmem[0x8000+i] = read_nothing;
-	readmem[0xa000+i] = read_nothing;
-	readmemb[0x8000+i] = read_nothingb;
-	readmemb[0xa000+i] = read_nothingb;
-	readmemh[0x8000+i] = read_nothingh;
-	readmemh[0xa000+i] = read_nothingh;
-	readmemd[0x8000+i] = read_nothingd;
-	readmemd[0xa000+i] = read_nothingd;
-	writemem[0x8000+i] = write_nothing;
-	writemem[0xa000+i] = write_nothing;
-	writememb[0x8000+i] = write_nothingb;
-	writememb[0xa000+i] = write_nothingb;
-	writememh[0x8000+i] = write_nothingh;
-	writememh[0xa000+i] = write_nothingh;
-	writememd[0x8000+i] = write_nothingd;
-	writememd[0xa000+i] = write_nothingd;
+     {
+	rwmem[0x8000+i] = rw_nothing;
+	rwmem[0xa000+i] = rw_nothing;
      }
    
    //init RDRAM registers
-   readmem[0x83f0] = read_rdramreg;
-   readmem[0xa3f0] = read_rdramreg;
-   readmemb[0x83f0] = read_rdramregb;
-   readmemb[0xa3f0] = read_rdramregb;
-   readmemh[0x83f0] = read_rdramregh;
-   readmemh[0xa3f0] = read_rdramregh;
-   readmemd[0x83f0] = read_rdramregd;
-   readmemd[0xa3f0] = read_rdramregd;
-   writemem[0x83f0] = write_rdramreg;
-   writemem[0xa3f0] = write_rdramreg;
-   writememb[0x83f0] = write_rdramregb;
-   writememb[0xa3f0] = write_rdramregb;
-   writememh[0x83f0] = write_rdramregh;
-   writememh[0xa3f0] = write_rdramregh;
-   writememd[0x83f0] = write_rdramregd;
-   writememd[0xa3f0] = write_rdramregd;
+   rwmem[0x83f0] = rw_rdramreg;
+   rwmem[0xa3f0] = rw_rdramreg;
    rdram_register.rdram_config=0;
    rdram_register.rdram_device_id=0;
    rdram_register.rdram_delay=0;
@@ -254,81 +285,25 @@ int init_memory()
    for (i=0x28; i<0xFFFF; i++) readrdramreg[i] = &trash;
    for (i=1; i<0x10; i++)
      {
-	readmem[0x83f0+i] = read_nothing;
-	readmem[0xa3f0+i] = read_nothing;
-	readmemb[0x83f0+i] = read_nothingb;
-	readmemb[0xa3f0+i] = read_nothingb;
-	readmemh[0x83f0+i] = read_nothingh;
-	readmemh[0xa3f0+i] = read_nothingh;
-	readmemd[0x83f0+i] = read_nothingd;
-	readmemd[0xa3f0+i] = read_nothingd;
-	writemem[0x83f0+i] = write_nothing;
-	writemem[0xa3f0+i] = write_nothing;
-	writememb[0x83f0+i] = write_nothingb;
-	writememb[0xa3f0+i] = write_nothingb;
-	writememh[0x83f0+i] = write_nothingh;
-	writememh[0xa3f0+i] = write_nothingh;
-	writememd[0x83f0+i] = write_nothingd;
-	writememd[0xa3f0+i] = write_nothingd;
+	rwmem[0x83f0+i] = rw_nothing;
+	rwmem[0xa3f0+i] = rw_nothing;
      }
    
    //init RSP memory
-   readmem[0x8400] = read_rsp_mem;
-   readmem[0xa400] = read_rsp_mem;
-   readmemb[0x8400] = read_rsp_memb;
-   readmemb[0xa400] = read_rsp_memb;
-   readmemh[0x8400] = read_rsp_memh;
-   readmemh[0xa400] = read_rsp_memh;
-   readmemd[0x8400] = read_rsp_memd;
-   readmemd[0xa400] = read_rsp_memd;
-   writemem[0x8400] = write_rsp_mem;
-   writemem[0xa400] = write_rsp_mem;
-   writememb[0x8400] = write_rsp_memb;
-   writememb[0xa400] = write_rsp_memb;
-   writememh[0x8400] = write_rsp_memh;
-   writememh[0xa400] = write_rsp_memh;
-   writememd[0x8400] = write_rsp_memd;
-   writememd[0xa400] = write_rsp_memd;
+   rwmem[0x8400] = rw_rsp_mem;
+   rwmem[0xa400] = rw_rsp_mem;
    for (i=0; i<(0x1000/4); i++) SP_DMEM[i]=0;
    for (i=0; i<(0x1000/4); i++) SP_IMEM[i]=0;
    
    for (i=1; i<0x4; i++)
      {
-	readmem[0x8400+i] = read_nothing;
-	readmem[0xa400+i] = read_nothing;
-	readmemb[0x8400+i] = read_nothingb;
-	readmemb[0xa400+i] = read_nothingb;
-	readmemh[0x8400+i] = read_nothingh;
-	readmemh[0xa400+i] = read_nothingh;
-	readmemd[0x8400+i] = read_nothingd;
-	readmemd[0xa400+i] = read_nothingd;
-	writemem[0x8400+i] = write_nothing;
-	writemem[0xa400+i] = write_nothing;
-	writememb[0x8400+i] = write_nothingb;
-	writememb[0xa400+i] = write_nothingb;
-	writememh[0x8400+i] = write_nothingh;
-	writememh[0xa400+i] = write_nothingh;
-	writememd[0x8400+i] = write_nothingd;
-	writememd[0xa400+i] = write_nothingd;
+	rwmem[0x8400+i] = rw_nothing;
+	rwmem[0xa400+i] = rw_nothing;
      }
    
    //init RSP registers
-   readmem[0x8404] = read_rsp_reg;
-   readmem[0xa404] = read_rsp_reg;
-   readmemb[0x8404] = read_rsp_regb;
-   readmemb[0xa404] = read_rsp_regb;
-   readmemh[0x8404] = read_rsp_regh;
-   readmemh[0xa404] = read_rsp_regh;
-   readmemd[0x8404] = read_rsp_regd;
-   readmemd[0xa404] = read_rsp_regd;
-   writemem[0x8404] = write_rsp_reg;
-   writemem[0xa404] = write_rsp_reg;
-   writememb[0x8404] = write_rsp_regb;
-   writememb[0xa404] = write_rsp_regb;
-   writememh[0x8404] = write_rsp_regh;
-   writememh[0xa404] = write_rsp_regh;
-   writememd[0x8404] = write_rsp_regd;
-   writememd[0xa404] = write_rsp_regd;
+   rwmem[0x8404] = rw_rsp_reg;
+   rwmem[0xa404] = rw_rsp_reg;
    sp_register.sp_mem_addr_reg=0;
    sp_register.sp_dram_addr_reg=0;
    sp_register.sp_rd_len_reg=0;
@@ -365,40 +340,12 @@ int init_memory()
    for (i=0x20; i<0x30; i++) readrspreg[i] = &trash;
    for (i=5; i<8; i++)
      {
-	readmem[0x8400+i] = read_nothing;
-	readmem[0xa400+i] = read_nothing;
-	readmemb[0x8400+i] = read_nothingb;
-	readmemb[0xa400+i] = read_nothingb;
-	readmemh[0x8400+i] = read_nothingh;
-	readmemh[0xa400+i] = read_nothingh;
-	readmemd[0x8400+i] = read_nothingd;
-	readmemd[0xa400+i] = read_nothingd;
-	writemem[0x8400+i] = write_nothing;
-	writemem[0xa400+i] = write_nothing;
-	writememb[0x8400+i] = write_nothingb;
-	writememb[0xa400+i] = write_nothingb;
-	writememh[0x8400+i] = write_nothingh;
-	writememh[0xa400+i] = write_nothingh;
-	writememd[0x8400+i] = write_nothingd;
-	writememd[0xa400+i] = write_nothingd;
+	rwmem[0x8400+i] = rw_nothing;
+	rwmem[0xa400+i] = rw_nothing;
      }
    
-   readmem[0x8408] = read_rsp;
-   readmem[0xa408] = read_rsp;
-   readmemb[0x8408] = read_rspb;
-   readmemb[0xa408] = read_rspb;
-   readmemh[0x8408] = read_rsph;
-   readmemh[0xa408] = read_rsph;
-   readmemd[0x8408] = read_rspd;
-   readmemd[0xa408] = read_rspd;
-   writemem[0x8408] = write_rsp;
-   writemem[0xa408] = write_rsp;
-   writememb[0x8408] = write_rspb;
-   writememb[0xa408] = write_rspb;
-   writememh[0x8408] = write_rsph;
-   writememh[0xa408] = write_rsph;
-   writememd[0x8408] = write_rspd;
-   writememd[0xa408] = write_rspd;
+   rwmem[0x8408] = rw_rsp;
+   rwmem[0xa408] = rw_rsp;
    rsp_register.rsp_pc=0;
    rsp_register.rsp_ibist=0;
    readrsp[0x0] = &rsp_register.rsp_pc;
@@ -407,41 +354,13 @@ int init_memory()
    for (i=0x8; i<0x10; i++) readrsp[i] = &trash;
    for (i=9; i<0x10; i++)
      {
-	readmem[0x8400+i] = read_nothing;
-	readmem[0xa400+i] = read_nothing;
-	readmemb[0x8400+i] = read_nothingb;
-	readmemb[0xa400+i] = read_nothingb;
-	readmemh[0x8400+i] = read_nothingh;
-	readmemh[0xa400+i] = read_nothingh;
-	readmemd[0x8400+i] = read_nothingd;
-	readmemd[0xa400+i] = read_nothingd;
-	writemem[0x8400+i] = write_nothing;
-	writemem[0xa400+i] = write_nothing;
-	writememb[0x8400+i] = write_nothingb;
-	writememb[0xa400+i] = write_nothingb;
-	writememh[0x8400+i] = write_nothingh;
-	writememh[0xa400+i] = write_nothingh;
-	writememd[0x8400+i] = write_nothingd;
-	writememd[0xa400+i] = write_nothingd;
+	rwmem[0x8400+i] = rw_nothing;
+	rwmem[0xa400+i] = rw_nothing;
      }
    
    //init rdp command registers
-   readmem[0x8410] = read_dp;
-   readmem[0xa410] = read_dp;
-   readmemb[0x8410] = read_dpb;
-   readmemb[0xa410] = read_dpb;
-   readmemh[0x8410] = read_dph;
-   readmemh[0xa410] = read_dph;
-   readmemd[0x8410] = read_dpd;
-   readmemd[0xa410] = read_dpd;
-   writemem[0x8410] = write_dp;
-   writemem[0xa410] = write_dp;
-   writememb[0x8410] = write_dpb;
-   writememb[0xa410] = write_dpb;
-   writememh[0x8410] = write_dph;
-   writememh[0xa410] = write_dph;
-   writememd[0x8410] = write_dpd;
-   writememd[0xa410] = write_dpd;
+   rwmem[0x8410] = rw_dp;
+   rwmem[0xa410] = rw_dp;
    dpc_register.dpc_start=0;
    dpc_register.dpc_end=0;
    dpc_register.dpc_current=0;
@@ -474,41 +393,13 @@ int init_memory()
    for (i=0x20; i<0x30; i++) readdp[i] = &trash;
    for (i=1; i<0x10; i++)
      {
-	readmem[0x8410+i] = read_nothing;
-	readmem[0xa410+i] = read_nothing;
-	readmemb[0x8410+i] = read_nothingb;
-	readmemb[0xa410+i] = read_nothingb;
-	readmemh[0x8410+i] = read_nothingh;
-	readmemh[0xa410+i] = read_nothingh;
-	readmemd[0x8410+i] = read_nothingd;
-	readmemd[0xa410+i] = read_nothingd;
-	writemem[0x8410+i] = write_nothing;
-	writemem[0xa410+i] = write_nothing;
-	writememb[0x8410+i] = write_nothingb;
-	writememb[0xa410+i] = write_nothingb;
-	writememh[0x8410+i] = write_nothingh;
-	writememh[0xa410+i] = write_nothingh;
-	writememd[0x8410+i] = write_nothingd;
-	writememd[0xa410+i] = write_nothingd;
+	rwmem[0x8410+i] = rw_nothing;
+	rwmem[0xa410+i] = rw_nothing;
      }
    
    //init rsp span registers
-   readmem[0x8420] = read_dps;
-   readmem[0xa420] = read_dps;
-   readmemb[0x8420] = read_dpsb;
-   readmemb[0xa420] = read_dpsb;
-   readmemh[0x8420] = read_dpsh;
-   readmemh[0xa420] = read_dpsh;
-   readmemd[0x8420] = read_dpsd;
-   readmemd[0xa420] = read_dpsd;
-   writemem[0x8420] = write_dps;
-   writemem[0xa420] = write_dps;
-   writememb[0x8420] = write_dpsb;
-   writememb[0xa420] = write_dpsb;
-   writememh[0x8420] = write_dpsh;
-   writememh[0xa420] = write_dpsh;
-   writememd[0x8420] = write_dpsd;
-   writememd[0xa420] = write_dpsd;
+   rwmem[0x8420] = rw_dps;
+   rwmem[0xa420] = rw_dps;
    dps_register.dps_tbist=0;
    dps_register.dps_test_mode=0;
    dps_register.dps_buftest_addr=0;
@@ -521,41 +412,13 @@ int init_memory()
    for (i=0x10; i<0x20; i++) readdps[i] = &trash;
    for (i=1; i<0x10; i++)
      {
-	readmem[0x8420+i] = read_nothing;
-	readmem[0xa420+i] = read_nothing;
-	readmemb[0x8420+i] = read_nothingb;
-	readmemb[0xa420+i] = read_nothingb;
-	readmemh[0x8420+i] = read_nothingh;
-	readmemh[0xa420+i] = read_nothingh;
-	readmemd[0x8420+i] = read_nothingd;
-	readmemd[0xa420+i] = read_nothingd;
-	writemem[0x8420+i] = write_nothing;
-	writemem[0xa420+i] = write_nothing;
-	writememb[0x8420+i] = write_nothingb;
-	writememb[0xa420+i] = write_nothingb;
-	writememh[0x8420+i] = write_nothingh;
-	writememh[0xa420+i] = write_nothingh;
-	writememd[0x8420+i] = write_nothingd;
-	writememd[0xa420+i] = write_nothingd;
+	rwmem[0x8420+i] = rw_nothing;
+	rwmem[0xa420+i] = rw_nothing;
      }
    
    //init mips registers
-   readmem[0xa830] = read_mi;
-   readmem[0xa430] = read_mi;
-   readmemb[0xa830] = read_mib;
-   readmemb[0xa430] = read_mib;
-   readmemh[0xa830] = read_mih;
-   readmemh[0xa430] = read_mih;
-   readmemd[0xa830] = read_mid;
-   readmemd[0xa430] = read_mid;
-   writemem[0x8430] = write_mi;
-   writemem[0xa430] = write_mi;
-   writememb[0x8430] = write_mib;
-   writememb[0xa430] = write_mib;
-   writememh[0x8430] = write_mih;
-   writememh[0xa430] = write_mih;
-   writememd[0x8430] = write_mid;
-   writememd[0xa430] = write_mid;
+   rwmem[0xa830] = rw_mi;
+   rwmem[0xa430] = rw_mi;
    MI_register.w_mi_init_mode_reg = 0;
    MI_register.mi_init_mode_reg = 0;
    MI_register.init_length = 0;
@@ -580,41 +443,13 @@ int init_memory()
    for (i=0x10; i<0x20; i++) readmi[i] = &trash;
    for (i=1; i<0x10; i++)
      {
-	readmem[0x8430+i] = read_nothing;
-	readmem[0xa430+i] = read_nothing;
-	readmemb[0x8430+i] = read_nothingb;
-	readmemb[0xa430+i] = read_nothingb;
-	readmemh[0x8430+i] = read_nothingh;
-	readmemh[0xa430+i] = read_nothingh;
-	readmemd[0x8430+i] = read_nothingd;
-	readmemd[0xa430+i] = read_nothingd;
-	writemem[0x8430+i] = write_nothing;
-	writemem[0xa430+i] = write_nothing;
-	writememb[0x8430+i] = write_nothingb;
-	writememb[0xa430+i] = write_nothingb;
-	writememh[0x8430+i] = write_nothingh;
-	writememh[0xa430+i] = write_nothingh;
-	writememd[0x8430+i] = write_nothingd;
-	writememd[0xa430+i] = write_nothingd;
+	rwmem[0x8430+i] = rw_nothing;
+	rwmem[0xa430+i] = rw_nothing;
      }
    
    //init VI registers
-   readmem[0x8440] = read_vi;
-   readmem[0xa440] = read_vi;
-   readmemb[0x8440] = read_vib;
-   readmemb[0xa440] = read_vib;
-   readmemh[0x8440] = read_vih;
-   readmemh[0xa440] = read_vih;
-   readmemd[0x8440] = read_vid;
-   readmemd[0xa440] = read_vid;
-   writemem[0x8440] = write_vi;
-   writemem[0xa440] = write_vi;
-   writememb[0x8440] = write_vib;
-   writememb[0xa440] = write_vib;
-   writememh[0x8440] = write_vih;
-   writememh[0xa440] = write_vih;
-   writememd[0x8440] = write_vid;
-   writememd[0xa440] = write_vid;
+   rwmem[0x8440] = rw_vi;
+   rwmem[0xa440] = rw_vi;
    vi_register.vi_status = 0;
    vi_register.vi_origin = 0;
    vi_register.vi_width = 0;
@@ -647,41 +482,13 @@ int init_memory()
    for (i=0x38; i<0x40; i++) readvi[i] = &trash;
    for (i=1; i<0x10; i++)
      {
-	readmem[0x8440+i] = read_nothing;
-	readmem[0xa440+i] = read_nothing;
-	readmemb[0x8440+i] = read_nothingb;
-	readmemb[0xa440+i] = read_nothingb;
-	readmemh[0x8440+i] = read_nothingh;
-	readmemh[0xa440+i] = read_nothingh;
-	readmemd[0x8440+i] = read_nothingd;
-	readmemd[0xa440+i] = read_nothingd;
-	writemem[0x8440+i] = write_nothing;
-	writemem[0xa440+i] = write_nothing;
-	writememb[0x8440+i] = write_nothingb;
-	writememb[0xa440+i] = write_nothingb;
-	writememh[0x8440+i] = write_nothingh;
-	writememh[0xa440+i] = write_nothingh;
-	writememd[0x8440+i] = write_nothingd;
-	writememd[0xa440+i] = write_nothingd;
+	rwmem[0x8440+i] = rw_nothing;
+	rwmem[0xa440+i] = rw_nothing;
      }
    
    //init AI registers
-   readmem[0x8450] = read_ai;
-   readmem[0xa450] = read_ai;
-   readmemb[0x8450] = read_aib;
-   readmemb[0xa450] = read_aib;
-   readmemh[0x8450] = read_aih;
-   readmemh[0xa450] = read_aih;
-   readmemd[0x8450] = read_aid;
-   readmemd[0xa450] = read_aid;
-   writemem[0x8450] = write_ai;
-   writemem[0xa450] = write_ai;
-   writememb[0x8450] = write_aib;
-   writememb[0xa450] = write_aib;
-   writememh[0x8450] = write_aih;
-   writememh[0xa450] = write_aih;
-   writememd[0x8450] = write_aid;
-   writememd[0xa450] = write_aid;
+   rwmem[0x8450] = rw_ai;
+   rwmem[0xa450] = rw_ai;
    ai_register.ai_dram_addr = 0;
    ai_register.ai_len = 0;
    ai_register.ai_control = 0;
@@ -702,41 +509,13 @@ int init_memory()
    for (i=0x18; i<0x20; i++) readai[i] = &trash;
    for (i=1; i<0x10; i++)
      {
-	readmem[0x8450+i] = read_nothing;
-	readmem[0xa450+i] = read_nothing;
-	readmemb[0x8450+i] = read_nothingb;
-	readmemb[0xa450+i] = read_nothingb;
-	readmemh[0x8450+i] = read_nothingh;
-	readmemh[0xa450+i] = read_nothingh;
-	readmemd[0x8450+i] = read_nothingd;
-	readmemd[0xa450+i] = read_nothingd;
-	writemem[0x8450+i] = write_nothing;
-	writemem[0xa450+i] = write_nothing;
-	writememb[0x8450+i] = write_nothingb;
-	writememb[0xa450+i] = write_nothingb;
-	writememh[0x8450+i] = write_nothingh;
-	writememh[0xa450+i] = write_nothingh;
-	writememd[0x8450+i] = write_nothingd;
-	writememd[0xa450+i] = write_nothingd;
+	rwmem[0x8450+i] = rw_nothing;
+	rwmem[0xa450+i] = rw_nothing;
      }
    
    //init PI registers
-   readmem[0x8460] = read_pi;
-   readmem[0xa460] = read_pi;
-   readmemb[0x8460] = read_pib;
-   readmemb[0xa460] = read_pib;
-   readmemh[0x8460] = read_pih;
-   readmemh[0xa460] = read_pih;
-   readmemd[0x8460] = read_pid;
-   readmemd[0xa460] = read_pid;
-   writemem[0x8460] = write_pi;
-   writemem[0xa460] = write_pi;
-   writememb[0x8460] = write_pib;
-   writememb[0xa460] = write_pib;
-   writememh[0x8460] = write_pih;
-   writememh[0xa460] = write_pih;
-   writememd[0x8460] = write_pid;
-   writememd[0xa460] = write_pid;
+   rwmem[0x8460] = rw_pi;
+   rwmem[0xa460] = rw_pi;
    pi_register.pi_dram_addr_reg = 0;
    pi_register.pi_cart_addr_reg = 0;
    pi_register.pi_rd_len_reg = 0;
@@ -767,41 +546,13 @@ int init_memory()
    for (i=0x34; i<0xFFFF; i++) readpi[i] = &trash;
    for (i=1; i<0x10; i++)
      {
-	readmem[0x8460+i] = read_nothing;
-	readmem[0xa460+i] = read_nothing;
-	readmemb[0x8460+i] = read_nothingb;
-	readmemb[0xa460+i] = read_nothingb;
-	readmemh[0x8460+i] = read_nothingh;
-	readmemh[0xa460+i] = read_nothingh;
-	readmemd[0x8460+i] = read_nothingd;
-	readmemd[0xa460+i] = read_nothingd;
-	writemem[0x8460+i] = write_nothing;
-	writemem[0xa460+i] = write_nothing;
-	writememb[0x8460+i] = write_nothingb;
-	writememb[0xa460+i] = write_nothingb;
-	writememh[0x8460+i] = write_nothingh;
-	writememh[0xa460+i] = write_nothingh;
-	writememd[0x8460+i] = write_nothingd;
-	writememd[0xa460+i] = write_nothingd;
+	rwmem[0x8460+i] = rw_nothing;
+	rwmem[0xa460+i] = rw_nothing;
      }
    
    //init RI registers
-   readmem[0x8470] = read_ri;
-   readmem[0xa470] = read_ri;
-   readmemb[0x8470] = read_rib;
-   readmemb[0xa470] = read_rib;
-   readmemh[0x8470] = read_rih;
-   readmemh[0xa470] = read_rih;
-   readmemd[0x8470] = read_rid;
-   readmemd[0xa470] = read_rid;
-   writemem[0x8470] = write_ri;
-   writemem[0xa470] = write_ri;
-   writememb[0x8470] = write_rib;
-   writememb[0xa470] = write_rib;
-   writememh[0x8470] = write_rih;
-   writememh[0xa470] = write_rih;
-   writememd[0x8470] = write_rid;
-   writememd[0xa470] = write_rid;
+   rwmem[0x8470] = rw_ri;
+   rwmem[0xa470] = rw_ri;
    ri_register.ri_mode = 0;
    ri_register.ri_config = 0;
    ri_register.ri_select = 0;
@@ -822,41 +573,13 @@ int init_memory()
    for (i=0x20; i<0x30; i++) readri[i] = &trash;
    for (i=1; i<0x10; i++)
      {
-	readmem[0x8470+i] = read_nothing;
-	readmem[0xa470+i] = read_nothing;
-	readmemb[0x8470+i] = read_nothingb;
-	readmemb[0xa470+i] = read_nothingb;
-	readmemh[0x8470+i] = read_nothingh;
-	readmemh[0xa470+i] = read_nothingh;
-	readmemd[0x8470+i] = read_nothingd;
-	readmemd[0xa470+i] = read_nothingd;
-	writemem[0x8470+i] = write_nothing;
-	writemem[0xa470+i] = write_nothing;
-	writememb[0x8470+i] = write_nothingb;
-	writememb[0xa470+i] = write_nothingb;
-	writememh[0x8470+i] = write_nothingh;
-	writememh[0xa470+i] = write_nothingh;
-	writememd[0x8470+i] = write_nothingd;
-	writememd[0xa470+i] = write_nothingd;
+	rwmem[0x8470+i] = rw_nothing;
+	rwmem[0xa470+i] = rw_nothing;
      }
    
    //init SI registers
-   readmem[0x8480] = read_si;
-   readmem[0xa480] = read_si;
-   readmemb[0x8480] = read_sib;
-   readmemb[0xa480] = read_sib;
-   readmemh[0x8480] = read_sih;
-   readmemh[0xa480] = read_sih;
-   readmemd[0x8480] = read_sid;
-   readmemd[0xa480] = read_sid;
-   writemem[0x8480] = write_si;
-   writemem[0xa480] = write_si;
-   writememb[0x8480] = write_sib;
-   writememb[0xa480] = write_sib;
-   writememh[0x8480] = write_sih;
-   writememh[0xa480] = write_sih;
-   writememd[0x8480] = write_sid;
-   writememd[0xa480] = write_sid;
+   rwmem[0x8480] = rw_si;
+   rwmem[0xa480] = rw_si;
    si_register.si_dram_addr = 0;
    si_register.si_pif_addr_rd64b = 0;
    si_register.si_pif_addr_wr64b = 0;
@@ -871,155 +594,43 @@ int init_memory()
    for (i=0x1c; i<0x20; i++) readsi[i] = &trash;
    for (i=0x481; i<0x800; i++)
      {
-	readmem[0x8000+i] = read_nothing;
-	readmem[0xa000+i] = read_nothing;
-	readmemb[0x8000+i] = read_nothingb;
-	readmemb[0xa000+i] = read_nothingb;
-	readmemh[0x8000+i] = read_nothingh;
-	readmemh[0xa000+i] = read_nothingh;
-	readmemd[0x8000+i] = read_nothingd;
-	readmemd[0xa000+i] = read_nothingd;
-	writemem[0x8000+i] = write_nothing;
-	writemem[0xa000+i] = write_nothing;
-	writememb[0x8000+i] = write_nothingb;
-	writememb[0xa000+i] = write_nothingb;
-	writememh[0x8000+i] = write_nothingh;
-	writememh[0xa000+i] = write_nothingh;
-	writememd[0x8000+i] = write_nothingd;
-	writememd[0xa000+i] = write_nothingd;
+	rwmem[0x8000+i] = rw_nothing;
+	rwmem[0xa000+i] = rw_nothing;
      }
    
    //init flashram / sram
-   readmem[0x8800] = read_flashram_status;
-   readmem[0xa800] = read_flashram_status;
-   readmemb[0x8800] = read_flashram_statusb;
-   readmemb[0xa800] = read_flashram_statusb;
-   readmemh[0x8800] = read_flashram_statush;
-   readmemh[0xa800] = read_flashram_statush;
-   readmemd[0x8800] = read_flashram_statusd;
-   readmemd[0xa800] = read_flashram_statusd;
-   writemem[0x8800] = write_flashram_dummy;
-   writemem[0xa800] = write_flashram_dummy;
-   writememb[0x8800] = write_flashram_dummyb;
-   writememb[0xa800] = write_flashram_dummyb;
-   writememh[0x8800] = write_flashram_dummyh;
-   writememh[0xa800] = write_flashram_dummyh;
-   writememd[0x8800] = write_flashram_dummyd;
-   writememd[0xa800] = write_flashram_dummyd;
-   readmem[0x8801] = read_nothing;
-   readmem[0xa801] = read_nothing;
-   readmemb[0x8801] = read_nothingb;
-   readmemb[0xa801] = read_nothingb;
-   readmemh[0x8801] = read_nothingh;
-   readmemh[0xa801] = read_nothingh;
-   readmemd[0x8801] = read_nothingd;
-   readmemd[0xa801] = read_nothingd;
-   writemem[0x8801] = write_flashram_command;
-   writemem[0xa801] = write_flashram_command;
-   writememb[0x8801] = write_flashram_commandb;
-   writememb[0xa801] = write_flashram_commandb;
-   writememh[0x8801] = write_flashram_commandh;
-   writememh[0xa801] = write_flashram_commandh;
-   writememd[0x8801] = write_flashram_commandd;
-   writememd[0xa801] = write_flashram_commandd;
+   rwmem[0x8800] = rw_flashram0;
+   rwmem[0xa800] = rw_flashram0;
+   rwmem[0x8801] = rw_flashram1;
+   rwmem[0xa801] = rw_flashram1;
    
    for (i=0x802; i<0x1000; i++)
      {
-	readmem[0x8000+i] = read_nothing;
-	readmem[0xa000+i] = read_nothing;
-	readmemb[0x8000+i] = read_nothingb;
-	readmemb[0xa000+i] = read_nothingb;
-	readmemh[0x8000+i] = read_nothingh;
-	readmemh[0xa000+i] = read_nothingh;
-	readmemd[0x8000+i] = read_nothingd;
-	readmemd[0xa000+i] = read_nothingd;
-	writemem[0x8000+i] = write_nothing;
-	writemem[0xa000+i] = write_nothing;
-	writememb[0x8000+i] = write_nothingb;
-	writememb[0xa000+i] = write_nothingb;
-	writememh[0x8000+i] = write_nothingh;
-	writememh[0xa000+i] = write_nothingh;
-	writememd[0x8000+i] = write_nothingd;
-	writememd[0xa000+i] = write_nothingd;
+	rwmem[0x8000+i] = rw_nothing;
+	rwmem[0xa000+i] = rw_nothing;
      }
    
    //init rom area
    for (i=0; i<(rom_length >> 16); i++) 
      {
-	readmem[0x9000+i] = read_rom;
-	readmem[0xb000+i] = read_rom;
-	readmemb[0x9000+i] = read_romb;
-	readmemb[0xb000+i] = read_romb;
-	readmemh[0x9000+i] = read_romh;
-	readmemh[0xb000+i] = read_romh;
-	readmemd[0x9000+i] = read_romd;
-	readmemd[0xb000+i] = read_romd;
-	writemem[0x9000+i] = write_nothing;
-	writemem[0xb000+i] = write_rom;
-	writememb[0x9000+i] = write_nothingb;
-	writememb[0xb000+i] = write_nothingb;
-	writememh[0x9000+i] = write_nothingh;
-	writememh[0xb000+i] = write_nothingh;
-	writememd[0x9000+i] = write_nothingd;
-	writememd[0xb000+i] = write_nothingd;
+	rwmem[0x9000+i] = rw_rom0;
+	rwmem[0xb000+i] = rw_rom1;
      }
    for (i=(rom_length >> 16); i<0xfc0; i++) 
      {
-	readmem[0x9000+i] = read_nothing;
-	readmem[0xb000+i] = read_nothing;
-	readmemb[0x9000+i] = read_nothingb;
-	readmemb[0xb000+i] = read_nothingb;
-	readmemh[0x9000+i] = read_nothingh;
-	readmemh[0xb000+i] = read_nothingh;
-	readmemd[0x9000+i] = read_nothingd;
-	readmemd[0xb000+i] = read_nothingd;
-	writemem[0x9000+i] = write_nothing;
-	writemem[0xb000+i] = write_nothing;
-	writememb[0x9000+i] = write_nothingb;
-	writememb[0xb000+i] = write_nothingb;
-	writememh[0x9000+i] = write_nothingh;
-	writememh[0xb000+i] = write_nothingh;
-	writememd[0x9000+i] = write_nothingd;
-	writememd[0xb000+i] = write_nothingd;
+	rwmem[0x9000+i] = rw_nothing;
+	rwmem[0xb000+i] = rw_nothing;
      }
    
    //init PIF_RAM
-   readmem[0x9fc0] = read_pif;
-   readmem[0xbfc0] = read_pif;
-   readmemb[0x9fc0] = read_pifb;
-   readmemb[0xbfc0] = read_pifb;
-   readmemh[0x9fc0] = read_pifh;
-   readmemh[0xbfc0] = read_pifh;
-   readmemd[0x9fc0] = read_pifd;
-   readmemd[0xbfc0] = read_pifd;
-   writemem[0x9fc0] = write_pif;
-   writemem[0xbfc0] = write_pif;
-   writememb[0x9fc0] = write_pifb;
-   writememb[0xbfc0] = write_pifb;
-   writememh[0x9fc0] = write_pifh;
-   writememh[0xbfc0] = write_pifh;
-   writememd[0x9fc0] = write_pifd;
-   writememd[0xbfc0] = write_pifd;
+   rwmem[0x9fc0] = rw_pif;
+   rwmem[0xbfc0] = rw_pif;
    for (i=0; i<(0x40/4); i++) PIF_RAM[i]=0;
    
    for (i=0xfc1; i<0x1000; i++) 
      {
-	readmem[0x9000+i] = read_nothing;
-	readmem[0xb000+i] = read_nothing;
-	readmemb[0x9000+i] = read_nothingb;
-	readmemb[0xb000+i] = read_nothingb;
-	readmemh[0x9000+i] = read_nothingh;
-	readmemh[0xb000+i] = read_nothingh;
-	readmemd[0x9000+i] = read_nothingd;
-	readmemd[0xb000+i] = read_nothingd;
-	writemem[0x9000+i] = write_nothing;
-	writemem[0xb000+i] = write_nothing;
-	writememb[0x9000+i] = write_nothingb;
-	writememb[0xb000+i] = write_nothingb;
-	writememh[0x9000+i] = write_nothingh;
-	writememh[0xb000+i] = write_nothingh;
-	writememd[0x9000+i] = write_nothingd;
-	writememd[0xb000+i] = write_nothingd;
+	rwmem[0x9000+i] = rw_nothing;
+	rwmem[0xb000+i] = rw_nothing;
      }
    
    use_flashram = 0;
@@ -1195,22 +806,8 @@ void update_SP()
 			    end = end >> 16;
 			    for(j=start; j<=end; j++)
 			      {
-				 readmem[0x8000+j] = read_rdram;
-				 readmem[0xa000+j] = read_rdram;
-				 readmemb[0x8000+j] = read_rdramb;
-				 readmemb[0xa000+j] = read_rdramb;
-				 readmemh[0x8000+j] = read_rdramh;
-				 readmemh[0xa000+j] = read_rdramh;
-				 readmemd[0x8000+j] = read_rdramd;
-				 readmemd[0xa000+j] = read_rdramd;
-				 writemem[0x8000+j] = write_rdram;
-				 writemem[0xa000+j] = write_rdram;
-				 writememb[0x8000+j] = write_rdramb;
-				 writememb[0xa000+j] = write_rdramb;
-				 writememh[0x8000+j] = write_rdramh;
-				 writememh[0xa000+j] = write_rdramh;
-				 writememd[0x8000+j] = write_rdramd;
-				 writememd[0xa000+j] = write_rdramd;
+				 rwmem[0x8000+j] = rw_rdram;
+				 rwmem[0xa000+j] = rw_rdram;
 			      }
 			 }
 		    }
@@ -1251,22 +848,8 @@ void update_SP()
 			    end >>= 16;
 			    for(j=start; j<=end; j++)
 			      {
-				 readmem[0x8000+j] = read_rdramFB;
-				 readmem[0xa000+j] = read_rdramFB;
-				 readmemb[0x8000+j] = read_rdramFBb;
-				 readmemb[0xa000+j] = read_rdramFBb;
-				 readmemh[0x8000+j] = read_rdramFBh;
-				 readmemh[0xa000+j] = read_rdramFBh;
-				 readmemd[0x8000+j] = read_rdramFBd;
-				 readmemd[0xa000+j] = read_rdramFBd;
-				 writemem[0x8000+j] = write_rdramFB;
-				 writemem[0xa000+j] = write_rdramFB;
-				 writememb[0x8000+j] = write_rdramFBb;
-				 writememb[0xa000+j] = write_rdramFBb;
-				 writememh[0x8000+j] = write_rdramFBh;
-				 writememh[0xa000+j] = write_rdramFBh;
-				 writememd[0x8000+j] = write_rdramFBd;
-				 writememd[0xa000+j] = write_rdramFBd;
+				 rwmem[0x8000+j] = rw_rdramFB;
+				 rwmem[0xa000+j] = rw_rdramFB;
 			      }
 			    start <<= 4;
 			    end <<= 4;
