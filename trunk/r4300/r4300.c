@@ -1383,6 +1383,7 @@ void NOTCOMPILED()
 	       recompile_block(rdram+(((paddr-(PC->addr-blocks[PC->addr>>12]->start)) & 0x1FFFFFFF)>>2),
 			       blocks[PC->addr>>12], PC->addr);
 #endif
+		}
 	  }
 	else printf("not compiled exception\n");
      }
