@@ -8,6 +8,9 @@
 #include "gl.h" 
 #include "glext.h"
 #undef __WIN32__
+#ifdef HW_RVL
+#include "../gc_memory/MEM2.h"
+#endif //HW_RVL
 #endif // __GX__
 #include "convert.h"
 
@@ -68,6 +71,14 @@ struct TextureCache
 };
 
 extern TextureCache cache;
+
+#ifdef __GX__
+# ifdef HW_RVL
+# define GX_TEXTURE_CACHE_SIZE TEXCACHE_SIZE //8MB for Wii
+# else //HW_RVL
+# define GX_TEXTURE_CACHE_SIZE (1*1024*1024)
+# endif //!HW_RVL
+#endif //__GX__
 
 inline u32 pow2( u32 dim )
 {

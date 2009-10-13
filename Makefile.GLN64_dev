@@ -14,7 +14,7 @@ CFLAGS  = -g -O2 -Wall $(MACHDEP) $(INCLUDE) \
 MACHDEP	= -DGEKKO -mcpu=750 -meabi -mhard-float 
 LDFLAGS	= $(MACHDEP) -mogc -Wl,-Map,$(notdir $@).map -Wl,--cref
 
-INCLUDE = -I$(DEVKITPRO)/libogc/include -I$(DEVKITPRO)/libfat/libogc/include
+INCLUDE = -I$(DEVKITPRO)/libogc/include -I$(DEVKITPRO)/libfat/libogc/include -I$(DEVKITPRO)/libogc/include/ogc/machine
 LIBPATHS = -L$(DEVKITPRO)/libogc/lib/cube -L$(DEVKITPRO)/libfat/libogc/lib/cube
 
 CXXFLAGS	=$(CFLAGS)
