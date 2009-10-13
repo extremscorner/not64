@@ -111,43 +111,48 @@ void VI_UpdateScreen()
 		{
 			if (gDP.colorImage.changed)
 			{
-//				if(VI.copy_fb)
-//					VIDEO_WaitVSync();
 				FrameBuffer_SaveBuffer( gDP.colorImage.address, gDP.colorImage.size, gDP.colorImage.width, gDP.colorImage.height );
 				gDP.colorImage.changed = FALSE;
 			}
 
-			VI.doFrameBufferRender = true;
+			FrameBuffer_RenderBuffer( *REG.VI_ORIGIN );
+
+			//Draw DEBUG to screen
+			VI_GX_cleanUp();
+			VI_GX_showStats();
+			VI_GX_showFPS();
+			VI_GX_showDEBUG();
+			GX_SetCopyClear ((GXColor){0,0,0,255}, 0xFFFFFF);
+			//Copy EFB->XFB
+			GX_CopyDisp (VI.xfb[VI.which_fb], GX_FALSE);
+			GX_DrawDone(); //Wait until EFB->XFB copy is complete
+			VI.updateOSD = false;
+			VI.copy_fb = true;
+
+			//Restore current EFB
+			FrameBuffer_RestoreBuffer( gDP.colorImage.address, gDP.colorImage.size, gDP.colorImage.width );
 
 			gDP.colorImage.changed = FALSE;
 			VI.lastOrigin = *REG.VI_ORIGIN;
 		}
 	}
 	else
+	{
 		if (gSP.changed & CHANGED_COLORBUFFER)
 			OGL_SwapBuffers();
 
-	VI_GX_cleanUp();
-	VI_GX_showStats();
-	VI_GX_showFPS();
-	VI_GX_showDEBUG();
-	if(VI.updateOSD)
-	{
-//		DEBUG_stats(8, "RecompCache Blocks Freed", STAT_TYPE_CLEAR, 1);
-//		if(VI.copy_fb)
-//			VIDEO_WaitVSync();
-		GX_SetCopyClear ((GXColor){0,0,0,255}, 0xFFFFFF);
-//		GX_CopyDisp (VI.xfb[VI.which_fb], GX_TRUE);	//clear the EFB before executing new Dlist
-		GX_CopyDisp (VI.xfb[VI.which_fb], GX_FALSE);
-		GX_DrawDone(); //Wait until EFB->XFB copy is complete
-//		doCaptureScreen();
-		VI.updateOSD = false;
-		VI.copy_fb = true;
-	}
-	if(VI.doFrameBufferRender)
-	{
-		FrameBuffer_RenderBuffer( *REG.VI_ORIGIN );
-		VI.doFrameBufferRender = false;
+		VI_GX_cleanUp();
+		if(VI.updateOSD)
+		{
+			VI_GX_showStats();
+			VI_GX_showFPS();
+			VI_GX_showDEBUG();
+			GX_SetCopyClear ((GXColor){0,0,0,255}, 0xFFFFFF);
+			GX_CopyDisp (VI.xfb[VI.which_fb], GX_FALSE);
+			GX_DrawDone(); //Wait until EFB->XFB copy is complete
+			VI.updateOSD = false;
+			VI.copy_fb = true;
+		}
 	}
 #endif // __GX__
 
@@ -167,7 +172,6 @@ void VI_GX_init() {
 	VI.updateOSD = true;
 	VI.copy_fb = false;
 	VI.which_fb = 1;
-	VI.doFrameBufferRender = false;
 }
 
 void VI_GX_setFB(unsigned int* fb1, unsigned int* fb2){
@@ -178,6 +182,7 @@ void VI_GX_setFB(unsigned int* fb1, unsigned int* fb2){
 unsigned int* VI_GX_getScreenPointer(){ return VI.xfb[VI.which_fb]; }
 
 void VI_GX_clearEFB(){
+	GX_SetZMode(GX_ENABLE,GX_ALWAYS,GX_TRUE);
 	GX_SetCopyClear ((GXColor){0,0,0,255}, 0xFFFFFF);
 	GX_CopyDisp (VI.xfb[VI.which_fb], GX_TRUE);	//clear the EFB before executing new Dlist
 	GX_DrawDone(); //Wait until EFB->XFB copy is complete
@@ -186,36 +191,18 @@ void VI_GX_clearEFB(){
 extern timers Timers;
 
 void VI_GX_showFPS(){
-	static long long lastTick=0;
-	static int frames=0;
-	static int VIs=0;
 	static char caption[25];
-	
-/*	long long nowTick = gettime();
-	VIs++;
-	if (VI.updateOSD)
-		frames++;
-	if (diff_sec(lastTick,nowTick)>=1) {
-		sprintf(caption, "%02d VI/s, %02d FPS",VIs,frames);
-		frames = 0;
-		VIs = 0;
-		lastTick = nowTick;
-	}*/
 
 	sprintf(caption, "%.1f VI/s, %.1f FPS",Timers.vis,Timers.fps);
 	
-	if (VI.updateOSD)
-	{
-		GXColor fontColor = {150,255,150,255};
-		write_font_init_GX(fontColor);
-		if(showFPSonScreen)
-			write_font(10,35,caption, 1.0);
-		//write_font(10,10,caption,xfb,which_fb);
+	GXColor fontColor = {150,255,150,255};
+	write_font_init_GX(fontColor);
+	if(showFPSonScreen)
+		write_font(10,35,caption, 1.0);
 
-		//reset swap table from GUI/DEBUG
-		GX_SetTevSwapModeTable(GX_TEV_SWAP0, GX_CH_RED, GX_CH_GREEN, GX_CH_BLUE, GX_CH_ALPHA);
-		GX_SetTevSwapMode(GX_TEVSTAGE0, GX_TEV_SWAP0, GX_TEV_SWAP0);
-	}
+	//reset swap table from GUI/DEBUG
+	GX_SetTevSwapModeTable(GX_TEV_SWAP0, GX_CH_RED, GX_CH_GREEN, GX_CH_BLUE, GX_CH_ALPHA);
+	GX_SetTevSwapMode(GX_TEVSTAGE0, GX_TEV_SWAP0, GX_TEV_SWAP0);
 }
 
 void VI_GX_showLoadProg(float percent)
@@ -276,14 +263,9 @@ void VI_GX_showLoadProg(float percent)
 	GX_Color4u8(GXcol1.r, GXcol1.g, GXcol1.b, GXcol1.a);
 	GX_End();
 
-//    GX_DrawDone ();
 	GX_CopyDisp (VI.xfb[VI.which_fb], GX_FALSE);
     GX_DrawDone();
 	VI.copy_fb = true;
-//	VIDEO_SetNextFramebuffer(VI.xfb[VI.which_fb]);
-//	VIDEO_Flush();
-//	VI.which_fb ^= 1;
-//	VIDEO_WaitVSync();
 }
 
 void VI_GX_updateDEBUG()
@@ -295,29 +277,26 @@ extern char text[DEBUG_TEXT_HEIGHT][DEBUG_TEXT_WIDTH];
 
 void VI_GX_showDEBUG()
 {
-	if (VI.updateOSD)
-	{
-		int i = 0;
-		GXColor fontColor = {150, 255, 150, 255};
-		DEBUG_update();
-		write_font_init_GX(fontColor);
-		if(printToScreen)
-			for (i=0;i<DEBUG_TEXT_HEIGHT;i++)
-				write_font(10,(10*i+60),text[i], 0.5); 
-		
-	   //reset swap table from GUI/DEBUG
-		GX_SetTevSwapModeTable(GX_TEV_SWAP0, GX_CH_RED, GX_CH_GREEN, GX_CH_BLUE, GX_CH_ALPHA);
-		GX_SetTevSwapMode(GX_TEVSTAGE0, GX_TEV_SWAP0, GX_TEV_SWAP0);
-	}
+	int i = 0;
+	GXColor fontColor = {150, 255, 150, 255};
+	DEBUG_update();
+	write_font_init_GX(fontColor);
+	if(printToScreen)
+		for (i=0;i<DEBUG_TEXT_HEIGHT;i++)
+			write_font(10,(10*i+60),text[i], 0.5); 
+
+	//Reset any stats in DEBUG_stats
+//	DEBUG_stats(8, "RecompCache Blocks Freed", STAT_TYPE_CLEAR, 1);
+
+   //reset swap table from GUI/DEBUG
+	GX_SetTevSwapModeTable(GX_TEV_SWAP0, GX_CH_RED, GX_CH_GREEN, GX_CH_BLUE, GX_CH_ALPHA);
+	GX_SetTevSwapMode(GX_TEVSTAGE0, GX_TEV_SWAP0, GX_TEV_SWAP0);
 }
 
 void VI_GX_showStats()
 {
-	if (VI.updateOSD)
-	{
-		sprintf(txtbuffer,"texCache: %d bytes in %d cached textures; %d FB textures",cache.cachedBytes,cache.numCached,frameBuffer.numBuffers);
-		DEBUG_print(txtbuffer,DBG_CACHEINFO); 
-	}
+	sprintf(txtbuffer,"texCache: %d bytes in %d cached textures; %d FB textures",cache.cachedBytes,cache.numCached,frameBuffer.numBuffers);
+	DEBUG_print(txtbuffer,DBG_CACHEINFO); 
 }
 
 void VI_GX_cleanUp()

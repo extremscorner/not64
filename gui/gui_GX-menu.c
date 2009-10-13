@@ -135,6 +135,7 @@ void GUI_init(){
 void GUI_toggle()
 {
 	if (GUI_on == 1) {
+		GX_SetCopyClear ((GXColor){0,0,0,255}, 0x00000000);
 		GX_CopyDisp (GUI.xfb[GUI.which_fb], GX_TRUE); // This clears the efb
 		GX_CopyDisp (GUI.xfb[GUI.which_fb], GX_TRUE); // This clears the xfb
 		GX_Flush ();
@@ -575,6 +576,7 @@ void GUI_splashScreen()
 	}
 
 	GX_DrawDone ();
+	GX_SetCopyClear ((GXColor){0,0,0,255}, 0x00000000);
 	GX_CopyDisp (GUI.xfb[GUI.which_fb], GX_TRUE);
 	GX_Flush ();
 	VIDEO_SetNextFramebuffer(GUI.xfb[GUI.which_fb]);

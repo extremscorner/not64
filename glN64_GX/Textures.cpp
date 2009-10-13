@@ -35,7 +35,7 @@
 
 TextureCache	cache;
 #ifdef __GX__
-static heap_cntrl* GXtexCache;
+heap_cntrl* GXtexCache;
 #endif //__GX__
 
 typedef u32 (*GetTexelFunc)( u64 *src, u16 x, u16 i, u8 palette );

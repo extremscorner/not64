@@ -19,6 +19,9 @@
 #include "Textures.h"
 #include "OpenGL.h"
 
+#ifdef __GX__
+char glN64_useFrameBufferTextures = 0;
+#endif // __GX__
 
 #ifndef __GX__ // this eliminates several functions
 static const char *pluginDir = 0;
@@ -405,7 +408,6 @@ void Config_LoadConfig()
 #ifndef __GX__
 	if (pluginDir == 0)
 		pluginDir = GetPluginDir();
-#endif // !__GX__
 
 	// default configuration
 	OGL.fullscreenWidth = 640;
@@ -418,15 +420,21 @@ void Config_LoadConfig()
 	OGL.enable2xSaI = 0;
 	OGL.fog = 1;
 	OGL.textureBitDepth = 1; // normal (16 & 32 bits)
-#ifndef __GX__
 	OGL.frameBufferTextures = 0;
-#else //!__GX__ Temporary!
-	OGL.frameBufferTextures = 0;
-#endif //__GX__
 	OGL.usePolygonStipple = 0;
-#ifndef __GX__
-	cache.maxBytes = 32 * 1048576;	// reduced to 1MB for GC/Wii
-#else // !__GX__
+	cache.maxBytes = 32 * 1048576;	
+#else //!__GX__
+	// GX configuration
+	OGL.fullscreenWidth = 640;
+	OGL.fullscreenHeight = 480;
+	OGL.windowedWidth = 640;
+	OGL.windowedHeight = 480;
+	OGL.forceBilinear = 0;
+	OGL.enable2xSaI = 0;
+	OGL.fog = 1;
+	OGL.textureBitDepth = 1; // normal (16 & 32 bits)
+	OGL.frameBufferTextures = glN64_useFrameBufferTextures;
+	OGL.usePolygonStipple = 0;
 	cache.maxBytes = GX_TEXTURE_CACHE_SIZE;
 #endif // __GX__
 

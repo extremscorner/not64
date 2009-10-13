@@ -304,7 +304,7 @@ EXPORT void CALL ProcessDList(void)
 	sprintf(txtbuffer,"\nPROCESS D LIST!!\n\n");
 	DEBUG_print(txtbuffer,DBG_SDGECKOPRINT);
 #endif // GLN64_SDLOG
-	VI_GX_clearEFB();
+//	VI_GX_clearEFB();
 #endif // __GX__
 	RSP_ProcessDList();
 #endif

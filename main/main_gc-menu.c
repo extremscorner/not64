@@ -62,6 +62,9 @@ extern char audioEnabled;
 extern char printToScreen;
 extern char showFPSonScreen;
 extern char printToSD;
+#ifdef GLN64_GX
+extern char glN64_useFrameBufferTextures;
+#endif //GLN64_GX
 extern timers Timers;
        char saveEnabled;
        char creditsScrolling;
@@ -116,6 +119,10 @@ int main(){
 	saveEnabled      = 0; // Don't save game
 	creditsScrolling = 0; // Normal menu for now
 	dynacore         = 2; // Pure Interpreter
+#ifdef GLN64_GX
+	// glN64 specific  settings
+	glN64_useFrameBufferTextures = 0; // Disable FrameBuffer textures
+#endif //GLN64_GX
 
 	// 'Page flip' buttons so we know when it released
 	int which_pad = 0;

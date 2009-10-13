@@ -1,6 +1,7 @@
 #ifdef __GX__
 #include <gccore.h>
-#include <malloc.h>
+#include <ogc/lwp_heap.h>
+#include <string.h>
 #endif // __GX__
 
 #ifndef __LINUX__
@@ -18,6 +19,10 @@
 #include "Types.h"
 
 FrameBufferInfo frameBuffer;
+
+#ifdef __GX__
+extern heap_cntrl* GXtexCache;
+#endif //__GX__
 
 void FrameBuffer_Init()
 {
@@ -174,7 +179,7 @@ void FrameBuffer_SaveBuffer( u32 address, u16 size, u16 width, u16 height )
 #else // !__GX__
 			//Note: texture realWidth and realHeight should be multiple of 2!
 			GX_SetTexCopySrc(0, 0,(u16) current->texture->realWidth,(u16) current->texture->realHeight);
-			GX_SetTexCopyDst((u16) current->texture->GXrealWidth,(u16) current->texture->GXrealHeight, GX_TF_RGBA8, GX_FALSE);
+			GX_SetTexCopyDst((u16) current->texture->realWidth,(u16) current->texture->realHeight, current->texture->GXtexfmt, GX_FALSE);
 			GX_CopyTex(current->texture->GXtexture, GX_FALSE);
 			GX_PixModeSync();
 #endif // __GX__
@@ -218,31 +223,59 @@ void FrameBuffer_SaveBuffer( u32 address, u16 size, u16 width, u16 height )
 	current->texture->realWidth = pow2( (unsigned long)(current->width * OGL.scaleX) );
 	current->texture->realHeight = pow2( (unsigned long)(current->height * OGL.scaleY) );
 	current->texture->textureBytes = current->texture->realWidth * current->texture->realHeight * 4;
-	cache.cachedBytes += current->texture->textureBytes;
 #else //!__GX__
 	//realWidth & realHeight should be multiple of 2 for EFB->Texture Copy
-	if(current->texture->width % 2 || current->texture->width == 0)
+	if(current->texture->width & 0x1)	current->texture->realWidth = current->texture->width + 1;
+	else								current->texture->realWidth = current->texture->width;
+	if(!current->texture->realWidth)	current->texture->realWidth = 2;
+
+	if(current->texture->height & 0x1)	current->texture->realHeight = current->texture->height + 1;
+	else								current->texture->realHeight = current->texture->height;
+	if(!current->texture->realHeight)	current->texture->realHeight = 2;
+
+/*	if(current->texture->width % 2 || current->texture->width == 0)
 		current->texture->realWidth = current->texture->width + 2 - (current->texture->width % 2);
 	else
 		current->texture->realWidth = current->texture->width;
 	if(current->texture->height % 2 || current->texture->height == 0)
 		current->texture->realHeight = current->texture->height + 2 - (current->texture->height % 2);
 	else
-		current->texture->realHeight = current->texture->height;
+		current->texture->realHeight = current->texture->height;*/
+
 	//GXrealWidth and GXrealHeight should be multiple of 4 for GXtexture
-	if(current->texture->realWidth % 4)
+	if(current->texture->realWidth & 0x2)	current->texture->GXrealWidth = current->texture->realWidth + 2;
+	else									current->texture->GXrealWidth = current->texture->realWidth;
+	if(current->texture->realHeight & 0x2)	current->texture->GXrealHeight = current->texture->realHeight + 2;
+	else									current->texture->GXrealHeight = current->texture->realHeight;
+
+/*	if(current->texture->realWidth % 4)
 		current->texture->GXrealWidth = current->texture->realWidth + 4 - (current->texture->realWidth % 4);
 	else
 		current->texture->GXrealWidth = current->texture->realWidth;
 	if(current->texture->realHeight % 4)
 		current->texture->GXrealHeight = current->texture->realHeight + 4 - (current->texture->realHeight % 4);
 	else
-		current->texture->GXrealHeight = current->texture->realHeight;
+		current->texture->GXrealHeight = current->texture->realHeight;*/
+
+#ifdef HW_RVL
 	current->texture->textureBytes = (current->texture->GXrealWidth * current->texture->GXrealHeight) * 4;
-	cache.cachedBytes += current->texture->textureBytes;
-	current->texture->GXtexture = (u16*) memalign(32,current->texture->textureBytes);
 	current->texture->GXtexfmt = GX_TF_RGBA8;
+#else //HW_RVL
+	current->texture->textureBytes = (current->texture->GXrealWidth * current->texture->GXrealHeight) * 2;
+	current->texture->GXtexfmt = GX_TF_RGB565;
+#endif //!HW_RVL
+
+	current->texture->GXtexture = (u16*) __lwp_heap_allocate(GXtexCache,current->texture->textureBytes);
+	while(!current->texture->GXtexture)
+	{
+		if (cache.bottom != cache.dummy)
+			TextureCache_RemoveBottom();
+		else if (cache.dummy->higher)
+			TextureCache_Remove( cache.dummy->higher );
+		current->texture->GXtexture = (u16*) __lwp_heap_allocate(GXtexCache,current->texture->textureBytes);
+	}
 #endif //__GX__
+	cache.cachedBytes += current->texture->textureBytes;
 
 #ifndef __GX__
 	glBindTexture( GL_TEXTURE_2D, current->texture->glName );
@@ -250,7 +283,7 @@ void FrameBuffer_SaveBuffer( u32 address, u16 size, u16 width, u16 height )
 #else // !__GX__
 	//Note: texture realWidth and realHeight should be multiple of 2!
 	GX_SetTexCopySrc(0, 0,(u16) current->texture->realWidth,(u16) current->texture->realHeight);
-	GX_SetTexCopyDst((u16) current->texture->GXrealWidth,(u16) current->texture->GXrealHeight, GX_TF_RGBA8, GX_FALSE);
+	GX_SetTexCopyDst((u16) current->texture->realWidth,(u16) current->texture->realHeight, current->texture->GXtexfmt, GX_FALSE);
 	GX_CopyTex(current->texture->GXtexture, GX_FALSE);
 	GX_PixModeSync();
 #endif // __GX__
