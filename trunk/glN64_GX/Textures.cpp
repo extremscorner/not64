@@ -1,5 +1,6 @@
 #ifdef __GX__
 #include <gccore.h>
+#include <ogc/lwp_heap.h>
 #include <stdio.h>
 #include <malloc.h>
 #include <string.h>
@@ -33,6 +34,9 @@
 #include "FrameBuffer.h"
 
 TextureCache	cache;
+#ifdef __GX__
+static heap_cntrl* GXtexCache;
+#endif //__GX__
 
 typedef u32 (*GetTexelFunc)( u64 *src, u16 x, u16 i, u8 palette );
 
@@ -376,6 +380,19 @@ void TextureCache_Init()
 	cache.enable2xSaI = OGL.enable2xSaI;
 	cache.bitDepth = OGL.textureBitDepth;
 
+#ifdef __GX__
+	//Init texture cache heap if not yet inited
+	if(!GXtexCache)
+	{
+		GXtexCache = (heap_cntrl*)malloc(sizeof(heap_cntrl));
+#ifdef HW_RVL //TODO: move this to MEM2
+		__lwp_heap_init(GXtexCache, TEXCACHE_LO,GX_TEXTURE_CACHE_SIZE, 32);
+#else //HW_RVL
+		__lwp_heap_init(GXtexCache, memalign(32,GX_TEXTURE_CACHE_SIZE),GX_TEXTURE_CACHE_SIZE, 32);
+#endif //!HW_RVL
+	}
+#endif //__GX__
+
 #ifndef __GX__
 	u32 dummyTexture[16] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
 
@@ -435,7 +452,8 @@ void TextureCache_Init()
 	glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA8, 2, 2, 0, GL_RGBA, GL_UNSIGNED_BYTE, dummyTexture );
 #else // !__GX__
 	//Dummy texture doesn't seem to be needed, so don't load into GX for now.
-	cache.dummy->GXtexture = (u16*) memalign(32,cache.dummy->textureBytes);
+//	cache.dummy->GXtexture = (u16*) memalign(32,cache.dummy->textureBytes);
+	cache.dummy->GXtexture = (u16*) __lwp_heap_allocate(GXtexCache,cache.dummy->textureBytes);
 	cache.dummy->GXtexfmt = GX_TF_RGBA8;
 	for (int i = 0; i<16; i+=4)
 	{
@@ -512,7 +530,8 @@ void TextureCache_RemoveBottom()
 
 #ifdef __GX__
 	if( cache.bottom->GXtexture != NULL )
-		free( cache.bottom->GXtexture );
+//		free( cache.bottom->GXtexture );
+		__lwp_heap_free(GXtexCache, cache.bottom->GXtexture);
 #endif // __GX__
 	free( cache.bottom );
 
@@ -559,7 +578,8 @@ void TextureCache_Remove( CachedTexture *texture )
 	cache.cachedBytes -= texture->textureBytes;
 #ifdef __GX__
 	if( texture->GXtexture != NULL )
-		free(texture->GXtexture);
+//		free(texture->GXtexture);
+		__lwp_heap_free(GXtexCache, texture->GXtexture);
 #endif // __GX__
 	free( texture );
 
@@ -787,7 +807,18 @@ void TextureCache_LoadBackground( CachedTexture *texInfo )
 //	dest = (u32*)malloc( texInfo->textureBytes );
 
 	if (texInfo->textureBytes > 0)
-		texInfo->GXtexture = (u16*) memalign(32,texInfo->textureBytes);
+	{
+//		texInfo->GXtexture = (u16*) memalign(32,texInfo->textureBytes);
+		texInfo->GXtexture = (u16*) __lwp_heap_allocate(GXtexCache,texInfo->textureBytes);
+		while(!texInfo->GXtexture)
+		{
+			if (cache.bottom != cache.dummy)
+				TextureCache_RemoveBottom();
+			else if (cache.dummy->higher)
+				TextureCache_Remove( cache.dummy->higher );
+			texInfo->GXtexture = (u16*) __lwp_heap_allocate(GXtexCache,texInfo->textureBytes);
+		}
+	}
 	else
 		DEBUG_print((char*)"Textures: Trying to malloc a 0 byte GX texture",DBG_TXINFO);
 
@@ -990,7 +1021,18 @@ void TextureCache_Load( CachedTexture *texInfo )
 
 	texInfo->textureBytes = (texInfo->GXrealWidth * texInfo->GXrealHeight) * GXsize;
 	if (texInfo->textureBytes > 0)
-		texInfo->GXtexture = (u16*) memalign(32,texInfo->textureBytes);
+	{
+//		texInfo->GXtexture = (u16*) memalign(32,texInfo->textureBytes);
+		texInfo->GXtexture = (u16*) __lwp_heap_allocate(GXtexCache,texInfo->textureBytes);
+		while(!texInfo->GXtexture)
+		{
+			if (cache.bottom != cache.dummy)
+				TextureCache_RemoveBottom();
+			else if (cache.dummy->higher)
+				TextureCache_Remove( cache.dummy->higher );
+			texInfo->GXtexture = (u16*) __lwp_heap_allocate(GXtexCache,texInfo->textureBytes);
+		}
+	}
 	else
 		DEBUG_print((char*)"Textures: Trying to malloc a 0 byte GX texture",DBG_TXINFO);
 

@@ -427,7 +427,7 @@ void Config_LoadConfig()
 #ifndef __GX__
 	cache.maxBytes = 32 * 1048576;	// reduced to 1MB for GC/Wii
 #else // !__GX__
-	cache.maxBytes = (u32) (1 * 1024 * 1024);
+	cache.maxBytes = GX_TEXTURE_CACHE_SIZE;
 #endif // __GX__
 
 #ifndef __GX__
