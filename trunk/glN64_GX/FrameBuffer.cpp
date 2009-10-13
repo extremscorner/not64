@@ -180,7 +180,7 @@ void FrameBuffer_SaveBuffer( u32 address, u16 size, u16 width, u16 height )
 			//Note: texture realWidth and realHeight should be multiple of 2!
 			GX_SetTexCopySrc(0, 0,(u16) current->texture->realWidth,(u16) current->texture->realHeight);
 			GX_SetTexCopyDst((u16) current->texture->realWidth,(u16) current->texture->realHeight, current->texture->GXtexfmt, GX_FALSE);
-			GX_CopyTex(current->texture->GXtexture, GX_FALSE);
+			if (current->texture->GXtexture) GX_CopyTex(current->texture->GXtexture, GX_FALSE);
 			GX_PixModeSync();
 #endif // __GX__
 
@@ -284,7 +284,7 @@ void FrameBuffer_SaveBuffer( u32 address, u16 size, u16 width, u16 height )
 	//Note: texture realWidth and realHeight should be multiple of 2!
 	GX_SetTexCopySrc(0, 0,(u16) current->texture->realWidth,(u16) current->texture->realHeight);
 	GX_SetTexCopyDst((u16) current->texture->realWidth,(u16) current->texture->realHeight, current->texture->GXtexfmt, GX_FALSE);
-	GX_CopyTex(current->texture->GXtexture, GX_FALSE);
+	if (current->texture->GXtexture) GX_CopyTex(current->texture->GXtexture, GX_FALSE);
 	GX_PixModeSync();
 #endif // __GX__
 

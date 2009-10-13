@@ -577,6 +577,11 @@ void OGL_UpdateDepthUpdate()
 
 void OGL_UpdateStates()
 {
+#ifdef __GX__
+	if (OGL.GXclearColorBuffer || OGL.GXclearDepthBuffer)
+		OGL_GXclearEFB();
+#endif //__GX__
+
 	if (gSP.changed & CHANGED_GEOMETRYMODE)
 	{
 		OGL_UpdateCullFace();
@@ -733,6 +738,11 @@ void OGL_UpdateStates()
 			glEnable( GL_POLYGON_STIPPLE );
 		else
 			glDisable( GL_POLYGON_STIPPLE );*/
+
+		if (gDP.otherMode.depthSource == G_ZS_PRIM)
+			GX_SetZTexture(GX_ZT_REPLACE,GX_TF_Z16,0);
+		else
+			GX_SetZTexture(GX_ZT_DISABLE,GX_TF_Z16,0);
 	}
 #endif // __GX__
 
@@ -1464,7 +1474,7 @@ void OGL_DrawRect( int ulx, int uly, int lrx, int lry, float *color )
 
 	OGL_UpdateCullFace();
 	OGL_UpdateViewport();
-	gDP.changed &= CHANGED_SCISSOR;	//Restore scissor in OGL_UpdateStates() before drawing next geometry.
+	gDP.changed |= CHANGED_SCISSOR;	//Restore scissor in OGL_UpdateStates() before drawing next geometry.
 #endif // __GX__
 }
 
@@ -1795,19 +1805,7 @@ void OGL_ClearDepthBuffer()
 	glEnable( GL_SCISSOR_TEST );
 #else // !__GX__
 	//Note: OGL_UpdateDepthUpdate() should not need to be called b/c DepthMask is set in OGL_UpdateStates()
-	OGL.GXclearBufferTex = (u8*) memalign(32,640*480/2);
-	GX_SetCopyClear ((GXColor){0,0,0,255}, 0xFFFFFF);
-	GX_SetColorUpdate(GX_DISABLE);
-	GX_SetAlphaUpdate(GX_DISABLE);
-	GX_SetZMode(GX_ENABLE,GX_ALWAYS,GX_TRUE);
-	GX_SetTexCopySrc(0, 0, 640, 480);
-	GX_SetTexCopyDst(640, 480, GX_TF_I4, GX_FALSE);
-	GX_CopyTex(OGL.GXclearBufferTex, GX_TRUE);
-	GX_PixModeSync();
-//	GX_DrawDone();
-	GX_SetColorUpdate(GX_ENABLE);
-	GX_SetAlphaUpdate(GX_ENABLE);
-	free(OGL.GXclearBufferTex);
+	OGL.GXclearDepthBuffer = true;
 	gDP.changed |= CHANGED_RENDERMODE;
 #endif // __GX__
 }
@@ -1822,20 +1820,12 @@ void OGL_ClearColorBuffer( float *color )
 
 	glEnable( GL_SCISSOR_TEST );
 #else // !__GX__
-	OGL.GXclearBufferTex = (u8*) memalign(32,640*480/2);
-	GXColor GXclearColor;
-	GXclearColor.r = (u8) (color[0]*255);
-	GXclearColor.g = (u8) (color[1]*255);
-	GXclearColor.b = (u8) (color[2]*255);
-	GXclearColor.a = (u8) (color[3]*255);
-	GX_SetCopyClear (GXclearColor, 0xFFFFFF);
-	GX_SetZMode(GX_ENABLE,GX_ALWAYS,GX_FALSE);
-	GX_SetTexCopySrc(0, 0, 640, 480);
-	GX_SetTexCopyDst(640, 480, GX_TF_I4, GX_FALSE);
-	GX_CopyTex(OGL.GXclearBufferTex, GX_TRUE);
-	GX_PixModeSync();
-//	GX_DrawDone();
-	free(OGL.GXclearBufferTex);
+	OGL.GXclearColor.r = (u8) (color[0]*255);
+	OGL.GXclearColor.g = (u8) (color[1]*255);
+	OGL.GXclearColor.b = (u8) (color[2]*255);
+	OGL.GXclearColor.a = (u8) (color[3]*255);
+
+	OGL.GXclearColorBuffer = true;
 	gDP.changed |= CHANGED_RENDERMODE;
 #endif // __GX__
 }
@@ -2018,5 +2008,82 @@ void OGL_GXinitDlist()
 	GX_SetColorUpdate(GX_ENABLE);
 	GX_SetAlphaUpdate(GX_ENABLE);
 	GX_SetDstAlpha(GX_DISABLE, 0xFF);
+	OGL.GXclearColorBuffer = false;
+	OGL.GXclearDepthBuffer = false;
+	OGL.GXclearColor = (GXColor){0,0,0,255};
+}
+
+extern GXRModeObj *vmode;
+
+void OGL_GXclearEFB()
+{
+	//Note: EFB is RGB8, so no need to clear alpha
+	if(OGL.GXclearColorBuffer)	GX_SetColorUpdate(GX_ENABLE);
+	else						GX_SetColorUpdate(GX_DISABLE);
+	if(OGL.GXclearDepthBuffer)	GX_SetZMode(GX_ENABLE,GX_GEQUAL,GX_TRUE);
+	else						GX_SetZMode(GX_ENABLE,GX_GEQUAL,GX_FALSE);
+
+	GX_SetNumChans(1);
+	GX_SetNumTexGens(0);
+	GX_SetNumTevStages(1);
+	GX_SetTevOp (GX_TEVSTAGE0, GX_PASSCLR);
+	GX_SetTevOrder (GX_TEVSTAGE0, GX_TEXMAP_NULL, GX_TEXMAP_NULL, GX_COLOR0A0);
+	GX_SetBlendMode(GX_BM_NONE, GX_BL_ONE, GX_BL_ZERO, GX_LO_CLEAR); 
+	GX_SetZTexture(GX_ZT_DISABLE,GX_TF_Z16,0);	//GX_ZT_DISABLE or GX_ZT_REPLACE; set in gDP.cpp
+	GX_SetZCompLoc(GX_TRUE);	// Do Z-compare before texturing.
+	GX_SetAlphaCompare(GX_ALWAYS,0,GX_AOP_AND,GX_ALWAYS,0);
+	GX_SetFog(GX_FOG_NONE,0.1,1.0,0.0,1.0,(GXColor){0,0,0,255});
+	GX_SetViewport((f32) 0,(f32) 0,(f32) OGL.width,(f32) OGL.height, 0.0f, 1.0f);
+	GX_SetScissor((u32) 0,(u32) 0,(u32) OGL.width+1,(u32) OGL.height+1);	//Set to the same size as the viewport.
+//	GX_SetScissor(0,0,vmode->fbWidth,vmode->efbHeight);
+	GX_SetCullMode (GX_CULL_NONE);
+	Mtx44 GXprojection;
+	guMtxIdentity(GXprojection);
+	guOrtho(GXprojection, 0, OGL.height-1, 0, OGL.width-1, 0.0f, 1.0f);
+	GX_LoadProjectionMtx(GXprojection, GX_ORTHOGRAPHIC); 
+	GX_LoadPosMtxImm(OGL.GXmodelViewIdent,GX_PNMTX0);
+
+	//set vertex description here
+	GX_ClearVtxDesc();
+	GX_SetVtxDesc(GX_VA_PTNMTXIDX, GX_PNMTX0);
+	GX_SetVtxDesc(GX_VA_POS, GX_DIRECT);
+	GX_SetVtxDesc(GX_VA_CLR0, GX_DIRECT);
+	GX_SetVtxAttrFmt(GX_VTXFMT0, GX_VA_POS, GX_POS_XYZ, GX_F32, 0);
+	GX_SetVtxAttrFmt(GX_VTXFMT0, GX_VA_CLR0, GX_CLR_RGBA, GX_RGBA8, 0);
+	f32 ZmaxDepth = (f32) -0xFFFFFF/0x1000000;
+	GX_Begin(GX_QUADS, GX_VTXFMT0, 4);
+		GX_Position3f32(-1.0f, -1.0f, ZmaxDepth);
+		GX_Color4u8(OGL.GXclearColor.r, OGL.GXclearColor.g, OGL.GXclearColor.b, OGL.GXclearColor.a); 
+		GX_Position3f32((f32) OGL.width+1, -1.0f, ZmaxDepth);
+		GX_Color4u8(OGL.GXclearColor.r, OGL.GXclearColor.g, OGL.GXclearColor.b, OGL.GXclearColor.a); 
+		GX_Position3f32((f32) OGL.width+1,(f32) OGL.height+1, ZmaxDepth);
+		GX_Color4u8(OGL.GXclearColor.r, OGL.GXclearColor.g, OGL.GXclearColor.b, OGL.GXclearColor.a); 
+		GX_Position3f32(-1.0f,(f32) OGL.height+1, ZmaxDepth);
+		GX_Color4u8(OGL.GXclearColor.r, OGL.GXclearColor.g, OGL.GXclearColor.b, OGL.GXclearColor.a); 
+	GX_End();
+
+	OGL.GXclearColorBuffer = false;
+	OGL.GXclearDepthBuffer = false;
+	OGL.GXupdateMtx = true;
+	OGL.GXupdateFog = true;
+	GX_SetColorUpdate(GX_ENABLE);
+	OGL_UpdateCullFace();
+	OGL_UpdateViewport();
+	gDP.changed |= CHANGED_SCISSOR | CHANGED_COMBINE | CHANGED_RENDERMODE;	//Restore scissor in OGL_UpdateStates() before drawing next geometry.
+
+/*	OGL.GXclearBufferTex = (u8*) memalign(32,640*480/2);
+	GX_SetCopyClear (OGL.GXclearColor, 0xFFFFFF);
+	if(OGL.GXclearColorBuffer)	GX_SetColorUpdate(GX_ENABLE);
+	else						GX_SetColorUpdate(GX_DISABLE);
+	if(OGL.GXclearDepthBuffer)	GX_SetZMode(GX_ENABLE,GX_ALWAYS,GX_TRUE);
+	else						GX_SetZMode(GX_ENABLE,GX_ALWAYS,GX_FALSE);
+	GX_SetTexCopySrc(0, 0, 640, 480);
+	GX_SetTexCopyDst(640, 480, GX_TF_I4, GX_FALSE);
+	GX_CopyTex(OGL.GXclearBufferTex, GX_TRUE);
+	GX_PixModeSync();
+//	GX_DrawDone();
+	GX_SetColorUpdate(GX_ENABLE);
+	free(OGL.GXclearBufferTex);
+	gDP.changed |= CHANGED_RENDERMODE;*/
 }
 #endif // __GX__

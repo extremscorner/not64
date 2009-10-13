@@ -216,10 +216,12 @@ void gDPSetDepthSource( u32 source )
 	gDP.otherMode.depthSource = source;
 
 #ifdef __GX__
-	if (gDP.otherMode.depthSource == G_ZS_PRIM)
+	gDP.changed |= CHANGED_RENDERMODE;
+
+/*	if (gDP.otherMode.depthSource == G_ZS_PRIM)
 		GX_SetZTexture(GX_ZT_REPLACE,GX_TF_Z16,0);
 	else
-		GX_SetZTexture(GX_ZT_DISABLE,GX_TF_Z16,0);
+		GX_SetZTexture(GX_ZT_DISABLE,GX_TF_Z16,0);*/
 #endif // __GX__
 
 #ifdef DEBUG

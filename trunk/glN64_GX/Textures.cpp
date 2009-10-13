@@ -545,6 +545,11 @@ void TextureCache_RemoveBottom()
 
 void TextureCache_Remove( CachedTexture *texture )
 {
+#ifdef __GX__
+	if (texture->frameBufferTexture)
+		FrameBuffer_RemoveBuffer( texture->address );
+#endif //__GX__
+
 	if ((texture == cache.bottom) &&
 		(texture == cache.top))
 	{
