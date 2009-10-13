@@ -8,8 +8,8 @@ CFLAGS  = -g -O2 -Wall $(MACHDEP) $(INCLUDE) \
 	  -DCPU_SHUTDOWN -DSPC700_SHUTDOWN -DVAR_CYCLES -DSOUND \
 	  -DNOASM -DNGC -DNOASM -DPIXEL_FORMAT=RGB565  \
 	  -fno-exceptions -Wno-unused-parameter -pipe \
-	  -DUSE_GUI -DHW_DOL -DSHOW_DEBUG -DTHREADED_AUDIO -DUSE_TLB_CACHE -DUSE_RECOMP_CACHE
-#	  -DDEBUGON  -DGLN64_SDLOG -DUSE_EXPANSION -DUSE_RECOMP_CACHE -DPPC_DYNAREC
+	  -DUSE_GUI -DHW_DOL -DSHOW_DEBUG -DTHREADED_AUDIO -DUSE_TLB_CACHE -DUSE_RECOMP_CACHE -DPPC_DYNAREC
+#	  -DDEBUGON  -DGLN64_SDLOG -DUSE_EXPANSION
 
 MACHDEP	= -DGEKKO -mcpu=750 -meabi -mhard-float 
 LDFLAGS	= $(MACHDEP) -mogc -Wl,-Map,$(notdir $@).map -Wl,--cref
@@ -42,7 +42,7 @@ OBJ		=main/rom_gc.o \
 		r4300/regimm.o \
 		r4300/exception.o \
 		r4300/Invalid_Code.o \
-		r4300/Recomp-Cache.o \
+		r4300/Recomp-Cache-Heap.o \
 		gc_memory/ARAM.o \
 		gc_memory/tlb.o \
 		gc_memory/TLB-Cache-hash.o \
@@ -66,10 +66,10 @@ OBJ		=main/rom_gc.o \
 		r4300/profile.o \
 		main/adler32.o
 		
-OBJ_PPC		=r4300/new-ppc/MIPS-to-PPC.o \
-		r4300/new-ppc/Recompile.o \
-		r4300/new-ppc/Wrappers.o 
-		#r4300/ppc/ppc_disasm.o
+OBJ_PPC		=r4300/ppc/MIPS-to-PPC.o \
+		r4300/ppc/Recompile.o \
+		r4300/ppc/Wrappers.o \
+		r4300/ppc/Register-Cache.o
 
 OBJ_INPUT	=gc_input/main.o \
 		gc_input/controller-GC.o
@@ -254,17 +254,13 @@ glN64_GX/F3DWRUS.o:		glN64_GX/F3DWRUS.cpp
 				@echo $<
 				@$(CXX) $(CFLAGS) -D__LINUX__ -D__GX__ -c -o $@ $<
 
-r4300/ppc/Wrappers.o:		r4300/new-ppc/Wrappers.s
-				@echo $<
-				@$(AS) -o $@ $<
-
 #Default rule to build the rest of the C files
 %.o: %.c
 	@echo $<
 	@$(CC) $(CFLAGS) -c -o $@ $<
 	
 
-mupen64gc-glN64.elf:	$(OBJ) $(OBJ_INPUT) $(OBJ_GLN64_GX) $(OBJ_AUDIO) $(OBJ_RSPHLE) main/main_gc-menu.o #$(OBJ_PPC)
+mupen64gc-glN64.elf:	$(OBJ) $(OBJ_INPUT) $(OBJ_GLN64_GX) $(OBJ_AUDIO) $(OBJ_RSPHLE) main/main_gc-menu.o $(OBJ_PPC)
 						@echo linking ... $(notdir $@)
 						@$(LD) $^ $(LDFLAGS) $(LIBPATHS) $(LIB) -Wl -o $@
 						@echo linking ... mupen64gc-glN64.dol
