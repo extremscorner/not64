@@ -113,6 +113,7 @@ struct GLInfo
 	float	GXfogStartZ;
 	float	GXfogEndZ;
 	GXColor	GXfogColor;
+	GXColor GXclearColor;
 	u8		GXfogType;
 	u8*		GXclearBufferTex;
 	bool	GXupdateFog;
@@ -123,6 +124,8 @@ struct GLInfo
 	bool	GXforceClampS1;
 	bool	GXforceClampT1;
 	bool	GXuseMinMagNearest;
+	bool	GXclearColorBuffer;
+	bool	GXclearDepthBuffer;
 #endif
 };
 
@@ -206,6 +209,7 @@ void OGL_SwapBuffers();
 void OGL_ReadScreen( void **dest, long *width, long *height );
 #ifdef __GX__
 void OGL_GXinitDlist();
+void OGL_GXclearEFB();
 #endif // __GX__
 
 #endif
