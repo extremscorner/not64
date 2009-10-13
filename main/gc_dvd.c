@@ -10,11 +10,12 @@
 #include <di/di.h>
 #endif
 
+extern int dvdInitialized;
 int last_current_dir = -1;
 volatile unsigned long* dvd = (volatile unsigned long*)0xCC006000;
 file_entries *DVDToc = NULL; //Dynamically allocate this
 
-#ifndef HW_RVL
+#ifdef HW_DOL
 int dvd_read_id()
 {
 	dvd[0] = 0x2E;
@@ -38,7 +39,7 @@ int dvd_read_id(){
 }
 #endif
 
-#ifndef HW_RVL
+#ifdef HW_DOL
 unsigned int dvd_get_error(void)
 {
 	dvd[2] = 0xE0000000;
@@ -56,7 +57,7 @@ unsigned int dvd_get_error(void)
 }
 #endif
 
-#ifndef HW_RVL
+#ifdef HW_DOL
 void dvd_motor_off()
 {
 	dvd[0] = 0x2E;
@@ -75,7 +76,7 @@ void dvd_motor_off(){
 #endif
 
 
-#ifndef HW_RVL
+#ifdef HW_DOL
 int dvd_read(void* dst, unsigned int len, unsigned int offset)
 {
 	if ((((int)dst) & 0xC0000000) == 0x80000000) // cached?
@@ -97,7 +98,7 @@ int dvd_read(void* dst, unsigned int len, unsigned int offset)
 }
 #endif
 
-#ifndef HW_RVL
+#ifdef HW_DOL
 int read_sector(void* buffer, uint32_t sector)
 {
 	return dvd_read(buffer, 2048, sector * 2048);
@@ -140,7 +141,10 @@ int read_safe(void* dst, uint64_t offset, int len)
 	}
 	free(sector_buffer);
 	if(ret)
-		return -1;
+  	return -1;
+  	
+  if(dvd_get_error())
+  	  dvdInitialized=0;
 
 	return ol;
 }
