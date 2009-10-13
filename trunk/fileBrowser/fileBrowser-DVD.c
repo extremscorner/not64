@@ -11,7 +11,7 @@
 /* DVD Globals */
 extern unsigned int isWii;
 extern int previously_initd;
-int dvdInitialized;
+int dvdInitialized = 0;
 
 /* Worked out manually from my original Disc */
 #define OOT_OFFSET 0x54FBEEF4ULL
@@ -26,43 +26,32 @@ fileBrowser_file topLevel_DVD =
 	  FILE_BROWSER_ATTR_DIR
 	};
 
-#ifndef HW_RVL
-int DVD_check_state() {
-
-    if(dvd_get_error() == 0){
-            dvdInitialized = 1;
-            return 0;
-    }
-    else {
-        while(dvd_get_error()) {
-            if(!isWii){	//gamecube
-                DVD_Mount ();   
-                if(dvd_get_error())
-                    DVD_Reset(DVD_RESETHARD);
-            }
-            if(isWii) {	//GC mode on Wii
-                DVD_Reset(DVD_RESETHARD);
-                dvd_read_id();
-            }
-        }
-    }
-    dvdInitialized = 1;
-    return 0;
-
-}
+void init_dvd()
+{
+#ifdef HW_DOL
+  if(isWii) //GC mode on Wii
+  {
+    DVD_Reset(DVD_RESETHARD);
+    dvd_read_id();
+    dvdInitialized=1;
+  }
+  else      //GC, no modchip even required :)
+  {
+    DVD_Reset(DVD_RESETHARD);
+    DVD_Mount ();  
+    dvdInitialized=1;
+  }
 #else
-int DVD_check_state(){
-    dvdInitialized = 1;
-    return 0;
-}
+  dvdInitialized=1; //Wiimode stuff is handled by DVDx
 #endif
-		 
+}
+ 
 	 
 int fileBrowser_DVD_readDir(fileBrowser_file* ffile, fileBrowser_file** dir){	
 	
-	dvd_read_id();
-	DVD_check_state();
-	
+  if(!dvdInitialized)
+    init_dvd();
+    
 	int num_entries = 0;
 	
 	if (!memcmp((void*)0x80000000, "D43U01", 6)) { //OoT bonus disc support.
@@ -119,34 +108,15 @@ int fileBrowser_DVD_seekFile(fileBrowser_file* file, unsigned int where, unsigne
 }
 
 int fileBrowser_DVD_readFile(fileBrowser_file* file, void* buffer, unsigned int length){
-	DVD_check_state();
 	int bytesread = read_safe(buffer,file->discoffset+file->offset,length);
 	if(bytesread > 0)
 		file->offset += bytesread;
 	return bytesread;
 }
 
-#ifndef HW_RVL
-int fileBrowser_DVD_init(fileBrowser_file* file) {
-
-	dvd_read_id();
-	if(dvd_get_error() == 0)
-		return 0;
-	if(!isWii)	//gamecube
-		DVD_Mount ();
-	if(isWii) {	//GC mode on Wii
-		DVD_Reset(DVD_RESETHARD);
-		dvd_read_id();
-	}
-	if(dvd_get_error() == 0)
-		return 0;
-	return dvd_get_error();
-}
-#else
 int fileBrowser_DVD_init(fileBrowser_file* file){
 	return 0;
 }
-#endif
 
 int fileBrowser_DVD_deinit(fileBrowser_file* file) {
 	return 0;
