@@ -11,7 +11,6 @@ struct VIInfo
 	int which_fb;
 	bool updateOSD;
 	bool copy_fb;
-	bool doFrameBufferRender;
 #endif // __GX__
 };
 

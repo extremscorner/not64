@@ -3,6 +3,7 @@
 #include "../gui/DEBUG.h"
 #include <math.h>
 #include "3DMath.h"
+#include <malloc.h>
 #endif // __GX__
 
 #ifndef __LINUX__
@@ -54,6 +55,10 @@
 #ifdef DEBUGON
 extern "C" { void _break(); }
 #endif
+
+#ifdef __GX__
+extern char glN64_useFrameBufferTextures;
+#endif // __GX__
 
 GLInfo OGL;
 
@@ -155,7 +160,7 @@ void OGL_InitExtensions()
 		glGetFinalCombinerInputParameterfvNV = (PFNGLGETFINALCOMBINERINPUTPARAMETERFVNVPROC)wglGetProcAddress( "glGetFinalCombinerInputParameterfvNV" );
 		glGetFinalCombinerInputParameterivNV = (PFNGLGETFINALCOMBINERINPUTPARAMETERIVNVPROC)wglGetProcAddress( "glGetFinalCombinerInputParameterivNV" );
 #endif // !__LINUX__
-#ifndef __GX__ //TODO: Fill this variable
+#ifndef __GX__ 
 		glGetIntegerv( GL_MAX_GENERAL_COMBINERS_NV, &OGL.maxGeneralCombiners );
 #endif // !__GX__
 	}
@@ -171,7 +176,6 @@ void OGL_InitExtensions()
 		glGetIntegerv( GL_MAX_TEXTURE_UNITS_ARB, &OGL.maxTextureUnits );
 		OGL.maxTextureUnits = min( 8, OGL.maxTextureUnits ); // The plugin only supports 8, and 4 is really enough
 #else // !__GX__
-		//TODO: Check this
 		OGL.maxTextureUnits = 8;
 		OGL.ARB_multitexture = TRUE;
 #endif // __GX__
@@ -535,19 +539,14 @@ void OGL_UpdateCullFace()
 	else
 		glDisable( GL_CULL_FACE );
 #else // !__GX__
-	//TODO: Update GX Culling
 	if (gSP.geometryMode & G_CULL_BOTH)
 	{
-//		glEnable( GL_CULL_FACE );
 		if (gSP.geometryMode & G_CULL_BACK)
-//			glCullFace( GL_BACK );
 			GX_SetCullMode (GX_CULL_FRONT);	// GC vertex winding is backwards.
 		else
-//			glCullFace( GL_FRONT );
 			GX_SetCullMode (GX_CULL_BACK);	// GC vertex winding is backwards.
 	}
 	else
-//		glDisable( GL_CULL_FACE );
 		GX_SetCullMode (GX_CULL_NONE);
 #endif // __GX__
 }
@@ -729,7 +728,7 @@ void OGL_UpdateStates()
 		DEBUG_print(txtbuffer,DBG_SDGECKOPRINT);
 #endif // GLN64_SDLOG
 
-//TODO: Not sure yet how to implement this:
+//TODO: Implement PolygonStipple?
 /*		if (OGL.usePolygonStipple && (gDP.otherMode.alphaCompare == G_AC_DITHER) && !(gDP.otherMode.alphaCvgSel))
 			glEnable( GL_POLYGON_STIPPLE );
 		else
@@ -1069,7 +1068,6 @@ void OGL_DrawTriangles()
 #ifndef __GX__
 	glDrawArrays( GL_TRIANGLES, 0, OGL.numVertices );
 #else // !__GX__
-	//TODO: Implement in GX
 	GXColor GXcol;
 	float invW;
 
@@ -1529,7 +1527,7 @@ void OGL_DrawTexturedRect( float ulx, float uly, float lrx, float lry, float uls
 			rect[1].t0 = cache.current[0]->offsetT - rect[1].t0;
 		}
 
-#ifndef __GX__	//TODO: Figure out how to set wrap_s/wrap_t here.
+#ifndef __GX__	
 		if (OGL.ARB_multitexture)
 			glActiveTextureARB( GL_TEXTURE0_ARB );
 
@@ -1584,7 +1582,7 @@ void OGL_DrawTexturedRect( float ulx, float uly, float lrx, float lry, float uls
 			rect[1].t1 = cache.current[1]->offsetT - rect[1].t1;
 		}
 
-#ifndef __GX__	//TODO: Figure out how to set wrap_s/wrap_t here.
+#ifndef __GX__	
 		glActiveTextureARB( GL_TEXTURE1_ARB );
 
 		if ((rect[0].s1 == 0.0f) && (rect[1].s1 <= cache.current[1]->width))
@@ -1796,10 +1794,22 @@ void OGL_ClearDepthBuffer()
 
 	glEnable( GL_SCISSOR_TEST );
 #else // !__GX__
-	//TODO: Implement in GX
 	//Note: OGL_UpdateDepthUpdate() should not need to be called b/c DepthMask is set in OGL_UpdateStates()
+	OGL.GXclearBufferTex = (u8*) memalign(32,640*480/2);
+	GX_SetCopyClear ((GXColor){0,0,0,255}, 0xFFFFFF);
+	GX_SetColorUpdate(GX_DISABLE);
+	GX_SetAlphaUpdate(GX_DISABLE);
+	GX_SetZMode(GX_ENABLE,GX_ALWAYS,GX_TRUE);
+	GX_SetTexCopySrc(0, 0, 640, 480);
+	GX_SetTexCopyDst(640, 480, GX_TF_I4, GX_FALSE);
+	GX_CopyTex(OGL.GXclearBufferTex, GX_TRUE);
+	GX_PixModeSync();
+//	GX_DrawDone();
+	GX_SetColorUpdate(GX_ENABLE);
+	GX_SetAlphaUpdate(GX_ENABLE);
+	free(OGL.GXclearBufferTex);
+	gDP.changed |= CHANGED_RENDERMODE;
 #endif // __GX__
-
 }
 
 void OGL_ClearColorBuffer( float *color )
@@ -1812,9 +1822,22 @@ void OGL_ClearColorBuffer( float *color )
 
 	glEnable( GL_SCISSOR_TEST );
 #else // !__GX__
-	//TODO: Implement in GX
+	OGL.GXclearBufferTex = (u8*) memalign(32,640*480/2);
+	GXColor GXclearColor;
+	GXclearColor.r = (u8) (color[0]*255);
+	GXclearColor.g = (u8) (color[1]*255);
+	GXclearColor.b = (u8) (color[2]*255);
+	GXclearColor.a = (u8) (color[3]*255);
+	GX_SetCopyClear (GXclearColor, 0xFFFFFF);
+	GX_SetZMode(GX_ENABLE,GX_ALWAYS,GX_FALSE);
+	GX_SetTexCopySrc(0, 0, 640, 480);
+	GX_SetTexCopyDst(640, 480, GX_TF_I4, GX_FALSE);
+	GX_CopyTex(OGL.GXclearBufferTex, GX_TRUE);
+	GX_PixModeSync();
+//	GX_DrawDone();
+	free(OGL.GXclearBufferTex);
+	gDP.changed |= CHANGED_RENDERMODE;
 #endif // __GX__
-
 }
 
 void OGL_SaveScreenshot()
@@ -1922,10 +1945,7 @@ void OGL_ReadScreen( void **dest, long *width, long *height )
 	glReadPixels( 0, 0, OGL.width, OGL.height,
 	              GL_BGR, GL_UNSIGNED_BYTE, *dest );
 	glReadBuffer( oldMode );
-#else // !__GX__
-	//TODO: Implement in GX?
-#endif // __GX__
-
+#endif // !__GX__ Note: This is a VCR function.
 }
 
 #endif // __LINUX__
@@ -1933,12 +1953,10 @@ void OGL_ReadScreen( void **dest, long *width, long *height )
 #ifdef __GX__
 void OGL_GXinitDlist()
 {
-	//Clear efb
-//	GX_SetCopyClear ((GXColor){0,0,0,255}, 0xFFFFFF);	//TODO: get rid of this GX_CopyDisp as it's unneeded.
-//	GX_CopyDisp (VI_GX_getScreenPointer(), GX_TRUE);	//clear the EFB before executing new Dlist
-//	GX_DrawDone ();
-	if(VI.copy_fb)
-		VIDEO_WaitVSync();
+//	if(VI.copy_fb)
+//		VIDEO_WaitVSync();
+
+	OGL.frameBufferTextures = glN64_useFrameBufferTextures;
 
 	// init primeDepthZtex, Ztexture, AlphaCompare, and Texture Clamping
 	TextureCache_UpdatePrimDepthZtex( 1.0f );
