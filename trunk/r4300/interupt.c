@@ -344,7 +344,7 @@ void gen_interupt()
 	  next_interupt = q->count;
 	else
 	  next_interupt = 0;
-	if (interpcore)
+	if(dynacore || interpcore)
 	  {
 	     /*if ((Cause & (2 << 2)) && (Cause & 0x80000000))
 	       interp_addr = skip_jump+4;

@@ -33,9 +33,9 @@
 #define sign_extended(a) a = (long long)((long)a)
 //#define sign_extended(a) a |= (a&0x80000000) ? 0xFFFFFFFF00000000 : 0
 //#define sign_extendedb(a) a = (long long)((char)a) // tehpola: tracking down bugs
-#define sign_extendedb(a) a |= (a&0x80) ? 0xFFFFFFFFFFFFFF00 : 0
+#define sign_extendedb(a) a |= (a&0x80) ? 0xFFFFFFFFFFFFFF00ULL : 0
 //#define sign_extendedh(a) a = (long long)((short)a)
-#define sign_extendedh(a) a |= (a&0x8000) ? 0xFFFFFFFFFFFF0000 : 0
+#define sign_extendedh(a) a |= (a&0x8000) ? 0xFFFFFFFFFFFF0000ULL : 0
 
 #define rrt *PC->f.r.rt
 #define rrd *PC->f.r.rd

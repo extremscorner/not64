@@ -37,7 +37,7 @@ typedef unsigned int MIPS_instr;
 
 #define MIPS_SA_MASK      0x1F
 #define MIPS_SA_SHIFT     6
-#define MIPS_GET_SA(instr)      ((instr >> MIPS_SA_SHIFT)     & MIPS_SA_SHIFT)
+#define MIPS_GET_SA(instr)      ((instr >> MIPS_SA_SHIFT)     & MIPS_SA_MASK)
 
 #define MIPS_FUNC_MASK    0x3F
 #define MIPS_FUNC_SHIFT   0

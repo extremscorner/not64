@@ -621,7 +621,7 @@ static void RBLTZ()
 	//else //if(dynacore)
 	//if(dynacore) genbltz();
      }
-   else if (!interpcore && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
+   else if ((!interpcore && !dynacore) && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
      {
 	dst->ops = BLTZ_OUT;
 	//if(dynacore)
@@ -648,7 +648,7 @@ static void RBGEZ()
 	//else //if(dynacore)
 	//if(dynacore) genbgez();
      }
-   else if (!interpcore && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
+   else if ((!interpcore && !dynacore) && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
      {
 	dst->ops = BGEZ_OUT;
 	//if(dynacore)
@@ -675,7 +675,7 @@ static void RBLTZL()
 	//else //if(dynacore)
 	//if(dynacore) genbltzl();
      }
-   else if (!interpcore && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
+   else if ((!interpcore && !dynacore) && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
      {
 	dst->ops = BLTZL_OUT;
 	//if(dynacore)
@@ -702,7 +702,7 @@ static void RBGEZL()
 	//else //if(dynacore)
 	//if(dynacore) genbgezl();
      }
-   else if (!interpcore && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
+   else if ((!interpcore && !dynacore) && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
      {
 	dst->ops = BGEZL_OUT;
 	//if(dynacore)
@@ -771,7 +771,7 @@ static void RBLTZAL()
 	//else //if(dynacore)
 	//if(dynacore) genbltzal();
      }
-   else if (!interpcore && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
+   else if ((!interpcore && !dynacore) && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
      {
 	dst->ops = BLTZAL_OUT;
 	//if(dynacore)
@@ -798,7 +798,7 @@ static void RBGEZAL()
 	//else //if(dynacore)
 	//if(dynacore) genbgezal();
      }
-   else if (!interpcore && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
+   else if ((!interpcore && !dynacore) && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
      {
 	dst->ops = BGEZAL_OUT;
 	//if(dynacore)
@@ -825,7 +825,7 @@ static void RBLTZALL()
 	//else //if(dynacore)
 	//if(dynacore) genbltzall();
      }
-   else if (!interpcore && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
+   else if ((!interpcore && !dynacore) && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
      {
 	dst->ops = BLTZALL_OUT;
 	//if(dynacore)
@@ -852,7 +852,7 @@ static void RBGEZALL()
 	//else //if(dynacore)
 	//if(dynacore) genbgezall();
      }
-   else if (!interpcore && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
+   else if ((!interpcore && !dynacore) && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
      {
 	dst->ops = BGEZALL_OUT;
 	//if(dynacore)
@@ -979,7 +979,7 @@ static void RBC1F()
 	//else //if(dynacore)
 	//if(dynacore) genbc1f();
      }
-   else if (!interpcore && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
+   else if ((!interpcore && !dynacore) && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
      {
 	dst->ops = BC1F_OUT;
 	//if(dynacore)
@@ -1006,7 +1006,7 @@ static void RBC1T()
 	//else //if(dynacore)
 	//if(dynacore) genbc1t();
      }
-   else if (!interpcore && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
+   else if ((!interpcore && !dynacore) && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
      {
 	dst->ops = BC1T_OUT;
 	//if(dynacore)
@@ -1033,7 +1033,7 @@ static void RBC1FL()
 	//else //if(dynacore)
 	//if(dynacore) genbc1fl();
      }
-   else if (!interpcore && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
+   else if ((!interpcore && !dynacore) && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
      {
 	dst->ops = BC1FL_OUT;
 	//if(dynacore)
@@ -1060,7 +1060,7 @@ static void RBC1TL()
 	//else //if(dynacore)
 	//if(dynacore) genbc1tl();
      }
-   else if (!interpcore && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
+   else if ((!interpcore && !dynacore) && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
      {
 	dst->ops = BC1TL_OUT;
 	//if(dynacore)
@@ -1857,7 +1857,7 @@ static void RJ()
 	//else //if(dynacore)
 	//if(dynacore) genj();
      }
-   else if (!interpcore && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
+   else if ((!interpcore && !dynacore) && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
      {
 	dst->ops = J_OUT;
 	//if(dynacore)
@@ -1884,7 +1884,7 @@ static void RJAL()
 	//else //if(dynacore)
 	//if(dynacore) genjal();
      }
-   else if (!interpcore && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
+   else if ((!interpcore && !dynacore) && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
      {
 	dst->ops = JAL_OUT;
 	//if(dynacore)
@@ -1911,7 +1911,7 @@ static void RBEQ()
 	//else //if(dynacore)
 	//if(dynacore) genbeq();
      }
-   else if (!interpcore && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
+   else if ((!interpcore && !dynacore) && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
      {
 	dst->ops = BEQ_OUT;
 	//if(dynacore)
@@ -1938,7 +1938,7 @@ static void RBNE()
 	//else //if(dynacore)
 	//if(dynacore) genbne();
      }
-   else if (!interpcore && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
+   else if ((!interpcore && !dynacore) && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
      {
 	dst->ops = BNE_OUT;
 	//if(dynacore)
@@ -1965,7 +1965,7 @@ static void RBLEZ()
 	//else //if(dynacore)
 	//if(dynacore) genblez();
      }
-   else if (!interpcore && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
+   else if ((!interpcore && !dynacore) && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
      {
 	dst->ops = BLEZ_OUT;
 	//if(dynacore)
@@ -1992,7 +1992,7 @@ static void RBGTZ()
 	//else //if(dynacore)
 	//if(dynacore) genbgtz();
      }
-   else if (!interpcore && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
+   else if ((!interpcore && !dynacore) && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
      {
 	dst->ops = BGTZ_OUT;
 	//if(dynacore)
@@ -2101,7 +2101,7 @@ static void RBEQL()
 	//else //if(dynacore)
 	//if(dynacore) genbeql();
      }
-   else if (!interpcore && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
+   else if ((!interpcore && !dynacore) && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
      {
 	dst->ops = BEQL_OUT;
 	//if(dynacore)
@@ -2128,7 +2128,7 @@ static void RBNEL()
 	//else //if(dynacore)
 	//if(dynacore) genbnel();
      }
-   else if (!interpcore && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
+   else if ((!interpcore && !dynacore) && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
      {
 	dst->ops = BNEL_OUT;
 	//if(dynacore)
@@ -2155,7 +2155,7 @@ static void RBLEZL()
 	//else //if(dynacore)
 	//if(dynacore) genblezl();
      }
-   else if (!interpcore && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
+   else if ((!interpcore && !dynacore) && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
      {
 	dst->ops = BLEZL_OUT;
 	//if(dynacore)
@@ -2182,7 +2182,7 @@ static void RBGTZL()
 	//else //if(dynacore)
 	//if(dynacore) genbgtzl();
      }
-   else if (!interpcore && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
+   else if ((!interpcore && !dynacore) && (target < dst_block->start || target >= dst_block->end || dst->addr == (dst_block->end-4)))
      {
 	dst->ops = BGTZL_OUT;
 	//if(dynacore)
@@ -2849,14 +2849,4 @@ void prefetch_opcode(unsigned long instr)
    op = instr;
    //printf("Interpreting %08x\n",op);
    recomp_ops[((src >> 26) & 0x3F)]();
-   
-   // tehpola: dynarec hack
-   if(dynacore){
-   	sprintf(txtbuffer, "Interpreting 0x%08x\n", op);
-   	DEBUG_print(txtbuffer, DBG_USBGECKO);
-   	
-   	// Check for interrupts
-	update_count();
-	if (next_interupt <= Count) gen_interupt();
-   }
 }
