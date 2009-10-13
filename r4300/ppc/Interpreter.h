@@ -5,65 +5,159 @@
 #ifndef INTERPRETER_H
 #define INTERPRETER_H
 
-/* decodeNInterpret (passed instr through r1):
+/* decodeNInterpret(MIPS_instr, unsigned int PC):
 	1) Saves state
 	2) Calls prefetch_opcode(instr)               (Decodes)
 	3) Calls interp_ops[MIPS_GET_OPCODE(instr)]() (Interprets)
 	4) Restores state
  */
-void decodeNInterpret(void);
-#if 1
+unsigned int decodeNInterpret();
+
 // These defines tell the recompiler to interpret
 //  rather than recompile the instruction
+#if 0
 #define INTERPRET_LB
 #define INTERPRET_LBU
 #define INTERPRET_LH
 #define INTERPRET_LHU
 #define INTERPRET_LW
+#endif
+#define INTERPRET_LWU
 #define INTERPRET_LWL
 #define INTERPRET_LWR
 
+#if 0
 #define INTERPRET_SB
 #define INTERPRET_SH
 #define INTERPRET_SW
+#endif
 #define INTERPRET_SWL
 #define INTERPRET_SWR
 
-#define INTERPRET_DW
+#define INTERPRET_LD
+#define INTERPRET_LDL
+#define INTERPRET_LDR
+#define INTERPRET_SD
+#define INTERPRET_SDL
+#define INTERPRET_SDR
 
-#define INTERPRET_MADD
-#define INTERPRET_MADDU
-#define INTERPRET_MSUB
-#define INTERPRET_MSUBU
-//#define INTERPRET_CLO
-#define INTERPRET_HILO
+#define INTERPRET_LWC1
+#define INTERPRET_LDC1
+#define INTERPRET_SWC1
+#define INTERPRET_SDC1
 
-//#define INTERPRET_MOVN
-//#define INTERPRET_MOVZ
+//#define INTERPRET_DW
 
-#if 1
-#define INTERPRET_J
-#define INTERPRET_JAL
+#if 0
+#define INTERPRET_DADDIU
+#define INTERPRET_DSLLV
+#define INTERPRET_DSRLV
+#define INTERPRET_DSRAV
+#define INTERPRET_DADDU
+#define INTERPRET_DSUBU
+#define INTERPRET_DSLL
+#define INTERPRET_DSRL
+#define INTERPRET_DSRA
+#define INTERPRET_DSLL32
+#define INTERPRET_DSRL32
+#define INTERPRET_DSRA32
+#endif
+
+#define INTERPRET_DMULT
+#define INTERPRET_DMULTU
+#define INTERPRET_DDIV
+#define INTERPRET_DDIVU
+
+//#define INTERPRET_HILO
+
+#if 0
+#define INTERPRET_MULT
+#define INTERPRET_MULTU
+#define INTERPRET_DIV
+#define INTERPRET_DIVU
+#endif
+
+#if 0
+#define INTERPRET_SLT
+#define INTERPRET_SLTU
+#define INTERPRET_SLTI
+#define INTERPRET_SLTIU
+#endif
+
+//#define INTERPRET_J
+//#define INTERPRET_JAL
 #define INTERPRET_JR
 #define INTERPRET_JALR
-#define INTERPRET_BEQ
-#define INTERPRET_BNE
-#define INTERPRET_BLEZ
-#define INTERPRET_BGTZ
-#define INTERPRET_BLTZ
-#define INTERPRET_BGEZ
-#define INTERPRET_BLTZAL
-#define INTERPRET_BGEZAL
-#define INTERPRET_BCZF
-#define INTERPRET_BCZT
-#endif
-#endif
+//#define INTERPRET_BC
+//#define INTERPRET_BRANCH
+
 #define INTERPRET_SYSCALL
 #define INTERPRET_BREAK
 #define INTERPRET_TRAPS
+
 #define INTERPRET_LL
 #define INTERPRET_SC
+
 #define INTERPRET_COP0
+
+//#define INTERPRET_FP
+
+//#define INTERPRET_MFC1
+#define INTERPRET_DMFC1
+//#define INTERPRET_CFC1
+#define INTERPRET_MTC1
+#define INTERPRET_DMTC1
+//#define INTERPRET_CTC1
+
+//#define INTERPRET_FP_S
+//#define INTERPRET_FP_D
+//#define INTERPRET_FP_W
+#define INTERPRET_FP_L
+
+#if 0
+#define INTERPRET_FP_ADD
+#define INTERPRET_FP_SUB
+#define INTERPRET_FP_MUL
+#define INTERPRET_FP_DIV
+#define INTERPRET_FP_ABS
+#define INTERPRET_FP_MOV
+#define INTERPRET_FP_NEG
+#endif
+#define INTERPRET_FP_SQRT
+
+#define INTERPRET_FP_ROUND_L
+#define INTERPRET_FP_TRUNC_L
+#define INTERPRET_FP_FLOOR_L
+#define INTERPRET_FP_CEIL_L
+#if 0
+#define INTERPRET_FP_ROUND_W
+#define INTERPRET_FP_TRUNC_W
+#define INTERPRET_FP_FLOOR_W
+#define INTERPRET_FP_CEIL_W
+#endif
+//#define INTERPRET_FP_CVT_S
+//#define INTERPRET_FP_CVT_D
+//#define INTERPRET_FP_CVT_W
+#define INTERPRET_FP_CVT_L
+
+#if 0
+#define INTERPRET_FP_C_F
+#define INTERPRET_FP_C_UN
+#define INTERPRET_FP_C_EQ
+#define INTERPRET_FP_C_UEQ
+#define INTERPRET_FP_C_OLT
+#define INTERPRET_FP_C_ULT
+#define INTERPRET_FP_C_OLE
+#define INTERPRET_FP_C_ULE
+#define INTERPRET_FP_C_SF
+#define INTERPRET_FP_C_NGLE
+#define INTERPRET_FP_C_SEQ
+#define INTERPRET_FP_C_NGL
+#define INTERPRET_FP_C_LT
+#define INTERPRET_FP_C_NGE
+#define INTERPRET_FP_C_LE
+#define INTERPRET_FP_C_NGT
+#endif
 
 #endif
 

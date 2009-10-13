@@ -2810,6 +2810,7 @@ static void SB()
    address = iimmediate + irs32;
    byte = (unsigned char)(irt & 0xFF);
    write_byte_in_memory();
+   check_memory();
 }
 
 static void SH()
@@ -2818,6 +2819,7 @@ static void SH()
    address = iimmediate + irs32;
    hword = (unsigned short)(irt & 0xFFFF);
    write_hword_in_memory();
+   check_memory();
 }
 
 static void SWL()
@@ -2851,6 +2853,7 @@ static void SWL()
 	write_byte_in_memory();
 	break;
      }
+   check_memory();
 }
 
 static void SW()
@@ -2859,6 +2862,7 @@ static void SW()
    address = iimmediate + irs32;
    word = (unsigned long)(irt & 0xFFFFFFFF);
    write_word_in_memory();
+   check_memory();
 }
 
 static void SDL()
@@ -2922,6 +2926,7 @@ static void SDL()
 	write_dword_in_memory();
 	break;
      }
+   check_memory();
 }
 
 static void SDR()
@@ -2985,6 +2990,7 @@ static void SDR()
 	write_dword_in_memory();
 	break;
      }
+   check_memory();
 }
 
 static void SWR()
@@ -3020,6 +3026,7 @@ static void SWR()
 	write_word_in_memory();
 	break;
      }
+   check_memory();
 }
 
 static void CACHE()
@@ -3073,6 +3080,7 @@ static void SC()
 	address = iimmediate + irs32;
 	word = (unsigned long)(irt & 0xFFFFFFFF);
 	write_word_in_memory();
+	check_memory();
 	llbit = 0;
 	irt = 1;
      }

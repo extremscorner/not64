@@ -50,7 +50,7 @@ unsigned long i, dynacore = 0, interpcore = 0;
 int no_audio_delay = 0;
 int no_compiled_jump = 0;
 int stop, llbit;
-long long int reg[32], hi, lo;
+long long int reg[34];
 long long int local_rs, local_rt;
 unsigned long reg_cop0[32];
 long local_rs32, local_rt32;
@@ -1353,7 +1353,7 @@ void NOTCOMPILED()
 {
    if ((PC->addr>>16) == 0xa400){
 #ifdef PPC_DYNAREC
-     recompile_block(blocks[0xa4000000>>12]);
+     //recompile_block(blocks[0xa4000000>>12]);
 #else
      recompile_block(SP_DMEM, blocks[0xa4000000>>12], PC->addr);
 #endif
@@ -1370,15 +1370,15 @@ void NOTCOMPILED()
 		  //printf("not compiled rom:%x\n", paddr);
 #ifdef PPC_DYNAREC
 		  // FIXME: We need to read from the romcache into a buffer and recompile the buffer
-		  recompile_block(blocks[PC->addr>>12]);
+		  //recompile_block(blocks[PC->addr>>12]);
 #else
 		  recompile_block((unsigned long*)rom+((((paddr-(PC->addr-blocks[PC->addr>>12]->start)) & 0x1FFFFFFF) - 0x10000000)>>2),
 				  blocks[PC->addr>>12], PC->addr);
 #endif
 	       }
-	     else
+	     else {
 #ifdef PPC_DYNAREC
-		recompile_block(blocks[PC->addr>>12]);
+		//recompile_block(blocks[PC->addr>>12]);
 #else
 	       recompile_block(rdram+(((paddr-(PC->addr-blocks[PC->addr>>12]->start)) & 0x1FFFFFFF)>>2),
 			       blocks[PC->addr>>12], PC->addr);
@@ -1481,32 +1481,22 @@ int check_cop1_unusable()
    return 0;
 }
 
-#ifdef PPC_DYNAREC
-unsigned int instructionCount;
-#endif
 
 void update_count()
 {
-   if (interpcore)
+   if (dynacore || interpcore)
      {
-     	//sprintf(txtbuffer, "trace: addr = 0x%08x\n", interp_addr);
-	//DEBUG_print
 	Count = Count + (interp_addr - last_addr)/2;
 	last_addr = interp_addr;
      }
    else
      {
-#ifdef PPC_DYNAREC
-	// FIXME: divide by 2 or 3 instead of multiply by 1000
-	Count += instructionCount*10000;
-#else	
 	if (PC->addr < last_addr)
 	  {
 	     printf("PC->addr < last_addr\n");
 	  }
 	Count = Count + (PC->addr - last_addr)/2;
 	last_addr = PC->addr;
-#endif
      }
 #ifdef COMPARE_CORE
    if (delay_slot)
@@ -1535,7 +1525,7 @@ void init_blocks()
 #else
    blocks[0xa4000000>>12] = malloc(sizeof(PowerPC_block));
    blocks[0xa4000000>>12]->code_addr = NULL;
-   blocks[0xa4000000>>12]->code = NULL;
+   blocks[0xa4000000>>12]->funcs = NULL;
    blocks[0xa4000000>>12]->start_address = 0xa4000000;
    blocks[0xa4000000>>12]->end_address = 0xa4001000;
 #endif
@@ -1557,241 +1547,6 @@ void init_blocks()
 static int cpu_inited;
 void go()
 {
-#if 0
-   long long CRC = 0;
-   unsigned int j;
-   
-   j=0;
-   debug_count = 0;
-   printf("demarrage r4300\n");
-   //memcpy((char *)SP_DMEM+0x40, rom+0x40, 0xFBC);
-   ROMCache_read((char*)SP_DMEM+0x40, 0x40, 0xFBC);
-   delay_slot=0;
-   stop = 0;
-   for (i=0;i<32;i++)
-     {
-	reg[i]=0;
-	reg_cop0[i]=0;
-	reg_cop1_fgr_32[i]=0;
-	reg_cop1_fgr_64[i]=0;
-	
-	reg_cop1_double[i]=(double *)&reg_cop1_fgr_64[i];
-	reg_cop1_simple[i]=(float *)&reg_cop1_fgr_64[i];
-	
-	// --------------tlb------------------------
-	tlb_e[i].mask=0;
-	tlb_e[i].vpn2=0;
-	tlb_e[i].g=0;
-	tlb_e[i].asid=0;
-	tlb_e[i].pfn_even=0;
-	tlb_e[i].c_even=0;
-	tlb_e[i].d_even=0;
-	tlb_e[i].v_even=0;
-	tlb_e[i].pfn_odd=0;
-	tlb_e[i].c_odd=0;
-	tlb_e[i].d_odd=0;
-	tlb_e[i].v_odd=0;
-	tlb_e[i].r=0;
-	//tlb_e[i].check_parity_mask=0x1000;
-	
-	tlb_e[i].start_even=0;
-	tlb_e[i].end_even=0;
-	tlb_e[i].phys_even=0;
-	tlb_e[i].start_odd=0;
-	tlb_e[i].end_odd=0;
-	tlb_e[i].phys_odd=0;
-     }
-   /*for (i=0; i<0x100000; i++)
-     {
-	tlb_LUT_r[i] = 0;
-	tlb_LUT_w[i] = 0;
-     }*/
-   llbit=0;
-   hi=0;
-   lo=0;
-   FCR0=0x511;
-   FCR31=0;
-   
-   //--------
-   /*reg[20]=1;
-   reg[22]=0x3F;
-   reg[29]=0xFFFFFFFFA0400000LL;
-   Random=31;
-   Status=0x70400004;
-   Config=0x66463;
-   PRevID=0xb00;*/
-   //--------
-   
-   // the following values are extracted from the pj64 source code
-   // thanks to Zilmar and Jabo
-   
-   reg[6] = 0xFFFFFFFFA4001F0CLL;
-   reg[7] = 0xFFFFFFFFA4001F08LL;
-   reg[8] = 0x00000000000000C0LL;
-   reg[10]= 0x0000000000000040LL;
-   reg[11]= 0xFFFFFFFFA4000040LL;
-   reg[29]= 0xFFFFFFFFA4001FF0LL;
-   
-   Random = 31;
-   Status= 0x34000000;
-   Config= 0x6e463;
-   PRevID = 0xb00;
-   Count = 0x5000;
-   Cause = 0x5C;
-   Context = 0x7FFFF0;
-   EPC = 0xFFFFFFFF;
-   BadVAddr = 0xFFFFFFFF;
-   ErrorEPC = 0xFFFFFFFF;
-   
-   for (i = 0x40/4; i < (0x1000/4); i++)
-     CRC += SP_DMEM[i];
-   switch(CRC) {
-    case 0x000000D0027FDF31LL:
-    case 0x000000CFFB631223LL:
-      CIC_Chip = 1;
-      break;
-    case 0x000000D057C85244LL:
-      CIC_Chip = 2;
-      break;
-    case 0x000000D6497E414BLL:
-      CIC_Chip = 3;
-      break;
-    case 0x0000011A49F60E96LL:
-      CIC_Chip = 5;
-      break;
-    case 0x000000D6D5BE5580LL:
-      CIC_Chip = 6;
-      break;
-    default:
-      CIC_Chip = 2;
-   }
-   
-   switch(ROM_HEADER->Country_code&0xFF)
-     {
-      case 0x44:
-      case 0x46:
-      case 0x49:
-      case 0x50:
-      case 0x53:
-      case 0x55:
-      case 0x58:
-      case 0x59:
-	switch (CIC_Chip) {
-	 case 2:
-	   reg[5] = 0xFFFFFFFFC0F1D859LL;
-	   reg[14]= 0x000000002DE108EALL;
-	   break;
-	 case 3:
-	   reg[5] = 0xFFFFFFFFD4646273LL;
-	   reg[14]= 0x000000001AF99984LL;
-	   break;
-	 case 5:
-	   SP_IMEM[1] = 0xBDA807FC;
-	   reg[5] = 0xFFFFFFFFDECAAAD1LL;
-	   reg[14]= 0x000000000CF85C13LL;
-	   reg[24]= 0x0000000000000002LL;
-	   break;
-	 case 6:
-	   reg[5] = 0xFFFFFFFFB04DC903LL;
-	   reg[14]= 0x000000001AF99984LL;
-	   reg[24]= 0x0000000000000002LL;
-	   break;
-	}
-	reg[23]= 0x0000000000000006LL;
-	reg[31]= 0xFFFFFFFFA4001554LL;
-	break;
-      case 0x37:
-      case 0x41:
-      case 0x45:
-      case 0x4A:
-      default:
-	switch (CIC_Chip) {
-	 case 2:
-	   reg[5] = 0xFFFFFFFFC95973D5LL;
-	   reg[14]= 0x000000002449A366LL;
-	   break;
-	 case 3:
-	   reg[5] = 0xFFFFFFFF95315A28LL;
-	   reg[14]= 0x000000005BACA1DFLL;
-	   break;
-	 case 5:
-	   SP_IMEM[1] = 0x8DA807FC;
-	   reg[5] = 0x000000005493FB9ALL;
-	   reg[14]= 0xFFFFFFFFC2C20384LL;
-	   break;
-	 case 6:
-	   reg[5] = 0xFFFFFFFFE067221FLL;
-	   reg[14]= 0x000000005CD2B70FLL;
-	   break;
-	}
-	reg[20]= 0x0000000000000001LL;
-	reg[24]= 0x0000000000000003LL;
-	reg[31]= 0xFFFFFFFFA4001550LL;
-     }
-   switch (CIC_Chip) {
-    case 1:
-      reg[22]= 0x000000000000003FLL;
-      break;
-    case 2:
-      reg[1] = 0x0000000000000001LL;
-      reg[2] = 0x000000000EBDA536LL;
-      reg[3] = 0x000000000EBDA536LL;
-      reg[4] = 0x000000000000A536LL;
-      reg[12]= 0xFFFFFFFFED10D0B3LL;
-      reg[13]= 0x000000001402A4CCLL;
-      reg[15]= 0x000000003103E121LL;
-      reg[22]= 0x000000000000003FLL;
-      reg[25]= 0xFFFFFFFF9DEBB54FLL;
-      break;
-    case 3:
-      reg[1] = 0x0000000000000001LL;
-      reg[2] = 0x0000000049A5EE96LL;
-      reg[3] = 0x0000000049A5EE96LL;
-      reg[4] = 0x000000000000EE96LL;
-      reg[12]= 0xFFFFFFFFCE9DFBF7LL;
-      reg[13]= 0xFFFFFFFFCE9DFBF7LL;
-      reg[15]= 0x0000000018B63D28LL;
-      reg[22]= 0x0000000000000078LL;
-      reg[25]= 0xFFFFFFFF825B21C9LL;
-      break;
-    case 5:
-      SP_IMEM[0] = 0x3C0DBFC0;
-      SP_IMEM[2] = 0x25AD07C0;
-      SP_IMEM[3] = 0x31080080;
-      SP_IMEM[4] = 0x5500FFFC;
-      SP_IMEM[5] = 0x3C0DBFC0;
-      SP_IMEM[6] = 0x8DA80024;
-      SP_IMEM[7] = 0x3C0BB000;
-      reg[2] = 0xFFFFFFFFF58B0FBFLL;
-      reg[3] = 0xFFFFFFFFF58B0FBFLL;
-      reg[4] = 0x0000000000000FBFLL;
-      reg[12]= 0xFFFFFFFF9651F81ELL;
-      reg[13]= 0x000000002D42AAC5LL;
-      reg[15]= 0x0000000056584D60LL;
-      reg[22]= 0x0000000000000091LL;
-      reg[25]= 0xFFFFFFFFCDCE565FLL;
-      break;
-    case 6:
-      reg[2] = 0xFFFFFFFFA95930A4LL;
-      reg[3] = 0xFFFFFFFFA95930A4LL;
-      reg[4] = 0x00000000000030A4LL;
-      reg[12]= 0xFFFFFFFFBCB59510LL;
-      reg[13]= 0xFFFFFFFFBCB59510LL;
-      reg[15]= 0x000000007A3C07F4LL;
-      reg[22]= 0x0000000000000085LL;
-      reg[25]= 0x00000000465E3F72LL;
-      break;
-   }
-   
-   rounding_mode = 0x33F;
-
-   last_addr = 0xa4000040;
-   next_interupt = 624999;
-   init_interupt();
-   interpcore = 0;
-   
-#endif   
-	
 	stop = 0;
 	
    if (!dynacore)
@@ -1861,9 +1616,13 @@ void go()
      {
 	dynacore = 1;
 	//printf("dynamic recompiler\n");
-	init_blocks();
+	if(cpu_inited){
+		init_blocks();
+		cpu_inited = 0;
+	}
 #ifdef PPC_DYNAREC
-	jump_to(0xa4000040);
+	//jump_to(0xa4000040);
+	dynarec(interp_addr);
 #else
 	code = (void *)(actual->code+(actual->block[0x40/4].local_addr));
 	dyna_start(code);
@@ -1871,61 +1630,6 @@ void go()
 	//PC++;
      }
    debug_count+= Count;
-   
-#if 0
-
-/*   printf ("PC=%x:%x\n", (unsigned int)(PC->addr), 
-	   (unsigned int)(rdram[(PC->addr&0xFFFFFF)/4]));
-   for (j=0; j<16; j++)
-     printf ("reg[%2d]:%8x%8x        reg[%d]:%8x%8x\n",   
-	     j,
-	     (unsigned int)(reg[j] >> 32),
-	     (unsigned int)reg[j],
-	     j+16,
-	     (unsigned int)(reg[j+16] >> 32),
-	     (unsigned int)reg[j+16]);
-   printf("hi:%8x%8x        lo:%8x%8x\n",
-	  (unsigned int)(hi >> 32),
-	  (unsigned int)hi,
-	  (unsigned int)(lo >> 32),
-	  (unsigned int)lo);
-   printf("apr�s %d instructions soit %x\n",(unsigned int)debug_count
-	  ,(unsigned int)debug_count);*/
-   for (i=0; i<0x100000; i++)
-     {
-	if (blocks[i])
-	  {
-#ifdef PPC_DYNAREC
-		deinit_block(blocks[i]);
-#else
-	     if (blocks[i]->block) {
-#ifdef USE_RECOMP_CACHE
-		RecompCache_Free(i);
-#else
-		free(blocks[i]->block);
-#endif
-		blocks[i]->block = NULL;
-	     }
-	     if (blocks[i]->code) {
-		free(blocks[i]->code);
-		blocks[i]->code = NULL;
-	     }
-	     if (blocks[i]->jumps_table) {
-		free(blocks[i]->jumps_table);
-		blocks[i]->jumps_table = NULL;
-	     }
-#endif
-	     free(blocks[i]);
-	     blocks[i] = NULL;
-	  }
-     }
-   if (!dynacore && interpcore) free(PC);
-   
-#ifdef VCR_SUPPORT
-   VCR_coreStopped();
-#endif
-
-#endif
 }
 
 void cpu_init(void){
@@ -2196,6 +1900,6 @@ void cpu_deinit(void){
 		}
 	}
    // tehpola: modified condition from !dynacore && interpcore
-   if (dynacore == 2) free(PC);
+   if (dynacore) free(PC);
 }
 
