@@ -235,18 +235,14 @@ void Init_NV_register_combiners()
 		glActiveTextureARB( GL_TEXTURE0_ARB + i );
 		glDisable( GL_TEXTURE_2D );
 	}
-#else // !__GX__
-	//TODO: Implement this in GX??
-#endif // __GX__
+#endif //!__GX__
 }
 
 void Uninit_NV_register_combiners()
 {
 #ifndef __GX__
 	glDisable( GL_REGISTER_COMBINERS_NV );
-#else // !__GX__
-	//TODO: Implement this in GX??
-#endif // __GX__
+#endif //!__GX__
 }
 
 void Update_NV_register_combiners_Colors( RegisterCombiners *regCombiners)
@@ -259,17 +255,13 @@ void Update_NV_register_combiners_Colors( RegisterCombiners *regCombiners)
 
 #ifndef __GX__
 	  	glCombinerParameterfvNV( GL_CONSTANT_COLOR0_NV + i, (GLfloat*)&color );
-#else // !__GX__
-	//TODO: Implement this in GX??
-#endif // __GX__
+#endif //!__GX__
 	}
 
 	SetConstant( color, regCombiners->vertex.secondaryColor, ZERO );
 #ifndef __GX__
 	glSecondaryColor3fvEXT( (GLfloat*)&color );
-#else // !__GX__
-	//TODO: Implement this in GX??
-#endif // __GX__
+#endif //!__GX__
 }
 
 RegisterCombiners *Compile_NV_register_combiners( Combiner *color, Combiner *alpha )
@@ -620,7 +612,5 @@ void Set_NV_register_combiners( RegisterCombiners *regCombiners )
 	glFinalCombinerInputNV( GL_VARIABLE_E_NV, regCombiners->final.E.input, regCombiners->final.E.mapping, regCombiners->final.E.usage );
 	glFinalCombinerInputNV( GL_VARIABLE_F_NV, regCombiners->final.F.input, regCombiners->final.F.mapping, regCombiners->final.F.usage );
 	glFinalCombinerInputNV( GL_VARIABLE_G_NV, regCombiners->final.G.input, regCombiners->final.G.mapping, GL_ALPHA );
-#else // !__GX__
-	//TODO: Implement this in GX??
-#endif // __GX__
+#endif //!__GX__
 }

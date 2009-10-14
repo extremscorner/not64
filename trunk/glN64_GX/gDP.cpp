@@ -768,7 +768,7 @@ void gDPLoadTLUT( u32 tile, u32 uls, u32 ult, u32 lrs, u32 lrt )
 	{
 		for (u16 j = 0; (j < 16) && (i < count); j++, i++)
 		{
-#ifndef _BIG_ENDIAN //TODO: Make sure this is correct.
+#ifndef _BIG_ENDIAN
 			u16 color = swapword( src[i^1] );
 
 			*dest = color;

@@ -66,7 +66,7 @@ DWORD CRC_CalculatePalette( DWORD crc, void *buffer, DWORD count )
 		crc = (crc >> 8) ^ CRCTable[(crc & 0xFF) ^ *p++];
 
 		p += 6;
-#else // !_BIG_ENDIAN -> Big Endian fix  //TODO: Fix CRC table instead of messing with indices here and above
+#else // !_BIG_ENDIAN -> Big Endian fix  
 		crc = (crc >> 8) ^ CRCTable[(crc & 0xFF) ^ *(BYTE*)((int)p + 1)];
 		crc = (crc >> 8) ^ CRCTable[(crc & 0xFF) ^ *(BYTE*)((int)p)];
 
