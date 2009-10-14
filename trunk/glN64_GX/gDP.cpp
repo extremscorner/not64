@@ -625,6 +625,9 @@ void gDPLoadTile( u32 tile, u32 uls, u32 ult, u32 lrs, u32 lrt )
 			((*(u32*)&RDRAM[buffer->startAddress] & 0xFFFEFFFE) == (buffer->startAddress & 0xFFFEFFFE)))
 		{
 			gDP.loadTile->frameBuffer = buffer;
+#ifdef __GX__
+			FrameBuffer_MoveToTop(gDP.loadTile->frameBuffer);
+#endif //__GX__
 			gDP.textureMode = TEXTUREMODE_FRAMEBUFFER;
 			gDP.loadType = LOADTYPE_TILE;
 			gDP.changed |= CHANGED_TMEM;
@@ -698,6 +701,9 @@ void gDPLoadBlock( u32 tile, u32 uls, u32 ult, u32 lrs, u32 dxt )
 			((*(u32*)&RDRAM[buffer->startAddress] & 0xFFFEFFFE) == (buffer->startAddress & 0xFFFEFFFE)))
 		{
 			gDP.loadTile->frameBuffer = buffer;
+#ifdef __GX__
+			FrameBuffer_MoveToTop(gDP.loadTile->frameBuffer);
+#endif //__GX__
 			gDP.textureMode = TEXTUREMODE_FRAMEBUFFER;
 			gDP.loadType = LOADTYPE_BLOCK;
 			gDP.changed |= CHANGED_TMEM;
