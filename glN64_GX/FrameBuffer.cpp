@@ -44,6 +44,11 @@ void FrameBuffer_RemoveBottom()
 	if (frameBuffer.bottom == frameBuffer.top)
 		frameBuffer.top = NULL;
 
+#ifdef __GX__
+	if (gDP.loadTile->frameBuffer == frameBuffer.bottom)
+		gDP.loadTile->frameBuffer = NULL;
+#endif //__GX__
+
 	free( frameBuffer.bottom );
 
     frameBuffer.bottom = newBottom;
@@ -84,6 +89,11 @@ void FrameBuffer_Remove( FrameBuffer *buffer )
 
 	if (buffer->texture)
 		TextureCache_Remove( buffer->texture );
+
+#ifdef __GX__
+	if (gDP.loadTile->frameBuffer == buffer)
+		gDP.loadTile->frameBuffer = NULL;
+#endif //__GX__
 
 	free( buffer );
 
@@ -260,7 +270,7 @@ void FrameBuffer_SaveBuffer( u32 address, u16 size, u16 width, u16 height )
 	else
 		current->texture->GXrealHeight = current->texture->realHeight;*/
 
-#ifdef HW_RVL
+#if def HW_RVL
 	current->texture->textureBytes = (current->texture->GXrealWidth * current->texture->GXrealHeight) * 4;
 	current->texture->GXtexfmt = GX_TF_RGBA8;
 #else //HW_RVL

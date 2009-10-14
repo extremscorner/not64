@@ -1439,7 +1439,11 @@ void TextureCache_Update( u32 t )
 	}
 	else if (gDP.textureMode == TEXTUREMODE_FRAMEBUFFER)
 	{
+#ifndef __GX__
 		FrameBuffer_ActivateBufferTexture( t, gDP.loadTile->frameBuffer );
+#else //!__GX__
+		if (gDP.loadTile->frameBuffer) FrameBuffer_ActivateBufferTexture( t, gDP.loadTile->frameBuffer );
+#endif //__GX__
 		return;
 	}
 
