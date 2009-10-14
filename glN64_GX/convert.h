@@ -445,7 +445,6 @@ Done:
 #ifndef _BIG_ENDIAN
 		__asm__ volatile( "bswapl %0\n\t" : "=q"(dword) : "0"(dword) );
 #else // !_BIG_ENDIAN
-		//TODO: Make sure this is correct...
 		dword = ((dword & 0xFF)<<24)|(((dword>>8) & 0xFF)<<16)|(((dword>>16) & 0xFF)<<8)|((dword>>24)& 0xFF);
 #endif // _BIG_ENDIAN
 		*(u32 *)dest = dword;

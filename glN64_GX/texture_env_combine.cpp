@@ -189,9 +189,7 @@ void Uninit_texture_env_combine()
 #ifndef __GX__
 		glActiveTextureARB( GL_TEXTURE0_ARB + i );
 		glTexEnvi( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE );
-#else // !__GX__
-	//TODO: Implement this in GX??
-#endif // __GX__
+#endif //!__GX__
 	}
 }
 
@@ -206,9 +204,7 @@ void Update_texture_env_combine_Colors( TexEnvCombiner *envCombiner )
 #ifndef __GX__
 		glActiveTextureARB( GL_TEXTURE0_ARB + i );
 		glTexEnvfv( GL_TEXTURE_ENV, GL_TEXTURE_ENV_COLOR, &color.r );
-#else // !__GX__
-	//TODO: Implement this in GX??
-#endif // __GX__
+#endif //!__GX__
 	}
 }
 
@@ -576,9 +572,7 @@ void BeginTextureUpdate_texture_env_combine()
 #ifndef __GX__
 		glActiveTextureARB( GL_TEXTURE0_ARB + i );
 		glDisable( GL_TEXTURE_2D );
-#else // !__GX__
-	//TODO: Implement this in GX??
-#endif // __GX__
+#endif //!__GX__
 	}
 }
 
@@ -589,9 +583,7 @@ void EndTextureUpdate_texture_env_combine()
 #ifndef __GX__
 		glActiveTextureARB( GL_TEXTURE0_ARB + i );
 		glEnable( GL_TEXTURE_2D );
-#else // !__GX__
-	//TODO: Implement this in GX??
-#endif // __GX__
+#endif //!__GX__
 	}
 }
 
@@ -643,8 +635,6 @@ void Set_texture_env_combine( TexEnvCombiner *envCombiner )
 			glDisable( GL_TEXTURE_2D );
 		}			
 	}
-#else // !__GX__
-	//TODO: Implement this in GX??
-#endif // __GX__
+#endif //!__GX__
 
 }
