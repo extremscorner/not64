@@ -26,7 +26,7 @@ unsigned int decodeNInterpret();
 #define INTERPRET_LWL
 #define INTERPRET_LWR
 
-#if 0
+#if 1
 #define INTERPRET_SB
 #define INTERPRET_SH
 #define INTERPRET_SW

@@ -52,6 +52,8 @@ int has_next_src(void){ return (src_last-src) > 0; }
  // This should be called ONLY after get_next_src returns a
  //   NOP in a delay slot
  void nop_ignored(void){ if(src<src_last) code_addr[src-1-src_first] = dst; }
+ // Returns whether the current src instruction is branched to
+ int is_j_dst(void){ return isJmpDst[(get_src_pc()&0xfff)>>2]; }
 // Returns the MIPS PC
 unsigned int get_src_pc(void){ return addr_first + ((src-1-src_first)<<2); }
 void set_next_dst(PowerPC_instr i){ *(dst++) = i; ++code_length; }
@@ -110,10 +112,8 @@ void recompile_block(PowerPC_block* ppc_block, unsigned int addr){
 	PowerPC_func_node* fn, * next;
 	for(fn = node->next; fn != NULL; fn = next){
 		next = fn->next;
-		if((fn->function->start_addr >= func->start_addr &&
-		    fn->function->start_addr <  func->end_addr) ||
-		   (fn->function->end_addr > func->start_addr &&
-		    fn->function->end_addr < func->end_addr))
+		if(func->start_addr < fn->function->end_addr &&
+		   func->end_addr   > fn->function->start_addr)
 			RecompCache_Free(ppc_block->start_address |
 			                 fn->function->start_addr);
 	}
@@ -466,9 +466,9 @@ static void genJumpPad(void){
 	
 	// Set the next address to the first address in the next block if
 	//   we've really reached the end of the block, not jumped to the pad
-	GEN_LIS(ppc, 3, addr_last>>16);
+	GEN_LIS(ppc, 3, (get_src_pc()+4)>>16);
 	set_next_dst(ppc);
-	GEN_ORI(ppc, 3, 3, addr_last);
+	GEN_ORI(ppc, 3, 3, get_src_pc()+4);
 	set_next_dst(ppc);
 	
 	// return destination

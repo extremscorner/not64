@@ -15,6 +15,7 @@ extern unsigned long instructionCount;
 extern void (*interp_ops[64])(void);
 inline unsigned long update_invalid_addr(unsigned long addr);
 unsigned int dyna_check_cop1_unusable(unsigned int, int);
+unsigned int dyna_mem(unsigned int, unsigned int, memType, unsigned int, int);
 
 int noCheckInterrupt = 0;
 
@@ -43,7 +44,7 @@ inline unsigned int dyna_run(unsigned int (*code)(void)){
 		"mr	24, %9    \n"
 		:: "r" (reg), "r" (decodeNInterpret),
 		   "r" (dyna_update_count), "r" (&last_addr),
-		   "r" (rdram), "r" (SP_DMEM),
+		   "r" (rdram), "r" (dyna_mem),
 		   "r" (reg_cop1_simple), "r" (reg_cop1_double),
 		   "r" (&FCR31), "r" (dyna_check_cop1_unusable)
 		: "14", "15", "16", "17", "18", "19", "20", "21",
@@ -149,5 +150,78 @@ unsigned int dyna_check_cop1_unusable(unsigned int pc, int isDelaySlot){
 		return interp_addr;
 	} else
 		return 0;
+}
+
+static void invalidate_func(unsigned int addr){
+	PowerPC_block* block = blocks[address>>12];
+	PowerPC_func_node* fn;
+	for(fn = block->funcs; fn != NULL; fn = fn->next){
+		if((addr&0xffff) >= fn->function->start_addr &&
+		   (addr&0xffff) <  fn->function->end_addr){
+			RecompCache_Free(block->start_address |
+			                 fn->function->start_addr);
+			break;
+		}
+	}
+}
+
+#define check_memory() \
+	if(!invalid_code_get(address>>12) && \
+	   blocks[address>>12]->code_addr[(address&0xfff)>>2]) \
+		invalidate_func(address);
+
+unsigned int dyna_mem(unsigned int value, unsigned int addr,
+                      memType type, unsigned int pc, int isDelaySlot){
+	static unsigned long long dyna_rdword;
+	
+	address = addr;
+	rdword = &dyna_rdword;
+	PC->addr = interp_addr = pc;
+	delay_slot = isDelaySlot;
+	
+	switch(type){
+		case MEM_LW:
+			read_word_in_memory();
+			reg[value] = (long long)((long)dyna_rdword);
+			break;
+		case MEM_LH:
+			read_hword_in_memory();
+			reg[value] = (long long)((short)dyna_rdword);
+			break;
+		case MEM_LHU:
+			read_hword_in_memory();
+			reg[value] = (unsigned long long)((unsigned short)dyna_rdword);
+			break;
+		case MEM_LB:
+			read_byte_in_memory();
+			reg[value] = (long long)((signed char)dyna_rdword);
+			break;
+		case MEM_LBU:
+			read_byte_in_memory();
+			reg[value] = (unsigned long long)((unsigned char)dyna_rdword);
+			break;
+		case MEM_SW:
+			word = value;
+			write_word_in_memory();
+			check_memory();
+			break;
+		case MEM_SH:
+			hword = value;
+			write_hword_in_memory();
+			check_memory();
+			break;
+		case MEM_SB:
+			byte = value;
+			write_byte_in_memory();
+			check_memory();
+			break;
+		default:
+			stop = 1;
+			break;
+	}
+	
+	if(interp_addr != pc) noCheckInterrupt = 1;
+	
+	return interp_addr != pc ? interp_addr : 0;
 }
 

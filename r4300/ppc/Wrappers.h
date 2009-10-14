@@ -13,7 +13,7 @@
 #define DYNAREG_UCOUNT 17
 #define DYNAREG_LADDR  18
 #define DYNAREG_RDRAM  19
-#define DYNAREG_SPDMEM 20
+#define DYNAREG_RWMEM  20
 #define DYNAREG_FPR_32 21
 #define DYNAREG_FPR_64 22
 #define DYNAREG_FCR31  23
@@ -26,6 +26,9 @@ extern float*  reg_cop1_simple[32]; // 32-bit fprs
 extern double* reg_cop1_double[32]; // 64-bit fprs
 
 extern int noCheckInterrupt;
+
+typedef enum { MEM_LW, MEM_LH, MEM_LB, MEM_LHU, MEM_LBU,
+               MEM_SW, MEM_SH, MEM_SB } memType;
 
 unsigned int decodeNInterpret(MIPS_instr, unsigned int, int);
 int dyna_update_count(unsigned int pc);
