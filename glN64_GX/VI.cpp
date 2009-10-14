@@ -151,6 +151,7 @@ void VI_UpdateScreen()
 			GX_CopyDisp (VI.xfb[VI.which_fb], GX_FALSE);
 			GX_DrawDone(); //Wait until EFB->XFB copy is complete
 			VI.updateOSD = false;
+			gDP.colorImage.changed = FALSE;
 			VI.EFBcleared = false;
 			VI.copy_fb = true;
 		}
@@ -241,6 +242,9 @@ void VI_GX_showLoadProg(float percent)
 	GX_SetColorUpdate(GX_ENABLE);
 	GX_SetAlphaUpdate(GX_ENABLE);
 	GX_SetDstAlpha(GX_DISABLE, 0xFF);
+	GX_SetZMode(GX_DISABLE,GX_ALWAYS,GX_FALSE);
+	GX_SetZTexture(GX_ZT_DISABLE,GX_TF_Z16,0);	//GX_ZT_DISABLE or GX_ZT_REPLACE; set in gDP.cpp
+	GX_SetZCompLoc(GX_TRUE);	// Do Z-compare before texturing.
 	//set cull mode
 	GX_SetCullMode (GX_CULL_NONE);
 
@@ -265,9 +269,10 @@ void VI_GX_showLoadProg(float percent)
 	GX_Color4u8(GXcol1.r, GXcol1.g, GXcol1.b, GXcol1.a);
 	GX_End();
 
-	GX_CopyDisp (VI.xfb[VI.which_fb], GX_FALSE);
+	if (VI.copy_fb)	GX_CopyDisp (VI.xfb[VI.which_fb], GX_FALSE);
+	else			GX_CopyDisp (VI.xfb[VI.which_fb^1], GX_FALSE);
     GX_DrawDone();
-	VI.copy_fb = true;
+//	VI.copy_fb = true;
 }
 
 void VI_GX_updateDEBUG()

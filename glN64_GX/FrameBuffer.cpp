@@ -36,6 +36,9 @@ void FrameBuffer_RemoveBottom()
 {
 	FrameBuffer *newBottom = frameBuffer.bottom->higher;
 
+#ifdef __GX__
+	frameBuffer.bottom->texture->frameBufferTexture = false;
+#endif //__GX__
 	TextureCache_Remove( frameBuffer.bottom->texture );
 
 	if (frameBuffer.bottom == frameBuffer.top)

@@ -2008,8 +2008,8 @@ void OGL_GXinitDlist()
 	GX_SetColorUpdate(GX_ENABLE);
 	GX_SetAlphaUpdate(GX_ENABLE);
 	GX_SetDstAlpha(GX_DISABLE, 0xFF);
-	OGL.GXclearColorBuffer = false;
-	OGL.GXclearDepthBuffer = false;
+//	OGL.GXclearColorBuffer = false;
+//	OGL.GXclearDepthBuffer = false;
 	OGL.GXclearColor = (GXColor){0,0,0,255};
 }
 
