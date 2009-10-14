@@ -21,6 +21,7 @@ struct CachedTexture
 	u16			*GXtexture;
 	u8			GXtexfmt;
 	u32			GXrealWidth, GXrealHeight;	// Actual dimensions of GX texture
+	u32			VIcount;
 #endif // __GX__
 
 	GLuint	glName;
@@ -65,6 +66,7 @@ struct TextureCache
 	CachedTexture	*dummy;
 	u32				enable2xSaI, bitDepth;
 #ifdef __GX__
+	int				VIcount;
 	CachedTexture	*(GXprimDepthZ[2]);
 	u32				GXprimDepthCnt,GXZTexPrimCnt,GXnoZTexPrimCnt;
 #endif // __GX__
@@ -76,7 +78,7 @@ extern TextureCache cache;
 # ifdef HW_RVL
 # define GX_TEXTURE_CACHE_SIZE TEXCACHE_SIZE //8MB for Wii
 # else //HW_RVL
-# define GX_TEXTURE_CACHE_SIZE (2.5*1024*1024)
+# define GX_TEXTURE_CACHE_SIZE (1.5*1024*1024)
 # endif //!HW_RVL
 #endif //__GX__
 
@@ -115,6 +117,7 @@ void TextureCache_ActivateNoise( u32 t );
 void TextureCache_ActivateDummy( u32 t );
 BOOL TextureCache_Verify();
 #ifdef __GX__
+void TextureCache_FreeNextTexture();
 void TextureCache_UpdatePrimDepthZtex( f32 z );
 #endif // __GX__
 

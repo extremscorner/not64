@@ -32,7 +32,9 @@ void FrameBuffer_RemoveBuffer( u32 address );
 FrameBuffer *FrameBuffer_FindBuffer( u32 address );
 void FrameBuffer_ActivateBufferTexture( s16 t, FrameBuffer *buffer );
 #ifdef __GX__
+void FrameBuffer_RemoveBottom();
 void FrameBuffer_MoveToTop( FrameBuffer *newtop );
+void FrameBuffer_IncrementVIcount();
 #endif //__GX__
 
 #endif

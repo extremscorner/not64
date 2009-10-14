@@ -817,10 +817,7 @@ void TextureCache_LoadBackground( CachedTexture *texInfo )
 		texInfo->GXtexture = (u16*) __lwp_heap_allocate(GXtexCache,texInfo->textureBytes);
 		while(!texInfo->GXtexture)
 		{
-			if (cache.bottom != cache.dummy)
-				TextureCache_RemoveBottom();
-			else if (cache.dummy->higher)
-				TextureCache_Remove( cache.dummy->higher );
+			TextureCache_FreeNextTexture();
 			texInfo->GXtexture = (u16*) __lwp_heap_allocate(GXtexCache,texInfo->textureBytes);
 		}
 	}
@@ -1031,10 +1028,7 @@ void TextureCache_Load( CachedTexture *texInfo )
 		texInfo->GXtexture = (u16*) __lwp_heap_allocate(GXtexCache,texInfo->textureBytes);
 		while(!texInfo->GXtexture)
 		{
-			if (cache.bottom != cache.dummy)
-				TextureCache_RemoveBottom();
-			else if (cache.dummy->higher)
-				TextureCache_Remove( cache.dummy->higher );
+			TextureCache_FreeNextTexture();
 			texInfo->GXtexture = (u16*) __lwp_heap_allocate(GXtexCache,texInfo->textureBytes);
 		}
 	}
@@ -1710,6 +1704,32 @@ void TextureCache_ActivateNoise( u32 t )
 }
 
 #ifdef __GX__
+void TextureCache_FreeNextTexture()
+{
+	CachedTexture *current = cache.bottom;
+	if (!OGL.frameBufferTextures)
+	{
+		if (current != cache.dummy)
+			TextureCache_RemoveBottom();
+		else if (cache.dummy->higher)
+			TextureCache_Remove( cache.dummy->higher );
+	}
+	else
+	{
+		while (current)
+		{
+			if (current == cache.dummy || (current->frameBufferTexture && current->VIcount < 2))
+				current = current->higher;
+			else
+			{
+				TextureCache_Remove( current );
+				return;
+			}
+		}
+		FrameBuffer_RemoveBottom();
+	}
+}
+
 void TextureCache_UpdatePrimDepthZtex( f32 z )
 {
 	//This function sets a Ztex to gDP.primDepth.z which is in the range [0,1]
