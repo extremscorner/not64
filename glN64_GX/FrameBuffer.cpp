@@ -121,6 +121,9 @@ FrameBuffer *FrameBuffer_AddTop()
 	FrameBuffer *newtop = (FrameBuffer*)malloc( sizeof( FrameBuffer ) );
 
 	newtop->texture = TextureCache_AddTop();
+#ifdef __GX__
+	newtop->texture->VIcount = 0;
+#endif //__GX__
 
 	newtop->lower = frameBuffer.top;
 	newtop->higher = NULL;
@@ -160,6 +163,9 @@ void FrameBuffer_MoveToTop( FrameBuffer *newtop )
 	frameBuffer.top = newtop;
 
 	TextureCache_MoveToTop( newtop->texture );
+#ifdef __GX__
+	newtop->texture->VIcount = 0;
+#endif //__GX__
 }
 
 void FrameBuffer_Destroy()
@@ -281,10 +287,7 @@ void FrameBuffer_SaveBuffer( u32 address, u16 size, u16 width, u16 height )
 	current->texture->GXtexture = (u16*) __lwp_heap_allocate(GXtexCache,current->texture->textureBytes);
 	while(!current->texture->GXtexture)
 	{
-		if (cache.bottom != cache.dummy)
-			TextureCache_RemoveBottom();
-		else if (cache.dummy->higher)
-			TextureCache_Remove( cache.dummy->higher );
+		TextureCache_FreeNextTexture();
 		current->texture->GXtexture = (u16*) __lwp_heap_allocate(GXtexCache,current->texture->textureBytes);
 	}
 #endif //__GX__
@@ -630,3 +633,15 @@ void FrameBuffer_ActivateBufferTexture( s16 t, FrameBuffer *buffer )
 	FrameBuffer_MoveToTop( buffer );
 	TextureCache_ActivateTexture( t, buffer->texture );
 }
+
+#ifdef __GX__
+void FrameBuffer_IncrementVIcount()
+{
+	FrameBuffer *buffer = frameBuffer.top;
+	while(buffer)
+	{
+		buffer->texture->VIcount++;
+		buffer = buffer->lower;
+	}
+}
+#endif //__GX__

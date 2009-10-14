@@ -109,6 +109,7 @@ void VI_UpdateScreen()
 
 		if ((*REG.VI_ORIGIN != VI.lastOrigin) || ((current) && current->changed))
 		{
+			FrameBuffer_IncrementVIcount();
 			if (gDP.colorImage.changed)
 			{
 				FrameBuffer_SaveBuffer( gDP.colorImage.address, gDP.colorImage.size, gDP.colorImage.width, gDP.colorImage.height );
