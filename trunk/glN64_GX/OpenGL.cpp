@@ -2062,6 +2062,7 @@ void OGL_GXclearEFB()
 		GX_Color4u8(OGL.GXclearColor.r, OGL.GXclearColor.g, OGL.GXclearColor.b, OGL.GXclearColor.a); 
 	GX_End();
 
+	if (OGL.GXclearColorBuffer) VI.EFBcleared = true;
 	OGL.GXclearColorBuffer = false;
 	OGL.GXclearDepthBuffer = false;
 	OGL.GXupdateMtx = true;
