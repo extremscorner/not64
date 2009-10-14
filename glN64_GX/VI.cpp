@@ -142,7 +142,7 @@ void VI_UpdateScreen()
 			OGL_SwapBuffers();
 
 		VI_GX_cleanUp();
-		if(VI.updateOSD)
+		if(VI.updateOSD && gDP.colorImage.changed)
 		{
 			VI_GX_showStats();
 			VI_GX_showFPS();
@@ -151,6 +151,7 @@ void VI_UpdateScreen()
 			GX_CopyDisp (VI.xfb[VI.which_fb], GX_FALSE);
 			GX_DrawDone(); //Wait until EFB->XFB copy is complete
 			VI.updateOSD = false;
+			VI.EFBcleared = false;
 			VI.copy_fb = true;
 		}
 	}
@@ -170,6 +171,7 @@ void VI_GX_init() {
 	new_fb = false;
 	which_fb = 1;*/
 	VI.updateOSD = true;
+	VI.EFBcleared = true;
 	VI.copy_fb = false;
 	VI.which_fb = 1;
 }
