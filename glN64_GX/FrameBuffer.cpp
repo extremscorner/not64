@@ -601,12 +601,20 @@ void FrameBuffer_ActivateBufferTexture( s16 t, FrameBuffer *buffer )
 	if (gDP.loadType == LOADTYPE_TILE)
 	{
 		buffer->texture->offsetS = gDP.loadTile->uls;
+#ifndef __GX__
 		buffer->texture->offsetT = (float)buffer->height - (gDP.loadTile->ult + (gDP.textureImage.address - buffer->startAddress) / (buffer->width << buffer->size >> 1));
+#else //!__GX__
+		buffer->texture->offsetT = (float)(gDP.loadTile->ult + (gDP.textureImage.address - buffer->startAddress) / (buffer->width << buffer->size >> 1));
+#endif //__GX__
 	}
 	else
 	{
 		buffer->texture->offsetS = 0.0f;
+#ifndef __GX__
 		buffer->texture->offsetT = (float)buffer->height - (gDP.textureImage.address - buffer->startAddress) / (buffer->width << buffer->size >> 1);
+#else //!__GX__
+		buffer->texture->offsetT = (float)(gDP.textureImage.address - buffer->startAddress) / (buffer->width << buffer->size >> 1);
+#endif //__GX__
 	}
 
 	FrameBuffer_MoveToTop( buffer );
