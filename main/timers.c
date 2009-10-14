@@ -8,6 +8,7 @@
 #include "rom.h"
 #include "timers.h"
 #include "../r4300/r4300.h"
+#include "../gui/DEBUG.h"
 
 timers Timers = {0.0, 0.0, 0, 1, 0, 100};
 static float VILimit = 60.0;
@@ -51,7 +52,7 @@ void InitTimer(void) {
 	}  
 	else {
 		temp = 100;
-	}    
+	}
 	VILimitMicroseconds = (double) 1000000.0/(VILimit * temp / 100);
 	Timers.frameDrawn = 0;
 }
@@ -71,7 +72,11 @@ void new_frame(void) {
 	
 	CurrentFPSTime = ticks_to_microsecs(gettick());
 	
-	if (CurrentFPSTime - CounterTime >= 1000000 ) {
+	if (CounterTime > CurrentFPSTime) {
+		CounterTime = ticks_to_microsecs(gettick());
+		Fps_Counter = 0;
+	}
+	else if (CurrentFPSTime - CounterTime >= 500000.0 ) {
 		Timers.fps = (float) (Fps_Counter * 1000000.0 / (CurrentFPSTime - CounterTime));
 		CounterTime = ticks_to_microsecs(gettick());
 		Fps_Counter = 0;
@@ -85,7 +90,7 @@ void new_vi(void) {
 	DWORD CurrentFPSTime;
 	static DWORD LastFPSTime = 0;
 	static DWORD CounterTime = 0;
-	static DWORD CalculatedTime ;
+	static DWORD CalculatedTime;
 	static int VI_Counter = 0;
 	static int VI_WaitCounter = 0;
 	long time;
@@ -116,8 +121,15 @@ void new_vi(void) {
 		}
 	}
 
-	if (CurrentFPSTime - CounterTime >= 1000000.0 ) {
+//	DWORD diff_millisecs = ticks_to_millisecs(diff_ticks(CounterTime,CurrentFPSTime));
+	if (CounterTime > CurrentFPSTime) {
+		CounterTime = ticks_to_microsecs(gettick());
+		VI_Counter = 0 ;
+	}
+	else if (CurrentFPSTime - CounterTime >= 500000.0 ) {
 		Timers.vis = (float) (VI_Counter * 1000000.0 / (CurrentFPSTime - CounterTime));
+//		sprintf(txtbuffer,"Timer.VIs: Current = %dus; Last = %dus; diff_ms = %d; FPS_count = %d", CurrentFPSTime, CounterTime, diff_millisecs, VI_Counter);
+//		DEBUG_print(txtbuffer,0);
 		CounterTime = ticks_to_microsecs(gettick());
 		VI_Counter = 0 ;
 	}
