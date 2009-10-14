@@ -32,8 +32,8 @@ void inline TLBCache_set_r(unsigned int page, unsigned int val);
 void inline TLBCache_set_w(unsigned int page, unsigned int val);
 
 // for savestates
-int TLBCache_dump_r(gzFile *f);
-int TLBCache_dump_w(gzFile *f);
+void TLBCache_dump_r(gzFile *f);
+void TLBCache_dump_w(gzFile *f);
 
 #endif
 
