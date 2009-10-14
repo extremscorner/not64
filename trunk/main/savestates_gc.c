@@ -58,13 +58,14 @@ void savestates_select_slot(unsigned int s)
 	
 char* savestates_save()
 {
-	gzFile f;
-	char *filename, buf[1024];
-   	int len, i,curPos;
-	
-	if(!hasLoadedROM)
+  if(!hasLoadedROM)
 		return "A ROM must be loaded first";
-		     
+  
+  gzFile f;
+	char *filename, buf[1024];
+  int len, i,curPos;
+	
+  /* fix the filename to %s.st%d format */
 	filename = malloc(strlen(statespath)+strlen(ROM_SETTINGS.goodname)+4+1);
   strcpy(filename, statespath);
   strcat(filename, ROM_SETTINGS.goodname);
@@ -73,13 +74,12 @@ char* savestates_save()
 	strcat(filename, buf);
 
 	f = gzopen(filename, "wb");
-   	free(filename);
+  free(filename);
    	
-   	if(!f)
-   		return "Error Saving State";
+  if(!f)
+  	return "Error Saving State";
       
-   	gzwrite(f, ROM_SETTINGS.MD5, 32);		//Since Md5 isn't calc'd, use CRC(?)
-    gzwrite(f, &rdram_register, sizeof(RDRAM_register));
+  gzwrite(f, &rdram_register, sizeof(RDRAM_register));
 	gzwrite(f, &MI_register, sizeof(mips_register));
 	gzwrite(f, &pi_register, sizeof(PI_register));
 	gzwrite(f, &sp_register, sizeof(SP_register));
@@ -90,13 +90,7 @@ char* savestates_save()
 	gzwrite(f, &ai_register, sizeof(AI_register));
 	gzwrite(f, &dpc_register, sizeof(DPC_register));
 	gzwrite(f, &dps_register, sizeof(DPS_register));
-#ifdef USE_EXPANSION	
-	gzwrite(f, rdram, 0x800000);
-#else
-	gzwrite(f, rdram, 0x400000);		//Write RDRAM (4mb of it)
-	curPos = gztell(f);
-	gzseek(f,curPos+0x400000,SEEK_SET);	//Fill out the rest with 0's
-#endif
+	gzwrite(f, rdram, 0x400000);  /* fixme when expansion pak is done */
 	gzwrite(f, SP_DMEM, 0x1000);
 	gzwrite(f, SP_IMEM, 0x1000);
 	gzwrite(f, PIF_RAM, 0x40);
@@ -107,16 +101,9 @@ char* savestates_save()
 	gzwrite(f, tlb_LUT_r, 0x100000);		
 	gzwrite(f, tlb_LUT_w, 0x100000);
 #else
-	//Traverse the TLB cache hash	
-	int numNodesWritten_r=0,numNodesWritten_w=0;
-	curPos = gztell(f);
-	gzwrite(f, &numNodesWritten_r,4);	//we will overwrite 
-	gzwrite(f, &numNodesWritten_w,4);	//these two later
-	
-	//dump TLB_LUT_r
-	numNodesWritten_r = TLBCache_dump_r(f);
-	//dump TLB_LUT_w
-	numNodesWritten_w = TLBCache_dump_w(f);
+	//Traverse the TLB cache hash	and dump it
+  TLBCache_dump_r(f);
+	TLBCache_dump_w(f);
 #endif
 
 	gzwrite(f, &llbit, 4);
@@ -128,21 +115,14 @@ char* savestates_save()
 	gzwrite(f, &FCR0, 4);
 	gzwrite(f, &FCR31, 4);
 	gzwrite(f, tlb_e, 32*sizeof(tlb));
-	if (!dynacore && interpcore) gzwrite(f, &interp_addr, 4);
-	else gzwrite(f, &PC->addr, 4);
-	
+	gzwrite(f, &interp_addr, 4);    //Dynarec should be ok with just this
+
 	gzwrite(f, &next_interupt, 4);
 	gzwrite(f, &next_vi, 4);
 	gzwrite(f, &vi_field, 4);
 	
 	len = save_eventqueue_infos(buf);
 	gzwrite(f, buf, len);
-
-#ifdef USE_TLB_CACHE
-	gzseek(f,curPos,SEEK_SET);
-	gzwrite(f, &numNodesWritten_r,4);	//write out the proper TLB amounts
-	gzwrite(f, &numNodesWritten_w,4);
-#endif
 	
 	gzclose(f);
 	return "Save Successful";
@@ -150,13 +130,14 @@ char* savestates_save()
 
 char* savestates_load()
 {
-	gzFile f = NULL;
-	char *filename, buf[1024];
-	int len, i, curPos;
-
 	if(!hasLoadedROM)
 		return "A ROM must be loaded first";
 		
+	gzFile f = NULL;
+	char *filename, buf[1024];
+	int len, i, curPos;
+		
+	/* fix the filename to %s.st%d format */
 	filename = malloc(strlen(statespath)+strlen(ROM_SETTINGS.goodname)+4+1);
 	strcpy(filename, statespath);
   strcat(filename, ROM_SETTINGS.goodname);
@@ -169,17 +150,8 @@ char* savestates_load()
 	
 	if (!f)
 		return "Save doesn't exist";
-	
-	gzread(f, buf, 32);
-	//don't care for now and maybe never
-/*	if (memcmp(buf, ROM_SETTINGS.MD5, 32))
-	{
-			warn_savestate_from_another_rom();
-			gzclose(f);
-			return;
-	}
-*/	
-	gzread(f, &rdram_register, sizeof(RDRAM_register));
+
+  gzread(f, &rdram_register, sizeof(RDRAM_register));
 	gzread(f, &MI_register, sizeof(mips_register));
 	gzread(f, &pi_register, sizeof(PI_register));
 	gzread(f, &sp_register, sizeof(SP_register));
@@ -190,15 +162,7 @@ char* savestates_load()
 	gzread(f, &ai_register, sizeof(AI_register));
 	gzread(f, &dpc_register, sizeof(DPC_register));
 	gzread(f, &dps_register, sizeof(DPS_register));
-	
-	//only read what we can handle
-#ifdef USE_EXPANSION	
-	gzread(f, rdram, 0x800000);	//Load 8MB
-#else
-	gzread(f, rdram, 0x400000);	//Load 4MB
-	curPos = gztell(f);
-	gzseek(f,curPos+0x400000,SEEK_SET);	//Skip the 4MB of 0's
-#endif
+	gzread(f, rdram, 0x400000);     /* fixme when expansion pak is done */
 	gzread(f, SP_DMEM, 0x1000);
 	gzread(f, SP_IMEM, 0x1000);
 	gzread(f, PIF_RAM, 0x40);
@@ -214,13 +178,13 @@ char* savestates_load()
 	TLBCache_init();
 	//Load number of them..
 	gzread(f, &numNodesWritten_r, 4);
-	gzread(f, &numNodesWritten_w, 4);
 	for(cntr=0;cntr<numNodesWritten_r;cntr++)
 	{
 		gzread(f, &tlbpage, 4);
 		gzread(f, &tlbvalue, 4);
 		TLBCache_set_r(tlbpage,tlbvalue);
 	}
+	gzread(f, &numNodesWritten_w, 4);
 	for(cntr=0;cntr<numNodesWritten_w;cntr++)
 	{
 		gzread(f, &tlbpage, 4);
@@ -242,15 +206,7 @@ char* savestates_load()
 	gzread(f, &FCR0, 4);
 	gzread(f, &FCR31, 4);
 	gzread(f, tlb_e, 32*sizeof(tlb));
-	if (!dynacore && interpcore) gzread(f, &interp_addr, 4);
-	else	//finish me when dyarec is done
-	  {
-	//	int i;
-		gzread(f, &len, 4);
-	//	for (i=0; i<0x100000; i++) invalid_code[i] = 1;
-	//	jump_to(len);
-	  }
-	
+	gzread(f, &interp_addr, 4);       //dynarec should be ok with just this
 	gzread(f, &next_interupt, 4);
 	gzread(f, &next_vi, 4);
 	gzread(f, &vi_field, 4);
@@ -266,9 +222,6 @@ char* savestates_load()
 	load_eventqueue_infos(buf);
 	
 	gzclose(f);
-	if (!dynacore && interpcore)
-		last_addr = interp_addr;
-	else
-		last_addr = PC->addr;
+	last_addr = interp_addr;
 	return "Load Successful";
 }
