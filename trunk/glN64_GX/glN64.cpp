@@ -307,7 +307,7 @@ EXPORT void CALL ProcessDList(void)
 	float color[4] = {0.0f,0.0f,0.0f,0.0f};
 	OGL_ClearColorBuffer( color );
 	OGL_ClearDepthBuffer();
-	OGL_GXclearEFB();
+//	OGL_GXclearEFB();
 //	VI_GX_clearEFB();
 #endif // __GX__
 	RSP_ProcessDList();
