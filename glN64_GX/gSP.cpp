@@ -136,7 +136,7 @@ void gSPProcessVertex( u32 v )
 		gSP.vertices[v].w += gSP.vertices[0].w;
 # ifdef __GX__
 		sprintf(txtbuffer,"gSP: Using billboard");
-		DEBUG_print(txtbuffer,3); 
+		DEBUG_print(txtbuffer,6); 
 # endif // __GX__
 	}
 
