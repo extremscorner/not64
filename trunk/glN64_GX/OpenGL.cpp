@@ -830,8 +830,10 @@ void OGL_UpdateStates()
 		OGL.GXupdateFog = false;
 		if(OGL.GXfogType == GX_FOG_ORTHO_LIN)
 		{
+#ifdef SHOW_DEBUG
 			sprintf(txtbuffer,"SetFog: StartZ %f, EndZ %f, color (%d,%d,%d,%d), fo %f, fm %f", OGL.GXfogStartZ, OGL.GXfogEndZ, OGL.GXfogColor.r, OGL.GXfogColor.g, OGL.GXfogColor.b, OGL.GXfogColor.a, (float)gSP.fog.offset, (float)gSP.fog.multiplier);
 			DEBUG_print(txtbuffer,DBG_RSPINFO1);
+#endif
 		}
 	}
 #endif // __GX__
@@ -1199,8 +1201,10 @@ void OGL_DrawTriangles()
 
 	if (!OGL.GXuseProj)
 	{
+#ifdef SHOW_DEBUG
 		sprintf(txtbuffer,"OGL: using software MTX xforms");
 		DEBUG_print(txtbuffer,4);
+#endif
 	}
 
 	GX_Begin(GX_TRIANGLES, GX_VTXFMT0, OGL.numVertices);

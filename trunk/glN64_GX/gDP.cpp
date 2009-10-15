@@ -75,8 +75,10 @@ void gDPSetPrimDepth( u16 z, u16 dz )
 	gDP.primDepth.deltaZ = dz;
 
 #ifdef __GX__
+#ifdef SHOW_DEBUG
 	sprintf(txtbuffer,"gDP: Setting PrimDepth to %f", gDP.primDepth.z);
 	DEBUG_print(txtbuffer,DBG_RSPINFO1);
+#endif
 	TextureCache_UpdatePrimDepthZtex(gDP.primDepth.z);
 #endif //__GX__
 

@@ -303,8 +303,10 @@ void VI_GX_showDEBUG()
 
 void VI_GX_showStats()
 {
+#ifdef SHOW_DEBUG
 	sprintf(txtbuffer,"texCache: %d bytes in %d cached textures; %d FB textures",cache.cachedBytes,cache.numCached,frameBuffer.numBuffers);
 	DEBUG_print(txtbuffer,DBG_CACHEINFO); 
+#endif
 }
 
 void VI_GX_cleanUp()

@@ -88,10 +88,11 @@ AiDacrateChanged( int SystemType )
 		buffer_size = (SystemType != SYSTEM_PAL) ?
 		               BUFFER_SIZE_48_60 : BUFFER_SIZE_48_50;
 	}
-	
+#ifdef SHOW_DEBUG
 	sprintf(txtbuffer, "Initializing frequency: %d (resampling ratio %f)",
 	        real_freq, freq_ratio);
 	DEBUG_print(txtbuffer,DBG_AUDIOINFO);
+#endif
 }
 
 #ifdef THREADED_AUDIO

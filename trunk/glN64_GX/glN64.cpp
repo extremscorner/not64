@@ -318,8 +318,10 @@ EXPORT void CALL ProcessDList(void)
 #endif
 
 #ifdef __GX__
+#ifdef SHOW_DEBUG
 	sprintf(txtbuffer,"RSP: Vtx = %d; VtxMP = %d; pDcnt = %d; Zprim = %d; noZprim = %d", OGL.GXnumVtx, OGL.GXnumVtxMP, cache.GXprimDepthCnt, cache.GXZTexPrimCnt, cache.GXnoZTexPrimCnt);
 	DEBUG_print(txtbuffer,DBG_RSPINFO);
+#endif
 	VI_GX_updateDEBUG();
 #endif // __GX__
 }

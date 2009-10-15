@@ -78,8 +78,10 @@ void gSPLoadUcodeEx( u32 uc_start, u32 uc_dstart, u16 uc_dsize )
 	if (ucode->type != NONE) {
 		GBI_MakeCurrent( ucode );
 # ifdef __GX__
+#ifdef SHOW_DEBUG
 		sprintf(txtbuffer,"UCODE Detected: %s", MicrocodeTypes[ucode->type]);
 		DEBUG_print(txtbuffer,DBG_RSPINFO); 
+#endif
 # endif // __GX__
 	}
 	else
@@ -135,8 +137,10 @@ void gSPProcessVertex( u32 v )
 		gSP.vertices[v].z += gSP.vertices[0].z;
 		gSP.vertices[v].w += gSP.vertices[0].w;
 # ifdef __GX__
+#ifdef SHOW_DEBUG
 		sprintf(txtbuffer,"gSP: Using billboard");
 		DEBUG_print(txtbuffer,6); 
+#endif
 # endif // __GX__
 	}
 
@@ -2021,10 +2025,10 @@ void gSPObjSprite( u32 sp )
 	glOrtho( 0, VI.width, VI.height, 0, 0.0f, 32767.0f );
 #else // !__GX__
 	//TODO: Implement this in GX??
-
+#ifdef SHOW_DEBUG
 	sprintf(txtbuffer,"gSP: Rendering a Sprite Object!");
 	DEBUG_print(txtbuffer,DBG_VIINFO); //6 
-
+#endif
 #endif // __GX__
 	OGL_AddTriangle( gSP.vertices, 0, 1, 2 );
 	OGL_AddTriangle( gSP.vertices, 0, 2, 3 );
