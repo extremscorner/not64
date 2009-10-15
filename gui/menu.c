@@ -9,7 +9,6 @@
 #include "../fileBrowser/fileBrowser-DVD.h"
 #include "../fileBrowser/fileBrowser-CARD.h"
 #ifdef WII
-#include <di/di.h>
 #include "../fileBrowser/fileBrowser-WiiFS.h"
 #include <wiiuse/wpad.h>
 #endif
@@ -21,7 +20,11 @@
 #include "../main/timers.h"
 // -- ACTUAL MENU LAYOUT --
 
+#ifdef WII
+#define MAIN_MENU_SIZE 12
+#else
 #define MAIN_MENU_SIZE 14
+#endif
 
 
 /* Message menu_item: used for feedback, set the caption to what you want it to say */
@@ -152,23 +155,15 @@ extern BOOL hasLoadedROM;
 		if((hasLoadedROM) && (dvdInitialized)){
 			dvdInitialized = 0;
 			if (rom_length<15728640){
-			#ifndef HW_RVL
 				dvd_motor_off();
 				dvd_read_id();
-			#else
-				DI_StopMotor();
-			#endif
 				return "Motor stopped";
 			}
 			else 
 				return "Game still needs DVD";
 		}
-		#ifndef HW_RVL
-			dvd_motor_off();
-			dvd_read_id();
-		#else
-			DI_StopMotor();
-		#endif
+		dvd_motor_off();
+		dvd_read_id();
 		dvdInitialized = 0;
 		return "Motor Stopped";
 	}
@@ -184,13 +179,8 @@ extern BOOL hasLoadedROM;
 
 /* "Swap DVD" menu item */
 	static char* dvd_swap_func(){
-	#ifndef HW_RVL
 		dvd_motor_off();
 		dvd_read_id();
-	#else
-		DI_Eject();
-		DI_Mount();
-	#endif
 		return "Swap disc now";
 	}
 
@@ -291,7 +281,7 @@ static inline void menuStack_push(menu_item*);
 
 #define TOGGLE_AUDIO_INDEX MAIN_MENU_SIZE - 4
 #define TOGGLE_AUDIO_ITEM \
-	{ &toggleAudio_strings[0][0], \
+	{ &toggleAudio_strings[1][0], \
 	  MENU_ATTR_NONE, \
 	  { .func = toggleAudio_func } \
 	 }
@@ -330,7 +320,6 @@ static inline void menuStack_push(menu_item*);
 		
 		return NULL;
 	}
-
 	static char* loadROMDVD_func(){
 		// Deinit any existing romFile state
 		if(romFile_deinit) romFile_deinit( romFile_topLevel );
@@ -349,7 +338,7 @@ static inline void menuStack_push(menu_item*);
 		return NULL;
 	}
 
-#ifdef WII
+#ifdef WII 
 	static char* loadROMWiiFS_func(){
 		// Deinit any existing romFile state
 		if(romFile_deinit) romFile_deinit( romFile_topLevel );
@@ -400,10 +389,8 @@ static inline void menuStack_push(menu_item*);
 /* "Load Save File" item */
 #include "../gc_memory/Saves.h"
 #ifdef WII
-//#define WAYS_TO_SAVE 5
 #define WAYS_TO_SAVE 4
 #else
-//#define WAYS_TO_SAVE 4
 #define WAYS_TO_SAVE 3
 #endif
 
@@ -418,6 +405,7 @@ static inline void menuStack_push(menu_item*);
 		
 		// Try loading everything
 		int result = 0;
+		saveFile_init(saveFile_dir);
 		result += loadEeprom(saveFile_dir);
 		result += loadSram(saveFile_dir);
 		result += loadMempak(saveFile_dir);
@@ -514,6 +502,7 @@ static inline void menuStack_push(menu_item*);
 		
 		// Try loading everything
 		int result = 0;
+		saveFile_init(saveFile_dir);
 		result += saveEeprom(saveFile_dir);
 		result += saveSram(saveFile_dir);
 		result += saveMempak(saveFile_dir);
@@ -637,9 +626,6 @@ static inline void menuStack_push(menu_item*);
 /* "Exit to SDLOAD" item */
 
 	static void reload(){
-		#ifdef WII
-			DI_Close();
-		#endif
 		void (*rld)() = (void (*)()) 0x80001800;
 		rld();
 	}
@@ -690,7 +676,7 @@ static inline void menuStack_push(menu_item*);
 		{ "Debug to SD: file Closed",
 		  "Debug to SD: file Open" };
 	static char* toggleSDDebug_func(void);
-
+	
 	extern timers Timers;
 	static char toggleViLimit_strings[3][26] =
 		{ "VI Limit: disabled",
@@ -704,43 +690,43 @@ static inline void menuStack_push(menu_item*);
 		  "glN64 FB Textures: enabled" };
 	static char* toggleGlN64useFbTex_func(void);
 
-#define NUM_DEV_STD 3
+#define NUM_DEV_STD 2
 #ifdef SDPRINT
 	#define NUM_DEV_SDPRINT 1
 #else
 	#define NUM_DEV_SDPRINT 0
 #endif
 #ifdef GLN64_GX
-	#define NUM_DEV_GLN64 1
+	#define NUM_DEV_GLN64 2
 #else
 	#define NUM_DEV_GLN64 0
 #endif
-#define NUM_DEV_FEATURES (NUM_DEV_STD+NUM_DEV_SDPRINT+NUM_DEV_GLN64)
+#define NUM_DEV_FEATURES (NUM_DEV_STD+NUM_DEV_GLN64+NUM_DEV_SDPRINT)
 
 	static menu_item devFeatures_submenu[] =
 		{{ &toggleFPS_strings[1][0],
 		   MENU_ATTR_NONE,
 		   { .func = toggleFPS_func }
 		  },
-		 { &toggleScreenDebug_strings[1][0],
+		 { &toggleScreenDebug_strings[0][0],
 		   MENU_ATTR_NONE,
 		   { .func = toggleScreenDebug_func }
 		  },
-		 { &toggleViLimit_strings[1][0],
+#ifdef GLN64_GX
+		 { &toggleViLimit_strings[0][0],
 		   MENU_ATTR_NONE,
 		   { .func = toggleViLimit_func }
 		  },
-#ifdef SDPRINT
-		 { &toggleSDDebug_strings[0][0],
-		   MENU_ATTR_NONE,
-		   { .func = toggleSDDebug_func }
-		  },
-#endif
-#ifdef GLN64_GX
 		 { &toggleGlN64useFbTex_strings[0][0],
 		   MENU_ATTR_NONE,
 		   { .func = toggleGlN64useFbTex_func }
 		  },
+#endif
+#ifdef SDPRINT
+		 { &toggleSDDebug_strings[0][0],
+		   MENU_ATTR_NONE,
+		   { .func = toggleSDDebug_func }
+		  }
 #endif
 		 };
 	
@@ -768,13 +754,13 @@ static inline void menuStack_push(menu_item*);
 			DEBUG_print("open",DBG_SDGECKOOPEN);
 		else
 			DEBUG_print("close",DBG_SDGECKOCLOSE);
-		devFeatures_submenu[NUM_DEV_STD].caption = &toggleSDDebug_strings[printToSD][0];
+		devFeatures_submenu[5].caption = &toggleSDDebug_strings[printToSD][0];
 		return NULL;
 	}
 
 	static char* toggleGlN64useFbTex_func(void){
 		glN64_useFrameBufferTextures ^= 1;
-		devFeatures_submenu[NUM_DEV_STD+NUM_DEV_SDPRINT].caption = &toggleGlN64useFbTex_strings[glN64_useFrameBufferTextures][0];
+		devFeatures_submenu[3].caption = &toggleGlN64useFbTex_strings[glN64_useFrameBufferTextures][0];
 		return NULL;
 	}
 
@@ -800,8 +786,10 @@ static menu_item main_menu[MAIN_MENU_SIZE] =
 	  
 	  SHOW_CREDITS_ITEM,
 	  
+#ifndef WII
 	  STOP_DVD_ITEM,
 	  SWAP_DVD_ITEM,
+#endif
 	 
 	  DEV_FEATURES_ITEM,
 	  CONTROLLER_PAKS_ITEM,

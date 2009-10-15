@@ -70,6 +70,7 @@ extern timers Timers;
        char creditsScrolling;
        char padNeedScan;
        char wpadNeedScan;
+       char shutdown;
 unsigned int isWii = 0;
 #define WII_CPU_VERSION 0x87102
 #define mfpvr()   ({unsigned int rval; \
@@ -80,7 +81,6 @@ extern void gfx_set_fb(unsigned int* fb1, unsigned int* fb2);
 static u32* xfb[2] = { NULL, NULL };	/*** Framebuffers ***/
 //static GXRModeObj *vmode;				/*** Graphics Mode Object ***/
 GXRModeObj *vmode;				/*** Graphics Mode Object ***/
-void ogc_video__reset();
 
 // Dummy functions
 static void dummy_func(){ }
@@ -104,9 +104,6 @@ int main(){
 	DVD_Init();
 #endif
 	menuInit();
-#ifdef WII
-	//SYS_SetPowerCallback(STM_ShutdownToIdle());
-#endif
 #ifdef DEBUGON
 	//DEBUG_Init(GDBSTUB_DEVICE_TCP,GDBSTUB_DEF_TCPPORT); //Default port is 2828
 	DEBUG_Init(GDBSTUB_DEVICE_USB, 1);
@@ -114,14 +111,14 @@ int main(){
 #endif
 	
 	// Default Settings
-	audioEnabled     = 0; // No audio
+	audioEnabled     = 1; // Audio
 	showFPSonScreen  = 1; // Show FPS on Screen
-	printToScreen    = 1; // Show DEBUG text on screen
+	printToScreen    = 0; // Show DEBUG text on screen
 	printToSD        = 0; // Disable SD logging
-	Timers.limitVIs  = 1; // Limit VI/s
+	Timers.limitVIs  = 0; // Sync to Audio
 	saveEnabled      = 0; // Don't save game
 	creditsScrolling = 0; // Normal menu for now
-	dynacore         = 2; // Pure Interpreter
+	dynacore         = 1; // Dynarec
 #ifdef GLN64_GX
 // glN64 specific  settings	
  	glN64_useFrameBufferTextures = 0; // Disable FrameBuffer textures
@@ -135,7 +132,10 @@ int main(){
 		if(padNeedScan){ PAD_ScanPads(); padNeedScan = 0; }
 		// First read the pads
 		buttons[which_pad] = PAD_ButtonsHeld(0) | readWPAD();
-		
+#ifdef HW_RVL
+    if(shutdown)
+      SYS_ResetSystem(SYS_POWEROFF, 0, 0);		
+#endif
 // Check whether button is pressed and make sure it wasn't registered last time	
 #define PAD_PRESSED(butt0n) ( buttons[which_pad] & butt0n && !(buttons[which_pad^1] & butt0n) )
 		
@@ -244,7 +244,6 @@ int loadROM(fileBrowser_file* rom){
 	romOpen_input();
 	
 	cpu_init();
-	//ogc_video__reset();
 	return 0;
 }
 
@@ -349,7 +348,12 @@ void ScanPADSandReset() {
 	if(!((*(u32*)0xCC003000)>>16))
 		stop = 1;
 }
-void ResetCallBack() {stop = 1;}
+
+#ifdef HW_RVL
+void ShutdownWii() {
+  shutdown = 1;
+}
+#endif
 
 static void Initialise (void){
 
@@ -359,6 +363,8 @@ static void Initialise (void){
 #ifdef WII
   CONF_Init();
   WPAD_Init();
+  WPAD_SetPowerButtonCallback((WPADShutdownCallback)ShutdownWii);
+  SYS_SetPowerCallback(ShutdownWii);
 #endif
   
   vmode = VIDEO_GetPreferredMode(NULL);
@@ -371,7 +377,6 @@ static void Initialise (void){
   VIDEO_ClearFrameBuffer (vmode, xfb[0], COLOR_BLACK);
   VIDEO_ClearFrameBuffer (vmode, xfb[1], COLOR_BLACK);
   VIDEO_SetNextFramebuffer (xfb[0]);
-  //VIDEO_SetPostRetraceCallback (PAD_ScanPads);
   VIDEO_SetPostRetraceCallback (ScanPADSandReset);
   VIDEO_SetBlack (0);
   VIDEO_Flush ();
@@ -407,7 +412,6 @@ static void Initialise (void){
 		isWii = 1;
 	else
 		isWii = 0;
-	//SYS_SetResetCallback(ResetCallBack);	//not working, use old method for now
 	
 	// Init PS GQRs so I can load signed/unsigned chars/shorts as PS values
 	__asm__ volatile(
@@ -427,53 +431,5 @@ static void Initialise (void){
 		"addi	3, 3, %0 \n"
 		"mtspr	917, 3   \n" // GQR5 = unsigned short / (2^16)
 		:: "n" (16<<8 | 5) : "r3");
-}
-
-/* Reinitialize GX */ 
-void ogc_video__reset()
-{
-#if 0
-    GXRModeObj *rmode;
-	
-    //clear the old framebuffer
-	VIDEO_ClearFrameBuffer(vmode, xfb[0], COLOR_BLACK);
-	VIDEO_ClearFrameBuffer(vmode, xfb[1], COLOR_BLACK);
-    /* set TV mode for current ROM*/
-	switch(ROM_HEADER->Country_code)
-   	{
-    	case 0x0044:
-			rmode = &TVPal528IntDf;
-			break;
-    	case 0x0045:
-			rmode = &TVNtsc480IntDf;
-			break;
-     	case 0x004A:
-			rmode = &TVNtsc480IntDf;
-			break;
-    	case 0x0050:
-			rmode = &TVPal528IntDf;
-			break;
-    	case 0x0055:
-			rmode = &TVPal528IntDf;
-    	default:
-			rmode = &TVNtsc480IntDf;
-    }
-    
-#ifdef WII
-    if(rmode == &TVNtsc480IntDf &&
-	   VIDEO_HaveComponentCable() &&
-	   CONF_GetProgressiveScan())
-    	rmode = &TVNtsc480Prog;
-#endif
-    
-    vmode = rmode;
-    VIDEO_Configure (vmode);
-    VIDEO_ClearFrameBuffer(vmode, xfb[0], COLOR_BLACK);
-    VIDEO_ClearFrameBuffer(vmode, xfb[1], COLOR_BLACK);
-    VIDEO_Flush();
-    VIDEO_WaitVSync();
-    if (rmode->viTVMode & VI_NON_INTERLACE) VIDEO_WaitVSync();
-    else while (VIDEO_GetNextField())  VIDEO_WaitVSync();
-#endif
 }
 
