@@ -122,10 +122,10 @@ void add_interupt_event(int type, unsigned long delay)
    
    if(type == SPECIAL_INT /*|| type == COMPARE_INT*/) special = 1;
    if(Count > 0x80000000) SPECIAL_done = 0;
-   
+/*   
    if (get_event(type)) {
       printf("two events of type %x in queue\n", type);
-   }
+   }*/
    interupt_queue *aux = q;
    
    //if (type == PI_INT)
@@ -331,12 +331,13 @@ void gen_interupt()
    //if (!skip_jump)
      //printf("interrupt:%x (%x)\n", q->type, Count);
    if (stop == 1) dyna_stop();
+   /*
    if (savestates_job & LOADSTATE) 
      {
 	savestates_load();
 	savestates_job &= ~LOADSTATE;
 	return;
-     }
+     }*/
    
    if (skip_jump /*&& !dynacore*/)
      {
@@ -514,9 +515,10 @@ void gen_interupt()
 	break;
      }
    exception_general();
+   /*
    if (savestates_job & SAVESTATE) 
      {
 	savestates_save();
 	savestates_job &= ~SAVESTATE;
-     }
+     }*/
 }

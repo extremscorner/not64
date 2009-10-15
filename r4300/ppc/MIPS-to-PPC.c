@@ -692,6 +692,7 @@ static int LB(MIPS_instr mips){
 	
 	invalidateRegisters();
 	
+#ifdef FASTMEM
 	// If (base >> 16) & 0xDF80 == 0x8000
 	GEN_SRWI(ppc, 0, base, 16);
 	set_next_dst(ppc);
@@ -729,6 +730,7 @@ static int LB(MIPS_instr mips){
 	GEN_B(ppc, not_fastmem_id, 0, 0);
 	set_next_dst(ppc);
 	PowerPC_instr* preCall = get_curr_dst();
+#endif // FASTMEM
 	
 	// load into rt
 	GEN_LI(ppc, 3, 0, MIPS_GET_RT(mips));
@@ -736,8 +738,10 @@ static int LB(MIPS_instr mips){
 	
 	genCallDynaMem(MEM_LB, base, MIPS_GET_IMMED(mips));
 	
+#ifdef FASTMEM
 	int callSize = get_curr_dst() - preCall;
 	set_jump_special(not_fastmem_id, callSize+1);
+#endif
 	
 	return CONVERT_SUCCESS;
 #endif
@@ -758,6 +762,7 @@ static int LH(MIPS_instr mips){
 	
 	invalidateRegisters();
 	
+#ifdef FASTMEM
 	// If (base >> 16) & 0xDF80 == 0x8000
 	GEN_SRWI(ppc, 0, base, 16);
 	set_next_dst(ppc);
@@ -792,6 +797,7 @@ static int LH(MIPS_instr mips){
 	GEN_B(ppc, not_fastmem_id, 0, 0);
 	set_next_dst(ppc);
 	PowerPC_instr* preCall = get_curr_dst();
+#endif // FASTMEM
 	
 	// load into rt
 	GEN_LI(ppc, 3, 0, MIPS_GET_RT(mips));
@@ -799,8 +805,10 @@ static int LH(MIPS_instr mips){
 	
 	genCallDynaMem(MEM_LH, base, MIPS_GET_IMMED(mips));
 	
+#ifdef FASTMEM
 	int callSize = get_curr_dst() - preCall;
 	set_jump_special(not_fastmem_id, callSize+1);
+#endif
 	
 	return CONVERT_SUCCESS;
 #endif
@@ -832,6 +840,7 @@ static int LW(MIPS_instr mips){
 	
 	invalidateRegisters();
 	
+#ifdef FASTMEM
 	// If (base >> 16) & 0xDF80 == 0x8000
 	GEN_SRWI(ppc, 0, base, 16);
 	set_next_dst(ppc);
@@ -866,6 +875,7 @@ static int LW(MIPS_instr mips){
 	GEN_B(ppc, not_fastmem_id, 0, 0);
 	set_next_dst(ppc);
 	PowerPC_instr* preCall = get_curr_dst();
+#endif // FASTMEM
 	
 	// load into rt
 	GEN_LI(ppc, 3, 0, MIPS_GET_RT(mips));
@@ -873,8 +883,10 @@ static int LW(MIPS_instr mips){
 	
 	genCallDynaMem(MEM_LW, base, MIPS_GET_IMMED(mips));
 	
+#ifdef FASTMEM
 	int callSize = get_curr_dst() - preCall;
 	set_jump_special(not_fastmem_id, callSize+1);
+#endif
 	
 	return CONVERT_SUCCESS;
 #endif
@@ -895,6 +907,7 @@ static int LBU(MIPS_instr mips){
 	
 	invalidateRegisters();
 	
+#ifdef FASTMEM
 	// If (base >> 16) & 0xDF80 == 0x8000
 	GEN_SRWI(ppc, 0, base, 16);
 	set_next_dst(ppc);
@@ -929,6 +942,7 @@ static int LBU(MIPS_instr mips){
 	GEN_B(ppc, not_fastmem_id, 0, 0);
 	set_next_dst(ppc);
 	PowerPC_instr* preCall = get_curr_dst();
+#endif // FASTMEM
 	
 	// load into rt
 	GEN_LI(ppc, 3, 0, MIPS_GET_RT(mips));
@@ -936,8 +950,10 @@ static int LBU(MIPS_instr mips){
 	
 	genCallDynaMem(MEM_LBU, base, MIPS_GET_IMMED(mips));
 	
+#ifdef FASTMEM
 	int callSize = get_curr_dst() - preCall;
 	set_jump_special(not_fastmem_id, callSize+1);
+#endif
 	
 	return CONVERT_SUCCESS;
 #endif
@@ -958,6 +974,7 @@ static int LHU(MIPS_instr mips){
 	
 	invalidateRegisters();
 	
+#ifdef FASTMEM
 	// If (base >> 16) & 0xDF80 == 0x8000
 	GEN_SRWI(ppc, 0, base, 16);
 	set_next_dst(ppc);
@@ -992,6 +1009,7 @@ static int LHU(MIPS_instr mips){
 	GEN_B(ppc, not_fastmem_id, 0, 0);
 	set_next_dst(ppc);
 	PowerPC_instr* preCall = get_curr_dst();
+#endif // FASTMEM
 	
 	// load into rt
 	GEN_LI(ppc, 3, 0, MIPS_GET_RT(mips));
@@ -999,8 +1017,10 @@ static int LHU(MIPS_instr mips){
 	
 	genCallDynaMem(MEM_LHU, base, MIPS_GET_IMMED(mips));
 	
+#ifdef FASTMEM
 	int callSize = get_curr_dst() - preCall;
 	set_jump_special(not_fastmem_id, callSize+1);
+#endif
 	
 	return CONVERT_SUCCESS;
 #endif
@@ -1032,6 +1052,7 @@ static int LWU(MIPS_instr mips){
 	
 	invalidateRegisters();
 	
+#ifdef FASTMEM
 	// If (base >> 16) & 0xDF80 == 0x8000
 	GEN_SRWI(ppc, 0, base, 16);
 	set_next_dst(ppc);
@@ -1070,6 +1091,7 @@ static int LWU(MIPS_instr mips){
 	GEN_B(ppc, not_fastmem_id, 0, 0);
 	set_next_dst(ppc);
 	PowerPC_instr* preCall = get_curr_dst();
+#endif // FASTMEM
 	
 	// load into rt
 	GEN_LI(ppc, 3, 0, MIPS_GET_RT(mips));
@@ -1077,8 +1099,10 @@ static int LWU(MIPS_instr mips){
 	
 	genCallDynaMem(MEM_LWU, base, MIPS_GET_IMMED(mips));
 	
+#ifdef FASTMEM
 	int callSize = get_curr_dst() - preCall;
 	set_jump_special(not_fastmem_id, callSize+1);
+#endif
 	
 	return CONVERT_SUCCESS;
 #endif
@@ -1224,6 +1248,7 @@ static int LD(MIPS_instr mips){
 	
 	invalidateRegisters();
 	
+#ifdef FASTMEM
 	// If (base >> 16) & 0xDF80 == 0x8000
 	GEN_SRWI(ppc, 0, base, 16);
 	set_next_dst(ppc);
@@ -1261,6 +1286,7 @@ static int LD(MIPS_instr mips){
 	GEN_B(ppc, not_fastmem_id, 0, 0);
 	set_next_dst(ppc);
 	PowerPC_instr* preCall = get_curr_dst();
+#endif // FASTMEM
 	
 	// load into rt
 	GEN_LI(ppc, 3, 0, MIPS_GET_RT(mips));
@@ -1268,8 +1294,10 @@ static int LD(MIPS_instr mips){
 	
 	genCallDynaMem(MEM_LD, base, MIPS_GET_IMMED(mips));
 	
+#ifdef FASTMEM
 	int callSize = get_curr_dst() - preCall;
 	set_jump_special(not_fastmem_id, callSize+1);
+#endif
 	
 	return CONVERT_SUCCESS;
 #endif

@@ -224,7 +224,7 @@ unsigned int dyna_mem(unsigned int value, unsigned int addr,
 			break;
 		case MEM_LD:
 			read_dword_in_memory();
-			reg[value] = rdword;
+			reg[value] = dyna_rdword;
 			break;
 		case MEM_LWC1:
 			read_word_in_memory();
