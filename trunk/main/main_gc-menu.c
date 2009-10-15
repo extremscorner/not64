@@ -68,6 +68,8 @@ extern char glN64_useFrameBufferTextures;
 extern timers Timers;
        char saveEnabled;
        char creditsScrolling;
+       char padNeedScan;
+       char wpadNeedScan;
 unsigned int isWii = 0;
 #define WII_CPU_VERSION 0x87102
 #define mfpvr()   ({unsigned int rval; \
@@ -93,7 +95,7 @@ u16 readWPAD(void);
 int main(){
 	/* INITIALIZE */
 #ifdef HW_RVL
-	DI_Init();
+  	DI_Init();
 	DI_Mount();
 #endif
 	Initialise(); // Stock OGC initialization
@@ -120,16 +122,16 @@ int main(){
 	creditsScrolling = 0; // Normal menu for now
 	dynacore         = 2; // Pure Interpreter
 #ifdef GLN64_GX
-	// glN64 specific  settings
-	glN64_useFrameBufferTextures = 0; // Disable FrameBuffer textures
+// glN64 specific  settings	
+ 	glN64_useFrameBufferTextures = 0; // Disable FrameBuffer textures
 #endif //GLN64_GX
-
 	// 'Page flip' buttons so we know when it released
 	int which_pad = 0;
 	u16 buttons[2];
 	
 	/* MAIN LOOP */
 	while(TRUE){
+		if(padNeedScan){ PAD_ScanPads(); padNeedScan = 0; }
 		// First read the pads
 		buttons[which_pad] = PAD_ButtonsHeld(0) | readWPAD();
 		
@@ -161,15 +163,15 @@ int main(){
 	return 0;
 }
 
-#ifdef WII
+#if defined(WII)
 u16 readWPAD(void){
-	WPADData wpad;
-	WPAD_ReadEvent(0, &wpad);
+	if(wpadNeedScan){ WPAD_ScanPads(); wpadNeedScan = 0; }
+	WPADData* wpad = WPAD_Data(0);
 	
 	u16 b = 0;
-	if(wpad.err == WPAD_ERR_NONE &&
-	   wpad.exp.type == WPAD_EXP_CLASSIC){
-	   	u16 w = wpad.exp.classic.btns;
+	if(wpad->err == WPAD_ERR_NONE &&
+	   wpad->exp.type == WPAD_EXP_CLASSIC){
+	   	u16 w = wpad->exp.classic.btns;
 	   	b |= (w & CLASSIC_CTRL_BUTTON_UP)    ? PAD_BUTTON_UP    : 0;
 	   	b |= (w & CLASSIC_CTRL_BUTTON_DOWN)  ? PAD_BUTTON_DOWN  : 0;
 	   	b |= (w & CLASSIC_CTRL_BUTTON_LEFT)  ? PAD_BUTTON_LEFT  : 0;
@@ -222,7 +224,6 @@ int loadROM(fileBrowser_file* rom){
 	tlb_mem2_init();
 #endif
 	//romFile_init(rom);
-
 	if(rom_read(rom)){	// Something failed while trying to read the ROM.
 		hasLoadedROM = FALSE;
 		return -1;
@@ -343,13 +344,14 @@ static void rsp_info_init(void){
 }
 
 void ScanPADSandReset() {
-	PAD_ScanPads();
+	padNeedScan = wpadNeedScan = 1;
 	if(!((*(u32*)0xCC003000)>>16))
 		stop = 1;
 }
 void ResetCallBack() {stop = 1;}
 
 static void Initialise (void){
+
   VIDEO_Init();
   PAD_Init();
   PAD_Reset(0xf0000000);
@@ -429,6 +431,7 @@ static void Initialise (void){
 /* Reinitialize GX */ 
 void ogc_video__reset()
 {
+#if 0
     GXRModeObj *rmode;
 	
     //clear the old framebuffer
@@ -454,6 +457,14 @@ void ogc_video__reset()
     	default:
 			rmode = &TVNtsc480IntDf;
     }
+    
+#ifdef WII
+    if(rmode == &TVNtsc480IntDf &&
+	   VIDEO_HaveComponentCable() &&
+	   CONF_GetProgressiveScan())
+    	rmode = &TVNtsc480Prog;
+#endif
+    
     vmode = rmode;
     VIDEO_Configure (vmode);
     VIDEO_ClearFrameBuffer(vmode, xfb[0], COLOR_BLACK);
@@ -462,6 +473,6 @@ void ogc_video__reset()
     VIDEO_WaitVSync();
     if (rmode->viTVMode & VI_NON_INTERLACE) VIDEO_WaitVSync();
     else while (VIDEO_GetNextField())  VIDEO_WaitVSync();
-
+#endif
 }
 

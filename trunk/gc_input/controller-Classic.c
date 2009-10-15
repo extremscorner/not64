@@ -25,11 +25,11 @@ static int getStickValue(joystick_t* j, int axis, int maxAbsValue){
 
 static int _GetKeys(int Control, BUTTONS * Keys )
 {
-	WPADData wpad;
-	WPAD_ReadEvent(Control, &wpad);
+	if(wpadNeedScan){ WPAD_ScanPads(); wpadNeedScan = 0; }
+	WPADData* wpad = WPAD_Data(Control);
 	BUTTONS* c = Keys;
 	
-	int b = wpad.exp.classic.btns;
+	int b = wpad->exp.classic.btns;
 	c->R_DPAD       = (b & CLASSIC_CTRL_BUTTON_RIGHT) ? 1 : 0;
 	c->L_DPAD       = (b & CLASSIC_CTRL_BUTTON_LEFT)  ? 1 : 0;
 	c->D_DPAD       = (b & CLASSIC_CTRL_BUTTON_DOWN)  ? 1 : 0;
@@ -42,15 +42,15 @@ static int _GetKeys(int Control, BUTTONS * Keys )
 	c->R_TRIG       = (b & CLASSIC_CTRL_BUTTON_FULL_R) ? 1 : 0;
 	c->L_TRIG       = (b & CLASSIC_CTRL_BUTTON_FULL_L) ? 1 : 0;
 	
-	s8 substickX = getStickValue(&wpad.exp.classic.rjs, STICK_X, 7);
+	s8 substickX = getStickValue(&wpad->exp.classic.rjs, STICK_X, 7);
 	c->R_CBUTTON    = (substickX >  4)       ? 1 : 0;
 	c->L_CBUTTON    = (substickX < -4)       ? 1 : 0;
-	s8 substickY = getStickValue(&wpad.exp.classic.rjs, STICK_Y, 7);
+	s8 substickY = getStickValue(&wpad->exp.classic.rjs, STICK_Y, 7);
 	c->D_CBUTTON    = (substickY < -4)       ? 1 : 0;
 	c->U_CBUTTON    = (substickY >  4)       ? 1 : 0;
 	
-	c->X_AXIS       = getStickValue(&wpad.exp.classic.ljs, STICK_X, 127);
-	c->Y_AXIS       = getStickValue(&wpad.exp.classic.ljs, STICK_Y, 127);
+	c->X_AXIS       = getStickValue(&wpad->exp.classic.ljs, STICK_X, 127);
+	c->Y_AXIS       = getStickValue(&wpad->exp.classic.ljs, STICK_Y, 127);
 	
 	// X+Y quits to menu
 	return (b & CLASSIC_CTRL_BUTTON_X) && (b & CLASSIC_CTRL_BUTTON_Y);
@@ -84,15 +84,15 @@ controller_t controller_Classic =
 	 };
 
 static void init(void){
-	int i;
+	int i, ret;
 	for(i=0; i<4; ++i){
 		WPADData wpad;
-		WPAD_ReadEvent(i, &wpad);
+		ret = WPAD_ReadEvent(i, &wpad);
 		// Only use a connected classic controller
-		if(wpad.err == WPAD_ERR_NONE &&
+		if(!ret && wpad.err == WPAD_ERR_NONE &&
 		   wpad.exp.type == WPAD_EXP_CLASSIC){
 			controller_Classic.available[i] = 1;
-			WPAD_SetDataFormat(i, WPAD_FMT_BTNS);
+			WPAD_SetDataFormat(i, WPAD_DATA_EXPANSION);
 		} else
 			controller_Classic.available[i] = 0;
 	}

@@ -177,7 +177,7 @@ EXPORT void CALL InitiateControllers (CONTROL_INFO ControlInfo)
 	control_info = ControlInfo;
 	
 	// List of all the defined controller_t's
-#ifdef WII
+#if defined(WII) && !defined(NO_BT)
 	#define num_controller_t 2
 	extern controller_t controller_GC;
 	extern controller_t controller_Classic;
