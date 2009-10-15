@@ -1489,12 +1489,12 @@ void update_count()
    if (dynacore || interpcore)
      {
      	//sprintf(txtbuffer, "trace: addr = 0x%08x\n", interp_addr);
-     	if(interp_addr < last_addr){
 #ifdef SHOW_DEBUG
+     	if(interp_addr < last_addr){
      		sprintf(txtbuffer, "interp_addr (%08x) < last_addr (%08x)\n");
      		DEBUG_print(txtbuffer, DBG_USBGECKO);
-#endif
      	}
+#endif
 	Count = Count + (interp_addr - last_addr)/2;
 	last_addr = interp_addr;
      }
@@ -1623,6 +1623,7 @@ void go()
      }
    else
      {
+       interpcore = 0;
 	dynacore = 1;
 	//printf("dynamic recompiler\n");
 	if(cpu_inited){
