@@ -7,6 +7,9 @@
 #include <string.h>
 #include <malloc.h>
 #include <ogc/dvd.h>
+#ifdef HW_RVL
+#include <di/di.h>
+#endif
 
 /* DVD Globals */
 extern unsigned int isWii;
@@ -33,16 +36,25 @@ void init_dvd()
   {
     DVD_Reset(DVD_RESETHARD);
     dvd_read_id();
-    dvdInitialized=1;
+    if(!dvd_get_error())
+      dvdInitialized=1;
   }
   else      //GC, no modchip even required :)
   {
     DVD_Reset(DVD_RESETHARD);
-    DVD_Mount ();  
-    dvdInitialized=1;
+    DVD_Mount ();
+    if(!dvd_get_error())
+      dvdInitialized=1;
   }
-#else
-  dvdInitialized=1; //Wiimode stuff is handled by DVDx
+#endif
+#ifdef HW_RVL
+  //Wiimode stuff is handled by DVDx
+  u32 val;
+  DI_GetCoverRegister(&val);
+  if(val & 0x1) return; //no disc inserted
+	DI_Mount();
+	while(DI_GetStatus() & DVD_INIT) usleep(20000);
+	dvdInitialized=1;
 #endif
 }
  
@@ -51,8 +63,9 @@ int fileBrowser_DVD_readDir(fileBrowser_file* ffile, fileBrowser_file** dir){
 	
   if(!dvdInitialized)
     init_dvd();
-    
-	int num_entries = 0;
+  if(!dvdInitialized) return -1;  //fails if No disc
+	
+  int num_entries = 0;
 	
 	if (!memcmp((void*)0x80000000, "D43U01", 6)) { //OoT bonus disc support.
 		num_entries = 2;
