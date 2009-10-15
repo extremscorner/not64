@@ -3736,11 +3736,6 @@ static void genCallInterp(MIPS_instr mips){
 	// Pass in whether this instruction is in the delay slot
 	GEN_LI(ppc, 5, 0, isDelaySlot ? 1 : 0);
 	set_next_dst(ppc);
-	// Save the lr
-	GEN_MFLR(ppc, 0);
-	set_next_dst(ppc);
-	GEN_STW(ppc, 0, DYNAOFF_LR, 1);
-	set_next_dst(ppc);
 	// Move the address of decodeNInterpret to ctr for a bctr
 	GEN_MTCTR(ppc, DYNAREG_INTERP);
 	set_next_dst(ppc);
@@ -3801,11 +3796,6 @@ static void genUpdateCount(void){
 	// Move &dyna_update_count to ctr for call
 	GEN_MTCTR(ppc, DYNAREG_UCOUNT);
 	set_next_dst(ppc);
-	// Save the lr
-	GEN_MFLR(ppc, 0);
-	set_next_dst(ppc);
-	GEN_STW(ppc, 0, DYNAOFF_LR, 1);
-	set_next_dst(ppc);
 	// Load the current PC as the argument
 	GEN_LIS(ppc, 3, (get_src_pc()+4)>>16);
 	set_next_dst(ppc);
@@ -3832,11 +3822,6 @@ static void genCheckFP(void){
 		reset_code_addr();
 		// Move &dyna_check_cop1_unusable to ctr for call
 		GEN_MTCTR(ppc, DYNAREG_CHKFP);
-		set_next_dst(ppc);
-		// Save the lr
-		GEN_MFLR(ppc, 0);
-		set_next_dst(ppc);
-		GEN_STW(ppc, 0, DYNAOFF_LR, 1);
 		set_next_dst(ppc);
 		// Load the current PC as the argument
 		GEN_LIS(ppc, 3, get_src_pc()>>16);
@@ -3870,11 +3855,6 @@ void genCallDynaMem(memType type, int base, short immed){
 	// PRE: value to store, or register # to load into should be in r3
 	// mtctr DYNAREG_RWMEM
 	GEN_MTCTR(ppc, DYNAREG_RWMEM);
-	set_next_dst(ppc);
-	// save lr
-	GEN_MFLR(ppc, 0);
-	set_next_dst(ppc);
-	GEN_STW(ppc, 0, DYNAOFF_LR, 1);
 	set_next_dst(ppc);
 	// addr = base + immed
 	GEN_ADDI(ppc, 4, base, immed);

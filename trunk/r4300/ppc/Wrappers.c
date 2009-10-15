@@ -27,10 +27,14 @@ int noCheckInterrupt = 0;
  */
 
 inline unsigned int dyna_run(unsigned int (*code)(void)){
+	unsigned int naddr;
+	
 	__asm__ volatile(
+		// Create the stack frame for code
 		"stwu	1, -16(1) \n"
 		"mfcr	14        \n"
 		"stw	14, 8(1)  \n"
+		// Setup saved registers for code
 		"mr	14, %0    \n"
 		"addi	15, 0, 0  \n"
 		"mr	16, %1    \n"
@@ -50,9 +54,22 @@ inline unsigned int dyna_run(unsigned int (*code)(void)){
 		: "14", "15", "16", "17", "18", "19", "20", "21",
 		  "22", "23", "24");
 	
-	unsigned int naddr = code();
-	
-	__asm__ volatile("lwz	1, 0(1)\n");
+	// naddr = code();
+	__asm__ volatile(
+		// Save the lr so the recompiled code won't have to
+		"bl	4         \n"
+		"mtctr	%1        \n"
+		"mflr	4         \n"
+		"addi	4, 4, 20  \n"
+		"stw	4, 20(1)  \n"
+		// Execute the code
+		"bctrl           \n"
+		"mr	%0, 3     \n"
+		// Pop the stack
+		"lwz	1, 0(1)   \n"
+		: "=r" (naddr)
+		: "r" (code)
+		: "3", "4", "5", "6", "7", "8", "9", "10", "11", "12");
 	
 	return naddr;
 }
