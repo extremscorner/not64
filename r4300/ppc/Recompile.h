@@ -9,11 +9,17 @@
 
 typedef unsigned int uint;
 
+typedef struct hole_node {
+	unsigned short addr;
+	struct hole_node* next;
+} PowerPC_func_hole_node;
+
 typedef struct {
 	unsigned short start_addr;
 	unsigned short end_addr;
 	PowerPC_instr* code;
 	unsigned int   lru;
+	PowerPC_func_hole_node* holes;
 } PowerPC_func;
 
 typedef struct func_node {

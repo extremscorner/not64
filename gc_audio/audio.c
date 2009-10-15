@@ -17,13 +17,6 @@
 #include <ogc/semaphore.h>
 #endif
 
-//#define DUMP_AUDIO 1
-#ifdef DUMP_AUDIO
-#include "../main/rom.h"
-#include <fat.h>
-FILE* dump_audio_fp;
-#endif
-
 #include "AudioPlugin.h"
 #include "Audio_#1.1.h"
 #include "../gui/DEBUG.h"
@@ -31,7 +24,7 @@ FILE* dump_audio_fp;
 AUDIO_INFO AudioInfo;
 
 #define NUM_BUFFERS 4
-#define BUFFER_SIZE 3840/2
+#define BUFFER_SIZE 3840
 static char buffer[NUM_BUFFERS][BUFFER_SIZE] __attribute__((aligned(32)));
 static int which_buffer = 0;
 static unsigned int buffer_offset = 0;
@@ -40,8 +33,8 @@ static unsigned int freq;
 static unsigned int real_freq;
 static float freq_ratio;
 // NOTE: 32khz actually uses ~2136 bytes/frame @ 60hz
-static enum { BUFFER_SIZE_32_60 = 2176/2, BUFFER_SIZE_48_60 = 3200/2,
-              BUFFER_SIZE_32_50 = 2560/2, BUFFER_SIZE_48_50 = 3840/2 } buffer_size;
+static enum { BUFFER_SIZE_32_60 = 2112, BUFFER_SIZE_48_60 = 3200,
+              BUFFER_SIZE_32_50 = 2560, BUFFER_SIZE_48_50 = 3840 } buffer_size;
 
 #ifdef THREADED_AUDIO
 static lwp_t audio_thread;
@@ -99,13 +92,6 @@ AiDacrateChanged( int SystemType )
 	sprintf(txtbuffer, "Initializing frequency: %d (resampling ratio %f)",
 	        real_freq, freq_ratio);
 	DEBUG_print(txtbuffer,DBG_AUDIOINFO);
-	#ifdef DUMP_AUDIO
-  char tmpname[256];
-  memset(tmpname,0,256);
-  sprintf(tmpname,"/AUDIO/%d - %s.pcm",real_freq,ROM_SETTINGS.goodname);
-  if(!dump_audio_fp)
-    dump_audio_fp = fopen(tmpname,"wb");
-#endif
 }
 
 #ifdef THREADED_AUDIO
@@ -133,13 +119,15 @@ static void inline play_buffer(void){
 	// Make sure the buffer is in RAM, not the cache
 	DCFlushRange(buffer[thread_buffer], buffer_size);
 	
+	// Actually send the buffer out to be played next
+	AUDIO_InitDMA((unsigned int)&buffer[thread_buffer], buffer_size);
+	
 #ifdef THREADED_AUDIO
 	// Wait for the audio interface to be free before playing
 	LWP_SemWait(audio_free);
 #endif
 	
-	// Actually send the buffer out to be played
-	AUDIO_InitDMA((unsigned int)&buffer[thread_buffer], buffer_size);
+	// Start playing the buffer
 	AUDIO_StartDMA();
 	
 #ifdef THREADED_AUDIO
@@ -168,9 +156,6 @@ static void inline copy_to_buffer(int* buffer, int* stream, unsigned int length)
 		buffer[di] = stream[(int)si];
 #endif
 	}
-#ifdef DUMP_AUDIO
-	fwrite(buffer, 1, length*4, dump_audio_fp);
-#endif
 }
 
 static void inline add_to_buffer(void* stream, unsigned int length){
@@ -312,11 +297,6 @@ RomClosed( void )
 	audio_paused = 0;
 #endif
 	AUDIO_StopDMA(); // So we don't have a buzzing sound when we exit the game
-	#ifdef DUMP_AUDIO
-  if(dump_audio_fp)
-    fclose(dump_audio_fp);
-  dump_audio_fp = 0;
-#endif
 }
 
 EXPORT void CALL
