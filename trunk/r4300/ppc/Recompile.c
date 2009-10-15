@@ -420,7 +420,8 @@ static int pass0(PowerPC_block* ppc_block){
 				isJmpDst[ li & 0x3FF ] = 1;
 			}
 			--src;
-			if(opcode == MIPS_OPCODE_JAL) isJmpDst[ index + 2 ] = 1;
+			if(opcode == MIPS_OPCODE_JAL && index + 2 < 1024)
+				isJmpDst[ index + 2 ] = 1;
 			if(opcode == MIPS_OPCODE_J){ ++src, ++pc; break; }
 		} else if(opcode == MIPS_OPCODE_BEQ   ||
 		          opcode == MIPS_OPCODE_BNE   ||
