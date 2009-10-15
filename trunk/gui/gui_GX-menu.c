@@ -737,7 +737,7 @@ void GUI_creditScreen()
 	write_font_init_GX(fontColor);
 
 	fontColor = (GXColor) {69,31,133,255}; //purplish
-	strcpy(string,"Wii64 Tiizer Edition!!");
+	strcpy(string,"Wii64 Beta 1");
 	pos = (Vector) {319.5F, 130.0F, -250.0};
 	axis1 = (Vector) {0.0F, 1.0F, 0.0F};
 	rot = (Vector) {rotateby-90, 0.0F, 0.0F};
@@ -807,7 +807,7 @@ void GUI_creditScreen()
 	GUI_writeString(pos, axis1, axis2, axis3, rot, fontColor, string, 1.2);
 
 	fontColor = (GXColor) {128,121,18,255}; //dim yellow
-	strcpy(string,"libOGC - www.tehskeen.com");
+	strcpy(string,"emulatemii.com");
 	pos = (Vector) {319.5F, 410.0F, -50.0};
 	rot = (Vector) {0.0F, 0.0F, 0.0F};
 	GUI_writeString(pos, axis1, axis2, axis3, rot, fontColor, string, 1.0);
