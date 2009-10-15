@@ -7,6 +7,7 @@
 
 static int _GetKeys(int Control, BUTTONS * Keys )
 {
+	if(padNeedScan){ PAD_ScanPads(); padNeedScan = 0; }
 	BUTTONS* c = Keys;
 		
 	int b = PAD_ButtonsHeld(Control);
@@ -24,11 +25,11 @@ static int _GetKeys(int Control, BUTTONS * Keys )
 
 	// FIXME: Proper values for analog and C-Stick
 	s8 substickX = PAD_SubStickX(Control);
-	c->R_CBUTTON    = (substickX >  5)       ? 1 : 0;
-	c->L_CBUTTON    = (substickX < -5)       ? 1 : 0;
+	c->R_CBUTTON    = (substickX >  64)      ? 1 : 0;
+	c->L_CBUTTON    = (substickX < -64)      ? 1 : 0;
 	s8 substickY = PAD_SubStickY(Control);
-	c->D_CBUTTON    = (substickY < -5)       ? 1 : 0;
-	c->U_CBUTTON    = (substickY >  5)       ? 1 : 0;
+	c->D_CBUTTON    = (substickY < -64)      ? 1 : 0;
+	c->U_CBUTTON    = (substickY >  64)      ? 1 : 0;
 	
 	c->X_AXIS       = PAD_StickX(Control);
 	c->Y_AXIS       = PAD_StickY(Control);

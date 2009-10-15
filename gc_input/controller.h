@@ -8,6 +8,8 @@
 #include "../main/winlnxdefs.h"
 #include "Controller_#1.1.h"
 
+extern char padNeedScan, wpadNeedScan;
+
 typedef struct {
 	// Call GetKeys to read in BUTTONS for a controller of this type
 	// You should pass in controller num for this type
