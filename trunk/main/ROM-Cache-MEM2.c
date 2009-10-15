@@ -96,15 +96,6 @@ void ROMCache_load_block(char* dst, u32 rom_offset){
 }
 
 void ROMCache_read(u32* dest, u32 offset, u32 length){
-	// Display stats for reads
-	static int last_block = -1;
-	if( offset>>18 == last_block )
-		DEBUG_stats(3, "ROMCache same block", STAT_TYPE_ACCUM, 1);
-	else
-		DEBUG_stats(4, "ROMCache different block", STAT_TYPE_ACCUM, 1);
-	last_block = offset >> 18;
-	DEBUG_stats(5, "ROMCache avg length", STAT_TYPE_AVGE, length);
-	
 	if(ROMTooBig){
 		u32 block = offset>>20;
 		u32 length2 = length;
@@ -145,11 +136,9 @@ void ROMCache_read(u32* dest, u32 offset, u32 length){
 			// Only worry about using L1 cache if the read falls
 			//   within only one block for the L1 for now
 			if(offset >> 18 != L1tag){
-				DEBUG_stats(6, "ROMCache L1 misses", STAT_TYPE_ACCUM, 1);
 				memcpy(L1, ROMCACHE_LO + (offset&(~0x3FFFF)), 256*1024);
 				L1tag = offset >> 18;
 			}
-			DEBUG_stats(7, "ROMCache L1 transfers", STAT_TYPE_ACCUM, 1);
 			memcpy(dest, L1 + (offset&0x3FFFF), length);
 		} else
 #endif
