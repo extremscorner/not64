@@ -106,7 +106,7 @@ unsigned long long int* rdword;
 static unsigned long trash;
 
 // hash tables of memory functions
-void (**rwmem[0xFFFF])();
+void (**rwmem[0x10000])();
 
 void (*rw_nothing[8])() =
 	{ read_nothing,  read_nothingb,  read_nothingh,  read_nothingd,

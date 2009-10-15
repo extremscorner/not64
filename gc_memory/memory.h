@@ -66,7 +66,7 @@ extern unsigned char byte;
 extern unsigned short hword;
 extern unsigned long long int dword, *rdword;
 
-extern void (**rwmem[0xFFFF])();
+extern void (**rwmem[0x10000])();
 
 typedef struct _RDRAM_register
 {
