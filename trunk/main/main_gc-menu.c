@@ -352,6 +352,7 @@ void ScanPADSandReset() {
 #ifdef HW_RVL
 void ShutdownWii() {
   shutdown = 1;
+  stop = 1;
 }
 #endif
 
