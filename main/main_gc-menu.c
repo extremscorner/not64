@@ -95,9 +95,10 @@ u16 readWPAD(void);
 int main(){
 	/* INITIALIZE */
 #ifdef HW_RVL
-  	DI_Init();
-	DI_Mount();
+  DI_Close();
+  DI_Init();    // first
 #endif
+
 	Initialise(); // Stock OGC initialization
 #ifndef WII
 	DVD_Init();
