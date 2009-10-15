@@ -376,11 +376,7 @@ void gen_interupt()
 	break;
 	
       case VI_INT:
-#ifdef VCR_SUPPORT
-	VCR_updateScreen();
-#else
 	updateScreen();
-#endif
 #ifdef PROFILE
 	refresh_stat();
 #endif

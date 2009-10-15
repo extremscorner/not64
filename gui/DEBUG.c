@@ -15,8 +15,8 @@
 char text[DEBUG_TEXT_HEIGHT][DEBUG_TEXT_WIDTH];
 char printToSD;
 
-#ifdef SHOW_DEBUG
 char txtbuffer[1024];
+#ifdef SHOW_DEBUG
 long long texttimes[DEBUG_TEXT_HEIGHT];
 extern long long gettime();
 extern unsigned int diff_sec(long long start,long long end);
