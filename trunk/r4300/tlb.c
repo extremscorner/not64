@@ -453,7 +453,7 @@ void TLBWR()
 		  TLBCache_set_w(i>>12, 0x80000000 | 
 	          (tlb_e[Random].phys_even + (i - tlb_e[Random].start_even)));
 #else
-	          tlb_LUT_r[i>>12] = 0x80000000 | 
+	          tlb_LUT_w[i>>12] = 0x80000000 | 
 	          (tlb_e[Random].phys_even + (i - tlb_e[Random].start_even));
 #endif
 	  }

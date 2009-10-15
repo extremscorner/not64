@@ -69,9 +69,6 @@ extern unsigned long jump_to_address;
 extern int no_audio_delay;
 extern int no_compiled_jump;
 
-void cpu_init(void);
-void cpu_deinit(void);
-
 void go();
 void pure_interpreter();
 void compare_core();
@@ -97,9 +94,9 @@ void jump_to(unsigned int);
 #define AUDIO_SECTION 2
 #define COMPILER_SECTION 3
 #define IDLE_SECTION 4
-#define ROM_SECTION 5
-#define TLB_SECTION 6
-#define FP_SECTION 7
+#define TLB_SECTION 5
+#define FP_SECTION 6
+#define INTERP_SECTION 7
 #define NUM_SECTIONS 7
 
 //#define PROFILE

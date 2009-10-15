@@ -146,6 +146,7 @@ unsigned int dyna_check_cop1_unusable(unsigned int pc, int isDelaySlot){
 		// Take a FP unavailable exception
 		Cause = (11 << 2) | 0x10000000;
 		exception_general();
+		delay_slot = 0;
 		// Return the address to trampoline to
 		return interp_addr;
 	} else
@@ -184,6 +185,10 @@ unsigned int dyna_mem(unsigned int value, unsigned int addr,
 			read_word_in_memory();
 			reg[value] = (long long)((long)dyna_rdword);
 			break;
+		case MEM_LWU:
+			read_word_in_memory();
+			reg[value] = (unsigned long long)((long)dyna_rdword);
+			break;
 		case MEM_LH:
 			read_hword_in_memory();
 			reg[value] = (long long)((short)dyna_rdword);
@@ -200,6 +205,18 @@ unsigned int dyna_mem(unsigned int value, unsigned int addr,
 			read_byte_in_memory();
 			reg[value] = (unsigned long long)((unsigned char)dyna_rdword);
 			break;
+		case MEM_LD:
+			read_dword_in_memory();
+			reg[value] = rdword;
+			break;
+		case MEM_LWC1:
+			read_word_in_memory();
+			*((long*)reg_cop1_simple[value]) = (long)dyna_rdword;
+			break;
+		case MEM_LDC1:
+			read_dword_in_memory();
+			*((long long*)reg_cop1_double[value]) = dyna_rdword;
+			break;
 		case MEM_SW:
 			word = value;
 			write_word_in_memory();
@@ -215,10 +232,26 @@ unsigned int dyna_mem(unsigned int value, unsigned int addr,
 			write_byte_in_memory();
 			check_memory();
 			break;
+		case MEM_SD:
+			dword = reg[value];
+			write_dword_in_memory();
+			check_memory();
+			break;
+		case MEM_SWC1:
+			word = *((long*)reg_cop1_simple[value]);
+			write_word_in_memory();
+			check_memory();
+			break;
+		case MEM_SDC1:
+			dword = *((unsigned long long*)reg_cop1_double[value]);
+			write_dword_in_memory();
+			check_memory();
+			break;
 		default:
 			stop = 1;
 			break;
 	}
+	delay_slot = 0;
 	
 	if(interp_addr != pc) noCheckInterrupt = 1;
 	

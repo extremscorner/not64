@@ -33,12 +33,15 @@
 #include "../gc_memory/memory.h"
 #include "recomph.h"
 
+#include "../gui/DEBUG.h"
+
 extern unsigned long interp_addr;
 
 void address_error_exception()
 {
    printf("address_error_exception\n");
    stop=1;
+   _break();
 }
 
 void TLB_invalid_exception()
@@ -48,15 +51,18 @@ void TLB_invalid_exception()
 	skip_jump = 1;
 	printf("delay slot\nTLB refill exception\n");
 	stop=1;
+	_break();
      }
    printf("TLB invalid exception\n");
    stop=1;
+   _break();
 }
 
 void XTLB_refill_exception(unsigned long long int addresse)
 {
    printf("XTLB refill exception\n");
    stop=1;
+   _break();
 }
 
 void TLB_refill_exception(unsigned long address, int w)
@@ -149,22 +155,26 @@ void TLB_mod_exception()
 {
    printf("TLB mod exception\n");
    stop=1;
+   _break();
 }
 
 void integer_overflow_exception()
 {
    printf("integer overflow exception\n");
    stop=1;
+   _break();
 }
 
 void coprocessor_unusable_exception()
 {
    printf("coprocessor_unusable_exception\n");
    stop=1;
+   _break();
 }
 
 void exception_general()
 {
+//	DEBUG_print("exception_general()\n", DBG_USBGECKO);
    update_count();
    Status |= 2;
    
@@ -195,16 +205,15 @@ void exception_general()
      {
 	dyna_jump();
 	if (!dyna_interp) delay_slot = 0;
-     }
-   if (!dynacore || dyna_interp)
+     }*/
+   //if (!dynacore || dyna_interp)
      {
-	dyna_interp = 0;
+	//dyna_interp = 0;
 	if (delay_slot)
 	  {
-	     if (interpcore) skip_jump = interp_addr;
+	     if (dynacore || interpcore) skip_jump = interp_addr;
 	     else skip_jump = PC->addr;
 	     next_interupt = 0;
 	  }
      }
-     */
 }

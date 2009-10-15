@@ -58,7 +58,7 @@ int has_next_src(void){ return (src_last-src) > 0; }
 unsigned int get_src_pc(void){ return addr_first + ((src-1-src_first)<<2); }
 void set_next_dst(PowerPC_instr i){ *(dst++) = i; ++code_length; }
 // Adjusts the code_addr for the current instruction to account for flushes
-void reset_code_addr(void){ if(src<src_last) code_addr[src-1-src_first] = dst; }
+void reset_code_addr(void){ if(src<=src_last) code_addr[src-1-src_first] = dst; } // FIXME: < or <=??
 
 int add_jump(int old_jump, int is_j, int is_out){
 	int id = current_jump;
@@ -83,7 +83,7 @@ int add_jump_special(int is_j){
 
 void set_jump_special(int which, int new_jump){
 	jump_node* jump = &jump_table[which];
-	if(jump->type != JUMP_TYPE_SPEC) return;
+	if(!(jump->type & JUMP_TYPE_SPEC)) return;
 	jump->new_jump = new_jump;
 }
 
@@ -92,16 +92,18 @@ void recompile_block(PowerPC_block* ppc_block, unsigned int addr){
 	src_first = ppc_block->mips_code + ((addr&0xfff)>>2);
 	addr_first = ppc_block->start_address + (addr&0xfff);
 	code_addr = ppc_block->code_addr + ((addr&0xfff)>>2);
+	
+	int need_pad = pass0(ppc_block); // Sets src_last, addr_last
+	
 	code_length = 0;
-	
-	int useRegMaps = pass0(ppc_block); // Sets src_last, addr_last
-	
 	unsigned int max_length = addr_last - addr_first; // 4x size
 	
 	// Create a PowerPC_func for this function
 	PowerPC_func* func = malloc(sizeof(PowerPC_func));
 	func->start_addr = addr_first&0xffff;
 	func->end_addr = addr_last&0xffff;
+	func->code = NULL;
+	func->holes = NULL;
 	// Create a corresponding PowerPC_func_node to add to ppc_block->funcs
 	PowerPC_func_node* node = malloc(sizeof(PowerPC_func_node));
 	node->function = func;
@@ -112,22 +114,69 @@ void recompile_block(PowerPC_block* ppc_block, unsigned int addr){
 	PowerPC_func_node* fn, * next;
 	for(fn = node->next; fn != NULL; fn = next){
 		next = fn->next;
-		if(func->start_addr < fn->function->end_addr &&
-		   func->end_addr   > fn->function->start_addr)
+		if(fn->function->start_addr > func->start_addr &&
+		   fn->function->end_addr == func->end_addr){
+			// fn->function is a hole in func
+			PowerPC_func_hole_node* hole = malloc(sizeof(PowerPC_func_hole_node));
+			hole->addr = fn->function->start_addr;
+			hole->next = func->holes; // TODO: Add all holes from fn->function
+			func->holes = hole;
+			// Free the hole
+			RecompCache_Free(ppc_block->start_address |
+			                 fn->function->start_addr);
+			
+		} else if(func->start_addr > fn->function->start_addr &&
+		          func->end_addr == fn->function->end_addr){
+			// func is a hole in fn->function
+			PowerPC_func_hole_node* hole = malloc(sizeof(PowerPC_func_hole_node));
+			hole->addr = func->start_addr;
+			hole->next = fn->function->holes;
+			fn->function->holes = hole;
+			// Free up func and its node
+			ppc_block->funcs = node->next;
+			free(func);
+			free(node);
+			// Move all our pointers to the outer function
+			func = fn->function;
+			node = fn;
+			max_length = RecompCache_Size(func) / 4;
+			addr = ppc_block->start_address + (func->start_addr&0xfff);
+			src_first = ppc_block->mips_code + ((addr&0xfff)>>2);
+			addr_first = ppc_block->start_address + (addr&0xfff);
+			code_addr = ppc_block->code_addr + ((addr&0xfff)>>2);
+			need_pad = pass0(ppc_block);
+			RecompCache_Update(addr);
+			// There cannot be another overlapping function
+			break;
+			
+		} else if((!fn->function->end_addr || // Runs to end
+		           func->start_addr < fn->function->end_addr) &&
+		          (!func->end_addr || // Function runs to the end of a 0xfxxx
+		           func->end_addr   > fn->function->start_addr))
+			// We have some other non-containment overlap
 			RecompCache_Free(ppc_block->start_address |
 			                 fn->function->start_addr);
 	}
 	
+	if(!func->code){
+		// We aren't simply recompiling from a hole
 #ifdef USE_RECOMP_CACHE
-	RecompCache_Alloc(max_length * sizeof(PowerPC_instr), addr, func);
+		RecompCache_Alloc(max_length * sizeof(PowerPC_instr), addr, func);
 #else
-	func->code = malloc(max_length * sizeof(PowerPC_instr));
+		func->code = malloc(max_length * sizeof(PowerPC_instr));
 #endif
+	}
+	
+	PowerPC_func_hole_node* hole;
+	for(hole = func->holes; hole != NULL; hole = hole->next){
+		isJmpDst[ (hole->addr&0xfff) >> 2 ] = 1;
+	}
 	
 	src = src_first;
 	dst = func->code;
 	current_jump = 0;
 	start_new_block();
+	isJmpDst[src-ppc_block->mips_code] = 1;
 	
 	while(has_next_src()){
 		unsigned int offset = src - ppc_block->mips_code;
@@ -140,17 +189,18 @@ void recompile_block(PowerPC_block* ppc_block, unsigned int addr){
 			resizeCode(ppc_block, func, max_length);
 		}
 		
-		if(isJmpDst[offset] || !useRegMaps)
-			start_new_mapping();
+		if(isJmpDst[offset]){
+			src++; start_new_mapping(); src--;
+		}
 		
-		ppc_block->code_addr[offset] = dst;
+		//ppc_block->code_addr[offset] = dst;
 		convert();
 	}
 	
 	// Flush any remaining mapped registers
-	start_new_mapping();
+	flushRegisters(); //start_new_mapping();
 	// In case we couldn't compile the whole function, use a pad
-	if(!useRegMaps){
+	if(need_pad){
 		if(code_length + 8 > max_length)
 			resizeCode(ppc_block, func, code_length + 8);
 		genJumpPad();
@@ -350,9 +400,8 @@ static int pass0(PowerPC_block* ppc_block){
 	//   delay slot as it will be recompiled ahead of the J/JR and
 	//   does not need to be recompiled after the J/JR as it belongs
 	//   to the next function if its used in that way.
-	// If the function continues into the next block, we have to turn
-	//   off register mappings because we don't know where the second
-	//   part of the function will branch to within the first part.
+	// If the function continues into the next block, we'll need to use
+	//   a jump pad at the end of the block.
 	unsigned int pc = addr_first >> 2;
 	int i;
 	// Set this to the end address of the block for is_j_out
@@ -362,14 +411,17 @@ static int pass0(PowerPC_block* ppc_block){
 	// Go through each instruction and map every branch instruction's destination
 	for(src = src_first; (pc < addr_last >> 2); ++src, ++pc){
 		int opcode = MIPS_GET_OPCODE(*src);
+		int index = pc - (ppc_block->start_address >> 2);
 		if(opcode == MIPS_OPCODE_J || opcode == MIPS_OPCODE_JAL){
 			unsigned int li = MIPS_GET_LI(*src);
 			src+=2; ++pc;
 			if(!is_j_out(li, 1)){
+				assert( ((li&0x3FF) >= 0) && ((li&0x3FF) < 1024) );
 				isJmpDst[ li & 0x3FF ] = 1;
 			}
 			--src;
-			if(opcode == MIPS_OPCODE_J) break;
+			if(opcode == MIPS_OPCODE_JAL) isJmpDst[ index + 2 ] = 1;
+			if(opcode == MIPS_OPCODE_J){ ++src, ++pc; break; }
 		} else if(opcode == MIPS_OPCODE_BEQ   ||
 		          opcode == MIPS_OPCODE_BNE   ||
 		          opcode == MIPS_OPCODE_BLEZ  ||
@@ -378,19 +430,23 @@ static int pass0(PowerPC_block* ppc_block){
 		          opcode == MIPS_OPCODE_BNEL  ||
 		          opcode == MIPS_OPCODE_BLEZL ||
 		          opcode == MIPS_OPCODE_BGTZL ||
-		          opcode == MIPS_OPCODE_B     ){
+		          opcode == MIPS_OPCODE_B     ||
+		          (opcode == MIPS_OPCODE_COP1 &&
+		           MIPS_GET_RS(*src) == MIPS_FRMT_BC)){
 			int bd = MIPS_GET_IMMED(*src);
 			src+=2; ++pc;
 			bd |= (bd & 0x8000) ? 0xFFFF0000 : 0; // sign extend
 			if(!is_j_out(bd, 0)){
-				int index = (pc + bd) - (ppc_block->start_address >> 2);
-				assert( index >= 0 && index < 1024 );
-				isJmpDst[ index ] = 1;
+				assert( index + 1 + bd >= 0 && index + 1 + bd < 1024 );
+				isJmpDst[ index + 1 + bd ] = 1;
 			}
 			--src;
+			if(index + 2 < 1024)
+				isJmpDst[ index + 2 ] = 1;
 		} else if(opcode == MIPS_OPCODE_R &&
-		          MIPS_GET_FUNC(*src) == MIPS_FUNC_JR){
-			++src, ++pc;
+		          (MIPS_GET_FUNC(*src) == MIPS_FUNC_JR ||
+		           MIPS_GET_FUNC(*src) == MIPS_FUNC_JALR)){
+			src+=2, pc+=2;
 			break;
 		} else if(opcode == MIPS_OPCODE_COP0 &&
 		          MIPS_GET_FUNC(*src) == MIPS_FUNC_ERET){
@@ -401,16 +457,11 @@ static int pass0(PowerPC_block* ppc_block){
 	if(pc < addr_last >> 2){
 		src_last = src;
 		addr_last = pc << 2;
-		// Return true (can use mappings) since the function
-		//   was contained in this block and if it didn't begin in
-		//   the previous block
-		return addr_first&0xfff;
+		return 0;
 	} else {
 		src_last = ppc_block->mips_code + 1024;
 		addr_last = ppc_block->end_address;
-		// Return false (we can't use mappings) because this function
-		//   extends past the bounds of this block
-		return 0;
+		return 1;
 	}
 }
 

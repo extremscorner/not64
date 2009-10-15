@@ -1013,13 +1013,13 @@ PowerPC_instr Instruction(int opcode, ...);
 	/* NOTE: This branch is marked unlikely to be taken */ \
 	/* BO: Branch if CR bit is 0 */ \
 	/* BI: Check EQ bit in CR specified */ \
-	GEN_BCLR(ppc, lk, 0x6, (((cr)<<2)+2))
+	GEN_BCLR(ppc, lk, 0x4, (((cr)<<2)+2))
 
 #define GEN_BLELR(ppc,cr,lk) \
 	/* NOTE: This branch is marked unlikely to be taken */ \
 	/* BO: Branch if CR bit is 0 */ \
 	/* BI: Check GT bit in CR specified */ \
-	GEN_BCLR(ppc, lk, 0x6, (((cr)<<2)+1))
+	GEN_BCLR(ppc, lk, 0x4, (((cr)<<2)+1))
 
 #define GEN_ORIS(ppc,rd,rs,immed) \
 	{ ppc = NEW_PPC_INSTR(); \

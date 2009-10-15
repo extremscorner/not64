@@ -22,11 +22,11 @@ unsigned int decodeNInterpret();
 #define INTERPRET_LHU
 #define INTERPRET_LW
 #endif
-#define INTERPRET_LWU
+//#define INTERPRET_LWU
 #define INTERPRET_LWL
 #define INTERPRET_LWR
 
-#if 1
+#if 0
 #define INTERPRET_SB
 #define INTERPRET_SH
 #define INTERPRET_SW
@@ -34,17 +34,17 @@ unsigned int decodeNInterpret();
 #define INTERPRET_SWL
 #define INTERPRET_SWR
 
-#define INTERPRET_LD
+//#define INTERPRET_LD
 #define INTERPRET_LDL
 #define INTERPRET_LDR
-#define INTERPRET_SD
+//#define INTERPRET_SD
 #define INTERPRET_SDL
 #define INTERPRET_SDR
 
-#define INTERPRET_LWC1
-#define INTERPRET_LDC1
-#define INTERPRET_SWC1
-#define INTERPRET_SDC1
+//#define INTERPRET_LWC1
+//#define INTERPRET_LDC1
+//#define INTERPRET_SWC1
+//#define INTERPRET_SDC1
 
 //#define INTERPRET_DW
 
@@ -103,10 +103,10 @@ unsigned int decodeNInterpret();
 //#define INTERPRET_FP
 
 //#define INTERPRET_MFC1
-#define INTERPRET_DMFC1
+//#define INTERPRET_DMFC1
 //#define INTERPRET_CFC1
-#define INTERPRET_MTC1
-#define INTERPRET_DMTC1
+//#define INTERPRET_MTC1
+//#define INTERPRET_DMTC1
 //#define INTERPRET_CTC1
 
 //#define INTERPRET_FP_S
@@ -123,7 +123,7 @@ unsigned int decodeNInterpret();
 #define INTERPRET_FP_MOV
 #define INTERPRET_FP_NEG
 #endif
-#define INTERPRET_FP_SQRT
+//#define INTERPRET_FP_SQRT
 
 #define INTERPRET_FP_ROUND_L
 #define INTERPRET_FP_TRUNC_L

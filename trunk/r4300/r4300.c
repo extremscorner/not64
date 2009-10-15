@@ -1482,11 +1482,17 @@ int check_cop1_unusable()
    return 0;
 }
 
+#include "../gui/DEBUG.h"
 
 void update_count()
 {
    if (dynacore || interpcore)
      {
+     	//sprintf(txtbuffer, "trace: addr = 0x%08x\n", interp_addr);
+     	if(interp_addr < last_addr){
+     		sprintf(txtbuffer, "interp_addr (%08x) < last_addr (%08x)\n");
+     		DEBUG_print(txtbuffer, DBG_USBGECKO);
+     	}
 	Count = Count + (interp_addr - last_addr)/2;
 	last_addr = interp_addr;
      }
@@ -1618,6 +1624,7 @@ void go()
 	dynacore = 1;
 	//printf("dynamic recompiler\n");
 	if(cpu_inited){
+		RecompCache_Init();
 		init_blocks();
 		cpu_inited = 0;
 	}
@@ -1675,7 +1682,13 @@ void cpu_init(void){
 	tlb_e[i].end_odd=0;
 	tlb_e[i].phys_odd=0;
      }
-     
+#ifndef USE_TLB_CACHE
+   for (i=0; i<0x100000; i++)
+     {
+	tlb_LUT_r[i] = 0;
+	tlb_LUT_w[i] = 0;
+     }
+#endif
    llbit=0;
    hi=0;
    lo=0;
@@ -1880,7 +1893,7 @@ void cpu_deinit(void){
 #else
 			if (blocks[i]->block) {
 #ifdef USE_RECOMP_CACHE
-				RecompCache_Free(i);
+				invalidate_block(blocks[i]);
 #else
 				free(blocks[i]->block);
 #endif

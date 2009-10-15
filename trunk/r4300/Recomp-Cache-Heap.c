@@ -1,5 +1,6 @@
 
 
+#include <ogc/lwp_heap.h>
 #include <stdlib.h>
 #include "r4300.h"
 #include "Invalid_Code.h"
@@ -11,7 +12,8 @@ typedef struct _meta_node {
 	unsigned int  size;
 } CacheMetaNode;
 
-static int cacheSize;
+static heap_cntrl* cache = NULL;
+static int cacheSize = 0;
 
 #define HEAP_CHILD1(i) ((i<<1)+1)
 #define HEAP_CHILD2(i) ((i<<1)+2)
@@ -81,7 +83,13 @@ static CacheMetaNode* heapPop(void){
 
 static void free_func(PowerPC_func* func, unsigned int addr){
 	// Free the code associated with the func
-	free(func->code);
+	__lwp_heap_free(cache, func->code);
+	// Remove any holes into this func
+	PowerPC_func_hole_node* hole, * next;
+	for(hole = func->holes; hole != NULL; hole = next){
+		next = hole->next;
+		free(hole);
+	}
 	
 	// Remove any pointers to this code
 	PowerPC_block* block = blocks[addr>>12];
@@ -141,7 +149,7 @@ static void release(int minNeeded){
 	// Restore the heap properties to pop the LRU
 	heapify();
 	// Release nodes' memory until we've freed enough
-	while(toFree > 0 || !cacheSize){
+	while(toFree > 0 && cacheSize){
 		// Pop the LRU to be freed
 		CacheMetaNode* n = heapPop();
 		// Free the function it contains
@@ -159,13 +167,15 @@ void RecompCache_Alloc(unsigned int size, unsigned int address, PowerPC_func* fu
 	newBlock->size = size;
 	newBlock->func = func;
 	
-	if(cacheSize + size > RECOMP_CACHE_SIZE)
-		// Free up at least enough space for it to fit
-		release(cacheSize + size - RECOMP_CACHE_SIZE);
+	// Allocate new memory for this code
+	void* code = __lwp_heap_allocate(cache, size);
+	while(!code){
+		release(size);
+		code = __lwp_heap_allocate(cache, size);
+	}
 	
-	// We have the necessary space for this alloc, so just call malloc
 	cacheSize += size;
-	newBlock->func->code = malloc(size);
+	newBlock->func->code = code;
 	// Add it to the heap
 	heapPush(newBlock);
 	// Make this function the LRU
@@ -184,13 +194,20 @@ void RecompCache_Realloc(PowerPC_func* func, unsigned int size){
 	
 	int neededSpace = size - n->size;
 	
-	if(cacheSize + neededSpace > RECOMP_CACHE_SIZE)
-		// Free up at least enough space for it to fit
-		release(cacheSize + neededSpace - RECOMP_CACHE_SIZE);
+	// Allocate new memory (releasing if necessary)
+	void* code = __lwp_heap_allocate(cache, size);
+	while(!code){
+		release(size);
+		code = __lwp_heap_allocate(cache, size);
+	}
+	// Copy the old code into the new memory
+	memcpy(code, n->func->code, n->size);
+	// Free the old memory
+	__lwp_heap_free(cache, n->func->code);
 	
-	// We have the necessary space for this alloc, so just call malloc
+	// Adjust everything for this code
 	cacheSize += neededSpace;
-	n->func->code = realloc(n->func->code, size);
+	n->func->code = code;
 	n->size = size;
 }
 
@@ -223,5 +240,22 @@ void RecompCache_Update(unsigned int addr){
 			break;
 		}
 	}
+}
+
+void RecompCache_Init(void){
+	if(!cache){
+		cache = malloc(sizeof(heap_cntrl));
+		__lwp_heap_init(cache, malloc(RECOMP_CACHE_SIZE),
+		                RECOMP_CACHE_SIZE, 32);
+	}
+}
+
+unsigned int RecompCache_Size(PowerPC_func* func){
+	int i;
+	// Find the corresponding node
+	for(i=heapSize-1; i>=0; --i)
+		if(cacheHeap[i]->func == func)
+			return cacheHeap[i]->size;
+	return 0;
 }
 
