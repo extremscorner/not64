@@ -33,6 +33,7 @@
 #include "../gui/DEBUG.h"
 #include "timers.h"
 #ifdef WII
+unsigned int MALLOC_MEM2 = 0;
 #include <ogc/conf.h>
 #include <wiiuse/wpad.h>
 #include <di/di.h>

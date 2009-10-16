@@ -24,15 +24,20 @@
 
 #define PRINT GUI_print
 
+#define BLOCK_SIZE  (1024*1024)
+#define BLOCK_MASK  (BLOCK_SIZE-1)
+#define OFFSET_MASK (0xFFFFFFFF-BLOCK_MASK)
+#define BLOCK_SHIFT (20)	//only change ME and BLOCK_SIZE
+#define MAX_ROMSIZE (64*1024*1024)
+#define NUM_BLOCKS  (MAX_ROMSIZE/BLOCK_SIZE)
+#define LOAD_SIZE   (16*1024)
 
-#define BLOCK_SIZE (1024*1024)
-#define LOAD_SIZE  (4*1024)
 static u32   ROMSize;
 static int   ROMTooBig;
 static int   ROMCompressed;
 static int   ROMHeaderSize;
-static char* ROMBlocks[64];
-static int   ROMBlocksLRU[64];
+static char* ROMBlocks[NUM_BLOCKS];
+static int   ROMBlocksLRU[NUM_BLOCKS];
 static fileBrowser_file* ROMFile;
 static char readBefore = 0;
 
@@ -97,20 +102,20 @@ void ROMCache_load_block(char* dst, u32 rom_offset){
 
 void ROMCache_read(u32* dest, u32 offset, u32 length){
 	if(ROMTooBig){
-		u32 block = offset>>20;
+		u32 block = offset>>BLOCK_SHIFT;
 		u32 length2 = length;
-		u32 offset2 = offset&0xFFFFF;
+		u32 offset2 = offset&BLOCK_MASK;
 		
 		while(length2){
 			if(!ROMBlocks[block]){
 				// The block we're trying to read isn't in the cache
 				// Find the Least Recently Used Block
 				int i, max_i = 0;
-				for(i=0; i<64; ++i)
+				for(i=0; i<NUM_BLOCKS; ++i)
 					if(ROMBlocks[i] && ROMBlocksLRU[i] > ROMBlocksLRU[max_i])
 						max_i = i;
 				ROMBlocks[block] = ROMBlocks[max_i]; // Take its place
-				ROMCache_load_block(ROMBlocks[block], offset&0xFFF00000);
+				ROMCache_load_block(ROMBlocks[block], offset&OFFSET_MASK);
 				ROMBlocks[max_i] = 0; // Evict the LRU block
 			}
 			
@@ -121,7 +126,7 @@ void ROMCache_read(u32* dest, u32 offset, u32 length){
 		
 			// Increment LRU's; set this one to 0
 			int i;
-			for(i=0; i<64; ++i) ++ROMBlocksLRU[i];
+			for(i=0; i<NUM_BLOCKS; ++i) ++ROMBlocksLRU[i];
 			ROMBlocksLRU[block] = 0;
 			
 			// Actually read for this block
