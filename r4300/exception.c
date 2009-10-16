@@ -41,7 +41,9 @@ void address_error_exception()
 {
    printf("address_error_exception\n");
    stop=1;
+#ifdef DEBUGON
    _break();
+#endif      
 }
 
 void TLB_invalid_exception()
@@ -51,18 +53,24 @@ void TLB_invalid_exception()
 	skip_jump = 1;
 	printf("delay slot\nTLB refill exception\n");
 	stop=1;
-	_break();
+#ifdef DEBUGON
+  _break();
+#endif      
      }
    printf("TLB invalid exception\n");
    stop=1;
-   _break();
+#ifdef DEBUGON
+  _break();
+#endif     
 }
 
 void XTLB_refill_exception(unsigned long long int addresse)
 {
    printf("XTLB refill exception\n");
    stop=1;
-   _break();
+#ifdef DEBUGON
+  _break();
+#endif     
 }
 
 void TLB_refill_exception(unsigned long address, int w)
@@ -155,21 +163,27 @@ void TLB_mod_exception()
 {
    printf("TLB mod exception\n");
    stop=1;
-   _break();
+#ifdef DEBUGON
+  _break();
+#endif     
 }
 
 void integer_overflow_exception()
 {
    printf("integer overflow exception\n");
    stop=1;
-   _break();
+#ifdef DEBUGON
+  _break();
+#endif     
 }
 
 void coprocessor_unusable_exception()
 {
    printf("coprocessor_unusable_exception\n");
    stop=1;
-   _break();
+#ifdef DEBUGON
+  _break();
+#endif     
 }
 
 void exception_general()
