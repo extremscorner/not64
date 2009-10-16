@@ -30,10 +30,7 @@ OBJ		=main/rom_gc.o \
 		main/timers.o \
 		fileBrowser/fileBrowser-DVD.o \
 		fileBrowser/fileBrowser-CARD.o \
-		fileBrowser/fileBrowser-WiiFS.o \
 		fileBrowser/fileBrowser-libfat.o \
-		fileBrowser/HW64/customTitle.o \
-		fileBrowser/HW64/workaround.o \
 		fileBrowser/fileBrowser.o \
 		gui/menu.o \
 		gui/menuFileBrowser.o \
