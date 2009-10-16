@@ -8,7 +8,7 @@
 #include "../fileBrowser/fileBrowser-libfat.h"
 #include "../fileBrowser/fileBrowser-DVD.h"
 #include "../fileBrowser/fileBrowser-CARD.h"
-#ifdef WII
+#if defined(WII) && !defined(RELEASE)
 #include "../fileBrowser/fileBrowser-WiiFS.h"
 #include <wiiuse/wpad.h>
 #endif
@@ -338,7 +338,7 @@ static inline void menuStack_push(menu_item*);
 		return NULL;
 	}
 
-#ifdef WII 
+#if defined(WII) && !defined(RELEASE)
 	static char* loadROMWiiFS_func(){
 		// Deinit any existing romFile state
 		if(romFile_deinit) romFile_deinit( romFile_topLevel );
@@ -389,7 +389,11 @@ static inline void menuStack_push(menu_item*);
 /* "Load Save File" item */
 #include "../gc_memory/Saves.h"
 #ifdef WII
+#ifdef RELEASE
+#define WAYS_TO_SAVE 3
+#else
 #define WAYS_TO_SAVE 4
+#endif
 #else
 #define WAYS_TO_SAVE 3
 #endif
@@ -434,7 +438,7 @@ static inline void menuStack_push(menu_item*);
 		return result ? "Loaded save from memcard" : "No saves found on memcard";
 	}
 	
-#ifdef WII
+#if defined(WII) && !defined(RELEASE)
 	static char* loadSaveWiiFS_func(){
 		if(!hasLoadedROM) return "Please load a ROM first";
 		// Adjust saveFile pointers
@@ -470,7 +474,7 @@ static inline void menuStack_push(menu_item*);
 		   MENU_ATTR_NONE,
 		   { .func = loadSaveSD_func }
 		  },
-#ifdef WII
+#if defined(WII) && !defined(RELEASE)
 		 { "Wii Filesystem",
 		   MENU_ATTR_NONE,
 		   { .func = loadSaveWiiFS_func }
@@ -530,7 +534,7 @@ static inline void menuStack_push(menu_item*);
 		return result ? "Saved game to memcard" : "Nothing to save";
 	}
 	
-#ifdef WII
+#if defined(WII) && !defined(RELEASE)
 	static char* saveGameWiiFS_func(){
 		// Adjust saveFile pointers
 		saveFile_dir       = &saveDir_WiiFS;
@@ -565,7 +569,7 @@ static inline void menuStack_push(menu_item*);
 		   MENU_ATTR_NONE,
 		   { .func = saveGameSD_func }
 		  },
-#ifdef WII
+#if defined(WII) && !defined(RELEASE)
 		 { "Wii Filesystem",
 		   MENU_ATTR_NONE,
 		   { .func = saveGameWiiFS_func }
@@ -573,7 +577,7 @@ static inline void menuStack_push(menu_item*);
 #endif
 		 };
 
-#define SAVE_GAME_INDEX 2
+#define SAVE_GAME_INDEX 2 
 #define SAVE_GAME_ITEM \
 	{ "Save Game", \
 	  MENU_ATTR_HASSUBMENU, \
