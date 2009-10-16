@@ -69,6 +69,8 @@ extern unsigned long jump_to_address;
 extern int no_audio_delay;
 extern int no_compiled_jump;
 
+void cpu_init(void);
+void cpu_deinit(void);
 void go();
 void pure_interpreter();
 void compare_core();

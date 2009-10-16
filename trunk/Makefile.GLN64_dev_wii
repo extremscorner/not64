@@ -50,7 +50,6 @@ OBJ		=main/rom_gc.o \
 		r4300/exception.o \
 		r4300/Invalid_Code.o \
 		r4300/Recomp-Cache-Heap.o \
-		gc_memory/ARAM.o \
 		gc_memory/tlb.o \
 		gc_memory/TLB-Cache-hash.o \
 		gc_memory/memory.o \
