@@ -124,7 +124,6 @@ bool isEEPROM16k()
       return true;
   }
   return false;
-  
 }
 
 void byte_swap(char* buffer, unsigned int length){
@@ -166,26 +165,19 @@ int rom_read(fileBrowser_file* file){
    rom_file = file;
    rom_length = file->size;
    
-   /*sprintf(buffer, "Loading ROM: %s, please be patient...\n", file->name);
-   PRINT(buffer);*/
-   
    ROMCache_init(rom_file);
    int ret = ROMCache_load(rom_file);
 
    if(!ROM_HEADER) ROM_HEADER = malloc(sizeof(rom_header));
    ROMCache_read((u32*)ROM_HEADER, 0, sizeof(rom_header));
-
-   /*sprintf(buffer, "ROM (%s) loaded succesfully\n", ROM_HEADER->nom);
-   PRINT(buffer);*/
-
-   // Swap country code since I know it's used
-   char temp = ((char*)&ROM_HEADER->Country_code)[0];
-   ((char*)&ROM_HEADER->Country_code)[0] = ((char*)&ROM_HEADER->Country_code)[1];
-   ((char*)&ROM_HEADER->Country_code)[1] = temp;
-  
+ 
+   // Swap country code back since I know the emulator relies on this being little endian.
+  char temp = ((char*)&ROM_HEADER->Country_code)[0];   
+  ((char*)&ROM_HEADER->Country_code)[0] = ((char*)&ROM_HEADER->Country_code)[1];
+  ((char*)&ROM_HEADER->Country_code)[1] = temp;  
   //Copy header name as Goodname (in the .ini we can use CRC to identify ROMS)
   memset((char*)buffer,0,1024);
-  strcpy(buffer, (char*)ROM_HEADER->nom);
+  strncpy(buffer, (char*)ROM_HEADER->nom,32);
   //Maximum ROM name is 32 bytes. Lets make sure we cut off trailing spaces
   for(i = strlen(buffer); i>0; i--)
   {

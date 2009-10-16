@@ -28,6 +28,7 @@ static TLB_hash_node* TLB_LUT_w[TLB_NUM_SLOTS];
 static unsigned int TLB_hash_shift;
 
 void TLBCache_init(void){
+  TLBCache_deinit();
 	unsigned int temp = TLB_NUM_SLOTS;
 	while(temp){
 		temp >>= 1;
