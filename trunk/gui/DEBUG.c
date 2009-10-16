@@ -21,7 +21,7 @@ long long texttimes[DEBUG_TEXT_HEIGHT];
 extern long long gettime();
 extern unsigned int diff_sec(long long start,long long end);
 static void check_heap_space(void){
-	int space = 16 * 1024 * 1024, *ptr=NULL;
+	int space = 24 * 1024 * 1024, *ptr=NULL;
 	while(space > 0)
 		if((ptr = malloc(space))) break;
 		else space -= 4096;

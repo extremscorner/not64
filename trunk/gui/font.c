@@ -32,7 +32,10 @@ typedef struct
 	u16 s[256], t[256], font_size[256], fheight;
 } CHAR_INFO;
 
-//unsigned char* GXfontTexture;
+#ifdef HW_RVL
+#include "../gc_memory/MEM2.h"
+static unsigned char *fontFont = (unsigned char*)(FONT_LO);
+#else //GC
 static unsigned char fontFont[ 0x40000 ] __attribute__((aligned(32)));
 
 //lowlevel Qoob Modchip disable
@@ -54,6 +57,8 @@ void ipl_set_config(unsigned char c)
 	
 	exi[0] &= 0x405;	//deselect IPL
 }
+#endif
+
 /****************************************************************************
  * YAY0 Decoding
  ****************************************************************************/
@@ -150,24 +155,25 @@ extern void __SYS_ReadROM(void *buf,u32 len,u32 offset);
 
 void init_font(void)
 {
-	static unsigned char fontWork[ 0x20000 ] __attribute__((aligned(32)));
+	unsigned char *fontWork = (unsigned char*)memalign(32,0x20000);
+	//because we can't SYS_ReadROM straight to MEM2 on Wii, we must use a MEM1 buffer
+	unsigned char *fontCompressed = (unsigned char*)memalign(32,0x3000);
 	int i;
 
-	// dont read system rom fonts because this breaks on qoob modchip
-	memset(fontFont,0,0x3000);
-	#ifndef WII
-	ipl_set_config(6);
-	#endif
-	__SYS_ReadROM(( unsigned char *)&fontFont,0x3000,0x1FCF00);
-	yay0_decode((unsigned char *)&fontFont, (unsigned char *)&fontWork);
+	memset((unsigned char*)&fontCompressed[0],0,0x3000);
+#ifndef WII
+	ipl_set_config(6);  //Qoob Pro Fix
+#endif
+	__SYS_ReadROM(( unsigned char *)&fontCompressed[0],0x3000,0x1FCF00);
+	yay0_decode(fontCompressed, fontWork);
 	FONT_HEADER *fnt;
+  free(fontCompressed);
+	fnt = ( FONT_HEADER * )fontWork;
 
-	fnt = ( FONT_HEADER * )&fontWork;
-
-	TF_I2toI4((unsigned char*)&fontFont, (unsigned char*)&fontWork[fnt->offset_tile], fnt->texture_width, fnt->texture_height);
-	DCFlushRange(fontFont, 512*256);
-	//untile((unsigned char*)&fontFont, (unsigned char*)&fontWork[fnt->offset_tile], fnt->texture_width, fnt->texture_height);
-
+	TF_I2toI4((unsigned char*)&fontFont[0], (unsigned char*)&fontWork[fnt->offset_tile], fnt->texture_width, fnt->texture_height);
+	DCFlushRange((unsigned char*)&fontFont[0], 512*256);
+	
+  free(fontWork);
 	for (i=0; i<256; ++i)
 	{
 		int c = i;
@@ -227,7 +233,7 @@ void write_font_init_GX(GXColor fontColor)
 	GX_SetTexCoordGen(GX_TEXCOORD0, GX_TG_MTX2x4, GX_TG_TEX0, GX_IDENTITY);
 
 	GX_InvalidateTexAll();
-	GX_InitTexObj(&fontTexObj, &fontFont, 512, 512, GX_TF_I4, GX_CLAMP, GX_CLAMP, GX_FALSE);
+	GX_InitTexObj(&fontTexObj, &fontFont[0], 512, 512, GX_TF_I4, GX_CLAMP, GX_CLAMP, GX_FALSE);
 	GX_LoadTexObj(&fontTexObj, GX_TEXMAP1);
 
 	GX_SetTevColor(GX_TEVREG1,fontColor);
