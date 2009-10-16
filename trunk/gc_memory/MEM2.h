@@ -39,6 +39,21 @@
 #define FONT_LO   (INVCODE_HI)
 #define FONT_HI   (FONT_LO + FONT_SIZE)
 
+// We want 128KB for flashram
+#define FLASHRAM_SIZE (128*KB)
+#define FLASHRAM_LO   (FONT_HI)
+#define FLASHRAM_HI   (FLASHRAM_LO + FLASHRAM_SIZE)
+
+// We want 32KB for sram
+#define SRAM_SIZE (32*KB)
+#define SRAM_LO   (FLASHRAM_HI)
+#define SRAM_HI   (SRAM_LO + SRAM_SIZE)
+
+// We want 32*4KB for mempacks
+#define MEMPACK_SIZE (128*KB)
+#define MEMPACK_LO   (SRAM_HI)
+#define MEMPACK_HI   (MEMPACK_LO + MEMPACK_SIZE)
+
 // Unclaimed MEM2
 #define UNCLAIMED_SIZE (MEM2_HI - TEXCACHE_HI)
 #define UNCLAIMED_LO   (TEXCACHE_HI)
