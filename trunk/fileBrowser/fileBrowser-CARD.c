@@ -9,7 +9,7 @@
 #include "fileBrowser.h"
 #include "imagedata/mupenIcon.h"  //32x32 icon
 
-unsigned char SysArea[CARD_WORKAREA] ATTRIBUTE_ALIGN (32);
+unsigned char *SysArea = NULL;
 void card_removed_cb(s32 chn, s32 result){ CARD_Unmount(chn); }
 
 fileBrowser_file topLevel_CARD_SlotA =
@@ -31,7 +31,7 @@ fileBrowser_file topLevel_CARD_SlotB =
 int mount_card(int slot) {
   /* Pass company identifier and number */
   CARD_Init ("N64E", "OS");
-	
+	if(!SysArea) SysArea = memalign(32,CARD_WORKAREA);
   int Slot_error = CARD_Mount (slot, SysArea, card_removed_cb);
     
   /* Lets try 50 times to mount it. Sometimes it takes a while */
@@ -151,6 +151,9 @@ int fileBrowser_CARD_init(fileBrowser_file* file) {
 int fileBrowser_CARD_deinit(fileBrowser_file* file) {
 	int slot = file->discoffset;
 	CARD_Unmount(slot); //unmount via slot number
+	if(SysArea){
+  	free(SysArea); SysArea = NULL;
+  }
 	return 0;
 }
 
