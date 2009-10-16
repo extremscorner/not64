@@ -56,8 +56,12 @@
 #else
 #define PRINT printf
 #endif
-//todo: use one buffer for flashram+eeprom+sram cause they're never together at once
+#ifdef HW_RVL
+#include "MEM2.h"
+static unsigned char *sram = (unsigned char*)(SRAM_LO);
+#else //GC
 static unsigned char sram[0x8000] __attribute__((aligned(32)));
+#endif
 
 BOOL sramWritten = FALSE;
 

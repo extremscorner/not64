@@ -54,9 +54,14 @@
 #else
 #define PRINT printf
 #endif
-//todo: use one buffer for flashram+eeprom+sram cause they're never together at once
 static unsigned char eeprom[0x800] __attribute__((aligned(32)));
+#ifdef HW_RVL
+#include "MEM2.h"
+static unsigned char (*mempack)[0x8000] = (unsigned char(*)[0x8000])MEMPACK_LO;
+#else //GC
 static unsigned char mempack[4][0x8000] __attribute__((aligned(32)));
+#endif
+
 BOOL eepromWritten = FALSE;
 BOOL mempakWritten = FALSE;
 #define EEP_MC_OFFSET 0x1000
