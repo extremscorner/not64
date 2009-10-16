@@ -214,12 +214,15 @@ int loadROM(fileBrowser_file* rom){
 		
 		ROMCache_deinit();
 		free_memory();
+#ifndef HW_RVL
 		ARAM_manager_deinit();
+#endif
 	}
 	format_mempacks();
 	hasLoadedROM = TRUE;
-	
+#ifndef HW_RVL
 	ARAM_manager_init();
+#endif
 #ifdef USE_TLB_CACHE
 	TLBCache_init();
 #else
