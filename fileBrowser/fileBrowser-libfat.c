@@ -8,6 +8,17 @@
 #include <unistd.h>
 #include <sys/dir.h>
 #include "fileBrowser.h"
+#include <sdcard/gcsd.h>
+
+#ifdef HW_RVL
+#include <sdcard/wiisd_io.h>
+#include <ogc/usbstorage.h>
+const DISC_INTERFACE* frontsd = &__io_wiisd;
+const DISC_INTERFACE* usb = &__io_usbstorage;
+#endif
+const DISC_INTERFACE* carda = &__io_gcsda;
+const DISC_INTERFACE* cardb = &__io_gcsdb;
+
 
 fileBrowser_file topLevel_libfat_Default =
 	{ "/N64ROMS", // file name
@@ -87,7 +98,28 @@ int fileBrowser_libfat_writeFile(fileBrowser_file* file, void* buffer, unsigned 
 
 int fileBrowser_libfat_init(fileBrowser_file* f){
 	static int inited;
-	if(!inited){ fatInitDefault(); inited = 1; }
+	if(!inited) {
+  	int res = 0;
+#ifdef HW_RVL
+  	if(frontsd->startup()) {
+    	res |= fatMount ("sd", frontsd, 0, 4, 512);
+    	chdir("sd:/");
+  	}
+  	if(usb->startup()) {
+  	  res |= fatMount ("usb", usb, 0, 4, 512);
+  	  chdir("usb:/");
+	  }
+#endif
+  	if(carda->startup()) {
+    	res |= fatMount ("carda", carda, 0, 4, 512);
+    	chdir("carda:/");
+  	}
+  	if(cardb->startup()) {
+    	res |= fatMount ("cardb", cardb, 0, 4, 512);
+    	chdir("cardb:/");
+  	}
+    inited = res;
+  }
 	return 0;
 }
 
@@ -104,7 +136,6 @@ int fileBrowser_libfatROM_deinit(fileBrowser_file* f){
 	if(fd)
 		fclose(fd);
 	fd = NULL;
-	
 	// TODO: Call fileBrowser_libfat_deinit too?
 	
 	return 0;
