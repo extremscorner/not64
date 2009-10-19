@@ -67,7 +67,7 @@ OBJ		=main/rom_gc.o \
 		main/md5.o \
 		main/savestates_gc.o \
 		r4300/profile.o \
-		main/adler32.o main/KillWiimote.o
+		main/adler32.o
 		
 OBJ_PPC		=r4300/ppc/MIPS-to-PPC.o \
 		r4300/ppc/Recompile.o \
