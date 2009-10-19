@@ -47,5 +47,8 @@ void invalidateRegisters(void);
 int mapRegisterTemp(void);
 // Frees a previously reserved register
 void unmapRegisterTemp(int tmp);
+// Temporary FPR management
+int mapFPRTemp(void);
+void unmapFPRTemp(int tmp);
 
 #endif

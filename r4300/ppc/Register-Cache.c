@@ -433,4 +433,17 @@ void unmapRegisterTemp(int reg){
 	availableRegs[reg] = 1;
 }
 
+int mapFPRTemp(void){
+	// Try to find an already available FPR
+	int available = getAvailableFPR();
+	// If didn't find an available register, flush one
+	if(available >= 0) return available;
+	// If there are none, flush the LRU and use it
+	int lru = flushLRUFPR();
+	return lru;
+}
+
+void unmapFPRTemp(int fpr){
+	availableFPRs[fpr] = 1;
+}
 
