@@ -28,7 +28,7 @@ int noCheckInterrupt = 0;
 
 inline unsigned int dyna_run(unsigned int (*code)(void)){
 	unsigned int naddr;
-	
+
 	__asm__ volatile(
 		// Create the stack frame for code
 		"stwu	1, -16(1) \n"
@@ -36,27 +36,20 @@ inline unsigned int dyna_run(unsigned int (*code)(void)){
 		"stw	14, 8(1)  \n"
 		// Setup saved registers for code
 		"mr	14, %0    \n"
-		"addi	15, 0, 0  \n"
-		"mr	16, %1    \n"
-		"mr	17, %2    \n"
-		"mr	18, %3    \n"
-		"mr	19, %4    \n"
-		"mr	20, %5    \n"
-		"mr	21, %6    \n"
-		"mr	22, %7    \n"
-		"mr	23, %8    \n"
-		"mr	24, %9    \n"
-		"mr	25, %10   \n"
-		"mr	26, %11   \n"
-		:: "r" (reg), "r" (decodeNInterpret),
-		   "r" (dyna_update_count), "r" (&last_addr),
-		   "r" (rdram), "r" (dyna_mem),
+		"mr	15, %1    \n"
+		"mr	16, %2    \n"
+		"mr	17, %3    \n"
+		"mr	18, %4    \n"
+		"mr	19, %5    \n"
+		"mr	20, %6    \n"
+		"mr	21, %7    \n"
+		"addi	22, 0, 0  \n"
+		:: "r" (reg), "r" (reg_cop0),
 		   "r" (reg_cop1_simple), "r" (reg_cop1_double),
-		   "r" (&FCR31), "r" (dyna_check_cop1_unusable),
-		   "r" (reg_cop0), "r" (&next_interupt)
-		: "14", "15", "16", "17", "18", "19", "20", "21",
-		  "22", "23", "24", "25", "26");
-	
+		   "r" (&FCR31), "r" (rdram),
+		   "r" (&last_addr), "r" (&next_interupt)
+		: "14", "15", "16", "17", "18", "19", "20", "21", "22");
+
 	// naddr = code();
 	__asm__ volatile(
 		// Save the lr so the recompiled code won't have to
@@ -73,7 +66,7 @@ inline unsigned int dyna_run(unsigned int (*code)(void)){
 		: "=r" (naddr)
 		: "r" (code)
 		: "3", "4", "5", "6", "7", "8", "9", "10", "11", "12");
-	
+
 	return naddr;
 }
 
@@ -86,7 +79,7 @@ void dynarec(unsigned int address){
 		DEBUG_print(txtbuffer, DBG_USBGECKO);
 		*/
 		if(!paddr){ stop=1; return; }
-		
+
 		if(!dst_block){
 			/*sprintf(txtbuffer, "block at %08x doesn't exist\n", address&~0xFFF);
 			DEBUG_print(txtbuffer, DBG_USBGECKO);*/
@@ -100,7 +93,7 @@ void dynarec(unsigned int address){
 		} else if(invalid_code_get(address>>12)){
 			invalidate_block(dst_block);
 		}
-		
+
 		if(!dst_block->code_addr[(address&0xFFF)>>2]){
 			/*sprintf(txtbuffer, "code at %08x is not compiled\n", address);
 			DEBUG_print(txtbuffer, DBG_USBGECKO);*/
@@ -116,12 +109,8 @@ void dynarec(unsigned int address){
 		// Recompute the block offset
 		unsigned int (*code)(void);
 		code = (unsigned int (*)(void))dst_block->code_addr[(address&0xFFF)>>2];
-		/*
-		sprintf(txtbuffer, "Entering dynarec code @ 0x%08x\n", code);
-		DEBUG_print(txtbuffer, DBG_USBGECKO);
-		*/
 		address = dyna_run(code);
-		
+
 		if(!noCheckInterrupt){
 			last_addr = interp_addr = address;
 			// Check for interrupts
@@ -144,16 +133,16 @@ unsigned int decodeNInterpret(MIPS_instr mips, unsigned int pc,
 	interp_ops[MIPS_GET_OPCODE(mips)]();
 	end_section(INTERP_SECTION);
 	delay_slot = 0;
-	
+
 	if(interp_addr != pc + 4) noCheckInterrupt = 1;
-	
+
 	return interp_addr != pc + 4 ? interp_addr : 0;
 }
 
 int dyna_update_count(unsigned int pc){
 	Count += (pc - last_addr)/2;
 	last_addr = pc;
-	
+
 	return next_interupt - Count;
 }
 
@@ -194,12 +183,12 @@ static void invalidate_func(unsigned int addr){
 unsigned int dyna_mem(unsigned int value, unsigned int addr,
                       memType type, unsigned int pc, int isDelaySlot){
 	static unsigned long long dyna_rdword;
-	
+
 	address = addr;
 	rdword = &dyna_rdword;
 	PC->addr = interp_addr = pc;
 	delay_slot = isDelaySlot;
-	
+
 	switch(type){
 		case MEM_LW:
 			read_word_in_memory();
@@ -272,9 +261,9 @@ unsigned int dyna_mem(unsigned int value, unsigned int addr,
 			break;
 	}
 	delay_slot = 0;
-	
+
 	if(interp_addr != pc) noCheckInterrupt = 1;
-	
+
 	return interp_addr != pc ? interp_addr : 0;
 }
 

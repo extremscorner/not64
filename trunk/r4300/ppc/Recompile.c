@@ -60,15 +60,15 @@ void set_next_dst(PowerPC_instr i){ *(dst++) = i; ++code_length; }
 // Adjusts the code_addr for the current instruction to account for flushes
 void reset_code_addr(void){ if(src<=src_last) code_addr[src-1-src_first] = dst; } // FIXME: < or <=??
 
-int add_jump(int old_jump, int is_j, int is_out){
+int add_jump(int old_jump, int is_j, int is_call){
 	int id = current_jump;
 	jump_node* jump = &jump_table[current_jump++];
 	jump->old_jump  = old_jump;
 	jump->new_jump  = 0;     // This should be filled in when known
 	jump->src_instr = src-1; // src points to the next
 	jump->dst_instr = dst;   // set_next hasn't happened
-	jump->type      = (is_j   ? JUMP_TYPE_J   : 0)
-	                | (is_out ? JUMP_TYPE_OUT : 0);
+	jump->type      = (is_j    ? JUMP_TYPE_J    : 0)
+	                | (is_call ? JUMP_TYPE_CALL : 0);
 	return id;
 }
 
@@ -92,24 +92,25 @@ void recompile_block(PowerPC_block* ppc_block, unsigned int addr){
 	src_first = ppc_block->mips_code + ((addr&0xfff)>>2);
 	addr_first = ppc_block->start_address + (addr&0xfff);
 	code_addr = ppc_block->code_addr + ((addr&0xfff)>>2);
-	
+
 	int need_pad = pass0(ppc_block); // Sets src_last, addr_last
-	
+
 	code_length = 0;
 	unsigned int max_length = addr_last - addr_first; // 4x size
-	
+
 	// Create a PowerPC_func for this function
 	PowerPC_func* func = malloc(sizeof(PowerPC_func));
 	func->start_addr = addr_first&0xffff;
 	func->end_addr = addr_last&0xffff;
 	func->code = NULL;
 	func->holes = NULL;
+
 	// Create a corresponding PowerPC_func_node to add to ppc_block->funcs
 	PowerPC_func_node* node = malloc(sizeof(PowerPC_func_node));
 	node->function = func;
 	node->next = ppc_block->funcs;
 	ppc_block->funcs = node;
-	
+
 	// Check for and remove any overlapping functions
 	PowerPC_func_node* fn, * next;
 	for(fn = node->next; fn != NULL; fn = next){
@@ -124,7 +125,7 @@ void recompile_block(PowerPC_block* ppc_block, unsigned int addr){
 			// Free the hole
 			RecompCache_Free(ppc_block->start_address |
 			                 fn->function->start_addr);
-			
+
 		} else if(func->start_addr > fn->function->start_addr &&
 		          func->end_addr == fn->function->end_addr){
 			// func is a hole in fn->function
@@ -143,12 +144,11 @@ void recompile_block(PowerPC_block* ppc_block, unsigned int addr){
 			addr = ppc_block->start_address + (func->start_addr&0xfff);
 			src_first = ppc_block->mips_code + ((addr&0xfff)>>2);
 			addr_first = ppc_block->start_address + (addr&0xfff);
-			code_addr = ppc_block->code_addr + ((addr&0xfff)>>2);
-			need_pad = pass0(ppc_block);
+			code_addr = ppc_block->code_addr + ((addr&0xfff)>>2);			need_pad = pass0(ppc_block);
 			RecompCache_Update(addr);
 			// There cannot be another overlapping function
 			break;
-			
+
 		} else if((!fn->function->end_addr || // Runs to end
 		           func->start_addr < fn->function->end_addr) &&
 		          (!func->end_addr || // Function runs to the end of a 0xfxxx
@@ -157,7 +157,7 @@ void recompile_block(PowerPC_block* ppc_block, unsigned int addr){
 			RecompCache_Free(ppc_block->start_address |
 			                 fn->function->start_addr);
 	}
-	
+
 	if(!func->code){
 		// We aren't simply recompiling from a hole
 #ifdef USE_RECOMP_CACHE
@@ -166,18 +166,19 @@ void recompile_block(PowerPC_block* ppc_block, unsigned int addr){
 		func->code = malloc(max_length * sizeof(PowerPC_instr));
 #endif
 	}
-	
+
 	PowerPC_func_hole_node* hole;
 	for(hole = func->holes; hole != NULL; hole = hole->next){
 		isJmpDst[ (hole->addr&0xfff) >> 2 ] = 1;
 	}
-	
+
 	src = src_first;
 	dst = func->code;
 	current_jump = 0;
+
 	start_new_block();
 	isJmpDst[src-ppc_block->mips_code] = 1;
-	
+
 	while(has_next_src()){
 		unsigned int offset = src - ppc_block->mips_code;
 		// Make sure the code doesn't overflow
@@ -188,15 +189,15 @@ void recompile_block(PowerPC_block* ppc_block, unsigned int addr){
 			max_length = max_length * 3/2 + 64;
 			resizeCode(ppc_block, func, max_length);
 		}
-		
+
 		if(isJmpDst[offset]){
 			src++; start_new_mapping(); src--;
 		}
-		
+
 		//ppc_block->code_addr[offset] = dst;
 		convert();
 	}
-	
+
 	// Flush any remaining mapped registers
 	flushRegisters(); //start_new_mapping();
 	// In case we couldn't compile the whole function, use a pad
@@ -205,13 +206,13 @@ void recompile_block(PowerPC_block* ppc_block, unsigned int addr){
 			resizeCode(ppc_block, func, code_length + 8);
 		genJumpPad();
 	}
-	
+
 	// Here we recompute jumps and branches
 	pass2(ppc_block);
 	// Resize the code to exactly what is needed
 	// FIXME: This doesn't work for some reason
 	//resizeCode(ppc_block, *code_length);
-	
+
 	// Since this is a fresh block of code,
 	// Make sure it wil show up in the ICache
 	DCFlushRange(func->code, code_length*sizeof(PowerPC_instr));
@@ -220,17 +221,17 @@ void recompile_block(PowerPC_block* ppc_block, unsigned int addr){
 
 void init_block(MIPS_instr* mips_code, PowerPC_block* ppc_block){
 	unsigned int length = (ppc_block->end_address - ppc_block->start_address)/sizeof(MIPS_instr);
-	
+
 	if(!ppc_block->code_addr){
 		ppc_block->code_addr = malloc(length * sizeof(PowerPC_instr*));
 		memset(ppc_block->code_addr, 0, length * sizeof(PowerPC_instr*));
 	}
 	ppc_block->mips_code = mips_code;
-	
+
 	// FIXME: Equivalent addresses should point to the same code/funcs?
-	if(ppc_block->end_address < 0x80000000 || ppc_block->start_address >= 0xc0000000){	
+	if(ppc_block->end_address < 0x80000000 || ppc_block->start_address >= 0xc0000000){
 		unsigned long paddr;
-		
+
 		paddr = virtual_to_physical_address(ppc_block->start_address, 2);
 		invalid_code_set(paddr>>12, 0);
 		if(!blocks[paddr>>12]){
@@ -240,7 +241,7 @@ void init_block(MIPS_instr* mips_code, PowerPC_block* ppc_block){
 		     blocks[paddr>>12]->start_address = paddr & ~0xFFF;
 		     blocks[paddr>>12]->end_address = (paddr & ~0xFFF) + 0x1000;
 		}
-		
+
 		paddr += ppc_block->end_address - ppc_block->start_address - 4;
 		invalid_code_set(paddr>>12, 0);
 		if(!blocks[paddr>>12]){
@@ -250,7 +251,7 @@ void init_block(MIPS_instr* mips_code, PowerPC_block* ppc_block){
 		     blocks[paddr>>12]->start_address = paddr & ~0xFFF;
 		     blocks[paddr>>12]->end_address = (paddr & ~0xFFF) + 0x1000;
 		}
-		
+
 	} else {
 		unsigned int start = ppc_block->start_address;
 		unsigned int end   = ppc_block->end_address;
@@ -291,23 +292,23 @@ void deinit_block(PowerPC_block* ppc_block){
 		ppc_block->code_addr = NULL;
 	}
 	invalid_code_set(ppc_block->start_address>>12, 1);
-	
+
 	// We need to mark all equivalent addresses as invalid
-	if(ppc_block->end_address < 0x80000000 || ppc_block->start_address >= 0xc0000000){	
+	if(ppc_block->end_address < 0x80000000 || ppc_block->start_address >= 0xc0000000){
 		unsigned long paddr;
-		
+
 		paddr = virtual_to_physical_address(ppc_block->start_address, 2);
 		if(blocks[paddr>>12]){
 		     blocks[paddr>>12]->code_addr = NULL;
 		     invalid_code_set(paddr>>12, 1);
 		}
-		
+
 		paddr += ppc_block->end_address - ppc_block->start_address - 4;
 		if(blocks[paddr>>12]){
 		     blocks[paddr>>12]->code_addr = NULL;
 		     invalid_code_set(paddr>>12, 1);
 		}
-		
+
 	} else {
 		unsigned int start = ppc_block->start_address;
 		unsigned int end   = ppc_block->end_address;
@@ -340,7 +341,7 @@ static void pass2(PowerPC_block* ppc_block){
 	PowerPC_instr* current;
 	for(i=0; i<current_jump; ++i){
 		current = jump_table[i].dst_instr;
-		
+
 		// Special jump, its been filled out
 		if(jump_table[i].type & JUMP_TYPE_SPEC){
 			if(!(jump_table[i].type & JUMP_TYPE_J)){
@@ -354,18 +355,21 @@ static void pass2(PowerPC_block* ppc_block){
 			}
 			continue;
 		}
-		
-		if(jump_table[i].type & JUMP_TYPE_OUT){
-			// FIXME: Deprecated
-			printf("Deprecated jump out\n");
-			//stop = 1;
-			
+
+		if(jump_table[i].type & JUMP_TYPE_CALL){ // Call to C function code
+			// old_jump is the address of the function to call
+			int jump_offset = ((unsigned int)jump_table[i].old_jump -
+			                   (unsigned int)current)/4;
+			// We're filling in a jump instrucion
+			*current &= ~(PPC_LI_MASK << PPC_LI_SHIFT);
+			PPC_SET_LI(*current, jump_offset);
+
 		} else if(!(jump_table[i].type & JUMP_TYPE_J)){ // Branch instruction
-			int jump_offset = (unsigned int)jump_table[i].old_jump + 
+			int jump_offset = (unsigned int)jump_table[i].old_jump +
 				         ((unsigned int)jump_table[i].src_instr - (unsigned int)src_first)/4;
-			
+
 			jump_table[i].new_jump = code_addr[jump_offset] - current;
-			
+
 #if 0
 			// FIXME: Reenable this when blocks are small enough to BC within
 			//          Make sure that branch is using BC/B as appropriate
@@ -375,19 +379,19 @@ static void pass2(PowerPC_block* ppc_block){
 			*current &= ~(PPC_LI_MASK << PPC_LI_SHIFT);
 			PPC_SET_LI(*current, jump_table[i].new_jump);
 #endif
-			
+
 		} else { // Jump instruction
-			// The jump_address is actually calculated with the delay slot address
-			unsigned int jump_address = (jump_table[i].old_jump << 2) |
-			                            ((unsigned int)ppc_block->start_address & 0xF0000000);
-			
+			// The destination is actually calculated from the delay slot
+			unsigned int jump_addr = (jump_table[i].old_jump << 2) |
+			                         (ppc_block->start_address & 0xF0000000);
+
 			// We're jumping within this block, find out where
-			int jump_offset = (jump_address - ppc_block->start_address) >> 2;
-			jump_table[i].new_jump = ppc_block->code_addr[jump_offset] - current;
-			
+			int jump_offset = (jump_addr - addr_first) >> 2;
+			jump_table[i].new_jump = code_addr[jump_offset] - current;
+
 			*current &= ~(PPC_LI_MASK << PPC_LI_SHIFT);
 			PPC_SET_LI(*current, jump_table[i].new_jump);
-			
+
 		}
 	}
 }
@@ -479,7 +483,7 @@ void jump_to_func(){ jump_to(jump_to_address); }
 // Warning: This is a slow operation, try not to use it
 int resizeCode(PowerPC_block* block, PowerPC_func* func, int newSize){
 	if(!func->code) return 0;
-	
+
 	// Creating the new block and copying the code
 	PowerPC_instr* oldCode = func->code;
 #ifdef USE_RECOMP_CACHE
@@ -488,9 +492,9 @@ int resizeCode(PowerPC_block* block, PowerPC_func* func, int newSize){
 	func->code = realloc(func->code, newSize * sizeof(PowerPC_instr));
 #endif
 	if(!func->code){ printf("Realloc failed. Panic!\n"); return 0; }
-	
+
 	if(func->code == oldCode) return newSize;
-	
+
 	// Readjusting pointers
 	dst = func->code + (dst - oldCode);
 	int i, start = (func->start_addr&0xfff)>>2;
@@ -499,13 +503,13 @@ int resizeCode(PowerPC_block* block, PowerPC_func* func, int newSize){
 			block->code_addr[i] = func->code + (block->code_addr[i] - oldCode);
 	for(i=0; i<current_jump; ++i)
 		jump_table[i].dst_instr = func->code + (jump_table[i].dst_instr - oldCode);
-	
+
 	return newSize;
 }
 
 static void genJumpPad(void){
 	PowerPC_instr ppc = NEW_PPC_INSTR();
-	
+
 	// noCheckInterrupt = 1
 	GEN_LIS(ppc, 3, (unsigned int)(&noCheckInterrupt)>>16);
 	set_next_dst(ppc);
@@ -515,14 +519,14 @@ static void genJumpPad(void){
 	set_next_dst(ppc);
 	GEN_STW(ppc, 0, 0, 3);
 	set_next_dst(ppc);
-	
+
 	// Set the next address to the first address in the next block if
 	//   we've really reached the end of the block, not jumped to the pad
 	GEN_LIS(ppc, 3, (get_src_pc()+4)>>16);
 	set_next_dst(ppc);
 	GEN_ORI(ppc, 3, 3, get_src_pc()+4);
 	set_next_dst(ppc);
-	
+
 	// return destination
 	GEN_BLR(ppc,0);
 	set_next_dst(ppc);
@@ -537,6 +541,7 @@ void invalidate_block(PowerPC_block* ppc_block){
 		RecompCache_Free(ppc_block->start_address | n->function->start_addr);
 #else
 		free(n->function->code);
+		
 		free(n->function);
 		free(n);
 #endif
