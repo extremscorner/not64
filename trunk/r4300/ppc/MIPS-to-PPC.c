@@ -3821,6 +3821,45 @@ static void genJumpTo(unsigned int loc, unsigned int type){
 // Updates Count, and sets cr2 to (next_interupt ? Count)
 static void genUpdateCount(void){
 	PowerPC_instr ppc = NEW_PPC_INSTR();
+#if 1
+	// Dynarec inlined code equivalent:
+	int tmp = mapRegisterTemp();
+	// lis    tmp, pc >> 16
+	GEN_LIS(ppc, tmp, (get_src_pc()+4)>>16);
+	set_next_dst(ppc);
+	// lwz    r0,  0(&last_addr)     // r0 = last_addr
+	GEN_LWZ(ppc, 0, 0, DYNAREG_LADDR);
+	set_next_dst(ppc);
+	// ori    tmp, tmp, pc & 0xffff  // tmp = pc
+	GEN_ORI(ppc, tmp, tmp, get_src_pc()+4);
+	set_next_dst(ppc);
+	// stw    tmp, 0(&last_addr)     // last_addr = pc
+	GEN_STW(ppc, tmp, 0, DYNAREG_LADDR);
+	set_next_dst(ppc);
+	// subf   r0,  r0, tmp           // r0 = pc - last_addr
+	GEN_SUBF(ppc, 0, 0, tmp);
+	set_next_dst(ppc);
+	// lwz    tmp, 9*4(reg_cop0)     // tmp = Count
+	GEN_LWZ(ppc, tmp, 9*4, DYNAREG_COP0);
+	set_next_dst(ppc);
+	// srwi r0, r0, 1                // r0 = (pc - last_addr)/2
+	GEN_SRWI(ppc, 0, 0, 1);
+	set_next_dst(ppc);
+	// add    r0,  r0, tmp           // r0 += Count
+	GEN_ADD(ppc, 0, 0, tmp);
+	set_next_dst(ppc);
+	// lwz    tmp, 0(&next_interupt) // tmp = next_interupt
+	GEN_LWZ(ppc, tmp, 0, DYNAREG_NINTR);
+	set_next_dst(ppc);
+	// stw    r0,  9*4(reg_cop0)    // Count = r0
+	GEN_STW(ppc, 0, 9*4, DYNAREG_COP0);
+	set_next_dst(ppc);
+	// cmpl   cr2,  tmp, r0         // cr2 = next_interupt ? Count
+	GEN_CMPL(ppc, tmp, 0, 2);
+	set_next_dst(ppc);
+	// Free tmp register
+	unmapRegisterTemp(tmp);
+#else
 	// Move &dyna_update_count to ctr for call
 	GEN_MTCTR(ppc, DYNAREG_UCOUNT);
 	set_next_dst(ppc);
@@ -3840,6 +3879,7 @@ static void genUpdateCount(void){
 	// If next_interupt <= Count (cr2)
 	GEN_CMPI(ppc, 3, 0, 2);
 	set_next_dst(ppc);
+#endif
 }
 
 // Check whether we need to take a FP unavailable exception

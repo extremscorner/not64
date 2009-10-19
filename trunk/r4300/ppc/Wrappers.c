@@ -46,13 +46,16 @@ inline unsigned int dyna_run(unsigned int (*code)(void)){
 		"mr	22, %7    \n"
 		"mr	23, %8    \n"
 		"mr	24, %9    \n"
+		"mr	25, %10   \n"
+		"mr	26, %11   \n"
 		:: "r" (reg), "r" (decodeNInterpret),
 		   "r" (dyna_update_count), "r" (&last_addr),
 		   "r" (rdram), "r" (dyna_mem),
 		   "r" (reg_cop1_simple), "r" (reg_cop1_double),
-		   "r" (&FCR31), "r" (dyna_check_cop1_unusable)
+		   "r" (&FCR31), "r" (dyna_check_cop1_unusable),
+		   "r" (reg_cop0), "r" (&next_interupt)
 		: "14", "15", "16", "17", "18", "19", "20", "21",
-		  "22", "23", "24");
+		  "22", "23", "24", "25", "26");
 	
 	// naddr = code();
 	__asm__ volatile(

@@ -6,7 +6,7 @@
 #define RECOMP_CACHE_H
 
 // Hold 4MB worth of recompiled data max
-#define RECOMP_CACHE_SIZE (6*1024*1024)
+#define RECOMP_CACHE_SIZE (7*1024*1024)
 
 // Allocate and free memory to be used for recompiled code
 //   Any memory allocated this way can be freed at any time

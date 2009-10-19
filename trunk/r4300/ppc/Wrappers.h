@@ -18,6 +18,8 @@
 #define DYNAREG_FPR_64 22
 #define DYNAREG_FCR31  23
 #define DYNAREG_CHKFP  24
+#define DYNAREG_COP0   25
+#define DYNAREG_NINTR  26
 
 #define DYNAOFF_LR     20
 
@@ -29,7 +31,7 @@ extern int noCheckInterrupt;
 
 typedef enum { MEM_LW,   MEM_LH,   MEM_LB,   MEM_LD,
                MEM_LWU,  MEM_LHU,  MEM_LBU,
-               MEM_LWC1, MEM_LDC1, 
+               MEM_LWC1, MEM_LDC1,
                MEM_SW,   MEM_SH,   MEM_SB,   MEM_SD,
                MEM_SWC1, MEM_SDC1                    } memType;
 
