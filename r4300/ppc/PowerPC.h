@@ -375,10 +375,10 @@ PowerPC_instr Instruction(int opcode, ...);
 // Registers
 #define R0  0
 #define R1  1
-#define R2  2 
+#define R2  2
 #define R3  3
 #define R4  4
-#define R5  5 
+#define R5  5
 #define R6  6
 #define R7  7
 #define R8  8
@@ -461,21 +461,21 @@ PowerPC_instr Instruction(int opcode, ...);
 	  PPC_SET_RD    (ppc, (rd)); \
 	  PPC_SET_RA    (ppc, (ra)); \
 	  PPC_SET_IMMED (ppc, (immed)); }
-	  
+
 #define GEN_LHA(ppc,rd,immed,ra) \
 	{ ppc = NEW_PPC_INSTR(); \
 	  PPC_SET_OPCODE(ppc, PPC_OPCODE_LHA); \
 	  PPC_SET_RD    (ppc, (rd)); \
 	  PPC_SET_RA    (ppc, (ra)); \
 	  PPC_SET_IMMED (ppc, (immed)); }
-	  
+
 #define GEN_LBZ(ppc,rd,immed,ra) \
 	{ ppc = NEW_PPC_INSTR(); \
 	  PPC_SET_OPCODE(ppc, PPC_OPCODE_LBZ); \
 	  PPC_SET_RD    (ppc, (rd)); \
 	  PPC_SET_RA    (ppc, (ra)); \
 	  PPC_SET_IMMED (ppc, (immed)); }
-	   
+
 #define GEN_EXTSB(ppc,rd,rs) \
 	{ ppc = NEW_PPC_INSTR(); \
 	  PPC_SET_OPCODE(ppc, PPC_OPCODE_X); \
@@ -489,21 +489,21 @@ PowerPC_instr Instruction(int opcode, ...);
 	  PPC_SET_FUNC  (ppc, PPC_FUNC_EXTSH); \
 	  PPC_SET_RA    (ppc, (rd)); \
 	  PPC_SET_RD    (ppc, (rs)); }
-	  
+
 #define GEN_STB(ppc,rs,immed,ra) \
 	{ ppc = NEW_PPC_INSTR(); \
 	  PPC_SET_OPCODE(ppc, PPC_OPCODE_STB); \
 	  PPC_SET_RD    (ppc, (rs)); \
 	  PPC_SET_RA    (ppc, (ra)); \
 	  PPC_SET_IMMED (ppc, (immed)); }
-	  
+
 #define GEN_STH(ppc,rs,immed,ra) \
 	{ ppc = NEW_PPC_INSTR(); \
 	  PPC_SET_OPCODE(ppc, PPC_OPCODE_STH); \
 	  PPC_SET_RD    (ppc, (rs)); \
 	  PPC_SET_RA    (ppc, (ra)); \
 	  PPC_SET_IMMED (ppc, (immed)); }
-	  
+
 #define GEN_STW(ppc,rs,immed,ra) \
 	{ ppc = NEW_PPC_INSTR(); \
 	  PPC_SET_OPCODE(ppc, PPC_OPCODE_STW); \
@@ -528,6 +528,14 @@ PowerPC_instr Instruction(int opcode, ...);
 	{ ppc = NEW_PPC_INSTR(); \
 	  PPC_SET_OPCODE(ppc, PPC_OPCODE_X); \
 	  PPC_SET_FUNC  (ppc, PPC_FUNC_CMP); \
+	  PPC_SET_RA    (ppc, (ra)); \
+	  PPC_SET_RB    (ppc, (rb)); \
+	  PPC_SET_CRF   (ppc, (cr)); }
+
+#define GEN_CMPL(ppc,ra,rb,cr) \
+	{ ppc = NEW_PPC_INSTR(); \
+	  PPC_SET_OPCODE(ppc, PPC_OPCODE_X); \
+	  PPC_SET_FUNC  (ppc, PPC_FUNC_CMPL); \
 	  PPC_SET_RA    (ppc, (ra)); \
 	  PPC_SET_RB    (ppc, (rb)); \
 	  PPC_SET_CRF   (ppc, (cr)); }
@@ -814,15 +822,15 @@ PowerPC_instr Instruction(int opcode, ...);
 	  PPC_SET_FUNC  (ppc, PPC_FUNC_NEG); \
 	  PPC_SET_RD    (ppc, (rd)); \
 	  PPC_SET_RA    (ppc, (rs)); }
-	  
+
 #define GEN_EQV(ppc,rd,ra,rb) \
 	{ ppc = NEW_PPC_INSTR(); \
 	  PPC_SET_OPCODE(ppc, PPC_OPCODE_X); \
 	  PPC_SET_FUNC  (ppc, PPC_FUNC_EQV); \
 	  PPC_SET_RA    (ppc, (rd)); \
 	  PPC_SET_RD    (ppc, (ra)); \
-	  PPC_SET_RB    (ppc, (rb)); } 
-	  
+	  PPC_SET_RB    (ppc, (rb)); }
+
 #define GEN_ADDZE(ppc,rd,rs) \
 	{ ppc = NEW_PPC_INSTR(); \
 	  PPC_SET_OPCODE(ppc, PPC_OPCODE_X); \
