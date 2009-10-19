@@ -2478,7 +2478,42 @@ static int REGIMM(MIPS_instr mips){
 
 // -- COP0 Instructions --
 
-/*
+static int MFC0(MIPS_instr mips){
+	PowerPC_instr ppc;
+#ifdef INTERPRET_MFC0
+	genCallInterp(mips);
+	return INTERPRETED;
+#else
+	
+	int rt = mapRegisterNew(MIPS_GET_RT(mips));
+	// *rt = reg_cop0[rd]
+	GEN_LWZ(ppc, rt, MIPS_GET_RD(mips)*4, DYNAREG_COP0);
+	set_next_dst(ppc);
+	
+	return CONVERT_SUCCESS;
+#endif
+}
+
+static int MTC0(MIPS_instr mips){
+	PowerPC_instr ppc;
+#ifdef INTERPRET_MTC0
+	genCallInterp(mips);
+	return INTERPRETED;
+#else
+	return CONVERT_ERROR;
+#endif
+}
+
+static int TLB(MIPS_instr mips){
+	PowerPC_instr ppc;
+#ifdef INTERPRET_TLB
+	genCallInterp(mips);
+	return INTERPRETED;
+#else
+	return CONVERT_ERROR;
+#endif
+}
+
 static int (*gen_cop0[32])(MIPS_instr) =
 {
    MFC0, NI, NI, NI, MTC0, NI, NI, NI,
@@ -2486,15 +2521,13 @@ static int (*gen_cop0[32])(MIPS_instr) =
    TLB , NI, NI, NI, NI  , NI, NI, NI,
    NI  , NI, NI, NI, NI  , NI, NI, NI
 };
-*/
 
 static int COP0(MIPS_instr mips){
 #ifdef INTERPRET_COP0
 	genCallInterp(mips);
 	return INTERPRETED;
 #else
-	// TODO: COP0 instructions
-	return CONVERT_ERROR;
+	return gen_cop0[MIPS_GET_RS(mips)](mips);
 #endif
 }
 
