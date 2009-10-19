@@ -8,18 +8,14 @@
 #include "Recompile.h"
 
 #define DYNAREG_REG    14
-#define DYNAREG_ZERO   15
-#define DYNAREG_INTERP 16
-#define DYNAREG_UCOUNT 17
-#define DYNAREG_LADDR  18
+#define DYNAREG_COP0   15
+#define DYNAREG_FPR_32 16
+#define DYNAREG_FPR_64 17
+#define DYNAREG_FCR31  18
 #define DYNAREG_RDRAM  19
-#define DYNAREG_RWMEM  20
-#define DYNAREG_FPR_32 21
-#define DYNAREG_FPR_64 22
-#define DYNAREG_FCR31  23
-#define DYNAREG_CHKFP  24
-#define DYNAREG_COP0   25
-#define DYNAREG_NINTR  26
+#define DYNAREG_LADDR  20
+#define DYNAREG_NINTR  21
+#define DYNAREG_ZERO   22
 
 #define DYNAOFF_LR     20
 
@@ -37,6 +33,9 @@ typedef enum { MEM_LW,   MEM_LH,   MEM_LB,   MEM_LD,
 
 unsigned int decodeNInterpret(MIPS_instr, unsigned int, int);
 int dyna_update_count(unsigned int pc);
+unsigned int dyna_check_cop1_unusable(unsigned int pc, int isDelaySlot);
+unsigned int dyna_mem(unsigned int value, unsigned int addr,
+                      memType type, unsigned int pc, int isDelaySlot);
 
 //cop0 macros
 #define Index reg_cop0[0]

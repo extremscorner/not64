@@ -20,6 +20,7 @@ typedef struct {
 	PowerPC_instr* code;
 	unsigned int   lru;
 	PowerPC_func_hole_node* holes;
+
 } PowerPC_func;
 
 typedef struct func_node {
@@ -39,7 +40,7 @@ typedef struct {
 
 #define MAX_JUMPS        1024
 #define JUMP_TYPE_J      1   // uses a long immed & abs addr
-#define JUMP_TYPE_OUT    2   // the jump leaves the block
+#define JUMP_TYPE_CALL   2   // the jump is to a C function
 #define JUMP_TYPE_SPEC   4   // special jump, destination precomputed
 typedef struct {
 	MIPS_instr*    src_instr;
