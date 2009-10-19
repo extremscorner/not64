@@ -2784,16 +2784,19 @@ static int SQRT_FP(MIPS_instr mips, int dbl){
 	int half  = mapFPRTemp();
 	int three = mapFPRTemp();
 
-	// lis rt, (&half)@hi
+	// Use frsqrte to estimate 1/sqrt(x) 
+	// Enchance its accuracy with Newton-Raphson ((E/2)*(3 - x*E^2))
+	// Then determine sqrt(x) ~ x * 1/sqrte(x)
+	// lis rt, (&half)@ha
 	GEN_LIS(ppc, rt, extractUpper16(&constants[0]));
 	set_next_dst(ppc);
 	// frsqrte ft0, fs (ft0 = E ~ 1/sqrt(fs))
 	GEN_FRSQRTE(ppc, ft0, fs);
 	set_next_dst(ppc);
-	// lfs half, (&half)@lo(rt)
+	// lfs half, (&half)@l(rt)
 	GEN_LFS(ppc, half, extractLower16(&constants[0]), rt);
 	set_next_dst(ppc);
-	// lfs three, (&three)@lo(rt)
+	// lfs three, (&three)@l(rt)
 	GEN_LFS(ppc, three, extractLower16(&constants[1]), rt);
 	set_next_dst(ppc);
 	// fmul ft1, ft0, ft0 (ft1 = E^2)
@@ -3836,10 +3839,11 @@ static void genCallInterp(MIPS_instr mips){
 	// Load our argument into r3 (mips)
 	GEN_LIS(ppc, 3, mips>>16);
 	set_next_dst(ppc);
-	GEN_ORI(ppc, 3, 3, mips);
-	set_next_dst(ppc);
 	// Load the current PC as the second arg
 	GEN_LIS(ppc, 4, get_src_pc()>>16);
+	set_next_dst(ppc);
+	// Load the lower halves of mips and PC
+	GEN_ORI(ppc, 3, 3, mips);
 	set_next_dst(ppc);
 	GEN_ORI(ppc, 4, 4, get_src_pc());
 	set_next_dst(ppc);
@@ -3847,15 +3851,17 @@ static void genCallInterp(MIPS_instr mips){
 	//GEN_BCTRL(ppc);
 	GEN_B(ppc, add_jump(&decodeNInterpret, 1, 1), 0, 1);
 	set_next_dst(ppc);
-	// Restore the lr
+	// Load the old LR
 	GEN_LWZ(ppc, 0, DYNAOFF_LR, 1);
 	set_next_dst(ppc);
+	// Check if the PC changed
+	GEN_CMPI(ppc, 3, 0, 6);
+	set_next_dst(ppc);
+	// Restore the LR
 	GEN_MTLR(ppc, 0);
 	set_next_dst(ppc);
 	// if decodeNInterpret returned an address
 	//   jumpTo it
-	GEN_CMPI(ppc, 3, 0, 6);
-	set_next_dst(ppc);
 	GEN_BNELR(ppc, 6, 0);
 	set_next_dst(ppc);
 
@@ -3955,29 +3961,41 @@ static void genCheckFP(void){
 	if(FP_need_check || isDelaySlot){
 		flushRegisters();
 		reset_code_addr();
+		// lwz r0, 12*4(reg_cop0)
+		GEN_LWZ(ppc, 0, 12*4, DYNAREG_COP0);
+		set_next_dst(ppc);
+		// andis. r0, r0, 0x2000
+		GEN_ANDIS(ppc, 0, 0, 0x2000);
+		set_next_dst(ppc);
+		// bne cr0, end
+		GEN_BNE(ppc, 0, 9, 0, 0);
+		set_next_dst(ppc);
 		// Move &dyna_check_cop1_unusable to ctr for call
 		//GEN_MTCTR(ppc, DYNAREG_CHKFP);
 		//set_next_dst(ppc);
-		// Load the current PC as the argument
+		// Load the current PC as arg 1 (upper half)
 		GEN_LIS(ppc, 3, get_src_pc()>>16);
 		set_next_dst(ppc);
-		GEN_ORI(ppc, 3, 3, get_src_pc());
-		set_next_dst(ppc);
-		// Pass in whether this instruction is in the delay slot
+		// Pass in whether this instruction is in the delay slot as arg 2
 		GEN_LI(ppc, 4, 0, isDelaySlot ? 1 : 0);
+		set_next_dst(ppc);
+		// Current PC (lower half)
+		GEN_ORI(ppc, 3, 3, get_src_pc());
 		set_next_dst(ppc);
 		// Call dyna_check_cop1_unusable
 		//GEN_BCTRL(ppc);
 		GEN_B(ppc, add_jump(&dyna_check_cop1_unusable, 1, 1), 0, 1);
 		set_next_dst(ppc);
-		// Load the lr
+		// Load the old LR
 		GEN_LWZ(ppc, 0, DYNAOFF_LR, 1);
 		set_next_dst(ppc);
+		// Check if we need to take an interrupt
+		GEN_CMPI(ppc, 3, 0, 6);
+		set_next_dst(ppc);
+		// Restore the LR
 		GEN_MTLR(ppc, 0);
 		set_next_dst(ppc);
 		// if chkFP returned an address jumpTo it
-		GEN_CMPI(ppc, 3, 0, 6);
-		set_next_dst(ppc);
 		GEN_BNELR(ppc, 6, 0);
 		set_next_dst(ppc);
 		// Don't check for the rest of this mapping
@@ -3992,31 +4010,33 @@ void genCallDynaMem(memType type, int base, short immed){
 	// mtctr DYNAREG_RWMEM
 	//GEN_MTCTR(ppc, DYNAREG_RWMEM);
 	//set_next_dst(ppc);
-	// addr = base + immed
+	// Pass PC as arg 4 (upper half)
+	GEN_LIS(ppc, 6, (get_src_pc()+4)>>16);
+	set_next_dst(ppc);
+	// addr = base + immed (arg 2)
 	GEN_ADDI(ppc, 4, base, immed);
 	set_next_dst(ppc);
 	// type passed as arg 3
 	GEN_LI(ppc, 5, 0, type);
 	set_next_dst(ppc);
-	// Pass PC as argument
-	GEN_LIS(ppc, 6, (get_src_pc()+4)>>16);
-	set_next_dst(ppc);
+	// Lower half of PC
 	GEN_ORI(ppc, 6, 6, get_src_pc()+4);
 	set_next_dst(ppc);
-	// isDelaySlot
+	// isDelaySlot as arg 5
 	GEN_LI(ppc, 7, 0, isDelaySlot ? 1 : 0);
 	set_next_dst(ppc);
 	// call dyna_mem
 	//GEN_BCTRL(ppc);
 	GEN_B(ppc, add_jump(&dyna_mem, 1, 1), 0, 1);
 	set_next_dst(ppc);
-	// restore lr
+	// Load old LR
 	GEN_LWZ(ppc, 0, DYNAOFF_LR, 1);
-	set_next_dst(ppc);
-	GEN_MTLR(ppc, 0);
 	set_next_dst(ppc);
 	// Check whether we need to take an interrupt
 	GEN_CMPI(ppc, 3, 0, 6);
+	set_next_dst(ppc);
+	// Restore LR
+	GEN_MTLR(ppc, 0);
 	set_next_dst(ppc);
 	// If so, return to trampoline
 	GEN_BNELR(ppc, 6, 0);

@@ -147,19 +147,17 @@ int dyna_update_count(unsigned int pc){
 }
 
 unsigned int dyna_check_cop1_unusable(unsigned int pc, int isDelaySlot){
-	// Check if FP unusable bit is set
-	if(!(Status & 0x20000000)){
-		// Set state so it can be recovered after exception
-		delay_slot = isDelaySlot;
-		PC->addr = interp_addr = pc;
-		// Take a FP unavailable exception
-		Cause = (11 << 2) | 0x10000000;
-		exception_general();
-		delay_slot = 0;
-		// Return the address to trampoline to
-		return interp_addr;
-	} else
-		return 0;
+	// Set state so it can be recovered after exception
+	delay_slot = isDelaySlot;
+	PC->addr = interp_addr = pc;
+	// Take a FP unavailable exception
+	Cause = (11 << 2) | 0x10000000;
+	exception_general();
+	// Reset state
+	delay_slot = 0;
+	noCheckInterrupt = 1;
+	// Return the address to trampoline to
+	return interp_addr;
 }
 
 static void invalidate_func(unsigned int addr){
