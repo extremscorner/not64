@@ -1038,6 +1038,13 @@ PowerPC_instr Instruction(int opcode, ...);
 	/* BI: Check GT bit in CR specified */ \
 	GEN_BCLR(ppc, lk, 0x4, (((cr)<<2)+1))
 
+#define GEN_ANDIS(ppc,rd,ra,immed) \
+	{ ppc = NEW_PPC_INSTR(); \
+	  PPC_SET_OPCODE(ppc, PPC_OPCODE_ANDIS); \
+	  PPC_SET_RA    (ppc, (rd)); \
+	  PPC_SET_RD    (ppc, (ra)); \
+	  PPC_SET_IMMED (ppc, (immed)); }
+
 #define GEN_ORIS(ppc,rd,rs,immed) \
 	{ ppc = NEW_PPC_INSTR(); \
 	  PPC_SET_OPCODE(ppc, PPC_OPCODE_ORIS); \
