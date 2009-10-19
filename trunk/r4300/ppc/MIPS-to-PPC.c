@@ -13,6 +13,8 @@
 #include "Interpreter.h"
 #include "Wrappers.h"
 
+#include <assert.h>
+
 // Prototypes for functions used and defined in this file
 static void genCallInterp(MIPS_instr);
 #define JUMPTO_REG  0
@@ -32,6 +34,16 @@ void jump_to(unsigned int);
 	((get_src_pc()&0xFFF) == 0xFFC && \
 	 (get_src_pc() <  0x80000000 || \
 	  get_src_pc() >= 0xC0000000))
+
+static inline unsigned short extractUpper16(void* address){
+	unsigned int addr = (unsigned int)address;
+	return (addr>>16) + ((addr>>15)&1);
+}
+
+static inline short extractLower16(void* address){
+	unsigned int addr = (unsigned int)address;
+	return addr&0x8000 ? (addr&0xffff)-0x10000 : addr&0xffff;
+}
 
 static int FP_need_check;
 
@@ -2757,17 +2769,57 @@ static int SQRT_FP(MIPS_instr mips, int dbl){
 	return INTERPRETED;
 #else // INTERPRET_FP || INTERPRET_FP_SQRT
 
+	static float constants[2] = { 0.5f, 3.0f };
+	// Make sure we can get away with one base register
+	assert(extractUpper16(&constants[0]) == extractUpper16(&constants[1]));
+	
 	genCheckFP();
-
+	
+	int rt    = mapRegisterTemp();
 	int fs = mapFPR( MIPS_GET_FS(mips), dbl );
 	int fd = mapFPRNew( MIPS_GET_FD(mips), dbl );
+	int ft0   = 0;
+	int ft1   = mapFPRTemp();
+	int ft2   = mapFPRTemp();
+	int half  = mapFPRTemp();
+	int three = mapFPRTemp();
 
-	// frsqrte fd, fs (fd ~ 1/sqrt(fs))
-	GEN_FRSQRTE(ppc, fd, fs);
+	// lis rt, (&half)@hi
+	GEN_LIS(ppc, rt, extractUpper16(&constants[0]));
 	set_next_dst(ppc);
-	// fres fd, fd (fd ~ sqrt(fs))
-	GEN_FRES(ppc, fd, fd);
+	// frsqrte ft0, fs (ft0 = E ~ 1/sqrt(fs))
+	GEN_FRSQRTE(ppc, ft0, fs);
 	set_next_dst(ppc);
+	// lfs half, (&half)@lo(rt)
+	GEN_LFS(ppc, half, extractLower16(&constants[0]), rt);
+	set_next_dst(ppc);
+	// lfs three, (&three)@lo(rt)
+	GEN_LFS(ppc, three, extractLower16(&constants[1]), rt);
+	set_next_dst(ppc);
+	// fmul ft1, ft0, ft0 (ft1 = E^2)
+	GEN_FMUL(ppc, ft1, ft0, ft0);
+	set_next_dst(ppc);
+	// fmul ft2, ft0, half (ft2 = E/2)
+	GEN_FMUL(ppc, ft2, ft0, half);
+	set_next_dst(ppc);
+	// fnmsub ft1, ft1, fs, three (ft1 = (3 - E^2*x) = -(E^2*x - 3))
+	GEN_FNMSUB(ppc, ft1, ft1, fs, three);
+	set_next_dst(ppc);
+	// fmul ft0, ft1, ft2 (ft0 = (3 - E^2*x) * E/2)
+	GEN_FMUL(ppc, ft0, ft1, ft2);
+	set_next_dst(ppc);
+	// fsel ft0, ft0, ft0, fs (if ft0 is NaN: ft0 = fs)
+	GEN_FSEL(ppc, ft0, ft0, ft0, fs);
+	set_next_dst(ppc);
+	// fmul fd, ft0, fs (fd = ft0 * fs ~ sqrt(fs))
+	GEN_FMUL(ppc, fd, ft0, fs);
+	set_next_dst(ppc);
+	
+	unmapFPRTemp(three);
+	unmapFPRTemp(half);
+	unmapFPRTemp(ft2);
+	unmapFPRTemp(ft1);
+	unmapRegisterTemp(rt);
 
 	return CONVERT_SUCCESS;
 #endif
