@@ -3,8 +3,10 @@
  */
 
 #include "fileBrowser.h"
+#include <ogc/machine/processor.h>
 #include "../main/gc_dvd.h"
 #include <string.h>
+#include <unistd.h>
 #include <malloc.h>
 #include <ogc/dvd.h>
 #ifdef HW_RVL
@@ -12,7 +14,7 @@
 #endif
 
 /* DVD Globals */
-extern unsigned int isWii;
+#define GC_CPU_VERSION 0x00083214
 extern int previously_initd;
 int dvdInitialized = 0;
 
@@ -32,7 +34,7 @@ fileBrowser_file topLevel_DVD =
 void init_dvd()
 {
 #ifdef HW_DOL
-  if(isWii) //GC mode on Wii
+  if(mfpvr()!=GC_CPU_VERSION) //GC mode on Wii, modchip required
   {
     DVD_Reset(DVD_RESETHARD);
     dvd_read_id();

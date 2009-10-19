@@ -72,10 +72,7 @@ extern timers Timers;
        char padNeedScan;
        char wpadNeedScan;
        char shutdown;
-unsigned int isWii = 0;
-#define WII_CPU_VERSION 0x87102
-#define mfpvr()   ({unsigned int rval; \
-      asm volatile("mfpvr %0" : "=r" (rval)); rval;})
+
 extern void gfx_set_fb(unsigned int* fb1, unsigned int* fb2);
 // -- End plugin data --
 
@@ -365,15 +362,21 @@ static void Initialise (void){
   VIDEO_Init();
   PAD_Init();
   PAD_Reset(0xf0000000);
-#ifdef WII
+#ifdef HW_RVL
   CONF_Init();
   WPAD_Init();
-  WPAD_SetPowerButtonCallback((WPADShutdownCallback)ShutdownWii);
+  //WPAD_SetPowerButtonCallback((WPADShutdownCallback)ShutdownWii);
   SYS_SetPowerCallback(ShutdownWii);
 #endif
   
   vmode = VIDEO_GetPreferredMode(NULL);
-    
+#ifdef HW_RVL    
+  if(VIDEO_HaveComponentCable() && CONF_GetProgressiveScan())
+    	vmode = &TVNtsc480Prog;
+#else
+  if(VIDEO_HaveComponentCable())
+	  vmode = &TVNtsc480Prog;
+#endif
   VIDEO_Configure (vmode);
   xfb[0] = (u32 *) MEM_K0_TO_K1 (SYS_AllocateFramebuffer (&TVPal528IntDf)); //assume PAL largest
   xfb[1] = (u32 *) MEM_K0_TO_K1 (SYS_AllocateFramebuffer (&TVPal528IntDf));	//fixme for progressive?
@@ -412,11 +415,6 @@ static void Initialise (void){
   GUI_setFB(xfb[0], xfb[1]);
   GUI_init();
 #endif
-	isWii = mfpvr();
-	if(isWii == WII_CPU_VERSION)
-		isWii = 1;
-	else
-		isWii = 0;
 	
 	// Init PS GQRs so I can load signed/unsigned chars/shorts as PS values
 	__asm__ volatile(
