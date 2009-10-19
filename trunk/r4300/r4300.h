@@ -39,7 +39,12 @@
 extern precomp_instr *PC;
 #ifdef PPC_DYNAREC
 #include "ppc/Recompile.h"
-extern PowerPC_block* blocks[0x100000], *actual;
+#ifdef HW_RVL
+extern PowerPC_block **blocks; 
+#else
+extern PowerPC_block *blocks[0x100000];
+#endif
+extern PowerPC_block *actual;
 #else
 extern precomp_block *blocks[0x100000], *actual;
 #endif
