@@ -98,7 +98,10 @@ unsigned int decodeNInterpret();
 #define INTERPRET_LL
 #define INTERPRET_SC
 
-#define INTERPRET_COP0
+//#define INTERPRET_COP0
+//#define INTERPRET_MFC0
+#define INTERPRET_MTC0
+#define INTERPRET_TLB
 
 //#define INTERPRET_FP
 
