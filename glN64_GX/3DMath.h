@@ -257,33 +257,29 @@ MultMatrix_Loop:
 			"psq_l       3, 0(%1), 0, 0  \n"
 			"psq_l       5, 8(%1), 0, 0  \n"
 			
-			"ps_merge00  2, 2, 2         \n"
-			"ps_mul      4, 2, 3      \n"
-			"ps_mul      6, 2, 5      \n"
+			"ps_muls0    4, 3, 2      \n"
+			"ps_muls0    6, 5, 2      \n"
 			
 			"psq_l       2,  4(%0), 1, 0 \n"
 			"psq_l       3, 16(%1), 0, 0  \n"
 			"psq_l       5, 24(%1), 0, 0  \n"
 			
-			"ps_merge00  2, 2, 2         \n"
-			"ps_madd     4, 2, 3, 4      \n"
-			"ps_madd     6, 2, 5, 6      \n"
+			"ps_madds0   4, 3, 2, 4      \n"
+			"ps_madds0   6, 5, 2, 6      \n"
 			
 			"psq_l       2,  8(%0), 1, 0 \n"
 			"psq_l       3, 32(%1), 0, 0  \n"
 			"psq_l       5, 40(%1), 0, 0  \n"
 			
-			"ps_merge00  2, 2, 2         \n"
-			"ps_madd     4, 2, 3, 4      \n"
-			"ps_madd     6, 2, 5, 6      \n"
+			"ps_madds0   4, 3, 2, 4      \n"
+			"ps_madds0   6, 5, 2, 6      \n"
 			
 			"psq_l       2, 12(%0), 1, 0 \n"
 			"psq_l       3, 48(%1), 0, 0  \n"
 			"psq_l       5, 56(%1), 0, 0  \n"
 			
-			"ps_merge00  2, 2, 2         \n"
-			"ps_madd     4, 2, 3, 4      \n"
-			"ps_madd     6, 2, 5, 6      \n"
+			"ps_madds0   4, 3, 2, 4      \n"
+			"ps_madds0   6, 5, 2, 6      \n"
 			
 			"psq_st      4, 0(%2), 0, 0  \n"
 			"psq_st      6, 8(%2), 0, 0  \n"
@@ -495,25 +491,22 @@ inline void TransformVertex( float vtx[4], float mtx[4][4] )//, float perspNorm 
 		"psq_l      3, 0(%1), 0, 0 \n" // fr3 = Mj0, Mj1
 		"psq_l      5, 8(%1), 0, 0 \n" // fr5 = Mj2, Mj3
 		
-		"ps_merge00 2, 2, 2     \n" // fr2 = Vj,  Vj
-		"ps_mul    4, 3, 2  \n" // fr4 = fr3 * fr2
-		"ps_mul    6, 5, 2  \n" // fr6 = fr5 * fr2
+		"ps_muls0   4, 3, 2  \n" // fr4 = fr3 * Vj
+		"ps_muls0   6, 5, 2  \n" // fr6 = fr5 * Vj
 		
 		"psq_l      2, 4(%0), 1, 0 \n" // fr2 = Vj,  1.0f
 		"psq_l      3, 16(%1), 0, 0 \n" // fr3 = Mj0, Mj1
 		"psq_l      5, 24(%1), 0, 0 \n" // fr5 = Mj2, Mj3
 		
-		"ps_merge00 2, 2, 2     \n" // fr2 = Vj,  Vj
-		"ps_madd    4, 3, 2, 4  \n" // fr4 = fr3 * fr2 + fr4
-		"ps_madd    6, 5, 2, 6  \n" // fr6 = fr5 * fr2 + fr6
+		"ps_madds0  4, 3, 2, 4  \n" // fr4 = fr3 * Vj + fr4
+		"ps_madds0  6, 5, 2, 6  \n" // fr6 = fr5 * Vj + fr6
 		
 		"psq_l      2, 8(%0), 1, 0 \n" // fr2 = Vj,  1.0f
 		"psq_l      3, 32(%1), 0, 0 \n" // fr3 = Mj0, Mj1
 		"psq_l      5, 40(%1), 0, 0 \n" // fr5 = Mj2, Mj3
 		
-		"ps_merge00 2, 2, 2     \n" // fr2 = Vj,  Vj
-		"ps_madd    4, 3, 2, 4  \n" // fr4 = fr3 * fr2 + fr4
-		"ps_madd    6, 5, 2, 6  \n" // fr6 = fr5 * fr2 + fr6
+		"ps_madds0  4, 3, 2, 4  \n" // fr4 = fr3 * Vj + fr4
+		"ps_madds0  6, 5, 2, 6  \n" // fr6 = fr5 * Vj + fr6
 		
 		"psq_l	3, 48(%1), 0, 0 \n" // fr3 = M30, M31
 		"psq_l	5, 56(%1), 0, 0 \n" // fr5 = M32, M33
@@ -649,25 +642,22 @@ inline void TransformVector( float vec[3], float mtx[4][4] )
 		"psq_l      3, 0(%1), 0, 0 \n" // fr3 = Mj0, Mj1
 		"psq_l      5, 8(%1), 1, 0 \n" // fr5 = Mj2, 1.0f
 		
-		"ps_merge00 2, 2, 2     \n" // fr2 = Vj,  Vj
-		"ps_mul    4, 3, 2  \n" // fr4 = fr3 * fr2
-		"ps_mul    6, 5, 2  \n" // fr6 = fr5 * fr2
+		"ps_muls0   4, 3, 2  \n" // fr4 = fr3 * Vj
+		"ps_muls0   6, 5, 2  \n" // fr6 = fr5 * Vj
 		
 		"psq_l      2,  4(%0), 1, 0 \n" // fr2 = Vj,  1.0f
 		"psq_l      3, 16(%1), 0, 0 \n" // fr3 = Mj0, Mj1
 		"psq_l      5, 24(%1), 1, 0 \n" // fr5 = Mj2, 1.0f
 		
-		"ps_merge00 2, 2, 2     \n" // fr2 = Vj,  Vj
-		"ps_madd    4, 3, 2, 4  \n" // fr4 = fr3 * fr2 + fr4
-		"ps_madd    6, 5, 2, 6  \n" // fr6 = fr5 * fr2 + fr6
+		"ps_madds0  4, 3, 2, 4  \n" // fr4 = fr3 * Vj + fr4
+		"ps_madds0  6, 5, 2, 6  \n" // fr6 = fr5 * Vj + fr6
 		
 		"psq_l      2,  8(%0), 1, 0 \n" // fr2 = Vj,  1.0f
 		"psq_l      3, 32(%1), 0, 0 \n" // fr3 = Mj0, Mj1
 		"psq_l      5, 40(%1), 1, 0 \n" // fr5 = Mj2, 1.0f
 		
-		"ps_merge00 2, 2, 2     \n" // fr2 = Vj,  Vj
-		"ps_madd    4, 3, 2, 4  \n" // fr4 = fr3 * fr2 + fr4
-		"ps_madd    6, 5, 2, 6  \n" // fr6 = fr5 * fr2 + fr6
+		"ps_madds0  4, 3, 2, 4  \n" // fr4 = fr3 * Vj + fr4
+		"ps_madds0  6, 5, 2, 6  \n" // fr6 = fr5 * Vj + fr6
 		
 		"psq_st     4, 0(%0), 0, 0 \n" // D0, D1 = fr4
 		"psq_st     6, 8(%0), 1, 0 \n" // D2     = fr6
