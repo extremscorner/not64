@@ -54,9 +54,14 @@
 #define MEMPACK_LO   (SRAM_HI)
 #define MEMPACK_HI   (MEMPACK_LO + MEMPACK_SIZE)
 
+// We want 4MB for blocks
+#define BLOCKS_SIZE (4*MB)
+#define BLOCKS_LO   (MEMPACK_HI)
+#define BLOCKS_HI   (BLOCKS_LO + BLOCKS_SIZE)
+
 // Unclaimed MEM2
-#define UNCLAIMED_SIZE (MEM2_HI - TEXCACHE_HI)
-#define UNCLAIMED_LO   (TEXCACHE_HI)
+#define UNCLAIMED_SIZE (MEM2_HI - BLOCKS_HI)
+#define UNCLAIMED_LO   (BLOCKS_HI)
 #define UNCLAIMED_HI   (MEM2_HI)
 
 #endif

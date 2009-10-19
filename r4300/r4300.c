@@ -69,7 +69,13 @@ precomp_instr *PC;
 
 #ifdef PPC_DYNAREC
 #include "ppc/Recompile.h"
-PowerPC_block* blocks[0x100000], *actual;
+#ifdef HW_RVL
+#include "../gc_memory/MEM2.h"
+PowerPC_block **blocks = (PowerPC_block*)(UNCLAIMED_LO);
+#else
+PowerPC_block *blocks[0x100000];
+#endif
+PowerPC_block *actual;
 #else
 precomp_block *blocks[0x100000], *actual;
 #endif

@@ -67,7 +67,12 @@ void recompile_block(PowerPC_block* ppc_block, unsigned int addr);
 void init_block  (MIPS_instr* mips_code, PowerPC_block* ppc_block);
 void deinit_block(PowerPC_block* ppc_block);
 
-extern PowerPC_block* blocks[0x100000];
+#ifdef HW_RVL
+#include "../../gc_memory/MEM2.h"
+extern PowerPC_block **blocks;
+#else
+extern PowerPC_block *blocks[0x100000];
+#endif
 
 #endif
 
