@@ -120,8 +120,16 @@ void recompile_block(PowerPC_block* ppc_block, unsigned int addr){
 			// fn->function is a hole in func
 			PowerPC_func_hole_node* hole = malloc(sizeof(PowerPC_func_hole_node));
 			hole->addr = fn->function->start_addr;
-			hole->next = func->holes; // TODO: Add all holes from fn->function
+			hole->next = func->holes;
 			func->holes = hole;
+			// Add all holes from the hole
+			// Get to the end of this func->holes
+			PowerPC_func_hole_node* fhn;
+			for(fhn=func->holes; fhn->next; fhn=fhn->next);
+			// Add fn->function's holes to the end func->holes
+			fhn->next = fn->function->holes;
+			// Make sure those holes aren't freed
+			fn->function->holes = NULL;
 			// Free the hole
 			RecompCache_Free(ppc_block->start_address |
 			                 fn->function->start_addr);

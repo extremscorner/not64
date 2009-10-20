@@ -4108,7 +4108,7 @@ static void genCheckFP(void){
 		GEN_ANDIS(ppc, 0, 0, 0x2000);
 		set_next_dst(ppc);
 		// bne cr0, end
-		GEN_BNE(ppc, 0, 9, 0, 0);
+		GEN_BNE(ppc, 0, 8, 0, 0);
 		set_next_dst(ppc);
 		// Move &dyna_check_cop1_unusable to ctr for call
 		//GEN_MTCTR(ppc, DYNAREG_CHKFP);
@@ -4129,14 +4129,11 @@ static void genCheckFP(void){
 		// Load the old LR
 		GEN_LWZ(ppc, 0, DYNAOFF_LR, 1);
 		set_next_dst(ppc);
-		// Check if we need to take an interrupt
-		GEN_CMPI(ppc, 3, 0, 6);
-		set_next_dst(ppc);
 		// Restore the LR
 		GEN_MTLR(ppc, 0);
 		set_next_dst(ppc);
-		// if chkFP returned an address jumpTo it
-		GEN_BNELR(ppc, 6, 0);
+		// Return to trampoline
+		GEN_BLR(ppc, 0);
 		set_next_dst(ppc);
 		// Don't check for the rest of this mapping
 		// Unless this instruction is in a delay slot
