@@ -168,7 +168,7 @@ extern unsigned int diff_sec(long long start,long long end);
 };
 
 void VI_GX_init() {
-	init_font();
+	//init_font();
 /*	updateDEBUGflag = true;
 	new_fb = false;
 	which_fb = 1;*/
