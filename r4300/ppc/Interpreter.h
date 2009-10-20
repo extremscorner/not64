@@ -101,7 +101,12 @@ unsigned int decodeNInterpret();
 //#define INTERPRET_COP0
 //#define INTERPRET_MFC0
 #define INTERPRET_MTC0
-#define INTERPRET_TLB
+//#define INTERPRET_TLB
+//#define INTERPRET_ERET
+#define INTERPRET_TLBR
+#define INTERPRET_TLBWI
+#define INTERPRET_TLBWR
+#define INTERPRET_TLBP
 
 //#define INTERPRET_FP
 
