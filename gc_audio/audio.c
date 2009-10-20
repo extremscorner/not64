@@ -167,7 +167,7 @@ static void inline add_to_buffer(void* stream, unsigned int length){
 	unsigned int lengthLeft = length >> 2;
 	unsigned int rlengthLeft = ceilf(lengthLeft / freq_ratio);
 	while(1){
-		rlengthi = (buffer_offset + (rlengthLeft << 2) < buffer_size) ?
+		rlengthi = (buffer_offset + (rlengthLeft << 2) <= buffer_size) ?
 		            rlengthLeft : ((buffer_size - buffer_offset) >> 2);
 		lengthi  = rlengthi * freq_ratio;
 	
