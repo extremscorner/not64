@@ -288,8 +288,9 @@ void _2xSaI( void *srcPtr, void *dstPtr,
 			{
 				dstIter->set(0, colorA);
 				dstIter->set(1, interpolator->getFinalColor(product));
-				dstIter->set(tileW, interpolator->getFinalColor(product1));
-				dstIter->set(tileW + 1, interpolator->getFinalColor(product2));
+				dstIter->set(tileW<<1, interpolator->getFinalColor(product1));
+				dstIter->set((tileW<<1) + 1, interpolator->getFinalColor(product2));
+				(*dstIter) += 2;
 			}
 			else
 			{
@@ -297,17 +298,18 @@ void _2xSaI( void *srcPtr, void *dstPtr,
 				dstIter->set(tileW, (product1&0xFFFF0000)|(product2>>16));
 				dstIter->set(8, ((colorA&0xFFFF)<<16)|(product&0xFFFF));
 				dstIter->set(8+tileW, ((product1&0xFFFF)<<16)|(product2&0xFFFF));
+				(*dstIter) += 1;
 			}
 
 			++(*srcIter);
-			(*dstIter) += 2;
 		}
-		(*srcIter) += destWidth - tileW;
-		if (skipTile) (*dstIter) += 8;
-//		(*dstIter) += tileW; //skip a row in the tile
+		if (y2+1 < tileH)	(*srcIter) += width - tileW;
+		if (!skipTile)	(*dstIter) += tileW<<1; //skip a row in the tile
+		else			(*dstIter) += tileW; //skip a row in the tile
 	}
-		(*srcIter) += -(tileH-1)*destWidth;
-//		(*dstIter) += destWidth;
+	if (x1+tileW < width) (*srcIter) += -(tileH-1)*width;
+	if (skipTile) (*dstIter) += 8;
+//	(*dstIter) += destWidth;
 	}}
 	
 	delete srcIter;
