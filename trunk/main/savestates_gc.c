@@ -90,7 +90,11 @@ char* savestates_save()
 	gzwrite(f, &ai_register, sizeof(AI_register));
 	gzwrite(f, &dpc_register, sizeof(DPC_register));
 	gzwrite(f, &dps_register, sizeof(DPS_register));
-	gzwrite(f, rdram, 0x400000);  /* fixme when expansion pak is done */
+#ifdef USE_EXPANSION
+	gzwrite(f, rdram, 0x800000);
+#else
+  gzwrite(f, rdram, 0x400000);
+#endif
 	gzwrite(f, SP_DMEM, 0x1000);
 	gzwrite(f, SP_IMEM, 0x1000);
 	gzwrite(f, PIF_RAM, 0x40);
@@ -162,7 +166,11 @@ char* savestates_load()
 	gzread(f, &ai_register, sizeof(AI_register));
 	gzread(f, &dpc_register, sizeof(DPC_register));
 	gzread(f, &dps_register, sizeof(DPS_register));
-	gzread(f, rdram, 0x400000);     /* fixme when expansion pak is done */
+#ifdef USE_EXPANSION
+	gzread(f, rdram, 0x800000);
+#else
+  gzread(f, rdram, 0x400000);
+#endif
 	gzread(f, SP_DMEM, 0x1000);
 	gzread(f, SP_IMEM, 0x1000);
 	gzread(f, PIF_RAM, 0x40);
