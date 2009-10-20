@@ -16,8 +16,8 @@ struct Interpolator {
 	virtual u16 getTileH(u16 height) = 0;
 	virtual u16 getTileW(u16 width) = 0;
 	virtual bool getSkipTile(){ return false; }
-	virtual u32 interpolate(u32, u32) = 0;
-	virtual u32 interpolate(u32, u32, u32, u32) = 0;
+	virtual u32 interpolate(u32, u32);
+	virtual u32 interpolate(u32, u32, u32, u32);
 	virtual PixelIterator* iterator(void*) = 0;
 	virtual u32 getFinalColor(u32 color){ return color; }
 protected:
