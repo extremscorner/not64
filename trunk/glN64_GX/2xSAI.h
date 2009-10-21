@@ -12,14 +12,12 @@ struct PixelIterator {
 
 
 struct Interpolator {
-	virtual u16 getDestWidth(u16 width) = 0;
 	virtual u16 getTileH(u16 height) = 0;
 	virtual u16 getTileW(u16 width) = 0;
 	virtual bool getSkipTile(){ return false; }
 	virtual u32 interpolate(u32, u32);
 	virtual u32 interpolate(u32, u32, u32, u32);
 	virtual PixelIterator* iterator(void*) = 0;
-	virtual u32 getFinalColor(u32 color){ return color; }
 protected:
 	virtual u32 getHigh1(u32 color) = 0;
 	virtual u32 getLow1(u32 color) = 0;
@@ -30,7 +28,6 @@ protected:
 
 class Interpolator4444 : public Interpolator {
 public:
-	u16 getDestWidth(u16 width){ return width << 1; }
 	u16 getTileH(u16 height){ return height; }
 	u16 getTileW(u16 width){ return width; }
 	PixelIterator* iterator(void*);
@@ -43,7 +40,6 @@ protected:
 
 class Interpolator5551 : public Interpolator {
 public:
-	u16 getDestWidth(u16 width){ return width << 1; }
 	u16 getTileH(u16 height){ return height; }
 	u16 getTileW(u16 width){ return width; }
 	PixelIterator* iterator(void*);
@@ -59,7 +55,6 @@ protected:
 
 class Interpolator8888 : public Interpolator {
 public:
-	u16 getDestWidth(u16 width){ return width << 1; }
 	u16 getTileH(u16 height){ return height; }
 	u16 getTileW(u16 width){ return width; }
 	PixelIterator* iterator(void*);
@@ -73,7 +68,6 @@ protected:
 #ifdef __GX__
 class InterpolatorGXIA4 : public Interpolator {
 public:
-	u16 getDestWidth(u16 width){ return (width|0x3)? (width+4-(width|0x3)) << 1 : width << 1; }
 	u16 getTileH(u16 height){ return 2; }
 	u16 getTileW(u16 width){ return 4; }
 	PixelIterator* iterator(void*);
@@ -86,7 +80,6 @@ protected:
 
 class InterpolatorGXIA8 : public Interpolator {
 public:
-	u16 getDestWidth(u16 width){ return (width|0x1)? (width+2-(width|0x1)) << 1 : width << 1; }
 	u16 getTileH(u16 height){ return 2; }
 	u16 getTileW(u16 width){ return 2; }
 	PixelIterator* iterator(void*);
@@ -99,18 +92,36 @@ protected:
 
 class InterpolatorGXRGB5A3 : public Interpolator {
 public:
-	u16 getDestWidth(u16 width){ return (width|0x1)? (width+2-(width|0x1)) << 1 : width << 1; }
 	u16 getTileH(u16 height){ return 2; }
 	u16 getTileW(u16 width){ return 2; }
-	PixelIterator* iterator(void*);
-	u32 getFinalColor(u32 color){ 
-		return (color & 0x8000) ? color : 0x0000|(((color>>11)&0xF)<<8)|(((color>>6)&0xF)<<4)|((color>>1)&0xF); 
+	u32 interpolate(u32 A, u32 B){
+		if(A != B)
+		{
+			u32 tempval = (getHigh1(A) >> 1) + (getHigh1(B) >> 1) | (getLow1(A & B));
+			return (tempval & 0x8000) ? tempval : (((A|B)&0x8000)>>2) | ((tempval>>3) & 0x0F00) | ((tempval>>2) & 0x00F0) | ((tempval>>1) & 0x000F);
+		}
+		else
+			return A;
 	}
+	u32 interpolate(u32 A, u32 B, u32 C, u32 D){
+		u32 x = (getHigh2(A) >> 2) +
+				(getHigh2(B) >> 2) +
+			    (getHigh2(C) >> 2) +
+		        (getHigh2(D) >> 2);
+		u32 y = getLow2((getLow2(A) +
+				         getLow2(B) +
+			             getLow2(C) +
+		                 getLow2(D)) >> 2);
+		u32 z = getZ(A, B, C, D);
+		u32 tempval = x | y;
+		return (z > 0x4000) ? tempval | 0x8000 : z | ((tempval>>3) & 0x0F00) | ((tempval>>2) & 0x00F0) | ((tempval>>1) & 0x000F);
+	}
+	PixelIterator* iterator(void*);
 protected:
 	u32 getHigh1(u32 color){ 
 		return (color & 0x8000) ? color & 0x7BDE : ((color & 0x0F00)<<3)|((color & 0x00F0)<<2)|((color & 0x000F)<<1); 
 	}
-	u32 getLow1(u32 color){ return (color & 0x8000) ? color & 0x0421 : 0x0000; }
+	u32 getLow1(u32 color){ return (color & 0x8000) ? color & 0x8421 : 0x0000; }
 	u32 getHigh2(u32 color){ 
 		return (color & 0x8000) ? color & 0x739C : ((color & 0x0E00)<<3)|((color & 0x00E0)<<2)|((color & 0x000E)<<1); 
 	}
@@ -118,13 +129,12 @@ protected:
 		return (color & 0x8000) ? color & 0x0C63 : ((color & 0x0100)<<3)|((color & 0x0010)<<2)|((color & 0x0001)<<1); 
 	}
 	u32 getZ(u32 A, u32 B, u32 C, u32 D){
-		return ((A & 0x8000) + (B & 0x8000) + (C & 0x8000) + (D & 0x8000)) > 0x00010000 ? 0x8000 : 0;
+		return ((A & 0x8000) + (B & 0x8000) + (C & 0x8000) + (D & 0x8000)) >> 2;
 	}
 };
 
 class InterpolatorGXRGBA8 : public Interpolator {
 public:
-	u16 getDestWidth(u16 width){ return (width|0x1)? (width+2-(width|0x1)) << 1 : width << 1; }
 	u16 getTileH(u16 height){ return 2; }
 	u16 getTileW(u16 width){ return 2; }
 	bool getSkipTile(){ return true; }

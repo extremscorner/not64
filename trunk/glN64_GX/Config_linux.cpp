@@ -21,6 +21,7 @@
 
 #ifdef __GX__
 char glN64_useFrameBufferTextures = 0;
+char glN64_use2xSaiTextures = 0;
 #endif // __GX__
 
 #ifndef __GX__ // this eliminates several functions
@@ -430,7 +431,7 @@ void Config_LoadConfig()
 	OGL.windowedWidth = 640;
 	OGL.windowedHeight = 480;
 	OGL.forceBilinear = 0;
-	OGL.enable2xSaI = 0;
+	OGL.enable2xSaI = glN64_use2xSaiTextures;
 	OGL.fog = 1;
 	OGL.textureBitDepth = 1; // normal (16 & 32 bits)
 	OGL.frameBufferTextures = glN64_useFrameBufferTextures;
