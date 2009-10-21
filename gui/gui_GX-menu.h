@@ -29,6 +29,6 @@ void GUI_centerText(bool);
 void GUI_setLoadProg(float percent);
 void GUI_drawLoadProg();
 void GUI_creditScreen();
-void GUI_writeString(Vector pos, Vector axis1, Vector axis2, Vector axis3, Vector rot, GXColor fontColor, char *string, float scale);
+void GUI_writeString(guVector pos, guVector axis1, guVector axis2, guVector axis3, guVector rot, GXColor fontColor, char *string, float scale);
 
 #endif
