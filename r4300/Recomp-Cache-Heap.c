@@ -2,7 +2,9 @@
 
 #include <ogc/lwp_heap.h>
 #include <stdlib.h>
+#include "../gc_memory/MEM2.h"
 #include "r4300.h"
+#include "ppc/Recompile.h"
 #include "Invalid_Code.h"
 #include "Recomp-Cache.h"
 
@@ -12,7 +14,7 @@ typedef struct _meta_node {
 	unsigned int  size;
 } CacheMetaNode;
 
-static heap_cntrl* cache = NULL;
+static heap_cntrl* cache = NULL, * meta_cache = NULL;
 static int cacheSize = 0;
 
 #define HEAP_CHILD1(i) ((i<<1)+1)
@@ -84,46 +86,24 @@ static CacheMetaNode* heapPop(void){
 static void free_func(PowerPC_func* func, unsigned int addr){
 	// Free the code associated with the func
 	__lwp_heap_free(cache, func->code);
+	__lwp_heap_free(meta_cache, func->code_addr);
 	// Remove any holes into this func
 	PowerPC_func_hole_node* hole, * next;
 	for(hole = func->holes; hole != NULL; hole = next){
 		next = hole->next;
 		free(hole);
 	}
-	
+
 	// Remove any pointers to this code
 	PowerPC_block* block = blocks[addr>>12];
-	// Null out the corresponding code_addr entries
-	int i;
-	int start = (func->start_addr&0xfff)>>2;
-	int end = (func->end_addr - func->start_addr)>>2;
-	if(end < 0) end = 1024;
-	else end += start;
-	for(i=start; i<end; ++i)
-		block->code_addr[i] = NULL;
-	// Remove the function from the linked list
-	PowerPC_func_node* fn = block->funcs;
-	if(fn && fn->function == func){
-		block->funcs = fn->next;
-		free(fn->function);
-		free(fn);
-	} else {
-		for(; fn != NULL; fn = fn->next){
-			if(fn->next && fn->next->function == func){
-				PowerPC_func_node* t = fn->next;
-				fn->next = t->next;
-				free(t->function);
-				free(t);
-				break;
-			}
-		}
-	}
+	remove_func(&block->funcs, func);
+	free(func);
 }
 
 static inline void update_lru(PowerPC_func* func){
 	static unsigned int nextLRU = 0;
 	/*if(func->lru != nextLRU-1)*/ func->lru = nextLRU++;
-	
+
 	if(!nextLRU){
 		// Handle nextLRU overflows
 		// By heap-sorting and assigning new LRUs
@@ -138,7 +118,7 @@ static inline void update_lru(PowerPC_func* func){
 		}
 		free(cacheHeap);
 		cacheHeap = newHeap;
-		
+
 		nextLRU = heapSize = savedSize;
 	}
 }
@@ -166,16 +146,25 @@ void RecompCache_Alloc(unsigned int size, unsigned int address, PowerPC_func* fu
 	newBlock->addr = address;
 	newBlock->size = size;
 	newBlock->func = func;
-	
+
 	// Allocate new memory for this code
 	void* code = __lwp_heap_allocate(cache, size);
 	while(!code){
 		release(size);
 		code = __lwp_heap_allocate(cache, size);
 	}
-	
+	int num_instrs = ((func->end_addr ? func->end_addr : 0x10000) -
+                      func->start_addr) >> 2;
+	void* code_addr = __lwp_heap_allocate(meta_cache, num_instrs * sizeof(void*));
+	while(!code_addr){
+		release(num_instrs * sizeof(void*));
+		code_addr = __lwp_heap_allocate(meta_cache, num_instrs * sizeof(void*));
+	}
+
 	cacheSize += size;
 	newBlock->func->code = code;
+	newBlock->func->code_addr = code_addr;
+	memset(code_addr, 0, num_instrs * sizeof(void*));
 	// Add it to the heap
 	heapPush(newBlock);
 	// Make this function the LRU
@@ -191,9 +180,9 @@ void RecompCache_Realloc(PowerPC_func* func, unsigned int size){
 			n = cacheHeap[i];
 	// Make this function the LRU
 	update_lru(func);
-	
+
 	int neededSpace = size - n->size;
-	
+
 	// Allocate new memory (releasing if necessary)
 	void* code = __lwp_heap_allocate(cache, size);
 	while(!code){
@@ -204,7 +193,7 @@ void RecompCache_Realloc(PowerPC_func* func, unsigned int size){
 	memcpy(code, n->func->code, n->size);
 	// Free the old memory
 	__lwp_heap_free(cache, n->func->code);
-	
+
 	// Adjust everything for this code
 	cacheSize += neededSpace;
 	n->func->code = code;
@@ -230,16 +219,8 @@ void RecompCache_Free(unsigned int addr){
 	}
 }
 
-void RecompCache_Update(unsigned int addr){
-	PowerPC_func_node* n = blocks[addr>>12]->funcs;
-	addr &= 0xffff;
-	for(; n != NULL; n = n->next){
-		if(addr >= n->function->start_addr &&
-		   addr <  n->function->end_addr){
-			update_lru(n->function);
-			break;
-		}
-	}
+void RecompCache_Update(PowerPC_func* func){
+	update_lru(func);
 }
 
 void RecompCache_Init(void){
@@ -247,6 +228,11 @@ void RecompCache_Init(void){
 		cache = malloc(sizeof(heap_cntrl));
 		__lwp_heap_init(cache, malloc(RECOMP_CACHE_SIZE),
 		                RECOMP_CACHE_SIZE, 32);
+	}
+	if(!meta_cache){
+		meta_cache = malloc(sizeof(heap_cntrl));
+		__lwp_heap_init(meta_cache, RECOMPMETA_LO,
+		                RECOMPMETA_SIZE, 32);
 	}
 }
 

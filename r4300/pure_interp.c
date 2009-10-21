@@ -52,6 +52,7 @@ extern void update_debugger();
 
 static void invalidate_func(unsigned int addr){
 	PowerPC_block* block = blocks[address>>12];
+#if 0
 	PowerPC_func_node* fn;
 	for(fn = block->funcs; fn != NULL; fn = fn->next){
 		if((addr&0xffff) >= fn->function->start_addr &&
@@ -61,11 +62,16 @@ static void invalidate_func(unsigned int addr){
 			break;
 		}
 	}
+#else
+	PowerPC_func* func = find_func(&block->funcs, addr&0xffff);
+	if(func)
+		RecompCache_Free(block->start_address | func->start_addr);
+#endif
 }
 
 #define check_memory() \
-	if(dynacore && !invalid_code_get(address>>12) && \
-	   blocks[address>>12]->code_addr[(address&0xfff)>>2]) \
+	if(dynacore && !invalid_code_get(address>>12)/* && \
+	   blocks[address>>12]->code_addr[(address&0xfff)>>2]*/) \
 		invalidate_func(address); //invalid_code_set(address>>12, 1);
 #else
 #define check_memory()

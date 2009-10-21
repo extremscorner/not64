@@ -12,6 +12,7 @@
 #include "Register-Cache.h"
 #include "Interpreter.h"
 #include "Wrappers.h"
+#include <math.h>
 
 #include <assert.h>
 
@@ -2528,9 +2529,9 @@ static int ERET(MIPS_instr mips){
 	genCallInterp(mips);
 	return INTERPRETED;
 #else // INTERPRET_ERET
-	
+
 	flushRegisters();
-	
+
 	genUpdateCount(0);
 	// Load Status
 	GEN_LWZ(ppc, 3, 12*4, DYNAREG_COP0);
@@ -2562,7 +2563,7 @@ static int ERET(MIPS_instr mips){
 	// Return to trampoline with EPC
 	GEN_BLR(ppc, 0);
 	set_next_dst(ppc);
-	
+
 	return CONVERT_SUCCESS;
 #endif
 }
@@ -2585,12 +2586,12 @@ static int MFC0(MIPS_instr mips){
 	genCallInterp(mips);
 	return INTERPRETED;
 #else
-	
+
 	int rt = mapRegisterNew(MIPS_GET_RT(mips));
 	// *rt = reg_cop0[rd]
 	GEN_LWZ(ppc, rt, MIPS_GET_RD(mips)*4, DYNAREG_COP0);
 	set_next_dst(ppc);
-	
+
 	return CONVERT_SUCCESS;
 #endif
 }
@@ -2829,7 +2830,7 @@ static int ADD_FP(MIPS_instr mips, int dbl){
 	int ft = mapFPR( MIPS_GET_FT(mips), dbl );
 	int fd = mapFPRNew( MIPS_GET_FD(mips), dbl );
 
-	GEN_FADD(ppc, fd, fs, ft);
+	GEN_FADD(ppc, fd, fs, ft, dbl);
 	set_next_dst(ppc);
 
 	return CONVERT_SUCCESS;
@@ -2849,7 +2850,7 @@ static int SUB_FP(MIPS_instr mips, int dbl){
 	int ft = mapFPR( MIPS_GET_FT(mips), dbl );
 	int fd = mapFPRNew( MIPS_GET_FD(mips), dbl );
 
-	GEN_FSUB(ppc, fd, fs, ft);
+	GEN_FSUB(ppc, fd, fs, ft, dbl);
 	set_next_dst(ppc);
 
 	return CONVERT_SUCCESS;
@@ -2869,7 +2870,7 @@ static int MUL_FP(MIPS_instr mips, int dbl){
 	int ft = mapFPR( MIPS_GET_FT(mips), dbl );
 	int fd = mapFPRNew( MIPS_GET_FD(mips), dbl );
 
-	GEN_FMUL(ppc, fd, fs, ft);
+	GEN_FMUL(ppc, fd, fs, ft, dbl);
 	set_next_dst(ppc);
 
 	return CONVERT_SUCCESS;
@@ -2889,7 +2890,7 @@ static int DIV_FP(MIPS_instr mips, int dbl){
 	int ft = mapFPR( MIPS_GET_FT(mips), dbl );
 	int fd = mapFPRNew( MIPS_GET_FD(mips), dbl );
 
-	GEN_FDIV(ppc, fd, fs, ft);
+	GEN_FDIV(ppc, fd, fs, ft, dbl);
 	set_next_dst(ppc);
 
 	return CONVERT_SUCCESS;
@@ -2903,60 +2904,24 @@ static int SQRT_FP(MIPS_instr mips, int dbl){
 	return INTERPRETED;
 #else // INTERPRET_FP || INTERPRET_FP_SQRT
 
-	static float constants[2] = { 0.5f, 3.0f };
-	// Make sure we can get away with one base register
-	assert(extractUpper16(&constants[0]) == extractUpper16(&constants[1]));
-	
 	genCheckFP();
-	
-	int rt    = mapRegisterTemp();
-	int fs = mapFPR( MIPS_GET_FS(mips), dbl );
-	int fd = mapFPRNew( MIPS_GET_FD(mips), dbl );
-	int ft0   = 0;
-	int ft1   = mapFPRTemp();
-	int ft2   = mapFPRTemp();
-	int half  = mapFPRTemp();
-	int three = mapFPRTemp();
 
-	// Use frsqrte to estimate 1/sqrt(x) 
-	// Enchance its accuracy with Newton-Raphson ((E/2)*(3 - x*E^2))
-	// Then determine sqrt(x) ~ x * 1/sqrte(x)
-	// lis rt, (&half)@ha
-	GEN_LIS(ppc, rt, extractUpper16(&constants[0]));
+	flushRegisters();
+	mapFPR( MIPS_GET_FS(mips), dbl ); // maps to f1 (FP argument)
+	invalidateRegisters();
+
+	// call sqrt
+	GEN_B(ppc, add_jump(dbl ? &sqrt : &sqrtf, 1, 1), 0, 1);
 	set_next_dst(ppc);
-	// frsqrte ft0, fs (ft0 = E ~ 1/sqrt(fs))
-	GEN_FRSQRTE(ppc, ft0, fs);
+
+	mapFPRNew( MIPS_GET_FD(mips), dbl ); // maps to f1 (FP return)
+
+	// Load old LR
+	GEN_LWZ(ppc, 0, DYNAOFF_LR, 1);
 	set_next_dst(ppc);
-	// lfs half, (&half)@l(rt)
-	GEN_LFS(ppc, half, extractLower16(&constants[0]), rt);
+	// Restore LR
+	GEN_MTLR(ppc, 0);
 	set_next_dst(ppc);
-	// lfs three, (&three)@l(rt)
-	GEN_LFS(ppc, three, extractLower16(&constants[1]), rt);
-	set_next_dst(ppc);
-	// fmul ft1, ft0, ft0 (ft1 = E^2)
-	GEN_FMUL(ppc, ft1, ft0, ft0);
-	set_next_dst(ppc);
-	// fmul ft2, ft0, half (ft2 = E/2)
-	GEN_FMUL(ppc, ft2, ft0, half);
-	set_next_dst(ppc);
-	// fnmsub ft1, ft1, fs, three (ft1 = (3 - E^2*x) = -(E^2*x - 3))
-	GEN_FNMSUB(ppc, ft1, ft1, fs, three);
-	set_next_dst(ppc);
-	// fmul ft0, ft1, ft2 (ft0 = (3 - E^2*x) * E/2)
-	GEN_FMUL(ppc, ft0, ft1, ft2);
-	set_next_dst(ppc);
-	// fsel ft0, ft0, ft0, fs (if ft0 is NaN: ft0 = fs)
-	GEN_FSEL(ppc, ft0, ft0, ft0, fs);
-	set_next_dst(ppc);
-	// fmul fd, ft0, fs (fd = ft0 * fs ~ sqrt(fs))
-	GEN_FMUL(ppc, fd, ft0, fs);
-	set_next_dst(ppc);
-	
-	unmapFPRTemp(three);
-	unmapFPRTemp(half);
-	unmapFPRTemp(ft2);
-	unmapFPRTemp(ft1);
-	unmapRegisterTemp(rt);
 
 	return CONVERT_SUCCESS;
 #endif
@@ -3902,7 +3867,7 @@ static int CVT_FP_W(MIPS_instr mips, int dbl){
 	GEN_LFD(ppc, fd, -8, 1);
 	set_next_dst(ppc);
 	// fsub fd, fd, f0
-	GEN_FSUB(ppc, fd, fd, 0);
+	GEN_FSUB(ppc, fd, fd, 0, dbl);
 	set_next_dst(ppc);
 
 	unmapRegisterTemp(tmp);

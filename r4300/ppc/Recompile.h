@@ -20,21 +20,26 @@ typedef struct {
 	PowerPC_instr* code;
 	unsigned int   lru;
 	PowerPC_func_hole_node* holes;
-
+	PowerPC_instr** code_addr;
 } PowerPC_func;
 
 typedef struct func_node {
 	PowerPC_func* function;
-	struct func_node* next;
+	struct func_node* left;
+	struct func_node* right;
 } PowerPC_func_node;
+
+PowerPC_func* find_func(PowerPC_func_node** root, unsigned short addr);
+void insert_func(PowerPC_func_node** root, PowerPC_func* func);
+void remove_func(PowerPC_func_node** root, PowerPC_func* func);
 
 typedef struct {
 	MIPS_instr*     mips_code;     // The code to recompile
 	uint            start_address; // The address this code begins for the 64
 	uint            end_address;
-	PowerPC_instr** code_addr;     // table of block offsets to code pointer,
+	//PowerPC_instr** code_addr;     // table of block offsets to code pointer,
 	                               //   its length is end_addr - start_addr
-	PowerPC_func_node* funcs;      // Linked list of functions in this block
+	PowerPC_func_node* funcs;      // BST of functions in this block
 	unsigned long   adler32;       // Used for TLB
 } PowerPC_block;
 
@@ -64,7 +69,7 @@ void       set_jump_special(int which, int new_jump);
    init assumes that all pointers in the block fed it it are NULL or allocated
    memory. Deinit frees a block with the same preconditions.
  */
-void recompile_block(PowerPC_block* ppc_block, unsigned int addr);
+PowerPC_func* recompile_block(PowerPC_block* ppc_block, unsigned int addr);
 void init_block  (MIPS_instr* mips_code, PowerPC_block* ppc_block);
 void deinit_block(PowerPC_block* ppc_block);
 

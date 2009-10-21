@@ -131,7 +131,7 @@ unsigned int decodeNInterpret();
 #define INTERPRET_FP_MOV
 #define INTERPRET_FP_NEG
 #endif
-#define INTERPRET_FP_SQRT
+//#define INTERPRET_FP_SQRT
 
 #define INTERPRET_FP_ROUND_L
 #define INTERPRET_FP_TRUNC_L

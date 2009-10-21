@@ -3,9 +3,10 @@
  */
 
 #include <stdlib.h>
+#include "../r4300.h"
 #include "Recompile.h"
 
-static PowerPC_func_node** _find(PowerPC_func_node** node, unsigned short addr){
+static inline PowerPC_func_node** _find(PowerPC_func_node** node, unsigned short addr){
 	while(*node){
 		if(addr < (*node)->function->start_addr)
 			node = &(*node)->left;
@@ -19,7 +20,9 @@ static PowerPC_func_node** _find(PowerPC_func_node** node, unsigned short addr){
 }
 
 PowerPC_func* find_func(PowerPC_func_node** root, unsigned short addr){
+	//start_section(FUNCS_SECTION);
 	PowerPC_func_node* node = *_find(root, addr);
+	//end_section(FUNCS_SECTION);
 	return node ? node->function : NULL;
 }
 
@@ -33,7 +36,6 @@ void insert_func(PowerPC_func_node** root, PowerPC_func* func){
 void remove_func(PowerPC_func_node** root, PowerPC_func* func){
 	PowerPC_func_node** node = _find(root, func->start_addr);
 	PowerPC_func_node* old = *node;
-	if(!old) return;
 	if(!(*node)->left)
 		*node = (*node)->right;
 	else if(!(*node)->right)
@@ -44,7 +46,7 @@ void remove_func(PowerPC_func_node** root, PowerPC_func* func){
 		for(pre = &(*node)->left; (*pre)->right; pre = &(*pre)->right);
 		(*node)->function = (*pre)->function;
 		old = *pre;
-		*pre = NULL;
+		*pre = (*pre)->left;
 	}
 
 	free(old);

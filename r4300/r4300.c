@@ -71,7 +71,7 @@ precomp_instr *PC;
 #include "ppc/Recompile.h"
 #ifdef HW_RVL
 #include "../gc_memory/MEM2.h"
-PowerPC_block **blocks = (PowerPC_block*)(UNCLAIMED_LO);
+PowerPC_block **blocks = (PowerPC_block*)(BLOCKS_LO);
 #else
 PowerPC_block *blocks[0x100000];
 #endif
@@ -1539,7 +1539,7 @@ void init_blocks()
    blocks[0xa4000000>>12]->end = 0xa4001000;
 #else
    blocks[0xa4000000>>12] = malloc(sizeof(PowerPC_block));
-   blocks[0xa4000000>>12]->code_addr = NULL;
+   //blocks[0xa4000000>>12]->code_addr = NULL;
    blocks[0xa4000000>>12]->funcs = NULL;
    blocks[0xa4000000>>12]->start_address = 0xa4000000;
    blocks[0xa4000000>>12]->end_address = 0xa4001000;

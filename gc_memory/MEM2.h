@@ -59,8 +59,10 @@
 #define BLOCKS_LO   (MEMPACK_HI)
 #define BLOCKS_HI   (BLOCKS_LO + BLOCKS_SIZE)
 
-// todo: port new /tehpola r4300 and stuff in the next day or so
+// We want 4MB for RecompCache metadata
 #define RECOMPMETA_SIZE (4*MB)
+#define RECOMPMETA_LO   (BLOCKS_HI)
+#define RECOMPMETA_HI   (RECOMPMETA_LO + RECOMPMETA_SIZE)
 
 // Unclaimed MEM2
 #define UNCLAIMED_SIZE (MEM2_HI - BLOCKS_HI)
