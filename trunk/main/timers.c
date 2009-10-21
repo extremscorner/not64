@@ -57,7 +57,6 @@ void InitTimer(void) {
 	Timers.frameDrawn = 0;
 }
 
-extern unsigned long gettick();
 extern unsigned int usleep(unsigned int us);
 
 void new_frame(void) {
