@@ -59,9 +59,21 @@
 #define BLOCKS_LO   (MEMPACK_HI)
 #define BLOCKS_HI   (BLOCKS_LO + BLOCKS_SIZE)
 
+// todo: port new /tehpola r4300 and stuff in the next day or so
+#define RECOMPMETA_SIZE (4*MB)
+
 // Unclaimed MEM2
 #define UNCLAIMED_SIZE (MEM2_HI - BLOCKS_HI)
 #define UNCLAIMED_LO   (BLOCKS_HI)
 #define UNCLAIMED_HI   (MEM2_HI)
+
+#define MEM2_USED_SIZE (ROMCACHE_SIZE + TLBLUT_SIZE \
+                        + TEXCACHE_SIZE + INVCODE_SIZE \
+                        + FONT_SIZE + FLASHRAM_SIZE \
+                        + SRAM_SIZE + MEMPACK_SIZE \
+                        + BLOCKS_SIZE + RECOMPMETA_SIZE)
+#if MEM2_USED_SIZE > (0x933E0000-0x90080000)
+#error Too much MEM2 used!
+#endif
 
 #endif
