@@ -4,7 +4,7 @@
  *
  * Mupen64 homepage: http://mupen64.emulation64.com
  * email address: hacktarux@yahoo.fr
- * 
+ *
  * If you want to contribute to the project please contact
  * me first (maybe someone is already making what you are
  * planning to do).
@@ -39,6 +39,13 @@
 
 #include <ogc/card.h>
 
+#ifdef USE_GUI
+#include "../gui/GUI.h"
+#define PRINT GUI_print
+#else
+#define PRINT printf
+#endif
+
 #include "memory.h"
 #include "pif.h"
 #include "pif2.h"
@@ -48,12 +55,6 @@
 #include "../main/guifuncs.h"
 #include "Saves.h"
 
-#ifdef USE_GUI
-#include "../gui/GUI.h"
-#define PRINT GUI_print
-#else
-#define PRINT printf
-#endif
 static unsigned char eeprom[0x800] __attribute__((aligned(32)));
 #ifdef HW_RVL
 #include "MEM2.h"
@@ -84,9 +85,9 @@ int loadEeprom(fileBrowser_file* savepath){
 		eepromWritten = 1;
 		return result;
 	} else for (i=0; i<0x800; i++) eeprom[i] = 0;
-	
+
 	eepromWritten = FALSE;
-	
+
 	return result;
 }
 
@@ -95,16 +96,16 @@ extern long long gettime();
 int saveEeprom(fileBrowser_file* savepath){
 	if(!eepromWritten) return 0;
 	PRINT("Saving EEPROM, please do not turn off console...\n");
-	
+
 	fileBrowser_file saveFile;
 	memcpy(&saveFile, savepath, sizeof(fileBrowser_file));
 	strcat((char*)saveFile.name, ROM_SETTINGS.goodname);
 	strcat((char*)saveFile.name, ".eep");
-	
+
 	saveFile_writeFile(&saveFile, eeprom, 0x800);
-	
+
 	PRINT("OK\n");
-	
+
 	return 1;
 
 }
@@ -156,7 +157,7 @@ void EepromCommand(BYTE *Command)
 	  }
 	break;
 /*      default:
-    break;  
+    break;
 *///	printf("unknown command in EepromCommand : %x\n", Command[2]);
      }
 }
@@ -216,11 +217,11 @@ unsigned char mempack_crc(unsigned char *data)
 int loadMempak(fileBrowser_file* savepath){
 	int i, result = 0;
   fileBrowser_file saveFile;
-		
+
 	memcpy(&saveFile, savepath, sizeof(fileBrowser_file));
 	strcat((char*)saveFile.name, ROM_SETTINGS.goodname);
 	strcat((char*)saveFile.name, ".mpk");
-	
+
 	if( !(saveFile_readFile(&saveFile, &i, 4) <= 0) ){
 		PRINT("Loading mempak, please be patient...\n");
 		saveFile.offset = 0;
@@ -230,9 +231,9 @@ int loadMempak(fileBrowser_file* savepath){
 		mempakWritten = 1;
 		return result;
 	} else format_mempacks();
-	
+
 	mempakWritten = FALSE;
-	
+
 	return result;
 }
 
@@ -244,11 +245,11 @@ int saveMempak(fileBrowser_file* savepath){
 	memcpy(&saveFile, savepath, sizeof(fileBrowser_file));
 	strcat((char*)saveFile.name, ROM_SETTINGS.goodname);
 	strcat((char*)saveFile.name, ".mpk");
-	
+
 	saveFile_writeFile(&saveFile, mempack, 0x8000 * 4);
-	
+
 	PRINT("OK\n");
-	
+
 	return 1;
 }
 
@@ -367,7 +368,7 @@ void internal_ControllerCommand(int Control, BYTE *Command)
 		case PLUGIN_MEMPAK:
 		    {
 		       int address = (Command[3] << 8) | Command[4];
-		       if (address == 0x8001) 
+		       if (address == 0x8001)
 			 Command[0x25] = mempack_crc(&Command[5]);
 		       else
 			 {
@@ -444,7 +445,7 @@ void update_pif_write()
 	       {
 		  if (channel < 4)
 		    {
-		       if (Controls[channel].Present && 
+		       if (Controls[channel].Present &&
 			   Controls[channel].RawData)
 			 controllerCommand(channel, &PIF_RAMb[i]);
 		       else
@@ -498,7 +499,7 @@ void update_pif_read()
 	       {
 		  if (channel < 4)
 		    {
-		       if (Controls[channel].Present && 
+		       if (Controls[channel].Present &&
 			   Controls[channel].RawData)
 			 readController(channel, &PIF_RAMb[i]);
 		       else
