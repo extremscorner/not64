@@ -104,7 +104,9 @@ extern  u16 LOGOtexture[];
 extern long BGtexture_length;
 extern long BGtextureCI_length;
 extern long LOGOtexture_length;
-extern GXRModeObj *vmode;
+extern GXRModeObj *vmode, *rmode;
+extern char widescreen;
+extern int GX_xfb_offset;
 
 void draw_quad (u8, u8, u8, u8, u8);
 void GUI_splashScreen();
@@ -136,8 +138,8 @@ void GUI_toggle()
 {
 	if (GUI_on == 1) {
 		GX_SetCopyClear ((GXColor){0,0,0,255}, 0x00000000);
-		GX_CopyDisp (GUI.xfb[GUI.which_fb], GX_TRUE); // This clears the efb
-		GX_CopyDisp (GUI.xfb[GUI.which_fb], GX_TRUE); // This clears the xfb
+		GX_CopyDisp (GUI.xfb[GUI.which_fb]+GX_xfb_offset, GX_TRUE); // This clears the efb
+		GX_CopyDisp (GUI.xfb[GUI.which_fb]+GX_xfb_offset, GX_TRUE); // This clears the xfb
 		GX_Flush ();
 		VIDEO_SetNextFramebuffer(GUI.xfb[GUI.which_fb]);
 		VIDEO_Flush();
@@ -168,10 +170,10 @@ void GUI_draw()
 	GX_SetZTexture(GX_ZT_DISABLE,GX_TF_Z16,0);	//GX_ZT_DISABLE or GX_ZT_REPLACE; set in gDP.cpp
 	GX_SetZCompLoc(GX_TRUE);	// Do Z-compare before texturing.
 	GX_SetFog(GX_FOG_NONE,0,1,0,1,(GXColor){0,0,0,255});
-	GX_SetViewport(0,0,vmode->fbWidth,vmode->efbHeight,0,1);
+	GX_SetViewport(0,0,rmode->fbWidth,rmode->efbHeight,0,1);
 	GX_SetCoPlanar(GX_DISABLE);
 	GX_SetClipMode(GX_CLIP_DISABLE);
-	GX_SetScissor(0,0,vmode->fbWidth,vmode->efbHeight);
+	GX_SetScissor(0,0,rmode->fbWidth,rmode->efbHeight);
 	GX_SetAlphaCompare(GX_ALWAYS,0,GX_AOP_AND,GX_ALWAYS,0);
 
 	guMtxIdentity(GXmodelView2D);
@@ -224,7 +226,7 @@ void GUI_draw()
 	GUI_drawLoadProg();
 
 //	GX_DrawDone ();
-	GX_CopyDisp (GUI.xfb[GUI.which_fb], GX_FALSE);
+	GX_CopyDisp (GUI.xfb[GUI.which_fb]+GX_xfb_offset, GX_FALSE);
 //	GX_Flush ();
 	GX_DrawDone ();
 	VIDEO_SetNextFramebuffer(GUI.xfb[GUI.which_fb]);
@@ -580,7 +582,7 @@ void GUI_splashScreen()
 
 	GX_DrawDone ();
 	GX_SetCopyClear ((GXColor){0,0,0,255}, 0x00000000);
-	GX_CopyDisp (GUI.xfb[GUI.which_fb], GX_TRUE);
+	GX_CopyDisp (GUI.xfb[GUI.which_fb]+GX_xfb_offset, GX_TRUE);
 	GX_Flush ();
 	VIDEO_SetNextFramebuffer(GUI.xfb[GUI.which_fb]);
 	VIDEO_Flush();
@@ -819,7 +821,7 @@ void GUI_creditScreen()
 	GX_SetTevSwapMode(GX_TEVSTAGE0, GX_TEV_SWAP0, GX_TEV_SWAP0);
 
 	GX_DrawDone ();
-	GX_CopyDisp (GUI.xfb[GUI.which_fb], GX_FALSE);
+	GX_CopyDisp (GUI.xfb[GUI.which_fb]+GX_xfb_offset, GX_FALSE);
     GX_Flush ();
 	VIDEO_SetNextFramebuffer(GUI.xfb[GUI.which_fb]);
 	VIDEO_Flush();

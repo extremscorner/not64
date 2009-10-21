@@ -632,6 +632,7 @@ static inline void menuStack_push(menu_item*);
 	static void reload(){
 		VIDEO_SetBlack(true);
 		VIDEO_Flush();
+		VIDEO_WaitVSync ();        /*** Wait for VBL ***/
 		void (*rld)() = (void (*)()) 0x80001800;
 		rld();
 	}

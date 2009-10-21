@@ -23,7 +23,8 @@
 
 VIInfo VI;
 
-extern GXRModeObj *vmode;
+extern GXRModeObj *vmode, *rmode;
+extern int GX_xfb_offset;
 
 #ifdef __GX__
 char printToScreen;
@@ -125,7 +126,7 @@ void VI_UpdateScreen()
 			VI_GX_showDEBUG();
 			GX_SetCopyClear ((GXColor){0,0,0,255}, 0xFFFFFF);
 			//Copy EFB->XFB
-			GX_CopyDisp (VI.xfb[VI.which_fb], GX_FALSE);
+			GX_CopyDisp (VI.xfb[VI.which_fb]+GX_xfb_offset, GX_FALSE);
 			GX_DrawDone(); //Wait until EFB->XFB copy is complete
 			VI.updateOSD = false;
 			VI.copy_fb = true;
@@ -149,7 +150,7 @@ void VI_UpdateScreen()
 			VI_GX_showFPS();
 			VI_GX_showDEBUG();
 			GX_SetCopyClear ((GXColor){0,0,0,255}, 0xFFFFFF);
-			GX_CopyDisp (VI.xfb[VI.which_fb], GX_FALSE);
+			GX_CopyDisp (VI.xfb[VI.which_fb]+GX_xfb_offset, GX_FALSE);
 			GX_DrawDone(); //Wait until EFB->XFB copy is complete
 			VI.updateOSD = false;
 			gDP.colorImage.changed = FALSE;
@@ -188,7 +189,7 @@ unsigned int* VI_GX_getScreenPointer(){ return VI.xfb[VI.which_fb]; }
 void VI_GX_clearEFB(){
 	GX_SetZMode(GX_ENABLE,GX_ALWAYS,GX_TRUE);
 	GX_SetCopyClear ((GXColor){0,0,0,255}, 0xFFFFFF);
-	GX_CopyDisp (VI.xfb[VI.which_fb], GX_TRUE);	//clear the EFB before executing new Dlist
+	GX_CopyDisp (VI.xfb[VI.which_fb]+GX_xfb_offset, GX_TRUE);	//clear the EFB before executing new Dlist
 	GX_DrawDone(); //Wait until EFB->XFB copy is complete
 }
 
@@ -270,8 +271,8 @@ void VI_GX_showLoadProg(float percent)
 	GX_Color4u8(GXcol1.r, GXcol1.g, GXcol1.b, GXcol1.a);
 	GX_End();
 
-	if (VI.copy_fb)	GX_CopyDisp (VI.xfb[VI.which_fb], GX_FALSE);
-	else			GX_CopyDisp (VI.xfb[VI.which_fb^1], GX_FALSE);
+	if (VI.copy_fb)	GX_CopyDisp (VI.xfb[VI.which_fb]+GX_xfb_offset, GX_FALSE);
+	else			GX_CopyDisp (VI.xfb[VI.which_fb^1]+GX_xfb_offset, GX_FALSE);
     GX_DrawDone();
 //	VI.copy_fb = true;
 }
@@ -312,10 +313,10 @@ void VI_GX_showStats()
 void VI_GX_cleanUp()
 {
 	GX_SetFog(GX_FOG_NONE,0,1,0,1,(GXColor){0,0,0,255});
-	GX_SetViewport(0,0,vmode->fbWidth,vmode->efbHeight,0,1);
+	GX_SetViewport(0,0,rmode->fbWidth,rmode->efbHeight,0,1);
 	GX_SetCoPlanar(GX_DISABLE);
 	GX_SetClipMode(GX_CLIP_DISABLE);
-	GX_SetScissor(0,0,vmode->fbWidth,vmode->efbHeight);
+	GX_SetScissor(0,0,rmode->fbWidth,rmode->efbHeight);
 	GX_SetAlphaCompare(GX_ALWAYS,0,GX_AOP_AND,GX_ALWAYS,0);
 	GX_SetZCompLoc(GX_TRUE);	// Do Z-compare before texturing.
 }
