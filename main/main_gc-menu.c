@@ -29,6 +29,7 @@ unsigned int MALLOC_MEM2 = 0;
 #include <ogc/conf.h>
 #include <wiiuse/wpad.h>
 #include <di/di.h>
+#include "../gc_memory/MEM2.h"
 #endif
 
 #include "../r4300/r4300.h"
@@ -79,6 +80,7 @@ extern void gfx_set_fb(unsigned int* fb1, unsigned int* fb2);
 static u32* xfb[2] = { NULL, NULL };	/*** Framebuffers ***/
 //static GXRModeObj *vmode;				/*** Graphics Mode Object ***/
 GXRModeObj *vmode;				/*** Graphics Mode Object ***/
+GXRModeObj vmode_phys;				/*** Graphics Mode Object ***/
 
 // Dummy functions
 static void dummy_func(){ }
@@ -369,17 +371,27 @@ static void Initialise (void){
   SYS_SetPowerCallback(ShutdownWii);
 #endif
 
-  vmode = VIDEO_GetPreferredMode(NULL);
+//  vmode = VIDEO_GetPreferredMode(NULL);
+  vmode = VIDEO_GetPreferredMode(&vmode_phys);
 #ifdef HW_RVL
   if(VIDEO_HaveComponentCable() && CONF_GetProgressiveScan())
-    	vmode = &TVNtsc480Prog;
+  {
+//    	vmode = &TVNtsc480Prog;
+		memcpy( vmode, &TVNtsc480Prog, sizeof(GXRModeObj));
+//		vmode->viWidth = VI_MAX_WIDTH_PAL;
+  }
 #else
   if(VIDEO_HaveComponentCable())
 	  vmode = &TVNtsc480Prog;
 #endif
   VIDEO_Configure (vmode);
+#ifdef HW_RVL //Place xfb in MEM2.
+  xfb[0] = (u32 *) XFB0_LO;
+  xfb[1] = (u32 *) XFB1_LO;
+#else
   xfb[0] = (u32 *) MEM_K0_TO_K1 (SYS_AllocateFramebuffer (vmode));
   xfb[1] = (u32 *) MEM_K0_TO_K1 (SYS_AllocateFramebuffer (vmode));
+#endif
   console_init (xfb[0], 20, 64, vmode->fbWidth, vmode->xfbHeight,
         vmode->fbWidth * 2);
   VIDEO_ClearFrameBuffer (vmode, xfb[0], COLOR_BLACK);
