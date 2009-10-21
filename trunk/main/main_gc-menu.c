@@ -391,6 +391,9 @@ static void Initialise (void){
 			GX_xfb_offset = 24;
 		}
   }
+	vmode->fbWidth = VI_MAX_WIDTH_NTSC;
+	vmode->viWidth = VI_MAX_WIDTH_NTSC;
+	GX_xfb_offset = 24;
 #else
   if(VIDEO_HaveComponentCable())
   {
