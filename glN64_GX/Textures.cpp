@@ -1422,7 +1422,7 @@ void TextureCache_ActivateTexture( u32 t, CachedTexture *texture )
 
 	if (texture->GXtexture != NULL && !OGL.GXrenderTexRect) 
 	{
-		if (cache.enable2xSaI)
+		if (cache.enable2xSaI && !texture->frameBufferTexture)
 			GX_InitTexObj(&texture->GXtex, texture->GXtexture, (u16) texture->realWidth << 1, (u16) texture->realHeight << 1, texture->GXtexfmt, 
 				texture->clampS ? GX_CLAMP : GX_REPEAT, 
 				texture->clampT ? GX_CLAMP : GX_REPEAT, GX_FALSE); 

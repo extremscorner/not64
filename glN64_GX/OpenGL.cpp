@@ -1659,7 +1659,7 @@ void OGL_DrawTexturedRect( float ulx, float uly, float lrx, float lry, float uls
 
 	if (combiner.usesT0 && cache.current[0]->GXtexture != NULL) 
 	{
-		if (cache.enable2xSaI)
+		if (cache.enable2xSaI && !cache.current[0]->frameBufferTexture)
 			GX_InitTexObj(&cache.current[0]->GXtex, cache.current[0]->GXtexture, (u16) cache.current[0]->realWidth << 1, 
 				(u16) cache.current[0]->realHeight << 1, cache.current[0]->GXtexfmt, 
 				(cache.current[0]->clampS || OGL.GXforceClampS0) ? GX_CLAMP : GX_REPEAT, 
@@ -1675,7 +1675,7 @@ void OGL_DrawTexturedRect( float ulx, float uly, float lrx, float lry, float uls
 
 	if (combiner.usesT1 && OGL.ARB_multitexture && cache.current[1]->GXtexture != NULL)
 	{
-		if (cache.enable2xSaI)
+		if (cache.enable2xSaI && !cache.current[1]->frameBufferTexture)
 			GX_InitTexObj(&cache.current[1]->GXtex, cache.current[1]->GXtexture, (u16) cache.current[1]->realWidth << 1, 
 				(u16) cache.current[1]->realHeight << 1, cache.current[1]->GXtexfmt, 
 				(cache.current[1]->clampS || OGL.GXforceClampS1) ? GX_CLAMP : GX_REPEAT, 
