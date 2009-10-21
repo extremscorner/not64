@@ -384,18 +384,15 @@ static void Initialise (void){
   {
 		memcpy( vmode, &TVNtsc480Prog, sizeof(GXRModeObj));
 		memcpy( rmode, vmode, sizeof(GXRModeObj));
-		if(CONF_GetAspectRatio() == CONF_ASPECT_16_9)
+/*		if(CONF_GetAspectRatio() == CONF_ASPECT_16_9)
 		{
 			widescreen = 1;
 			vmode->fbWidth = VI_MAX_WIDTH_NTSC;
 			vmode->viWidth = VI_MAX_WIDTH_NTSC;
 //			vmode->viXOrigin = 80;
 			GX_xfb_offset = 24;
-		}
+		}*/
   }
-	vmode->fbWidth = VI_MAX_WIDTH_NTSC;
-	vmode->viWidth = VI_MAX_WIDTH_NTSC;
-	GX_xfb_offset = 24;
 #else
   if(VIDEO_HaveComponentCable())
   {
@@ -404,7 +401,7 @@ static void Initialise (void){
   }
 #endif
   VIDEO_Configure (vmode);
-#ifdef HW_RVL //Place xfb in MEM2.
+#if 0 //def HW_RVL //Place xfb in MEM2.
   xfb[0] = (u32 *) XFB0_LO;
   xfb[1] = (u32 *) XFB1_LO;
 #else
