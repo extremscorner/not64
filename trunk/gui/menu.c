@@ -630,6 +630,8 @@ static inline void menuStack_push(menu_item*);
 /* "Exit to SDLOAD" item */
 
 	static void reload(){
+		VIDEO_SetBlack(true);
+		VIDEO_Flush();
 		void (*rld)() = (void (*)()) 0x80001800;
 		rld();
 	}
