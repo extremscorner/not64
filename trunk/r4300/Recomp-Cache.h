@@ -5,8 +5,12 @@
 #ifndef RECOMP_CACHE_H
 #define RECOMP_CACHE_H
 
-// Hold 4MB worth of recompiled data max
-#define RECOMP_CACHE_SIZE (7*1024*1024)
+// Hold 6MB worth of recompiled data max
+#ifdef HW_RVL
+#define RECOMP_CACHE_SIZE (8*1024*1024)
+#else
+#define RECOMP_CACHE_SIZE (5*1024*1024)
+#endif
 
 // Allocate and free memory to be used for recompiled code
 //   Any memory allocated this way can be freed at any time
@@ -16,6 +20,6 @@ void RecompCache_Realloc(PowerPC_func* func, unsigned int size);
 void RecompCache_Free(unsigned int addr);
 // Update the LRU info of the indicated block
 //   (call when the block is accessed)
-void RecompCache_Update(unsigned int addr);
+void RecompCache_Update(PowerPC_func* func);
 
 #endif

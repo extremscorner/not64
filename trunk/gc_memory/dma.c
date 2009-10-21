@@ -213,11 +213,11 @@ void dma_pi_write()
 		 invalid_code_set(rdram_address2>>12, 1);
 #else
              if(!invalid_code_get(rdram_address1>>12))
-	       if(blocks[rdram_address1>>12]->code_addr[(rdram_address1&0xFFF)/4])
+	       //if(blocks[rdram_address1>>12]->code_addr[(rdram_address1&0xFFF)/4])
 		 invalid_code_set(rdram_address1>>12, 1);
 	     
 	     if(!invalid_code_get(rdram_address2>>12))
-	       if(blocks[rdram_address2>>12]->code_addr[(rdram_address2&0xFFF)/4])
+	       //if(blocks[rdram_address2>>12]->code_addr[(rdram_address2&0xFFF)/4])
 		 invalid_code_set(rdram_address2>>12, 1);
 #endif
 	  }

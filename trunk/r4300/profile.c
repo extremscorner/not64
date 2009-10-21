@@ -76,6 +76,9 @@ void refresh_stat()
 	sprintf(txtbuffer, "interp=%f%%", 100.0f * (float)time_in_section[INTERP_SECTION] / (float)time_in_section[0]);
 	DEBUG_print(txtbuffer, DBG_PROFILE_INTERP);
 	
+	sprintf(txtbuffer, "tramp=%f%%", 100.0f * (float)time_in_section[TRAMP_SECTION] / (float)time_in_section[0]);
+	DEBUG_print(txtbuffer, DBG_PROFILE_TRAMP);
+	
 	int i;
 	for(i=1; i<=NUM_SECTIONS; ++i) time_in_section[i] = 0;
 	last_start[0] = this_tick;
