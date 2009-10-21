@@ -4,7 +4,7 @@
  *
  * Mupen64 homepage: http://mupen64.emulation64.com
  * email address: hacktarux@yahoo.fr
- * 
+ *
  * If you want to contribute to the project please contact
  * me first (maybe someone is already making what you are
  * planning to do).
@@ -30,6 +30,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#ifdef USE_GUI
+#include "../gui/GUI.h"
+#define PRINT GUI_print
+#else
+#define PRINT printf
+#endif
+
 #include "../r4300/r4300.h"
 #include "memory.h"
 #include "../main/guifuncs.h"
@@ -37,13 +44,6 @@
 
 #include <ogc/card.h>
 #include "Saves.h"
-
-#ifdef USE_GUI
-#include "../gui/GUI.h"
-#define PRINT GUI_print
-#else
-#define PRINT printf
-#endif
 
 int use_flashram;
 
@@ -70,12 +70,12 @@ static unsigned long erase_offset, write_pointer;
 BOOL flashramWritten = FALSE;
 
 int loadFlashram(fileBrowser_file* savepath){
-	int i, result = 0; 
+	int i, result = 0;
 	fileBrowser_file saveFile;
 	memcpy(&saveFile, savepath, sizeof(fileBrowser_file));
 	strcat((char*)saveFile.name, ROM_SETTINGS.goodname);
 	strcat((char*)saveFile.name, ".fla");
-	
+
 	if( !(saveFile_readFile(&saveFile, &i, 4) <= 0) ){
 		PRINT("Loading flashram, please be patient...\n");
 		saveFile.offset = 0;
@@ -85,25 +85,25 @@ int loadFlashram(fileBrowser_file* savepath){
 		flashramWritten = 1;
 		return result;
 	} else for (i=0; i<0x20000; i++) flashram[i] = 0xff;
-	
+
 	flashramWritten = FALSE;
-	
+
 	return result;
 }
 
 int saveFlashram(fileBrowser_file* savepath){
 	if(!flashramWritten) return 0;
 	PRINT("Saving flashram, do not turn off the console...\n");
-	
+
 	fileBrowser_file saveFile;
 	memcpy(&saveFile, savepath, sizeof(fileBrowser_file));
 	strcat((char*)saveFile.name, ROM_SETTINGS.goodname);
 	strcat((char*)saveFile.name, ".fla");
-	
+
 	saveFile_writeFile(&saveFile, flashram, 0x20000);
-	
+
 	PRINT("OK\n");
-	
+
 	return 1;
 }
 
@@ -164,17 +164,17 @@ void flashram_command(unsigned long command)
 	       {
 		  int i;
 		  flashramWritten = TRUE;
-		  
+
 		  for (i=erase_offset; i<(erase_offset+128); i++)
 		    flashram[i^S8] = 0xff;
- 
+
 	       }
 	     break;
 	   case WRITE_MODE:
 	       {
 	       	  	int i;
 		  		flashramWritten = TRUE;
-                  
+
 		  for (i=0; i<128; i++)
 		    flashram[(erase_offset+i)^S8]=
 		    ((unsigned char*)rdram)[(write_pointer+i)^S8];
@@ -219,7 +219,7 @@ void dma_read_flashram()
 	  ((unsigned char*)rdram)[(pi_register.pi_dram_addr_reg+i)^S8]=
 	  flashram[(((pi_register.pi_cart_addr_reg-0x08000000)&0xFFFF)*2+i)^S8];
 	break;
-      default:	
+      default:
 	printf("unknown dma_read_flashram:%x\n", mode);
 	stop=1;
      }

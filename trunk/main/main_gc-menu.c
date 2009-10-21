@@ -18,14 +18,6 @@
 #include "rom.h"
 #include "plugin.h"
 
-#include "../r4300/r4300.h"
-#include "../gc_memory/memory.h"
-#include "../gc_memory/ARAM.h"
-#include "../gc_memory/TLB-Cache.h"
-#include "../gc_memory/tlb.h"
-#include "../gc_memory/pif.h"
-#include "ROM-Cache.h"
-
 #include <gccore.h>
 #include "../gui/gui_GX-menu.h"
 #include "../gui/GUI.h"
@@ -38,6 +30,14 @@ unsigned int MALLOC_MEM2 = 0;
 #include <wiiuse/wpad.h>
 #include <di/di.h>
 #endif
+
+#include "../r4300/r4300.h"
+#include "../gc_memory/memory.h"
+#include "../gc_memory/ARAM.h"
+#include "../gc_memory/TLB-Cache.h"
+#include "../gc_memory/tlb.h"
+#include "../gc_memory/pif.h"
+#include "ROM-Cache.h"
 
 /* NECESSARY FUNCTIONS AND VARIABLES */
 
@@ -107,7 +107,7 @@ int main(){
 	DEBUG_Init(GDBSTUB_DEVICE_USB, 1);
 	_break();
 #endif
-	
+
 	// Default Settings
 	audioEnabled     = 1; // Audio
 	showFPSonScreen  = 1; // Show FPS on Screen
@@ -118,13 +118,13 @@ int main(){
 	creditsScrolling = 0; // Normal menu for now
 	dynacore         = 1; // Dynarec
 #ifdef GLN64_GX
-// glN64 specific  settings	
+// glN64 specific  settings
  	glN64_useFrameBufferTextures = 0; // Disable FrameBuffer textures
 #endif //GLN64_GX
 	// 'Page flip' buttons so we know when it released
 	int which_pad = 0;
 	u16 buttons[2];
-	
+
 	/* MAIN LOOP */
 	while(TRUE){
 		if(padNeedScan){ PAD_ScanPads(); padNeedScan = 0; }
@@ -132,33 +132,33 @@ int main(){
 		buttons[which_pad] = PAD_ButtonsHeld(0) | readWPAD();
 #ifdef HW_RVL
     if(shutdown)
-      SYS_ResetSystem(SYS_POWEROFF, 0, 0);		
+      SYS_ResetSystem(SYS_POWEROFF, 0, 0);
 #endif
-// Check whether button is pressed and make sure it wasn't registered last time	
+// Check whether button is pressed and make sure it wasn't registered last time
 #define PAD_PRESSED(butt0n) ( buttons[which_pad] & butt0n && !(buttons[which_pad^1] & butt0n) )
-		
+
 		// Navigate the menu accordingly
 		if( PAD_PRESSED( PAD_BUTTON_UP ) )
 			menuNavigate(-1);
 		else if( PAD_PRESSED( PAD_BUTTON_DOWN ) )
 			menuNavigate(1);
-		
+
 		if( PAD_PRESSED( PAD_BUTTON_A ) )
 			menuSelect();
 		else if( PAD_PRESSED( PAD_BUTTON_B ) )
 			menuBack();
-		
+
 		// TODO: Analog stick
-		
+
 		// 'Flip' buttons
 		which_pad ^= 1;
-		
+
 		// Display everything
 		menuDisplay();
 		if(creditsScrolling) GUI_creditScreen();
 		else GUI_draw();
 	}
-	
+
 	return 0;
 }
 
@@ -166,7 +166,7 @@ int main(){
 u16 readWPAD(void){
 	if(wpadNeedScan){ WPAD_ScanPads(); wpadNeedScan = 0; }
 	WPADData* wpad = WPAD_Data(0);
-	
+
 	u16 b = 0;
 	if(wpad->err == WPAD_ERR_NONE &&
 	   wpad->exp.type == WPAD_EXP_CLASSIC){
@@ -178,7 +178,7 @@ u16 readWPAD(void){
 	   	b |= (w & CLASSIC_CTRL_BUTTON_A) ? PAD_BUTTON_A : 0;
 	   	b |= (w & CLASSIC_CTRL_BUTTON_B) ? PAD_BUTTON_B : 0;
 	}
-	
+
 	return b;
 }
 #else
@@ -191,7 +191,7 @@ extern BOOL sramWritten;
 extern BOOL flashramWritten;
 BOOL hasLoadedROM = FALSE;
 int loadROM(fileBrowser_file* rom){
-	
+
 	// First, if there's already a loaded ROM
 	if(hasLoadedROM){
 		// Unload it, and deinit everything
@@ -208,7 +208,7 @@ int loadROM(fileBrowser_file* rom){
 		closeDLL_input();
 		closeDLL_audio();
 		closeDLL_gfx();
-		
+
 		ROMCache_deinit();
 		free_memory();
 #ifndef HW_RVL
@@ -230,20 +230,20 @@ int loadROM(fileBrowser_file* rom){
 		hasLoadedROM = FALSE;
 		return -1;
 	}
-	
+
 	// Init everything for this ROM
 	init_memory();
-	
+
 	gfx_info_init();
 	audio_info_init();
 	control_info_init();
 	rsp_info_init();
-	
+
 	romOpen_gfx();
 	gfx_set_fb(xfb[0], xfb[1]);
 	romOpen_audio();
 	romOpen_input();
-	
+
 	cpu_init();
 	return 0;
 }
@@ -368,9 +368,9 @@ static void Initialise (void){
   //WPAD_SetPowerButtonCallback((WPADShutdownCallback)ShutdownWii);
   SYS_SetPowerCallback(ShutdownWii);
 #endif
-  
+
   vmode = VIDEO_GetPreferredMode(NULL);
-#ifdef HW_RVL    
+#ifdef HW_RVL
   if(VIDEO_HaveComponentCable() && CONF_GetProgressiveScan())
     	vmode = &TVNtsc480Prog;
 #else
@@ -396,9 +396,9 @@ static void Initialise (void){
   void *gp_fifo = NULL;
   gp_fifo = MEM_K0_TO_K1 (memalign (32, DEFAULT_FIFO_SIZE));
   memset (gp_fifo, 0, DEFAULT_FIFO_SIZE);
- 
+
   GX_Init (gp_fifo, DEFAULT_FIFO_SIZE);
- 
+
   // clears the bg to color and clears the z buffer
 //  GX_SetCopyClear ((GXColor){64,64,64,255}, 0x00000000);
   GX_SetCopyClear ((GXColor){0,0,0,255}, 0x00000000);
@@ -406,7 +406,7 @@ static void Initialise (void){
   GX_SetViewport (0, 0, vmode->fbWidth, vmode->efbHeight, 0, 1);
   // Set the correct y scaling for efb->xfb copy operation
   GX_SetDispCopyYScale ((f32) vmode->xfbHeight / (f32) vmode->efbHeight);
-  GX_SetDispCopyDst (vmode->fbWidth, vmode->xfbHeight); 
+  GX_SetDispCopyDst (vmode->fbWidth, vmode->xfbHeight);
   GX_SetCullMode (GX_CULL_NONE); // default in rsp init
   GX_CopyDisp (xfb[0], GX_TRUE); // This clears the efb
   GX_CopyDisp (xfb[0], GX_TRUE); // This clears the xfb
@@ -415,7 +415,7 @@ static void Initialise (void){
   GUI_setFB(xfb[0], xfb[1]);
   GUI_init();
 #endif
-	
+
 	// Init PS GQRs so I can load signed/unsigned chars/shorts as PS values
 	__asm__ volatile(
 		"lis	3, 4     \n"

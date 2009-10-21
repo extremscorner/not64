@@ -1,11 +1,11 @@
 /**
  * Mupen64 - rom_gc.c
- * Copyright (C) 2002 Hacktarux, 
+ * Copyright (C) 2002 Hacktarux,
  * Wii/GC Additional code by tehpola, emu_kidid
  *
  * Mupen64 homepage: http://mupen64.emulation64.com
  * email address: hacktarux@yahoo.fr
- * 
+ *
  * If you want to contribute to the project please contact
  * me first (maybe someone is already making what you are
  * planning to do).
@@ -32,11 +32,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include "../gui/GUI.h"
 #include "rom.h"
-#include "ROM-Cache.h" 
+#include "ROM-Cache.h"
 #include "../gc_memory/memory.h"
 #include "../fileBrowser/fileBrowser.h"
-#include "../gui/GUI.h"
 
 #define PRINT GUI_print
 
@@ -48,7 +48,7 @@ rom_header* ROM_HEADER = NULL;
 rom_settings ROM_SETTINGS;
 
 int init_byte_swap(u32 magicWord){
-	
+
 	switch(magicWord >> 24){
 	case 0x37:					//37804012 aka byteswapped
 		ROM_byte_swap = BYTE_SWAP_BYTE;
@@ -117,7 +117,7 @@ bool isEEPROM16k()
   int i = 0;
   unsigned int curCRC[2];
   ROMCache_read((unsigned int*)&curCRC[0], 0x10, sizeof(unsigned int)*2);
-  
+
   for (i = 0; i < TOTAL_NUM_16KBIT; i++)
   {
     if((CRC_TABLE[i][0] == curCRC[0])&&(CRC_TABLE[i][1] == curCRC[1]))
@@ -129,12 +129,12 @@ bool isEEPROM16k()
 void byte_swap(char* buffer, unsigned int length){
 	if(ROM_byte_swap == BYTE_SWAP_NONE || ROM_byte_swap == BYTE_SWAP_BAD)
 		return;
-	
+
 	int i = 0;
 	u8 aByte = 0;
 	u16 aShort = 0;
 	u16 *buffer_short = (unsigned short*)buffer;
-	
+
 	if(ROM_byte_swap == BYTE_SWAP_HALF){	//aka little endian (40123780) vs (80371240)
 		for(i=0; i<length; i+=2) 	//get it from (40123780) to (12408037)
 		{
@@ -143,7 +143,7 @@ void byte_swap(char* buffer, unsigned int length){
 			buffer[i+1] = aByte;
 		}
 		for(i=0; i<length/2; i+=2)	//get it from (12408037) to (80371240)
-		{ 
+		{
 			aShort        		= buffer_short[i];
 			buffer_short[i]   	= buffer_short[i+1];
 			buffer_short[i+1] 	= aShort;
@@ -164,17 +164,17 @@ int rom_read(fileBrowser_file* file){
    int i;
    rom_file = file;
    rom_length = file->size;
-   
+
    ROMCache_init(rom_file);
    int ret = ROMCache_load(rom_file);
 
    if(!ROM_HEADER) ROM_HEADER = malloc(sizeof(rom_header));
    ROMCache_read((u32*)ROM_HEADER, 0, sizeof(rom_header));
- 
+
    // Swap country code back since I know the emulator relies on this being little endian.
-  char temp = ((char*)&ROM_HEADER->Country_code)[0];   
+  char temp = ((char*)&ROM_HEADER->Country_code)[0];
   ((char*)&ROM_HEADER->Country_code)[0] = ((char*)&ROM_HEADER->Country_code)[1];
-  ((char*)&ROM_HEADER->Country_code)[1] = temp;  
+  ((char*)&ROM_HEADER->Country_code)[1] = temp;
   //Copy header name as Goodname (in the .ini we can use CRC to identify ROMS)
   memset((char*)buffer,0,1024);
   strncpy(buffer, (char*)ROM_HEADER->nom,32);
