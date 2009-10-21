@@ -707,6 +707,12 @@ static inline void menuStack_push(menu_item*);
 		  "glN64 FB Textures: enabled" };
 	static char* toggleGlN64useFbTex_func(void);
 
+	extern char glN64_use2xSaiTextures;
+	static char toggleGlN64use2xSaiTex_strings[2][31] =
+		{ "glN64 2xSaI Textures: disabled",
+		  "glN64 2xSaI Textures: enabled" };
+	static char* toggleGlN64use2xSaiTex_func(void);
+
 #define NUM_DEV_STD 2
 #ifdef SDPRINT
 	#define NUM_DEV_SDPRINT 1
@@ -714,7 +720,7 @@ static inline void menuStack_push(menu_item*);
 	#define NUM_DEV_SDPRINT 0
 #endif
 #ifdef GLN64_GX
-	#define NUM_DEV_GLN64 2
+	#define NUM_DEV_GLN64 3
 #else
 	#define NUM_DEV_GLN64 0
 #endif
@@ -737,6 +743,10 @@ static inline void menuStack_push(menu_item*);
 		 { &toggleGlN64useFbTex_strings[0][0],
 		   MENU_ATTR_NONE,
 		   { .func = toggleGlN64useFbTex_func }
+		  },
+		 { &toggleGlN64use2xSaiTex_strings[0][0],
+		   MENU_ATTR_NONE,
+		   { .func = toggleGlN64use2xSaiTex_func }
 		  },
 #endif
 #ifdef SDPRINT
@@ -778,6 +788,12 @@ static inline void menuStack_push(menu_item*);
 	static char* toggleGlN64useFbTex_func(void){
 		glN64_useFrameBufferTextures ^= 1;
 		devFeatures_submenu[3].caption = &toggleGlN64useFbTex_strings[glN64_useFrameBufferTextures][0];
+		return NULL;
+	}
+
+	static char* toggleGlN64use2xSaiTex_func(void){
+		glN64_use2xSaiTextures ^= 1;
+		devFeatures_submenu[4].caption = &toggleGlN64use2xSaiTex_strings[glN64_use2xSaiTextures][0];
 		return NULL;
 	}
 

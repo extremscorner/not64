@@ -111,9 +111,6 @@ void _2xSaI( void *srcPtr, void *dstPtr,
              u16 width, u16 height, s32 clampS, s32 clampT,
              Interpolator* interpolator )
 {
-//	u16 destWidth = width << 1;
-	//u16 destHeight = height << 1;
-	u16 destWidth = interpolator->getDestWidth(width);
 	u16 tileH = interpolator->getTileH(height);
 	u16 tileW = interpolator->getTileW(width);
 	bool skipTile = interpolator->getSkipTile();
@@ -287,9 +284,9 @@ void _2xSaI( void *srcPtr, void *dstPtr,
 			if (!skipTile)
 			{
 				dstIter->set(0, colorA);
-				dstIter->set(1, interpolator->getFinalColor(product));
-				dstIter->set(tileW<<1, interpolator->getFinalColor(product1));
-				dstIter->set((tileW<<1) + 1, interpolator->getFinalColor(product2));
+				dstIter->set(1, product);
+				dstIter->set(tileW<<1, product1);
+				dstIter->set((tileW<<1) + 1, product2);
 				(*dstIter) += 2;
 			}
 			else
@@ -309,7 +306,6 @@ void _2xSaI( void *srcPtr, void *dstPtr,
 	}
 	if (x1+tileW < width) (*srcIter) += -(tileH-1)*width;
 	if (skipTile) (*dstIter) += 8;
-//	(*dstIter) += destWidth;
 	}}
 	
 	delete srcIter;
