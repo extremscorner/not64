@@ -79,8 +79,10 @@ extern void gfx_set_fb(unsigned int* fb1, unsigned int* fb2);
 
 static u32* xfb[2] = { NULL, NULL };	/*** Framebuffers ***/
 //static GXRModeObj *vmode;				/*** Graphics Mode Object ***/
-GXRModeObj *vmode;				/*** Graphics Mode Object ***/
-GXRModeObj vmode_phys;				/*** Graphics Mode Object ***/
+GXRModeObj *vmode, *rmode;				/*** Graphics Mode Object ***/
+GXRModeObj vmode_phys, rmode_phys;		/*** Graphics Mode Object ***/
+char widescreen = 0;
+int GX_xfb_offset = 0;
 
 // Dummy functions
 static void dummy_func(){ }
@@ -119,6 +121,7 @@ int main(){
 	saveEnabled      = 0; // Don't save game
 	creditsScrolling = 0; // Normal menu for now
 	dynacore         = 1; // Dynarec
+	widescreen		 = 0; // Stretch FB horizontally
 #ifdef GLN64_GX
 // glN64 specific  settings
  	glN64_useFrameBufferTextures = 0; // Disable FrameBuffer textures
@@ -371,18 +374,29 @@ static void Initialise (void){
   SYS_SetPowerCallback(ShutdownWii);
 #endif
 
-//  vmode = VIDEO_GetPreferredMode(NULL);
   vmode = VIDEO_GetPreferredMode(&vmode_phys);
+  rmode = &rmode_phys;
+  memcpy( rmode, vmode, sizeof(GXRModeObj));
 #ifdef HW_RVL
   if(VIDEO_HaveComponentCable() && CONF_GetProgressiveScan())
   {
-//    	vmode = &TVNtsc480Prog;
 		memcpy( vmode, &TVNtsc480Prog, sizeof(GXRModeObj));
-//		vmode->viWidth = VI_MAX_WIDTH_PAL;
+		memcpy( rmode, vmode, sizeof(GXRModeObj));
+		if(CONF_GetAspectRatio() == CONF_ASPECT_16_9)
+		{
+			widescreen = 1;
+			vmode->fbWidth = VI_MAX_WIDTH_NTSC;
+			vmode->viWidth = VI_MAX_WIDTH_NTSC;
+//			vmode->viXOrigin = 80;
+			GX_xfb_offset = 24;
+		}
   }
 #else
   if(VIDEO_HaveComponentCable())
-	  vmode = &TVNtsc480Prog;
+  {
+		memcpy( vmode, &TVNtsc480Prog, sizeof(GXRModeObj));
+		memcpy( rmode, vmode, sizeof(GXRModeObj));
+  }
 #endif
   VIDEO_Configure (vmode);
 #ifdef HW_RVL //Place xfb in MEM2.
@@ -410,18 +424,18 @@ static void Initialise (void){
   memset (gp_fifo, 0, DEFAULT_FIFO_SIZE);
 
   GX_Init (gp_fifo, DEFAULT_FIFO_SIZE);
-
+	  
   // clears the bg to color and clears the z buffer
 //  GX_SetCopyClear ((GXColor){64,64,64,255}, 0x00000000);
   GX_SetCopyClear ((GXColor){0,0,0,255}, 0x00000000);
   // init viewport
-  GX_SetViewport (0, 0, vmode->fbWidth, vmode->efbHeight, 0, 1);
+  GX_SetViewport (0, 0, rmode->fbWidth, rmode->efbHeight, 0, 1);
   // Set the correct y scaling for efb->xfb copy operation
-  GX_SetDispCopyYScale ((f32) vmode->xfbHeight / (f32) vmode->efbHeight);
+  GX_SetDispCopyYScale ((f32) rmode->xfbHeight / (f32) rmode->efbHeight);
   GX_SetDispCopyDst (vmode->fbWidth, vmode->xfbHeight);
   GX_SetCullMode (GX_CULL_NONE); // default in rsp init
-  GX_CopyDisp (xfb[0], GX_TRUE); // This clears the efb
-  GX_CopyDisp (xfb[0], GX_TRUE); // This clears the xfb
+  GX_CopyDisp (xfb[0]+GX_xfb_offset, GX_TRUE); // This clears the efb
+  GX_CopyDisp (xfb[0]+GX_xfb_offset, GX_TRUE); // This clears the xfb
 
 #ifdef USE_GUI
   GUI_setFB(xfb[0], xfb[1]);

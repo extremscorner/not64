@@ -2042,7 +2042,7 @@ void OGL_GXinitDlist()
 	OGL.GXclearColor = (GXColor){0,0,0,255};
 }
 
-extern GXRModeObj *vmode;
+extern GXRModeObj *vmode, *rmode;
 
 void OGL_GXclearEFB()
 {
@@ -2064,7 +2064,7 @@ void OGL_GXclearEFB()
 	GX_SetFog(GX_FOG_NONE,0.1,1.0,0.0,1.0,(GXColor){0,0,0,255});
 	GX_SetViewport((f32) 0,(f32) 0,(f32) OGL.width,(f32) OGL.height, 0.0f, 1.0f);
 	GX_SetScissor((u32) 0,(u32) 0,(u32) OGL.width+1,(u32) OGL.height+1);	//Set to the same size as the viewport.
-//	GX_SetScissor(0,0,vmode->fbWidth,vmode->efbHeight);
+//	GX_SetScissor(0,0,rmode->fbWidth,rmode->efbHeight);
 	GX_SetCullMode (GX_CULL_NONE);
 	Mtx44 GXprojection;
 	guMtxIdentity(GXprojection);
