@@ -33,11 +33,13 @@ static unsigned int current_jump;
 static PowerPC_instr** code_addr;
 static unsigned char isJmpDst[1024];
 
+static PowerPC_instr code_buffer[1024*32];
+static PowerPC_instr* code_addr_buffer[1024];
+
 static int pass0(PowerPC_block* ppc_block);
 static void pass2(PowerPC_block* ppc_block);
 //static void genRecompileBlock(PowerPC_block*);
 static void genJumpPad(void);
-int resizeCode(PowerPC_block* block, PowerPC_func* func, int newSize);
 void invalidate_block(PowerPC_block* ppc_block);
 
 MIPS_instr get_next_src(void) { return *(src++); }
@@ -58,7 +60,7 @@ int has_next_src(void){ return (src_last-src) > 0; }
 unsigned int get_src_pc(void){ return addr_first + ((src-1-src_first)<<2); }
 void set_next_dst(PowerPC_instr i){ *(dst++) = i; ++code_length; }
 // Adjusts the code_addr for the current instruction to account for flushes
-void reset_code_addr(void){ if(src<=src_last) code_addr[src-1-src_first] = dst; } // FIXME: < or <=??
+void reset_code_addr(void){ if(src<=src_last) code_addr[src-1-src_first] = dst; }
 
 int add_jump(int old_jump, int is_j, int is_call){
 	int id = current_jump;
@@ -96,7 +98,6 @@ PowerPC_func* recompile_block(PowerPC_block* ppc_block, unsigned int addr){
 	int need_pad = pass0(ppc_block); // Sets src_last, addr_last
 
 	code_length = 0;
-	unsigned int max_length = addr_last - addr_first; // 4x size
 
 	// Create a PowerPC_func for this function
 	PowerPC_func* func = malloc(sizeof(PowerPC_func));
@@ -105,13 +106,7 @@ PowerPC_func* recompile_block(PowerPC_block* ppc_block, unsigned int addr){
 	func->code = NULL;
 	func->holes = NULL;
 	func->code_addr = NULL;
-	// Create a corresponding PowerPC_func_node to add to ppc_block->funcs
-#if 0
-	PowerPC_func_node* node = malloc(sizeof(PowerPC_func_node));
-	node->function = func;
-	node->next = ppc_block->funcs;
-	ppc_block->funcs = node;
-#endif
+	// We'll need to insert this func into the block
 	int needInsert = 1;
 
 	// Check for and remove any overlapping functions
@@ -151,22 +146,17 @@ PowerPC_func* recompile_block(PowerPC_block* ppc_block, unsigned int addr){
 			hole->addr = func->start_addr;
 			hole->next = (*node)->function->holes;
 			(*node)->function->holes = hole;
-			// Free up func and its node
-#if 0
-			ppc_block->funcs = node->next;
-			free(node);
-#else
-			needInsert = 0;
-#endif
+			// Free this func since its just a hole now
 			free(func);
 			// Move all our pointers to the outer function
 			func = (*node)->function;
-			max_length = RecompCache_Size(func) / 4;
 			addr = ppc_block->start_address + (func->start_addr&0xfff);
 			src_first = ppc_block->mips_code + ((addr&0xfff)>>2);
 			addr_first = ppc_block->start_address + (addr&0xfff);
 			need_pad = pass0(ppc_block);
 			RecompCache_Update(func);
+			// Make sure we don't insert the old func again
+			needInsert = 0;
 			// There cannot be another overlapping function
 			//break;
 
@@ -182,37 +172,22 @@ PowerPC_func* recompile_block(PowerPC_block* ppc_block, unsigned int addr){
 	func = handle_overlap(&ppc_block->funcs, func);
 	if(needInsert) insert_func(&ppc_block->funcs, func);
 
-	if(!func->code){
-		// We aren't simply recompiling from a hole
-#ifdef USE_RECOMP_CACHE
-		RecompCache_Alloc(max_length * sizeof(PowerPC_instr), addr, func);
-#else
-		func->code = malloc(max_length * sizeof(PowerPC_instr));
-#endif
-	}
-
 	PowerPC_func_hole_node* hole;
 	for(hole = func->holes; hole != NULL; hole = hole->next){
 		isJmpDst[ (hole->addr&0xfff) >> 2 ] = 1;
 	}
 
 	src = src_first;
-	dst = func->code;
+	dst = code_buffer; // Use buffer to avoid guessing length
 	current_jump = 0;
-	code_addr = func->code_addr;
+	code_addr = code_addr_buffer;
+	memset(code_addr, 0, addr_last - addr_first);
+
 	start_new_block();
 	isJmpDst[src-ppc_block->mips_code] = 1;
 
 	while(has_next_src()){
 		unsigned int offset = src - ppc_block->mips_code;
-		// Make sure the code doesn't overflow
-		// FIXME: The resize factor may not be optimal
-		//          maybe we can make a guess based on
-		//          how far along we are now
-		if(code_length + 64 >= max_length){
-			max_length = max_length * 3/2 + 64;
-			resizeCode(ppc_block, func, max_length);
-		}
 
 		if(isJmpDst[offset]){
 			src++; start_new_mapping(); src--;
@@ -225,17 +200,37 @@ PowerPC_func* recompile_block(PowerPC_block* ppc_block, unsigned int addr){
 	// Flush any remaining mapped registers
 	flushRegisters(); //start_new_mapping();
 	// In case we couldn't compile the whole function, use a pad
-	if(need_pad){
-		if(code_length + 8 > max_length)
-			resizeCode(ppc_block, func, code_length + 8);
+	if(need_pad)
 		genJumpPad();
+
+	// Allocate the func buffers and copy the code
+	if(!func->code){
+		// We aren't simply recompiling from a hole
+#ifdef USE_RECOMP_CACHE
+		RecompCache_Alloc(code_length * sizeof(PowerPC_instr), addr, func);
+#else
+		func->code = malloc(code_length * sizeof(PowerPC_instr));
+#endif
+	} else {
+		// We're recompiling from a hole, and we need to adjust the buffer size
+		RecompCache_Realloc(func, code_length * sizeof(PowerPC_instr));
 	}
+	memcpy(func->code, code_buffer, code_length * sizeof(PowerPC_instr));
+	memcpy(func->code_addr, code_addr_buffer, addr_last - addr_first);
+
+	// Readjusting pointers to the func buffers
+	code_addr = func->code_addr;
+	dst = func->code + (dst - code_buffer);
+	int i;
+	for(i=0; i<src-src_first; ++i)
+		if(code_addr[i])
+			code_addr[i] = func->code + (code_addr[i] - code_buffer);
+	for(i=0; i<current_jump; ++i)
+		jump_table[i].dst_instr = func->code +
+		                          (jump_table[i].dst_instr - code_buffer);
 
 	// Here we recompute jumps and branches
 	pass2(ppc_block);
-	// Resize the code to exactly what is needed
-	// FIXME: This doesn't work for some reason
-	//resizeCode(ppc_block, *code_length);
 
 	// Since this is a fresh block of code,
 	// Make sure it wil show up in the ICache
@@ -507,33 +502,6 @@ void dyna_jump(){ jump_to(jump_to_address); }
 void dyna_stop(){ }
 void jump_to_func(){ jump_to(jump_to_address); }
 
-// Warning: This is a slow operation, try not to use it
-int resizeCode(PowerPC_block* block, PowerPC_func* func, int newSize){
-	if(!func->code) return 0;
-
-	// Creating the new block and copying the code
-	PowerPC_instr* oldCode = func->code;
-#ifdef USE_RECOMP_CACHE
-	RecompCache_Realloc(func, newSize * sizeof(PowerPC_instr));
-#else
-	func->code = realloc(func->code, newSize * sizeof(PowerPC_instr));
-#endif
-	if(!func->code){ printf("Realloc failed. Panic!\n"); return 0; }
-
-	if(func->code == oldCode) return newSize;
-
-	// Readjusting pointers
-	dst = func->code + (dst - oldCode);
-	int i, start = (func->start_addr&0xfff)>>2;
-	for(i=0; i<src-src_first; ++i)
-		if(code_addr[i])
-			code_addr[i] = func->code + (code_addr[i] - oldCode);
-	for(i=0; i<current_jump; ++i)
-		jump_table[i].dst_instr = func->code + (jump_table[i].dst_instr - oldCode);
-
-	return newSize;
-}
-
 static void genJumpPad(void){
 	PowerPC_instr ppc = NEW_PPC_INSTR();
 
@@ -561,21 +529,6 @@ static void genJumpPad(void){
 
 void invalidate_block(PowerPC_block* ppc_block){
 	// Free the code for all the functions in this block
-#if 0
-	PowerPC_func_node* n, * next;
-	for(n=ppc_block->funcs; n != NULL; n = next){
-		next = n->next;
-#ifdef USE_RECOMP_CACHE
-		RecompCache_Free(ppc_block->start_address | n->function->start_addr);
-#else
-		free(n->function->code);
-		free(n->function->code_addr);
-		free(n->function);
-		free(n);
-#endif
-	}
-	ppc_block->funcs = NULL;
-#else
 	PowerPC_func_node* free_tree(PowerPC_func_node* node){
 		if(!node) return NULL;
 		node->left = free_tree(node->left);
@@ -584,7 +537,6 @@ void invalidate_block(PowerPC_block* ppc_block){
 		return NULL;
 	}
 	ppc_block->funcs = free_tree(ppc_block->funcs);
-#endif
 	// NULL out code_addr
 	//memset(ppc_block->code_addr, 0, 1024 * sizeof(PowerPC_instr*));
 	// Now that we've handled the invalidation, reinit ourselves

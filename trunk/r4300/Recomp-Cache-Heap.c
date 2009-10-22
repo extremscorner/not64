@@ -112,7 +112,7 @@ static inline void update_lru(PowerPC_func* func){
 		//   I have to create a new heap
 		CacheMetaNode** newHeap = malloc(maxHeapSize * sizeof(CacheMetaNode*));
 		int i, savedSize = heapSize;
-		for(i=0; i<heapSize; ++i){
+		for(i=0; heapSize > 0; ++i){
 			newHeap[i] = heapPop();
 			newHeap[i]->func->lru = i;
 		}
@@ -164,40 +164,30 @@ void RecompCache_Alloc(unsigned int size, unsigned int address, PowerPC_func* fu
 	cacheSize += size;
 	newBlock->func->code = code;
 	newBlock->func->code_addr = code_addr;
-	memset(code_addr, 0, num_instrs * sizeof(void*));
 	// Add it to the heap
 	heapPush(newBlock);
 	// Make this function the LRU
 	update_lru(func);
 }
 
-void RecompCache_Realloc(PowerPC_func* func, unsigned int size){
-	int i;
-	CacheMetaNode* n = NULL;
-	// Find the corresponding node
-	for(i=heapSize-1; !n; --i)
-		if(cacheHeap[i]->func == func)
-			n = cacheHeap[i];
-	// Make this function the LRU
-	update_lru(func);
-
-	int neededSpace = size - n->size;
-
-	// Allocate new memory (releasing if necessary)
-	void* code = __lwp_heap_allocate(cache, size);
-	while(!code){
-		release(size);
-		code = __lwp_heap_allocate(cache, size);
+void RecompCache_Realloc(PowerPC_func* func, unsigned int new_size){
+	// There should be no need for the code to be preserved
+	__lwp_heap_free(cache, func->code);
+	func->code = __lwp_heap_allocate(cache, new_size);
+	while(!func->code){
+		release(new_size);
+		func->code = __lwp_heap_allocate(cache, new_size);
 	}
-	// Copy the old code into the new memory
-	memcpy(code, n->func->code, n->size);
-	// Free the old memory
-	__lwp_heap_free(cache, n->func->code);
 
-	// Adjust everything for this code
-	cacheSize += neededSpace;
-	n->func->code = code;
-	n->size = size;
+	// Update the size for the cache
+	int i;
+	for(i=heapSize-1; i>=0; --i){
+		if(cacheHeap[i]->func == func){
+			cacheSize += new_size - cacheHeap[i]->size;
+			cacheHeap[i]->size = new_size;
+			break;
+		}
+	}
 }
 
 void RecompCache_Free(unsigned int addr){
@@ -214,7 +204,7 @@ void RecompCache_Free(unsigned int addr){
 			cacheSize -= n->size;
 			// Free the cache node
 			free(n);
-			break;
+			return;
 		}
 	}
 }
@@ -234,14 +224,5 @@ void RecompCache_Init(void){
 		__lwp_heap_init(meta_cache, RECOMPMETA_LO,
 		                RECOMPMETA_SIZE, 32);
 	}
-}
-
-unsigned int RecompCache_Size(PowerPC_func* func){
-	int i;
-	// Find the corresponding node
-	for(i=heapSize-1; i>=0; --i)
-		if(cacheHeap[i]->func == func)
-			return cacheHeap[i]->size;
-	return 0;
 }
 
