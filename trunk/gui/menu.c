@@ -675,7 +675,9 @@ static inline void menuStack_push(menu_item*);
 /* End of "Restart Game" item */
 
 /* "Dev Features" menu item */
-
+#ifdef AIDUMP
+  extern char *toggle_audiodump();
+#endif
 	extern char showFPSonScreen;
 	static char* toggleFPS_func(void);
 	static char toggleFPS_strings[2][14] =
@@ -714,6 +716,11 @@ static inline void menuStack_push(menu_item*);
 	static char* toggleGlN64use2xSaiTex_func(void);
 
 #define NUM_DEV_STD 2
+#ifdef AIDUMP
+  #define NUM_DEV_AIDUMP 1
+#else
+  #define NUM_DEV_AIDUMP 0
+#endif
 #ifdef SDPRINT
 	#define NUM_DEV_SDPRINT 1
 #else
@@ -724,7 +731,7 @@ static inline void menuStack_push(menu_item*);
 #else
 	#define NUM_DEV_GLN64 0
 #endif
-#define NUM_DEV_FEATURES (NUM_DEV_STD+NUM_DEV_GLN64+NUM_DEV_SDPRINT)
+#define NUM_DEV_FEATURES (NUM_DEV_STD+NUM_DEV_GLN64+NUM_DEV_SDPRINT+NUM_DEV_AIDUMP)
 
 	static menu_item devFeatures_submenu[] =
 		{{ &toggleFPS_strings[1][0],
@@ -748,6 +755,12 @@ static inline void menuStack_push(menu_item*);
 		   MENU_ATTR_NONE,
 		   { .func = toggleGlN64use2xSaiTex_func }
 		  },
+#endif
+#ifdef AIDUMP
+		 { "Dump Audio Data", \
+	     MENU_ATTR_NONE, \
+	     { .func = toggle_audiodump } \
+	    },
 #endif
 #ifdef SDPRINT
 		 { &toggleSDDebug_strings[0][0],
