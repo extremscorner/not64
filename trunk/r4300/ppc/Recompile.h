@@ -43,7 +43,7 @@ typedef struct {
 	unsigned long   adler32;       // Used for TLB
 } PowerPC_block;
 
-#define MAX_JUMPS        1024
+#define MAX_JUMPS        4096
 #define JUMP_TYPE_J      1   // uses a long immed & abs addr
 #define JUMP_TYPE_CALL   2   // the jump is to a C function
 #define JUMP_TYPE_SPEC   4   // special jump, destination precomputed
