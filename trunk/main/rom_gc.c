@@ -66,8 +66,8 @@ int init_byte_swap(u32 magicWord){
 	return ROM_byte_swap;
 }
 
-#define TOTAL_NUM_16KBIT 40
-static unsigned int CRC_TABLE[40][2] = {
+#define TOTAL_NUM_16KBIT 33
+static unsigned int CRC_TABLE[33][2] = {
   { 0x514B6900, 0xB4B19881},  //Banjo to Kazooie no Daibouken 2 (J) [!]
   { 0x155B7CDF, 0xF0DA7325},  //Banjo-Tooie (A) [!]
   { 0xC9176D39, 0xEA4779D1},  //Banjo-Tooie (E) [!]
@@ -76,10 +76,10 @@ static unsigned int CRC_TABLE[40][2] = {
   { 0x30C7AC50, 0x7704072D},  //Conker's Bad Fur Day (U) [!]
   { 0x83F3931E, 0xCB72223D},  //Cruis'n World (E) [!]
   { 0xDFE61153, 0xD76118E6},  //Cruis'n World (U) [!]
-  { 0x11936D8C, 0x6F2C4B43},  //Donkey Kong 64 (E) [!]
+  /*{ 0x11936D8C, 0x6F2C4B43},  //Donkey Kong 64 (E) [!]
   { 0x053C89A7, 0xA5064302},  //Donkey Kong 64 (J) [!]
   { 0xEC58EABF, 0xAD7C7169},  //Donkey Kong 64 (U) [!]
-  { 0x0DD4ABAB, 0xB5A2A91E},  //Donkey Kong 64 - Kiosk (U) [!]
+  { 0x0DD4ABAB, 0xB5A2A91E},  //Donkey Kong 64 - Kiosk (U) [!]*/
   { 0xB6306E99, 0xB63ED2B2},  //Doraemon 2 - Hikari no Shinden (J) [!]
   { 0xA8275140, 0xB9B056E8},  //Doraemon 3 - Nobi Dai no Machi SOS! (J) [!]
   { 0x202A8EE4, 0x83F88B89},  //Excitebike 64 (E) [!]
@@ -91,9 +91,9 @@ static unsigned int CRC_TABLE[40][2] = {
   { 0xC5674160, 0x0F5F453C},  //Mario Party 3 (E) [!]
   { 0x0B0AB4CD, 0x7B158937},  //Mario Party 3 (J) [!]
   { 0x7C3829D9, 0x6E8247CE},  //Mario Party 3 (U) [!]
-  { 0x839F3AD5, 0x406D15FA},  //Mario Tennis (E) [!]
+  /*{ 0x839F3AD5, 0x406D15FA},  //Mario Tennis (E) [!]
   { 0x3A6C42B5, 0x1ACADA1B},  //Mario Tennis (J) [!]
-  { 0x5001CF4F, 0xF30CB3BD},  //Mario Tennis (U) [!]
+  { 0x5001CF4F, 0xF30CB3BD},  //Mario Tennis (U) [!]*/
   { 0x147E0EDB, 0x36C5B12C},  //Neon Genesis Evangelion (J) [!]
   { 0xF468118C, 0xE32EE44E},  //PD Ultraman Battle Collection 64 (J) [!]
   { 0xE4B08007, 0xA602FF33},  //Perfect Dark (E) [!]
