@@ -51,6 +51,24 @@ static int   audio_paused = 0;
 #define thread_buffer which_buffer
 #endif
 
+#ifdef AIDUMP
+FILE *AIdump=NULL;
+char *toggle_audiodump()
+{
+  if(AIdump) {
+    fclose(AIdump);
+    AIdump=NULL;
+    return "Stopped Dumping";
+  }
+  else {
+    AIdump = fopen("/dump.raw","wb");
+    if(AIdump)
+      return "Starting Audio Dumping";
+    return "Error creating file";
+  }
+}
+#endif
+
 char audioEnabled;
 
 EXPORT void CALL
@@ -200,7 +218,10 @@ static void inline add_to_buffer(void* stream, unsigned int length){
 #else
 		play_buffer();
 #endif
-		
+#ifdef AIDUMP
+		if(AIdump)
+	    fwrite(&buffer[which_buffer][0],1,buffer_size,AIdump);
+#endif
 		NEXT(which_buffer);
 		buffer_offset = 0;
 	}
