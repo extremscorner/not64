@@ -273,7 +273,8 @@ void VI_GX_showLoadProg(float percent)
 
 	if (VI.copy_fb)	GX_CopyDisp (VI.xfb[VI.which_fb]+GX_xfb_offset, GX_FALSE);
 	else			GX_CopyDisp (VI.xfb[VI.which_fb^1]+GX_xfb_offset, GX_FALSE);
-    GX_DrawDone();
+	GX_Flush();
+//    GX_DrawDone();
 //	VI.copy_fb = true;
 }
 
