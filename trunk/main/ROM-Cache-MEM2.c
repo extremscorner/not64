@@ -24,10 +24,10 @@
 
 #define PRINT GUI_print
 
-#define BLOCK_SIZE  (1024*1024)
+#define BLOCK_SIZE  (512*1024)
 #define BLOCK_MASK  (BLOCK_SIZE-1)
 #define OFFSET_MASK (0xFFFFFFFF-BLOCK_MASK)
-#define BLOCK_SHIFT (20)	//only change ME and BLOCK_SIZE
+#define BLOCK_SHIFT (19)	//only change ME and BLOCK_SIZE
 #define MAX_ROMSIZE (64*1024*1024)
 #define NUM_BLOCKS  (MAX_ROMSIZE/BLOCK_SIZE)
 #define LOAD_SIZE   (32*1024)
@@ -112,7 +112,7 @@ void ROMCache_read(u32* dest, u32 offset, u32 length){
   		  // The block we're trying to read isn't in the cache
 				// Find the Least Recently Used Block
 				int i, max_i = 0, max_lru = 0;
-				for(i=0; i<64; ++i)
+				for(i=0; i<NUM_BLOCKS; ++i)
 					if(ROMBlocks[i] && ROMBlocksLRU[i] > max_lru)
 						max_i = i, max_lru = ROMBlocksLRU[i];
 				ROMBlocks[block] = ROMBlocks[max_i]; // Take its place
