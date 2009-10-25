@@ -34,8 +34,8 @@
 
 static u32   ROMSize;
 static int   ROMTooBig;
-static int   ROMCompressed;
-static int   ROMHeaderSize;
+//static int   ROMCompressed;
+//static int   ROMHeaderSize;
 static char* ROMBlocks[NUM_BLOCKS];
 static int   ROMBlocksLRU[NUM_BLOCKS];
 static fileBrowser_file* ROMFile;
@@ -55,20 +55,8 @@ PKZIPHEADER pkzip;
 
 void ROMCache_init(fileBrowser_file* f){
   readBefore = 0; //de-init byteswapping
-	romFile_readFile(f, &pkzip, sizeof(PKZIPHEADER));
-	if(pkzip.zipid != PKZIPID){		//PKZIP magic
-		ROMSize = f->size;
-		ROMTooBig = ROMSize > ROMCACHE_SIZE;
-		ROMCompressed = 0;
-	}
-	else	// Compressed file found.
-	{
-		ROMCompressed = 1;
-		ROMTooBig = 0;		// Currently no way to swap out compressed ROMs from filesystem.
-		ROMSize = FLIP32(pkzip.uncompressedSize);
-		ROMHeaderSize = (sizeof(PKZIPHEADER) + FLIP16(pkzip.filenameLength) + FLIP16(pkzip.extraDataLength));
-		inflate_init(&pkzip);
-	}
+	ROMSize = f->size;
+	ROMTooBig = ROMSize > ROMCACHE_SIZE;
 
 	romFile_seekFile(f, 0, FILE_BROWSER_SEEK_SET);	// Lets be nice and keep the file at 0.
 #ifdef USE_ROM_CACHE_L1
@@ -156,11 +144,9 @@ void ROMCache_read(u32* dest, u32 offset, u32 length){
 
 int ROMCache_load(fileBrowser_file* f){
 	char txt[128];
-	void* buf;
-	int ret;
 	GUI_clear();
 	GUI_centerText(true);
-	sprintf(txt, "%s ROM %s into MEM2.\n Please be patient...\n", ROMCompressed ? "Uncompressing" : "Loading",ROMTooBig ? "partially" : "fully");
+	sprintf(txt, "Loading ROM %s into MEM2.\n Please be patient...\n",ROMTooBig ? "partially" : "fully");
 	PRINT(txt);
 
 	ROMFile = f;
@@ -169,70 +155,30 @@ int ROMCache_load(fileBrowser_file* f){
 	u32 offset = 0,loads_til_update = 0;
 	int bytes_read;
 	u32 sizeToLoad = MIN(ROMCACHE_SIZE, ROMSize);
-	if(ROMCompressed){
-		buf = malloc(LOAD_SIZE);
-		do{
-			bytes_read = romFile_readFile(f, buf, LOAD_SIZE);
-
-			if(bytes_read < 0){		// Read fail!
-				GUI_setLoadProg( -1.0f );
-				free(buf);
-				return -1;
-			}
-
-			ret = inflate_chunk(ROMCACHE_LO + offset, buf, bytes_read);
-			
-			//initialize byteswapping
-			if(!readBefore)
-			{
-  			init_byte_swap(*(unsigned int*)ROMCACHE_LO);
-  			readBefore = 1;
-			}
-			//byteswap
-			byte_swap(ROMCACHE_LO + offset, bytes_read);
-			
-			if(ret > 0)
-				offset += ret;
-
-			if(!loads_til_update--){
-				GUI_setLoadProg( (float)offset/sizeToLoad );
-				GUI_draw();
-				loads_til_update = 16;
-			}
-		}while(ret > 0);
-		free(buf);
-		if(ret){	// Uh oh, decompression fail!
+	while(offset < sizeToLoad){
+		bytes_read = romFile_readFile(f, ROMCACHE_LO + offset, LOAD_SIZE);
+		
+		if(bytes_read < 0){		// Read fail!
 			GUI_setLoadProg( -1.0f );
 			return -1;
 		}
-	}
-	else
-	{
-		while(offset < sizeToLoad){
-			bytes_read = romFile_readFile(f, ROMCACHE_LO + offset, LOAD_SIZE);
-			
-			if(bytes_read < 0){		// Read fail!
-				GUI_setLoadProg( -1.0f );
-				return -1;
-			}
-			//initialize byteswapping if it isn't already
-			if(!readBefore)
-			{
-  			init_byte_swap(*(unsigned int*)ROMCACHE_LO);
-  			readBefore = 1;
-			}
-			//byteswap
-			byte_swap(ROMCACHE_LO + offset, bytes_read);
-			
-			offset += bytes_read;
-		
-			if(!loads_til_update--){
-				GUI_setLoadProg( (float)offset/sizeToLoad );
-				GUI_draw();
-				loads_til_update = 16;
-			}
+		//initialize byteswapping if it isn't already
+		if(!readBefore)
+		{
+ 			init_byte_swap(*(unsigned int*)ROMCACHE_LO);
+ 			readBefore = 1;
 		}
-	}	
+		//byteswap
+		byte_swap(ROMCACHE_LO + offset, bytes_read);
+		
+		offset += bytes_read;
+		
+		if(!loads_til_update--){
+			GUI_setLoadProg( (float)offset/sizeToLoad );
+			GUI_draw();
+			loads_til_update = 16;
+		}
+	}
 	
 	if(ROMTooBig){ // Set block pointers if we need to
 		int i;
