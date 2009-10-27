@@ -11,6 +11,7 @@
 #include "LoadSaveFrame.h"
 #include "SaveGameFrame.h"
 #include "SettingsFrame.h"
+#include "SelectCPUFrame.h"
 
 #include "MenuTypes.h"
 
@@ -29,7 +30,8 @@ public:
 		FRAME_CURRENTROM,
 		FRAME_LOADSAVE,
 		FRAME_SAVEGAME,
-		FRAME_SETTINGS
+		FRAME_SETTINGS,
+		FRAME_SELECTCPU
 		
 	};
 
@@ -43,6 +45,7 @@ private:
 	LoadSaveFrame *loadSaveFrame;
 	SaveGameFrame *saveGameFrame;
 	SettingsFrame *settingsFrame;
+	SelectCPUFrame *selectCPUFrame;
 
 };
 
