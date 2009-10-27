@@ -330,7 +330,7 @@ void pauseAudio(void){
 #ifdef THREADED_AUDIO
 	// We just grab the audio_free 'lock' and don't let go
 	//   when we have this lock, audio_thread must be waiting
-	if(audio_enabled){
+	if(audioEnabled){
 		LWP_SemWait(audio_free);
 		audio_paused = 1;
 	}
