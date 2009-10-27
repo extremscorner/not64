@@ -10,7 +10,7 @@
 #include "fileBrowser.h"
 #include <sdcard/gcsd.h>
 
-#if 0
+#if 1
 #ifdef HW_RVL
 #include <sdcard/wiisd_io.h>
 #include <ogc/usbstorage.h>
@@ -22,7 +22,15 @@ const DISC_INTERFACE* cardb = &__io_gcsdb;
 #endif
 
 fileBrowser_file topLevel_libfat_Default =
-	{ "/N64ROMS", // file name
+	{ "/wii64/roms", // file name
+	  0, // sector
+	  0, // offset
+	  0, // size
+	  FILE_BROWSER_ATTR_DIR
+	 };
+	 
+fileBrowser_file topLevel_libfat_USB =
+	{ "usb:/wii64/roms", // file name
 	  0, // sector
 	  0, // offset
 	  0, // size
@@ -30,7 +38,15 @@ fileBrowser_file topLevel_libfat_Default =
 	 };
 
 fileBrowser_file saveDir_libfat_Default =
-	{ "/N64SAVES/",
+	{ "/wii64/saves/",
+	  0,
+	  0,
+	  0,
+	  FILE_BROWSER_ATTR_DIR
+	 };
+	 
+fileBrowser_file saveDir_libfat_USB =
+	{ "usb:/wii64/saves/",
 	  0,
 	  0,
 	  0,
@@ -97,39 +113,51 @@ int fileBrowser_libfat_writeFile(fileBrowser_file* file, void* buffer, unsigned 
 	return bytes_read;
 }
 
+/* call fileBrowser_libfat_init as much as you like for all devices
+    - returns 0 on device not present/error
+    - returns 1 on ok
+*/
 int fileBrowser_libfat_init(fileBrowser_file* f){
-	static int inited;
-#if 0	
-	if(!inited) {
-  	int res = 0;
+ 	int res = 0;
 #ifdef HW_RVL
-  	if(frontsd->startup()) {
-    	res |= fatMount ("sd", frontsd, 0, 4, 512);
-    	chdir("sd:/");
-  	}
-  	if(usb->startup()) {
-  	  res |= fatMount ("usb", usb, 0, 4, 512);
-  	  chdir("usb:/");
-	  }
-#endif
-  	if(carda->startup()) {
-    	res |= fatMount ("carda", carda, 0, 4, 512);
-    	chdir("carda:/");
-  	}
-  	if(cardb->startup()) {
-    	res |= fatMount ("cardb", cardb, 0, 4, 512);
-    	chdir("cardb:/");
-  	}
-    inited = res;
+  if(f->name[0] == '/') {
+   	if(frontsd->startup()) {
+     	res |= fatMountSimple ("sd", frontsd);
+     	chdir("sd:/");
+   	}
+   	if(carda->startup()) {
+   	  res |= fatMountSimple ("sd", carda);
+   	  chdir("sd:/");
+ 	  }
+ 	  if(cardb->startup()) {
+   	  res |= fatMountSimple ("sd", cardb);
+   	  chdir("sd:/");
+ 	  }
+ 	  return res;
+ 	}
+ 	else if(f->name[0] == 'u') {
+   	if(usb->startup()) {
+   	  res |= fatMountSimple ("usb", usb);
+    }
+    return res;
   }
+  return res;
 #else
-  if(!inited){ fatInitDefault(); inited = 1; }
+ 	if(carda->startup()) {
+   	res |= fatMountSimple ("sd", carda);
+   	chdir("sd:/");
+ 	}
+ 	if(cardb->startup()) {
+   	res |= fatMountSimple ("sd", cardb);
+   	chdir("sd:/");
+ 	}
+	return res;
 #endif
-	return 0;
 }
 
 int fileBrowser_libfat_deinit(fileBrowser_file* f){
-	// TODO: deinit
+  //we can't support multiple device re-insertion
+  //because there's no device removed callbacks
 	return 0;
 }
 
@@ -141,7 +169,6 @@ int fileBrowser_libfatROM_deinit(fileBrowser_file* f){
 	if(fd)
 		fclose(fd);
 	fd = NULL;
-	// TODO: Call fileBrowser_libfat_deinit too?
 	
 	return 0;
 }

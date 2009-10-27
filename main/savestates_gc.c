@@ -41,7 +41,7 @@
 #include "../r4300/interupt.h"
 #include "../gc_memory/TLB-Cache.h"
 
-char* statespath = "/N64SAVES/";
+char* statespath = "/wii64/saves/";
 
 extern unsigned long interp_addr;
 extern int *autoinc_save_slot;
@@ -63,7 +63,7 @@ char* savestates_save()
   
   gzFile f;
 	char *filename, buf[1024];
-  int len, i,curPos;
+  int len, i;
 	
   /* fix the filename to %s.st%d format */
 	filename = malloc(strlen(statespath)+strlen(ROM_SETTINGS.goodname)+4+1);
@@ -139,7 +139,7 @@ char* savestates_load()
 		
 	gzFile f = NULL;
 	char *filename, buf[1024];
-	int len, i, curPos;
+	int len, i;
 		
 	/* fix the filename to %s.st%d format */
 	filename = malloc(strlen(statespath)+strlen(ROM_SETTINGS.goodname)+4+1);
