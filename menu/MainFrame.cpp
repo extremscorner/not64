@@ -152,6 +152,12 @@ void resumeAudio(void); void resumeInput(void);
 void go(void); 
 }
 
+extern char autoSave;
+extern BOOL sramWritten;
+extern BOOL eepromWritten;
+extern BOOL mempakWritten;
+extern BOOL flashramWritten;
+
 void Func_PlayGame()
 {
 	if(!hasLoadedROM)
@@ -171,7 +177,13 @@ void Func_PlayGame()
 #endif
 	pauseInput();
 	pauseAudio();
-  //TODO: auto save here and popup dialog box
-  //if(autoSave) ..
+
+  if(autoSave) {
+    if(flashramWritten || sramWritten || eepromWritten || mempakWritten) {
+      menu::MessageBox::getInstance().setMessage("Automatically saving game .. (not really)");
+      //TODO: Do actual writing here .. 
+      flashramWritten = sramWritten = eepromWritten = mempakWritten = 0;
+    }
+  }
 	menu::Cursor::getInstance().clearCursorFocus();
 }
