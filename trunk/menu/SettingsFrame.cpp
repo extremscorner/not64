@@ -193,6 +193,8 @@ void Func_ConfigurePaks()
 }
 
 extern char  audioEnabled;
+extern char  autoLoad;
+extern char  autoSave;
 
 void Func_ToggleAudio()
 {
@@ -203,12 +205,16 @@ void Func_ToggleAudio()
 
 void Func_ToggleAutoLoad()
 {
-	menu::MessageBox::getInstance().setMessage("Auto Load not implemented");
+  autoLoad ^= 1;
+	if (autoLoad) FRAME_BUTTONS[10].buttonString = FRAME_STRINGS[19];
+	else FRAME_BUTTONS[10].buttonString = FRAME_STRINGS[18];
 }
 
 void Func_ToggleAutoSave()
 {
-	menu::MessageBox::getInstance().setMessage("Auto Save not implemented");
+  autoSave ^= 1;
+	if (autoSave) FRAME_BUTTONS[11].buttonString = FRAME_STRINGS[21];
+	else FRAME_BUTTONS[11].buttonString = FRAME_STRINGS[20];
 }
 
 void Func_ReturnFromSettingsFrame()
