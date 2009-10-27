@@ -163,6 +163,8 @@ void Func_LoadSaveSD()
 		return;
 	}
 	// Adjust saveFile pointers
+	//TODO: based on default save location preference (SD vs USB)
+	//      change saveFile_dir here.
 	saveFile_dir = &saveDir_libfat_Default;
 	saveFile_readFile  = fileBrowser_libfat_readFile;
 	saveFile_writeFile = fileBrowser_libfat_writeFile;
@@ -171,6 +173,7 @@ void Func_LoadSaveSD()
 		
 	// Try loading everything
 	int result = 0;
+	saveFile_deinit(saveFile_dir);
 	saveFile_init(saveFile_dir);
 	result += loadEeprom(saveFile_dir);
 	result += loadSram(saveFile_dir);

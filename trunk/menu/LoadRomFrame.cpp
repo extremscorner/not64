@@ -108,6 +108,7 @@ void Func_LoadFromSD()
 	romFile_init     = fileBrowser_libfat_init;
 	romFile_deinit   = fileBrowser_libfatROM_deinit;
 	// Make sure the romFile system is ready before we browse the filesystem
+	romFile_deinit( romFile_topLevel );
 	romFile_init( romFile_topLevel );
 
 	fileBrowserFrame_OpenDirectory(romFile_topLevel);
@@ -134,20 +135,21 @@ void Func_LoadFromDVD()
 
 void Func_LoadFromUSB()
 {
-	menu::MessageBox::getInstance().setMessage("Load from USB not implemented");
-
-#if 0 //def WII
+#ifdef WII
 	// Deinit any existing romFile state
 	if(romFile_deinit) romFile_deinit( romFile_topLevel );
 	// Change all the romFile pointers
-	romFile_topLevel = &topLevel_WiiFS;
-	romFile_readDir  = fileBrowser_WiiFS_readDir;
-	romFile_readFile = fileBrowser_WiiFSROM_readFile;
-	romFile_seekFile = fileBrowser_WiiFS_seekFile;
-	romFile_init     = fileBrowser_WiiFSROM_init;
-	romFile_deinit   = fileBrowser_WiiFSROM_deinit;
+	romFile_topLevel = &topLevel_libfat_USB;
+	romFile_readDir  = fileBrowser_libfat_readDir;
+	romFile_readFile = fileBrowser_libfatROM_readFile;
+	romFile_seekFile = fileBrowser_libfat_seekFile;
+	romFile_init     = fileBrowser_libfat_init;
+	romFile_deinit   = fileBrowser_libfatROM_deinit;
 	// Make sure the romFile system is ready before we browse the filesystem
+	romFile_deinit( romFile_topLevel );
 	romFile_init( romFile_topLevel );
+	
+	//TODO, gray me out if romFile_init returns 0
 
 	fileBrowserFrame_OpenDirectory(romFile_topLevel);
 	pMenuContext->setActiveFrame(MenuContext::FRAME_FILEBROWSER);
