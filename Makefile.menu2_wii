@@ -59,7 +59,6 @@ OBJ		=main/rom_gc.o \
 		gui/GUI.o \
 		gui/DEBUG.o \
 		gui/TEXT.o \
-		gui/font.o \
 		r4300/r4300.o \
 		r4300/cop0.o \
 		r4300/special.o \

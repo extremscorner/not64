@@ -32,8 +32,12 @@ private:
 		u16 s[256], t[256], font_size[256], fheight;
 	} CHAR_INFO;
 
+#ifdef HW_RVL
+	unsigned char *fontFont;
+#else //GC
 	unsigned char fontFont[ 0x40000 ] __attribute__((aligned(32)));
-//	unsigned char* fontFont;
+#endif
+
 	u16 frameWidth;
 	CHAR_INFO fontChars;
 	GXTexObj fontTexObj;
