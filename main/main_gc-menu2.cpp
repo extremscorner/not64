@@ -133,6 +133,8 @@ int main(int argc, char* argv[]){
 	printToSD        = 0; // Disable SD logging
 	Timers.limitVIs  = 0; // Sync to Audio
 	saveEnabled      = 0; // Don't save game
+	autoSave         = 0; // Don't Auto Save Game
+	autoLoad         = 0; // Don't Auto Load Save Game
 	creditsScrolling = 0; // Normal menu for now
 	dynacore         = 1; // Dynarec
 	widescreen		 = 0; // Stretch FB horizontally
