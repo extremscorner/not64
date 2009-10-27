@@ -15,26 +15,27 @@ public:
 	~Button();
 	void setActive(bool active);
 	bool getActive();
+	void setSelected(bool selected);
 	void setReturn(ButtonFunc returnFn);
 	void doReturn();
 	void setClicked(ButtonFunc clickedFn);
 	void doClicked();
 	void setText(char** strPtr);
 	void setNormalImage(Image *image);
-	void setPressedImage(Image *image);
+	void setSelectedImage(Image *image);
 	void setFocusImage(Image *image);
 	void drawComponent(Graphics& gfx);
 	Component* updateFocus(int direction, int buttonsPressed);
 	void setButtonColors(GXColor *colors);
 
 private:
-	bool active;
+	bool active, selected;
 	Image	*normalImage;
-	Image	*pressedImage;
+	Image	*selectedImage;
 	Image	*focusImage;
 	char** buttonText;
 	float x, y, width, height;
-	GXColor	focusColor, activeColor, pressedColor, labelColor;
+	GXColor	focusColor, inactiveColor, activeColor, selectedColor, labelColor;
 	ButtonFunc clickedFunc, returnFunc;
 
 };

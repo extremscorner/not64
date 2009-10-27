@@ -32,7 +32,8 @@ public:
 	{
 		TYPE_OTHER,
 		TYPE_FRAME,
-		TYPE_BUTTON
+		TYPE_BUTTON,
+		TYPE_TEXTBOX
 	};
 
 protected:

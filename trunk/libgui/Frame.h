@@ -26,6 +26,7 @@ public:
 	void setBackFunc(FrameFunc backFn);
 	void setSelectFunc(FrameFunc selectFn);
 	Component* updateFocus(int direction, int buttonsPressed);
+	virtual void activateSubmenu(int submenu) {};
 
 private:
 	Component* defaultFocus;

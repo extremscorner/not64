@@ -211,7 +211,7 @@ void IplFont::drawInit(GXColor fontColor)
 	GX_SetTexCoordGen(GX_TEXCOORD0, GX_TG_MTX2x4, GX_TG_TEX0, GX_IDENTITY);
 
 	GX_InvalidateTexAll();
-	GX_InitTexObj(&fontTexObj, fontFont, 512, 512, GX_TF_I4, GX_CLAMP, GX_CLAMP, GX_FALSE);
+	GX_InitTexObj(&fontTexObj, &fontFont[0], 512, 512, GX_TF_I4, GX_CLAMP, GX_CLAMP, GX_FALSE);
 	GX_LoadTexObj(&fontTexObj, GX_TEXMAP1);
 
 	GX_SetTevColor(GX_TEVREG1,fontColor);

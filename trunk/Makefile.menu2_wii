@@ -10,7 +10,7 @@ CFLAGS  = -g -O2 -Wall $(MACHDEP) $(INCLUDE) \
 	  -fno-exceptions -Wno-unused-parameter -pipe \
 	  -DUSE_GUI -DWII -DHW_RVL -DGLN64_GX -DAIDUMP -DUSE_EXPANSION \
 	  -DTHREADED_AUDIO -DUSE_RECOMP_CACHE -DPPC_DYNAREC -DFASTMEM -DRELEASE -DMENU_V2\
-	  #-DSHOW_DEBUG #-DUSE_EXPANSION -DUSE_TLB_CACHE \
+	  #-DSHOW_DEBUG  #-DUSE_TLB_CACHE \
 	  #-DPPC_DYNAREC -DNO_BT -DPROFILE #-DSHOW_DEBUG #-DDEBUGON #-DPRINTGECKO 
 #	  -DDEBUGON -DUSE_ROM_CACHE_L1 -DPRINTGECKO -DGLN64_SDLOG -DEMBEDDED_FONTS -DUSE_EXPANSION -DPPC_DYNAREC -DSHOW_STATS
 
@@ -52,6 +52,7 @@ OBJ		=main/rom_gc.o \
 		libgui/LoadingBar.o \
 		libgui/MessageBox.o \
 		libgui/resources.o \
+		libgui/TextBox.o \
 		fileBrowser/fileBrowser-DVD.o \
 		fileBrowser/fileBrowser-CARD.o \
 		fileBrowser/fileBrowser-libfat.o \
