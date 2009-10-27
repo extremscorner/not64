@@ -83,7 +83,7 @@ void MenuContext::setActiveFrame(int frameIndex)
 		currentActiveFrame = fileBrowserFrame;
 		break;
 	case FRAME_CURRENTROM:
-		currentActiveFrame = loadSaveFrame;
+		currentActiveFrame = currentRomFrame;
 		break;
 	case FRAME_LOADSAVE:
 		currentActiveFrame = loadSaveFrame;

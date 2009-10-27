@@ -1,7 +1,11 @@
 #ifdef __GX__
 #include <stdio.h>
 #include <gccore.h>
+# ifdef MENU_V2
+#include "../libgui/IPLFont.h"
+# else // MENU_V2
 #include "../gui/font.h"
+# endif //!MENU_V2
 #include "../gui/DEBUG.h"
 #include "../main/timers.h"
 //#include "Textures.h"
@@ -201,9 +205,15 @@ void VI_GX_showFPS(){
 	sprintf(caption, "%.1f VI/s, %.1f FPS",Timers.vis,Timers.fps);
 	
 	GXColor fontColor = {150,255,150,255};
+#ifndef MENU_V2
 	write_font_init_GX(fontColor);
 	if(showFPSonScreen)
 		write_font(10,35,caption, 1.0);
+#else
+	menu::IplFont::getInstance().drawInit(fontColor);
+	if(showFPSonScreen)
+		menu::IplFont::getInstance().drawString(10,35,caption, 1.0, false);
+#endif
 
 	//reset swap table from GUI/DEBUG
 //	GX_SetTevSwapModeTable(GX_TEV_SWAP0, GX_CH_RED, GX_CH_GREEN, GX_CH_BLUE, GX_CH_ALPHA);
@@ -290,10 +300,17 @@ void VI_GX_showDEBUG()
 	int i = 0;
 	GXColor fontColor = {150, 255, 150, 255};
 	DEBUG_update();
+#ifndef MENU_V2
 	write_font_init_GX(fontColor);
 	if(printToScreen)
 		for (i=0;i<DEBUG_TEXT_HEIGHT;i++)
 			write_font(10,(10*i+60),text[i], 0.5); 
+#else
+	menu::IplFont::getInstance().drawInit(fontColor);
+	if(printToScreen)
+		for (i=0;i<DEBUG_TEXT_HEIGHT;i++)
+			menu::IplFont::getInstance().drawString(10,(10*i+60),text[i], 0.5, false); 
+#endif
 
 	//Reset any stats in DEBUG_stats
 //	DEBUG_stats(8, "RecompCache Blocks Freed", STAT_TYPE_CLEAR, 1);
