@@ -77,10 +77,10 @@ int loadFlashram(fileBrowser_file* savepath){
 	strcat((char*)saveFile.name, ".fla");
 
 	if( !(saveFile_readFile(&saveFile, &i, 4) <= 0) ){
-		PRINT("Loading flashram, please be patient...\n");
+		//PRINT("Loading flashram, please be patient...\n");
 		saveFile.offset = 0;
 		saveFile_readFile(&saveFile, flashram, 0x20000);
-		PRINT("OK\n");
+		//PRINT("OK\n");
 		result = 1;
 		flashramWritten = 1;
 		return result;
@@ -93,7 +93,7 @@ int loadFlashram(fileBrowser_file* savepath){
 
 int saveFlashram(fileBrowser_file* savepath){
 	if(!flashramWritten) return 0;
-	PRINT("Saving flashram, do not turn off the console...\n");
+	//PRINT("Saving flashram, do not turn off the console...\n");
 
 	fileBrowser_file saveFile;
 	memcpy(&saveFile, savepath, sizeof(fileBrowser_file));
@@ -102,7 +102,7 @@ int saveFlashram(fileBrowser_file* savepath){
 
 	saveFile_writeFile(&saveFile, flashram, 0x20000);
 
-	PRINT("OK\n");
+	//PRINT("OK\n");
 
 	return 1;
 }
