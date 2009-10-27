@@ -29,9 +29,9 @@
 
 #ifdef USE_GUI
 #include "../gui/GUI.h"
-#define PRINT GUI_print
+//#define PRINT GUI_print
 #else
-#define PRINT printf
+//#define PRINT printf
 #endif
 
 #include <ogc/card.h>
@@ -74,10 +74,10 @@ int loadSram(fileBrowser_file* savepath){
 	strcat((char*)saveFile.name, ".sra");
 
 	if( !(saveFile_readFile(&saveFile, &i, 4) <= 0) ){
-		PRINT("Loading SRAM, please be patient...\n");
+		//PRINT("Loading SRAM, please be patient...\n");
 		saveFile.offset = 0;
 		saveFile_readFile(&saveFile, sram, 0x8000);
-		PRINT("OK\n");
+		//PRINT("OK\n");
 		result = 1;
 		sramWritten = 1;
 		return result;
@@ -91,7 +91,7 @@ int loadSram(fileBrowser_file* savepath){
 
 int saveSram(fileBrowser_file* savepath){
 	if(!sramWritten) return 0;
-	PRINT("Saving SRAM, do not turn off the console...\n");
+	//PRINT("Saving SRAM, do not turn off the console...\n");
 	fileBrowser_file saveFile;
 	memcpy(&saveFile, savepath, sizeof(fileBrowser_file));
 	strcat((char*)saveFile.name, ROM_SETTINGS.goodname);
@@ -99,7 +99,7 @@ int saveSram(fileBrowser_file* savepath){
 
 	saveFile_writeFile(&saveFile, sram, 0x8000);
 
-	PRINT("OK\n");
+	//PRINT("OK\n");
 
 	return 1;
 }
