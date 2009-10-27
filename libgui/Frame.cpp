@@ -8,6 +8,7 @@ Frame::Frame()
 		  backFunc(0),
 		  selectFunc(0)
 {
+	setVisible(false);
 }
 
 Frame::~Frame()

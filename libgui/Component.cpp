@@ -4,7 +4,7 @@ namespace menu {
 
 Component::Component()
 		: componentList(0),
-		  visible(false),
+		  visible(true),
 		  enabled(false),
 		  focus(false),
 		  parent(0),
@@ -75,7 +75,8 @@ void Component::draw(Graphics& gfx)
 	//maybe call paintComponent() and then paintChildren()
 	//pop Graphics context
 //	printf("Component draw\n");
-	drawComponent(gfx);
+	if (isVisible())
+		drawComponent(gfx);
 }
 
 void Component::drawComponent(Graphics& gfx)

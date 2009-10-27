@@ -81,6 +81,8 @@ extern timers Timers;
        char padNeedScan;
        char wpadNeedScan;
        char shutdown;
+	   char nativeSaveDevice;
+	   char saveStateDevice;
        char autoSave; //TODO: Use me
        char autoLoad; //TODO: Use me
 
@@ -133,6 +135,8 @@ int main(int argc, char* argv[]){
 	printToSD        = 0; // Disable SD logging
 	Timers.limitVIs  = 0; // Sync to Audio
 	saveEnabled      = 0; // Don't save game
+	nativeSaveDevice = 0; // SD
+	saveStateDevice	 = 0; // SD
 	autoSave         = 0; // Don't Auto Save Game
 	autoLoad         = 0; // Don't Auto Load Save Game
 	creditsScrolling = 0; // Normal menu for now

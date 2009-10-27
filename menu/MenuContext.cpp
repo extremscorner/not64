@@ -107,6 +107,12 @@ void MenuContext::setActiveFrame(int frameIndex)
 	}
 }
 
+void MenuContext::setActiveFrame(int frameIndex, int submenu)
+{
+	setActiveFrame(frameIndex);
+	if(currentActiveFrame) currentActiveFrame->activateSubmenu(submenu);
+}
+
 void MenuContext::draw()
 {
 	menu::Gui::getInstance().draw();

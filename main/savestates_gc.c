@@ -48,12 +48,12 @@ extern int *autoinc_save_slot;
 
 int savestates_job = 0;
 extern BOOL hasLoadedROM;
-static unsigned int slot = 0;
+static unsigned int savestates_slot = 0;
 
 void savestates_select_slot(unsigned int s)
 {
    if (s > 9) return;
-   slot = s;
+   savestates_slot = s;
 }
 	
 char* savestates_save()
@@ -70,7 +70,7 @@ char* savestates_save()
   strcpy(filename, statespath);
   strcat(filename, ROM_SETTINGS.goodname);
 	strcat(filename, ".st");
-	sprintf(buf, "%d", slot);
+	sprintf(buf, "%d", savestates_slot);
 	strcat(filename, buf);
 
 	f = gzopen(filename, "wb");
@@ -146,7 +146,7 @@ char* savestates_load()
 	strcpy(filename, statespath);
   strcat(filename, ROM_SETTINGS.goodname);
 	strcat(filename, ".st");
-	sprintf(buf, "%d", slot);
+	sprintf(buf, "%d", savestates_slot);
 	strcat(filename, buf);
 	
 	f = gzopen(filename, "rb");

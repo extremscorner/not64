@@ -1,5 +1,6 @@
 #include "MenuContext.h"
 #include "MainFrame.h"
+#include "SettingsFrame.h"
 #include "../libgui/Button.h"
 #include "../libgui/resources.h"
 #include "../libgui/FocusManager.h"
@@ -52,13 +53,13 @@ struct ButtonInfo
 	ButtonFunc		clickedFunc;
 	ButtonFunc		returnFunc;
 } FRAME_BUTTONS[NUM_MAIN_BUTTONS] =
-{ //	button	buttonString			x		y		width	height	Up	Dwn	Lft	Rt	clickFunc				returnFunc
-	{	NULL,	FRAME_STRINGS[0],	 45.0,	 50.0,	250.0,	40.0,	 5,	 1,	-1,	-1,	Func_LoadROM,			NULL }, // Load ROM
-	{	NULL,	FRAME_STRINGS[1],	 45.0,	110.0,	250.0,	40.0,	 0,	 2,	-1,	-1,	Func_CurrentROM,		NULL }, // Current ROM
-	{	NULL,	FRAME_STRINGS[2],	 45.0,	170.0,	250.0,	40.0,	 1,	 3,	-1,	-1,	Func_Settings,			NULL }, // Settings
-	{	NULL,	FRAME_STRINGS[3],	 45.0,	230.0,	250.0,	40.0,	 2,	 4,	-1,	-1,	Func_Credits,			NULL }, // Credits
-	{	NULL,	FRAME_STRINGS[4],	 45.0,	290.0,	250.0,	40.0,	 3,	 5,	-1,	-1,	Func_ExitToLoader,		NULL }, // Exit to Loader
-	{	NULL,	FRAME_STRINGS[5],	 45.0,	350.0,	250.0,	40.0,	 4,	 0,	-1,	-1,	Func_PlayGame,			NULL }, // Play/Resume Game
+{ //	button	buttonString		x		y		width	height	Up	Dwn	Lft	Rt	clickFunc				returnFunc
+	{	NULL,	FRAME_STRINGS[0],	195.0,	 60.0,	250.0,	40.0,	 5,	 1,	-1,	-1,	Func_LoadROM,			NULL }, // Load ROM
+	{	NULL,	FRAME_STRINGS[1],	195.0,	120.0,	250.0,	40.0,	 0,	 2,	-1,	-1,	Func_CurrentROM,		NULL }, // Current ROM
+	{	NULL,	FRAME_STRINGS[2],	195.0,	180.0,	250.0,	40.0,	 1,	 3,	-1,	-1,	Func_Settings,			NULL }, // Settings
+	{	NULL,	FRAME_STRINGS[3],	195.0,	240.0,	250.0,	40.0,	 2,	 4,	-1,	-1,	Func_Credits,			NULL }, // Credits
+	{	NULL,	FRAME_STRINGS[4],	195.0,	300.0,	250.0,	40.0,	 3,	 5,	-1,	-1,	Func_ExitToLoader,		NULL }, // Exit to Loader
+	{	NULL,	FRAME_STRINGS[5],	195.0,	360.0,	250.0,	40.0,	 4,	 0,	-1,	-1,	Func_PlayGame,			NULL }, // Play/Resume Game
 };
 
 MainFrame::MainFrame()
@@ -124,7 +125,7 @@ void Func_CurrentROM()
 
 void Func_Settings()
 {
-	pMenuContext->setActiveFrame(MenuContext::FRAME_SETTINGS);
+	pMenuContext->setActiveFrame(MenuContext::FRAME_SETTINGS,SettingsFrame::SUBMENU_GENERAL);
 }
 
 void Func_Credits()

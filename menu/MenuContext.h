@@ -22,6 +22,7 @@ public:
 	~MenuContext();
 	bool isRunning();
 	void setActiveFrame(int frameIndex);
+	void setActiveFrame(int frameIndex, int submenu);
 	enum FrameIndices
 	{
 		FRAME_MAIN=1,
