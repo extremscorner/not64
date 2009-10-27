@@ -484,9 +484,10 @@ static void Initialise (void){
 		:: "n" (16<<8 | 5) : "r3");
 }
 
-void video_mode_init(GXRModeObj *rmode,unsigned int *fb1, unsigned int *fb2)
+void video_mode_init(GXRModeObj *videomode,unsigned int *fb1, unsigned int *fb2)
 {
-	vmode = rmode;
+	vmode = videomode;
+	rmode = videomode;
 	xfb[0] = fb1;
 	xfb[1] = fb2;
 }
