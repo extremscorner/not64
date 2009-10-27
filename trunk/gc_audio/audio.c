@@ -87,7 +87,7 @@ AiDacrateChanged( int SystemType )
 		freq = 48628316 / (*AudioInfo.AI_DACRATE_REG + 1);
 		break;
 	}
-	
+
 	// Calculate the absolute differences from 32 and 48khz
 	int diff32 = freq - 32000;
 	int diff48 = freq - 48000;
@@ -96,7 +96,7 @@ AiDacrateChanged( int SystemType )
 	// Choose the closest real frequency
 	real_freq = (diff32 < diff48) ? 32000 : 48000;
 	freq_ratio = (float)freq / real_freq;
-	
+
 	if( real_freq == 32000 ){
 		AUDIO_SetDSPSampleRate(AI_SAMPLERATE_32KHZ);
 		buffer_size = (SystemType != SYSTEM_PAL) ?
@@ -126,29 +126,29 @@ static void inline play_buffer(void){
 	// We should wait for the other buffer to finish its DMA transfer first
 	while( AUDIO_GetDMABytesLeft() );
 	AUDIO_StopDMA();
-	
+
 #else // THREADED_AUDIO
 	// This thread will keep giving buffers to the audio as they come
 	while(thread_running){
-	
+
 	// Wait for a buffer to be processed
 	LWP_SemWait(buffer_full);
 #endif
-	
+
 	// Make sure the buffer is in RAM, not the cache
 	DCFlushRange(buffer[thread_buffer], buffer_size);
-	
+
 	// Actually send the buffer out to be played next
 	AUDIO_InitDMA((unsigned int)&buffer[thread_buffer], buffer_size);
-	
+
 #ifdef THREADED_AUDIO
 	// Wait for the audio interface to be free before playing
 	LWP_SemWait(audio_free);
 #endif
-	
+
 	// Start playing the buffer
 	AUDIO_StartDMA();
-	
+
 #ifdef THREADED_AUDIO
 	// Move the index to the next buffer
 	NEXT(thread_buffer);
@@ -188,14 +188,14 @@ static void inline add_to_buffer(void* stream, unsigned int length){
 		rlengthi = (buffer_offset + (rlengthLeft << 2) <= buffer_size) ?
 		            rlengthLeft : ((buffer_size - buffer_offset) >> 2);
 		lengthi  = rlengthi * freq_ratio;
-	
+
 #ifdef THREADED_AUDIO
 		// Wait for a buffer we can copy into
 		LWP_SemWait(buffer_empty);
-#endif		
+#endif
 		copy_to_buffer(buffer[which_buffer] + buffer_offset,
 		               stream + stream_offset, rlengthi);
-		
+
 		if(buffer_offset + (rlengthLeft << 2) < buffer_size){
 			buffer_offset += rlengthi << 2;
 #ifdef THREADED_AUDIO
@@ -207,11 +207,11 @@ static void inline add_to_buffer(void* stream, unsigned int length){
 #endif
 			return;
 		}
-		
+
 		lengthLeft    -= lengthi;
 		stream_offset += lengthi << 2;
 		rlengthLeft   -= rlengthi;
-		
+
 #ifdef THREADED_AUDIO
 		// Let the audio thread know that we've filled a new buffer
 		LWP_SemPost(buffer_full);
@@ -232,11 +232,11 @@ AiLenChanged( void )
 {
 	// FIXME: We may need near full speed before this is going to work
 	if(!audioEnabled) return;
-	
-	short* stream = (short*)(AudioInfo.RDRAM + 
+
+	short* stream = (short*)(AudioInfo.RDRAM +
 		         (*AudioInfo.AI_DRAM_ADDR_REG & 0xFFFFFF));
 	unsigned int length = *AudioInfo.AI_LEN_REG;
-	
+
 	add_to_buffer(stream, length);
 }
 
@@ -330,15 +330,17 @@ void pauseAudio(void){
 #ifdef THREADED_AUDIO
 	// We just grab the audio_free 'lock' and don't let go
 	//   when we have this lock, audio_thread must be waiting
-	LWP_SemWait(audio_free);
-	audio_paused = 1;
+	if(audio_enabled){
+		LWP_SemWait(audio_free);
+		audio_paused = 1;
+	}
 #endif
 	AUDIO_StopDMA();
 }
 
 void resumeAudio(void){
 #ifdef THREADED_AUDIO
-	if(audio_paused){
+	if(audio_paused && audioEnabled){
 		// When we're want the audio to resume, release the 'lock'
 		LWP_SemPost(audio_free);
 		audio_paused = 0;
