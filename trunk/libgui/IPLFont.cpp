@@ -1,5 +1,9 @@
 #include "IPLFont.h"
 
+#ifdef HW_RVL
+#include "../gc_memory/MEM2.h"
+#endif
+
 namespace menu {
 
 #define FONT_TEX_SIZE_I4 ((512*512)>>1)
@@ -10,17 +14,15 @@ extern "C" void __SYS_ReadROM(void *buf,u32 len,u32 offset);
 IplFont::IplFont()
 		: frameWidth(640)
 {
-//	fontFont = (unsigned char*) memalign(32, FONT_TEX_SIZE_I4);
-//	fontFont = new unsigned char[FONT_TEX_SIZE_I4];
+#ifdef HW_RVL
+	fontFont = (unsigned char*)(FONT_LO);
+#endif
 	memset(fontFont,0,FONT_TEX_SIZE_I4);
 	initFont();
 }
 
 IplFont::~IplFont()
 {
-//	free(fontFont);
-//	delete [] fontFont;
-//	fontFont = NULL;
 }
 
 void IplFont::initFont()
@@ -209,7 +211,7 @@ void IplFont::drawInit(GXColor fontColor)
 	GX_SetTexCoordGen(GX_TEXCOORD0, GX_TG_MTX2x4, GX_TG_TEX0, GX_IDENTITY);
 
 	GX_InvalidateTexAll();
-	GX_InitTexObj(&fontTexObj, &fontFont, 512, 512, GX_TF_I4, GX_CLAMP, GX_CLAMP, GX_FALSE);
+	GX_InitTexObj(&fontTexObj, fontFont, 512, 512, GX_TF_I4, GX_CLAMP, GX_CLAMP, GX_FALSE);
 	GX_LoadTexObj(&fontTexObj, GX_TEXMAP1);
 
 	GX_SetTevColor(GX_TEVREG1,fontColor);
