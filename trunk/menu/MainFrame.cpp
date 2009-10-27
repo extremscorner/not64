@@ -171,6 +171,7 @@ void Func_PlayGame()
 #endif
 	pauseInput();
 	pauseAudio();
-
+  //TODO: auto save here and popup dialog box
+  //if(autoSave) ..
 	menu::Cursor::getInstance().clearCursorFocus();
 }

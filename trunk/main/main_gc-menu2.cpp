@@ -81,6 +81,8 @@ extern timers Timers;
        char padNeedScan;
        char wpadNeedScan;
        char shutdown;
+       char autoSave; //TODO: Use me
+       char autoLoad; //TODO: Use me
 
 extern "C" void gfx_set_fb(unsigned int* fb1, unsigned int* fb2);
 // -- End plugin data --
@@ -272,6 +274,8 @@ int loadROM(fileBrowser_file* rom){
 	romOpen_input();
 
 	cpu_init();
+  //TODO: auto load save here (don't popup dialog box if fail or success)
+  //if(autoLoad) ..
 	return 0;
 }
 
