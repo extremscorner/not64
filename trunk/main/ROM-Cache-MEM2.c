@@ -22,7 +22,16 @@
 #include "gczip.h"
 #include "zlib.h"
 
+#ifdef MENU_V2
+void LoadingBar_showBar(float percent, const char* string);
+#define PRINT DUMMY_print
+#define SETLOADPROG DUMMY_setLoadProg
+#define DRAWGUI DUMMY_draw
+#else
 #define PRINT GUI_print
+#define SETLOADPROG GUI_setLoadProg
+#define DRAWGUI GUI_draw
+#endif
 
 #define BLOCK_SIZE  (512*1024)
 #define BLOCK_MASK  (BLOCK_SIZE-1)
@@ -50,6 +59,10 @@ extern BOOL hasLoadedROM;
 static u8  L1[256*1024];
 static u32 L1tag;
 #endif
+
+void DUMMY_print(char* string) { }
+void DUMMY_setLoadProg(float percent) { }
+void DUMMY_draw() { }
 
 PKZIPHEADER pkzip;
 
@@ -144,8 +157,10 @@ void ROMCache_read(u32* dest, u32 offset, u32 length){
 
 int ROMCache_load(fileBrowser_file* f){
 	char txt[128];
+#ifndef MENU_V2
 	GUI_clear();
 	GUI_centerText(true);
+#endif
 	sprintf(txt, "Loading ROM %s into MEM2.\n Please be patient...\n",ROMTooBig ? "partially" : "fully");
 	PRINT(txt);
 
@@ -159,7 +174,8 @@ int ROMCache_load(fileBrowser_file* f){
 		bytes_read = romFile_readFile(f, ROMCACHE_LO + offset, LOAD_SIZE);
 		
 		if(bytes_read < 0){		// Read fail!
-			GUI_setLoadProg( -1.0f );
+
+			SETLOADPROG( -1.0f );
 			return -1;
 		}
 		//initialize byteswapping if it isn't already
@@ -174,8 +190,11 @@ int ROMCache_load(fileBrowser_file* f){
 		offset += bytes_read;
 		
 		if(!loads_til_update--){
-			GUI_setLoadProg( (float)offset/sizeToLoad );
-			GUI_draw();
+			SETLOADPROG( (float)offset/sizeToLoad );
+			DRAWGUI();
+#ifdef MENU_V2
+			LoadingBar_showBar((float)offset/sizeToLoad, txt);
+#endif
 			loads_til_update = 16;
 		}
 	}
@@ -190,7 +209,7 @@ int ROMCache_load(fileBrowser_file* f){
 			ROMBlocksLRU[i] = i;
 	}
 	
-	GUI_setLoadProg( -1.0f );
+	SETLOADPROG( -1.0f );
 	return 0;
 }
 
