@@ -41,9 +41,9 @@
 
 #ifdef USE_GUI
 #include "../gui/GUI.h"
-#define PRINT GUI_print
+//#define PRINT GUI_print
 #else
-#define PRINT printf
+//#define PRINT printf
 #endif
 
 #include "memory.h"
@@ -77,10 +77,10 @@ int loadEeprom(fileBrowser_file* savepath){
 	strcat((char*)saveFile.name, ".eep");
 
 	if( !(saveFile_readFile(&saveFile, &i, 4) <= 0) ){
-		PRINT("Loading EEPROM, please be patient...\n");
+		//PRINT("Loading EEPROM, please be patient...\n");
 		saveFile.offset = 0;
 		saveFile_readFile(&saveFile, eeprom, 0x800);
-		PRINT("OK\n");
+		//PRINT("OK\n");
 		result = 1;
 		eepromWritten = 1;
 		return result;
@@ -95,7 +95,7 @@ extern long long gettime();
 // Note: must be called after load
 int saveEeprom(fileBrowser_file* savepath){
 	if(!eepromWritten) return 0;
-	PRINT("Saving EEPROM, please do not turn off console...\n");
+	//PRINT("Saving EEPROM, please do not turn off console...\n");
 
 	fileBrowser_file saveFile;
 	memcpy(&saveFile, savepath, sizeof(fileBrowser_file));
@@ -104,7 +104,7 @@ int saveEeprom(fileBrowser_file* savepath){
 
 	saveFile_writeFile(&saveFile, eeprom, 0x800);
 
-	PRINT("OK\n");
+	//PRINT("OK\n");
 
 	return 1;
 
@@ -223,10 +223,10 @@ int loadMempak(fileBrowser_file* savepath){
 	strcat((char*)saveFile.name, ".mpk");
 
 	if( !(saveFile_readFile(&saveFile, &i, 4) <= 0) ){
-		PRINT("Loading mempak, please be patient...\n");
+		//PRINT("Loading mempak, please be patient...\n");
 		saveFile.offset = 0;
 		saveFile_readFile(&saveFile, mempack, 0x8000 * 4);
-		PRINT("OK\n");
+		//PRINT("OK\n");
 		result = 1;
 		mempakWritten = 1;
 		return result;
@@ -239,7 +239,7 @@ int loadMempak(fileBrowser_file* savepath){
 
 int saveMempak(fileBrowser_file* savepath){
 	if(!mempakWritten) return 0;
-	PRINT("Saving mempak, please do not turn off console...\n");
+	//PRINT("Saving mempak, please do not turn off console...\n");
 
 	fileBrowser_file saveFile;
 	memcpy(&saveFile, savepath, sizeof(fileBrowser_file));
@@ -248,7 +248,7 @@ int saveMempak(fileBrowser_file* savepath){
 
 	saveFile_writeFile(&saveFile, mempack, 0x8000 * 4);
 
-	PRINT("OK\n");
+	//PRINT("OK\n");
 
 	return 1;
 }
