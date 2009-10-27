@@ -149,8 +149,6 @@ void Func_LoadFromUSB()
 	romFile_deinit( romFile_topLevel );
 	romFile_init( romFile_topLevel );
 	
-	//TODO, gray me out if romFile_init returns 0
-
 	fileBrowserFrame_OpenDirectory(romFile_topLevel);
 	pMenuContext->setActiveFrame(MenuContext::FRAME_FILEBROWSER);
 #endif
