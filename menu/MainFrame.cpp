@@ -109,8 +109,16 @@ void Func_LoadROM()
 	pMenuContext->setActiveFrame(MenuContext::FRAME_LOADROM);
 }
 
+extern BOOL hasLoadedROM;
+
 void Func_CurrentROM()
 {
+	if(!hasLoadedROM)
+	{
+		menu::MessageBox::getInstance().setMessage("Please load a ROM first");
+		return;
+	}
+
 	pMenuContext->setActiveFrame(MenuContext::FRAME_CURRENTROM);
 }
 
@@ -137,8 +145,6 @@ extern "C" {
 void cpu_init();
 void cpu_deinit();
 }
-
-extern BOOL hasLoadedROM;
 
 extern "C" {
 void pauseAudio(void);  void pauseInput(void);

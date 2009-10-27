@@ -132,7 +132,7 @@ int main(int argc, char* argv[]){
 	Timers.limitVIs  = 0; // Sync to Audio
 	saveEnabled      = 0; // Don't save game
 	creditsScrolling = 0; // Normal menu for now
-	dynacore         = 0;//1; // Dynarec
+	dynacore         = 1; // Dynarec
 	widescreen		 = 0; // Stretch FB horizontally
 #ifdef GLN64_GX
 // glN64 specific  settings

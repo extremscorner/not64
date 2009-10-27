@@ -110,5 +110,5 @@ void Func_ChooseDynarec()
 
 void Func_ReturnFromSelectCPUFrame()
 {
-	pMenuContext->setActiveFrame(MenuContext::FRAME_MAIN);
+	pMenuContext->setActiveFrame(MenuContext::FRAME_SETTINGS);
 }
