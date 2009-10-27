@@ -125,11 +125,11 @@ int fileBrowser_libfat_init(fileBrowser_file* f){
      	res |= fatMountSimple ("sd", frontsd);
      	chdir("sd:/");
    	}
-   	if(carda->startup()) {
+   	else if(carda->startup()) {
    	  res |= fatMountSimple ("sd", carda);
    	  chdir("sd:/");
  	  }
- 	  if(cardb->startup()) {
+ 	  else if(cardb->startup()) {
    	  res |= fatMountSimple ("sd", cardb);
    	  chdir("sd:/");
  	  }
@@ -147,7 +147,7 @@ int fileBrowser_libfat_init(fileBrowser_file* f){
    	res |= fatMountSimple ("sd", carda);
    	chdir("sd:/");
  	}
- 	if(cardb->startup()) {
+ 	else if(cardb->startup()) {
    	res |= fatMountSimple ("sd", cardb);
    	chdir("sd:/");
  	}
