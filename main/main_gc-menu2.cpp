@@ -37,6 +37,7 @@ extern "C" {
 #include "../fileBrowser/fileBrowser.h"
 #include "../fileBrowser/fileBrowser-libfat.h"
 #include "../fileBrowser/fileBrowser-CARD.h"
+#include "wii64config.h"
 }
 
 #ifdef WII
@@ -89,21 +90,22 @@ extern timers Timers;
        char autoSave;
        char autoLoad;
        char widescreen = 0;
-       
+
 struct {
 	char* key;
 	char* value; // Not a string, but a char pointer
+	char  min, max;
 } OPTIONS[] =
-{ { "Audio", &audioEnabled },
-  { "FPS", &showFPSonScreen },
-  { "Debug", &printToScreen },
-  { "FBTex", &glN64_useFrameBufferTextures },
-  { "2xSaI", &glN64_use2xSaiTextures },
-  { "WideScreen", &widescreen },
-  { "Core", ((char*)&dynacore)+3 },
-  { "NativeDevice", &nativeSaveDevice },
-  { "StatesDevice", &saveStateDevice },
-  { "AutoSave", &autoSave },
+{ { "Audio", &audioEnabled, AUDIO_DISABLE, AUDIO_ENABLE },
+  { "FPS", &showFPSonScreen, FPS_HIDE, FPS_SHOW },
+  { "Debug", &printToScreen, DEBUG_HIDE, DEBUG_SHOW },
+  { "FBTex", &glN64_useFrameBufferTextures, GLN64_FBTEX_DISABLE, GLN64_FBTEX_ENABLE },
+  { "2xSaI", &glN64_use2xSaiTextures, GLN64_2XSAI_DISABLE, GLN64_2XSAI_ENABLE },
+  { "WideScreen", &widescreen, SCREENMODE_4x3, SCREENMODE_16x9 },
+  { "Core", ((char*)&dynacore)+3, DYNACORE_INTERPRETER, DYNACORE_PURE_INTERP },
+  { "NativeDevice", &nativeSaveDevice, NATIVESAVEDEVICE_SD, NATIVESAVEDEVICE_CARDB },
+  { "StatesDevice", &saveStateDevice, SAVESTATEDEVICE_SD, SAVESTATEDEVICE_USB },
+  { "AutoSave", &autoSave, AUTOSAVE_DISABLE, AUTOSAVE_ENABLE },
 };
 void readConfig(FILE* f);
 void writeConfig(FILE* f);
@@ -206,8 +208,8 @@ int main(int argc, char* argv[]){
       }
     }
   }
-  
-    
+
+
 	while (menu->isRunning()) {
 		PAD_ScanPads();
 		if(PAD_ButtonsHeld(0) == PAD_BUTTON_START)
@@ -527,7 +529,8 @@ void video_mode_init(GXRModeObj *videomode,unsigned int *fb1, unsigned int *fb2)
 void setOption(char* key, char value){
 	for(unsigned int i=0; i<sizeof(OPTIONS)/sizeof(OPTIONS[0]); ++i){
 		if(!strcmp(OPTIONS[i].key, key)){
-			*OPTIONS[i].value = value;
+			if(value >= OPTIONS[i].min && value <= OPTIONS[i].max)
+				*OPTIONS[i].value = value;
 			break;
 		}
 	}
