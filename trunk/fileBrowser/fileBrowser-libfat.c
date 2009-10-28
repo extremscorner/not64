@@ -22,7 +22,7 @@ const DISC_INTERFACE* cardb = &__io_gcsdb;
 #endif
 
 fileBrowser_file topLevel_libfat_Default =
-	{ "/wii64/roms", // file name
+	{ "sd:/wii64/roms", // file name
 	  0, // sector
 	  0, // offset
 	  0, // size
@@ -38,7 +38,7 @@ fileBrowser_file topLevel_libfat_USB =
 	 };
 
 fileBrowser_file saveDir_libfat_Default =
-	{ "/wii64/saves/",
+	{ "sd:/wii64/saves/",
 	  0,
 	  0,
 	  0,
@@ -120,18 +120,15 @@ int fileBrowser_libfat_writeFile(fileBrowser_file* file, void* buffer, unsigned 
 int fileBrowser_libfat_init(fileBrowser_file* f){
  	int res = 0;
 #ifdef HW_RVL
-  if(f->name[0] == '/') {
+  if(f->name[0] == 's') {
    	if(frontsd->startup()) {
      	res |= fatMountSimple ("sd", frontsd);
-     	chdir("sd:/");
    	}
-   	else if(carda->startup()) {
+   	else if(carda->startup() && !res) {
    	  res |= fatMountSimple ("sd", carda);
-   	  chdir("sd:/");
  	  }
- 	  else if(cardb->startup()) {
+ 	  else if(cardb->startup() && !res) {
    	  res |= fatMountSimple ("sd", cardb);
-   	  chdir("sd:/");
  	  }
  	  return res;
  	}
@@ -145,11 +142,9 @@ int fileBrowser_libfat_init(fileBrowser_file* f){
 #else
  	if(carda->startup()) {
    	res |= fatMountSimple ("sd", carda);
-   	chdir("sd:/");
  	}
- 	else if(cardb->startup()) {
+ 	else if(cardb->startup() && !res) {
    	res |= fatMountSimple ("sd", cardb);
-   	chdir("sd:/");
  	}
 	return res;
 #endif
