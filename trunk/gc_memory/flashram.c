@@ -76,33 +76,32 @@ int loadFlashram(fileBrowser_file* savepath){
 	strcat((char*)saveFile.name, ROM_SETTINGS.goodname);
 	strcat((char*)saveFile.name, ".fla");
 
-	if( !(saveFile_readFile(&saveFile, &i, 4) <= 0) ){
-		//PRINT("Loading flashram, please be patient...\n");
+	if(saveFile_readFile(&saveFile, &i, 4) == 4) {  //file exists
 		saveFile.offset = 0;
-		saveFile_readFile(&saveFile, flashram, 0x20000);
-		//PRINT("OK\n");
+		if(saveFile_readFile(&saveFile, flashram, 0x20000)!=0x20000) {  //error reading file
+  		for (i=0; i<0x20000; i++) flashram[i] = 0xff;
+  		flashramWritten = FALSE;
+  		return -1;
+		}
 		result = 1;
 		flashramWritten = 1;
-		return result;
-	} else for (i=0; i<0x20000; i++) flashram[i] = 0xff;
+		return result;  //file read ok
+	} else for (i=0; i<0x20000; i++) flashram[i] = 0xff;  //file doesn't exist
 
 	flashramWritten = FALSE;
 
-	return result;
+	return result;    //no file
 }
 
 int saveFlashram(fileBrowser_file* savepath){
-	if(!flashramWritten) return 0;
-	//PRINT("Saving flashram, do not turn off the console...\n");
-
+  if(!flashramWritten) return 0;
 	fileBrowser_file saveFile;
 	memcpy(&saveFile, savepath, sizeof(fileBrowser_file));
 	strcat((char*)saveFile.name, ROM_SETTINGS.goodname);
 	strcat((char*)saveFile.name, ".fla");
 
-	saveFile_writeFile(&saveFile, flashram, 0x20000);
-
-	//PRINT("OK\n");
+	if(saveFile_writeFile(&saveFile, flashram, 0x20000)!=0x20000)
+	  return -1;
 
 	return 1;
 }

@@ -218,8 +218,17 @@ void Func_LoadSave()
 	}
 }
 
+extern BOOL sramWritten;
+extern BOOL eepromWritten;
+extern BOOL mempakWritten;
+extern BOOL flashramWritten;
+
 void Func_SaveGame()
 {
+  if(!flashramWritten && !sramWritten && !eepromWritten && !mempakWritten) {
+    menu::MessageBox::getInstance().setMessage("Nothing to save");
+    return;
+  }
 	switch (nativeSaveDevice)
 	{
 		case NATIVESAVEDEVICE_SD:
@@ -257,6 +266,7 @@ void Func_SaveGame()
 	}
 
 	// Try saving everything
+	int amountSaves = flashramWritten + sramWritten + eepromWritten + mempakWritten;
 	int result = 0;
 	saveFile_init(saveFile_dir);
 	result += saveEeprom(saveFile_dir);
@@ -265,7 +275,7 @@ void Func_SaveGame()
 	result += saveFlashram(saveFile_dir);
 	saveFile_deinit(saveFile_dir);
 
-	if (result)	
+	if (result==amountSaves)	
 		switch (nativeSaveDevice)
 		{
 			case NATIVESAVEDEVICE_SD:
@@ -281,7 +291,7 @@ void Func_SaveGame()
 				menu::MessageBox::getInstance().setMessage("Saved game to memcard in Slot B");
 				break;
 		}
-	else		menu::MessageBox::getInstance().setMessage("Nothing to save");
+	else		menu::MessageBox::getInstance().setMessage("Failed to Save");
 }
 
 void Func_LoadState()
