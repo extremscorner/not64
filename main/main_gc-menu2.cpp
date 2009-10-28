@@ -34,6 +34,9 @@ extern "C" {
 #include "../gc_memory/tlb.h"
 #include "../gc_memory/pif.h"
 #include "ROM-Cache.h"
+#include "../fileBrowser/fileBrowser.h"
+#include "../fileBrowser/fileBrowser-libfat.h"
+#include "../fileBrowser/fileBrowser-CARD.h"
 }
 
 #ifdef WII
@@ -83,16 +86,27 @@ extern timers Timers;
        char shutdown;
 	   char nativeSaveDevice;
 	   char saveStateDevice;
-       char autoSave; //TODO: Use me
-       char autoLoad; //TODO: Use me
-
+       char autoSave;
+       char autoLoad;
+       char widescreen = 0;
+       
 struct {
 	char* key;
 	char* value; // Not a string, but a char pointer
 } OPTIONS[] =
 { { "Audio", &audioEnabled },
   { "FPS", &showFPSonScreen },
+  { "Debug", &printToScreen },
+  { "FBTex", &glN64_useFrameBufferTextures },
+  { "2xSaI", &glN64_use2xSaiTextures },
+  { "WideScreen", &widescreen },
+  { "Core", ((char*)&dynacore)+3 },
+  { "NativeDevice", &nativeSaveDevice },
+  { "StatesDevice", &saveStateDevice },
+  { "AutoSave", &autoSave },
 };
+void readConfig(FILE* f);
+void writeConfig(FILE* f);
 
 extern "C" void gfx_set_fb(unsigned int* fb1, unsigned int* fb2);
 // -- End plugin data --
@@ -102,7 +116,6 @@ static u32* xfb[2] = { NULL, NULL };	/*** Framebuffers ***/
 GXRModeObj *vmode, *rmode;				/*** Graphics Mode Object ***/
 GXRModeObj vmode_phys, rmode_phys;		/*** Graphics Mode Object ***/
 void ScanPADSandReset(u32 dummy);
-char widescreen = 0;
 int GX_xfb_offset = 0;
 
 // Dummy functions
@@ -156,44 +169,45 @@ int main(int argc, char* argv[]){
 	glN64_use2xSaiTextures = 0;	// Disable 2xSai textures
 #endif //GLN64_GX
 
-/*	// 'Page flip' buttons so we know when it released
-	int which_pad = 0;
-	u16 buttons[2];
-
-	// * MAIN LOOP * //
-	while(TRUE){
-		if(padNeedScan){ PAD_ScanPads(); padNeedScan = 0; }
-		// First read the pads
-		buttons[which_pad] = PAD_ButtonsHeld(0) | readWPAD();
-#ifdef HW_RVL
-    if(shutdown)
-      SYS_ResetSystem(SYS_POWEROFF, 0, 0);
-#endif
-// Check whether button is pressed and make sure it wasn't registered last time
-#define PAD_PRESSED(butt0n) ( buttons[which_pad] & butt0n && !(buttons[which_pad^1] & butt0n) )
-
-		// Navigate the menu accordingly
-		if( PAD_PRESSED( PAD_BUTTON_UP ) )
-			menuNavigate(-1);
-		else if( PAD_PRESSED( PAD_BUTTON_DOWN ) )
-			menuNavigate(1);
-
-		if( PAD_PRESSED( PAD_BUTTON_A ) )
-			menuSelect();
-		else if( PAD_PRESSED( PAD_BUTTON_B ) )
-			menuBack();
-
-		// TODO: Analog stick
-
-		// 'Flip' buttons
-		which_pad ^= 1;
-
-		// Display everything
-		menuDisplay();
-		if(creditsScrolling) GUI_creditScreen();
-		else GUI_draw();
-	}*/
-
+  //config stuff
+  fileBrowser_file* configFile_file;
+  int (*configFile_init)(fileBrowser_file*) = fileBrowser_libfat_init;
+  if(argv[0][0] == 'u') {  //assume USB
+    configFile_file = &saveDir_libfat_USB;
+    if(configFile_init(configFile_file)) {                //only if device initialized ok
+      FILE* f = fopen( "usb:/wii64/settings.cfg", "rb" );  //attempt to open file
+      if(!f) {
+        f = fopen( "usb:/wii64/settings.cfg", "wb" );      //open fail, create file
+        if(f) {
+          writeConfig(f); //write a fresh one
+          fclose(f);
+        }
+      }
+      else if(f) {        //open ok, read it
+        readConfig(f);
+        fclose(f);
+      }
+    }
+  }
+  else /*if((argv[0][0]=='s') || (argv[0][0]=='/'))*/ { //assume SD
+    configFile_file = &saveDir_libfat_Default;
+    if(configFile_init(configFile_file)) {                //only if device initialized ok
+      FILE* f = fopen( "sd:/wii64/settings.cfg", "rb" );  //attempt to open file
+      if(!f) {
+        f = fopen( "sd:/wii64/settings.cfg", "wb" );      //open fail, create file
+        if(f) {
+          writeConfig(f); //write a fresh one
+          fclose(f);
+        }
+      }
+      else if(f) {        //open ok, read it
+        readConfig(f);
+        fclose(f);
+      }
+    }
+  }
+  
+    
 	while (menu->isRunning()) {
 		PAD_ScanPads();
 		if(PAD_ButtonsHeld(0) == PAD_BUTTON_START)
@@ -510,7 +524,7 @@ void video_mode_init(GXRModeObj *videomode,unsigned int *fb1, unsigned int *fb2)
 	xfb[1] = fb2;
 }
 
-static void setOption(char* key, char value){
+void setOption(char* key, char value){
 	for(unsigned int i=0; i<sizeof(OPTIONS)/sizeof(OPTIONS[0]); ++i){
 		if(!strcmp(OPTIONS[i].key, key)){
 			*OPTIONS[i].value = value;
@@ -519,7 +533,7 @@ static void setOption(char* key, char value){
 	}
 }
 
-static void readConfig(FILE* f){
+void readConfig(FILE* f){
 	char line[256];
 	while(fgets(line, 256, f)){
 		if(line[0] == '#') continue;
@@ -534,7 +548,7 @@ static void readConfig(FILE* f){
 	}
 }
 
-static void writeConfig(FILE* f){
+void writeConfig(FILE* f){
 	for(unsigned int i=0; i<sizeof(OPTIONS)/sizeof(OPTIONS[0]); ++i){
 		fprintf(f, "%s = %d\n", OPTIONS[i].key, *OPTIONS[i].value);
 	}
