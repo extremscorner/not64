@@ -73,33 +73,33 @@ int loadSram(fileBrowser_file* savepath){
 	strcat((char*)saveFile.name, ROM_SETTINGS.goodname);
 	strcat((char*)saveFile.name, ".sra");
 
-	if( !(saveFile_readFile(&saveFile, &i, 4) <= 0) ){
-		//PRINT("Loading SRAM, please be patient...\n");
+	if(saveFile_readFile(&saveFile, &i, 4) == 4){ //file exists
 		saveFile.offset = 0;
-		saveFile_readFile(&saveFile, sram, 0x8000);
-		//PRINT("OK\n");
-		result = 1;
-		sramWritten = 1;
-		return result;
-	} else for (i=0; i<0x8000; i++) sram[i] = 0;
+		if(saveFile_readFile(&saveFile, sram, 0x8000)!=0x8000) {  //error reading file
+  		for (i=0; i<0x8000; i++) sram[i] = 0;
+  		sramWritten = FALSE;
+  		return -1;
+		}
+  	result = 1;
+  	sramWritten = 1;
+		return result;  //file read ok
+	} else for (i=0; i<0x8000; i++) sram[i] = 0;  //file doesn't exist
 
 	sramWritten = FALSE;
 
-	return result;
+	return result;    //no file
 
 }
 
 int saveSram(fileBrowser_file* savepath){
-	if(!sramWritten) return 0;
-	//PRINT("Saving SRAM, do not turn off the console...\n");
+  if(!sramWritten) return 0;
 	fileBrowser_file saveFile;
 	memcpy(&saveFile, savepath, sizeof(fileBrowser_file));
 	strcat((char*)saveFile.name, ROM_SETTINGS.goodname);
 	strcat((char*)saveFile.name, ".sra");
 
-	saveFile_writeFile(&saveFile, sram, 0x8000);
-
-	//PRINT("OK\n");
+	if(saveFile_writeFile(&saveFile, sram, 0x8000)!=0x8000)
+	  return -1;
 
 	return 1;
 }

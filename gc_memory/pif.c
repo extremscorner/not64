@@ -76,35 +76,34 @@ int loadEeprom(fileBrowser_file* savepath){
 	strcat((char*)saveFile.name, ROM_SETTINGS.goodname);
 	strcat((char*)saveFile.name, ".eep");
 
-	if( !(saveFile_readFile(&saveFile, &i, 4) <= 0) ){
-		//PRINT("Loading EEPROM, please be patient...\n");
+	if(saveFile_readFile(&saveFile, &i, 4) == 4) {  //file exists
 		saveFile.offset = 0;
-		saveFile_readFile(&saveFile, eeprom, 0x800);
-		//PRINT("OK\n");
+		if(saveFile_readFile(&saveFile, eeprom, 0x800)!=0x800) { //error reading file
+  		for (i=0; i<0x800; i++) eeprom[i] = 0;
+  		eepromWritten = FALSE;
+  		return -1;
+		}
 		result = 1;
 		eepromWritten = 1;
-		return result;
-	} else for (i=0; i<0x800; i++) eeprom[i] = 0;
+		return result;  //file read ok
+	} else for (i=0; i<0x800; i++) eeprom[i] = 0; //file doesn't exist
 
 	eepromWritten = FALSE;
 
-	return result;
+	return result;  //no file
 }
 
 extern long long gettime();
 // Note: must be called after load
 int saveEeprom(fileBrowser_file* savepath){
-	if(!eepromWritten) return 0;
-	//PRINT("Saving EEPROM, please do not turn off console...\n");
-
+  if(!eepromWritten) return 0;
 	fileBrowser_file saveFile;
 	memcpy(&saveFile, savepath, sizeof(fileBrowser_file));
 	strcat((char*)saveFile.name, ROM_SETTINGS.goodname);
 	strcat((char*)saveFile.name, ".eep");
 
-	saveFile_writeFile(&saveFile, eeprom, 0x800);
-
-	//PRINT("OK\n");
+	if(saveFile_writeFile(&saveFile, eeprom, 0x800)!=0x800)
+	  return -1;
 
 	return 1;
 
@@ -222,33 +221,32 @@ int loadMempak(fileBrowser_file* savepath){
 	strcat((char*)saveFile.name, ROM_SETTINGS.goodname);
 	strcat((char*)saveFile.name, ".mpk");
 
-	if( !(saveFile_readFile(&saveFile, &i, 4) <= 0) ){
-		//PRINT("Loading mempak, please be patient...\n");
+	if(saveFile_readFile(&saveFile, &i, 4) == 4) {  //file exists
 		saveFile.offset = 0;
-		saveFile_readFile(&saveFile, mempack, 0x8000 * 4);
-		//PRINT("OK\n");
+		if(saveFile_readFile(&saveFile, mempack, 0x8000 * 4)!=(0x8000*4)) { //error reading file
+  		format_mempacks();
+	    mempakWritten = FALSE;
+	    return -1;
+    }
 		result = 1;
 		mempakWritten = 1;
-		return result;
-	} else format_mempacks();
+		return result;  //file read ok
+	} else format_mempacks(); //file doesn't exist
 
 	mempakWritten = FALSE;
 
-	return result;
+	return result;    //no file
 }
 
 int saveMempak(fileBrowser_file* savepath){
-	if(!mempakWritten) return 0;
-	//PRINT("Saving mempak, please do not turn off console...\n");
-
+  if(!mempakWritten) return 0;
 	fileBrowser_file saveFile;
 	memcpy(&saveFile, savepath, sizeof(fileBrowser_file));
 	strcat((char*)saveFile.name, ROM_SETTINGS.goodname);
 	strcat((char*)saveFile.name, ".mpk");
 
-	saveFile_writeFile(&saveFile, mempack, 0x8000 * 4);
-
-	//PRINT("OK\n");
+	if(saveFile_writeFile(&saveFile, mempack, 0x8000 * 4)!=(0x8000*4))
+	  return -1;
 
 	return 1;
 }
