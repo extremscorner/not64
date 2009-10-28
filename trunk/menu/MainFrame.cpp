@@ -6,6 +6,7 @@
 #include "../libgui/FocusManager.h"
 #include "../libgui/CursorManager.h"
 #include "../libgui/MessageBox.h"
+#include "../main/wii64config.h"
 #ifdef DEBUGON
 # include <debug.h>
 #endif
@@ -13,6 +14,13 @@ extern "C" {
 #ifdef WII
 #include <di/di.h>
 #endif 
+#include "../gc_memory/memory.h"
+#include "../gc_memory/Saves.h"
+#include "../main/plugin.h"
+#include "../main/savestates.h"
+#include "../fileBrowser/fileBrowser.h"
+#include "../fileBrowser/fileBrowser-libfat.h"
+#include "../fileBrowser/fileBrowser-CARD.h"
 #include "../main/gc_dvd.h"
 }
 #include <ogc/dvd.h>
@@ -179,11 +187,61 @@ void Func_PlayGame()
 	pauseInput();
 	pauseAudio();
 
+	//TODO: make the MessageBox here not require an "ok", and just do "Saving to X" and vanish
   if(autoSave) {
-    if(flashramWritten || sramWritten || eepromWritten || mempakWritten) {
-      menu::MessageBox::getInstance().setMessage("Automatically saving game .. (not really)");
-      //TODO: Do actual writing here .. 
-      flashramWritten = sramWritten = eepromWritten = mempakWritten = 0;
+    if(flashramWritten || sramWritten || eepromWritten || mempakWritten) {  //something needs saving
+      //menu::MessageBox::getInstance().setMessage("Automatically saving game .. ");
+      switch (nativeSaveDevice)
+    	{
+    		case NATIVESAVEDEVICE_SD:
+    		case NATIVESAVEDEVICE_USB:
+    			// Adjust saveFile pointers
+    			saveFile_dir = (nativeSaveDevice==NATIVESAVEDEVICE_SD) ? &saveDir_libfat_Default:&saveDir_libfat_USB;
+    			saveFile_readFile  = fileBrowser_libfat_readFile;
+    			saveFile_writeFile = fileBrowser_libfat_writeFile;
+    			saveFile_init      = fileBrowser_libfat_init;
+    			saveFile_deinit    = fileBrowser_libfat_deinit;
+    			break;
+    		case NATIVESAVEDEVICE_CARDA:
+    		case NATIVESAVEDEVICE_CARDB:
+    			// Adjust saveFile pointers
+    			saveFile_dir       = (nativeSaveDevice==NATIVESAVEDEVICE_CARDA) ? &saveDir_CARD_SlotA:&saveDir_CARD_SlotB;
+    			saveFile_readFile  = fileBrowser_CARD_readFile;
+    			saveFile_writeFile = fileBrowser_CARD_writeFile;
+    			saveFile_init      = fileBrowser_CARD_init;
+    			saveFile_deinit    = fileBrowser_CARD_deinit;
+    			break;
+    	}
+    	// Try saving everything
+    	int amountSaves = flashramWritten + sramWritten + eepromWritten + mempakWritten;
+    	int result = 0;
+    	saveFile_init(saveFile_dir);
+    	result += saveEeprom(saveFile_dir);
+    	result += saveSram(saveFile_dir);
+    	result += saveMempak(saveFile_dir);
+    	result += saveFlashram(saveFile_dir);
+    	saveFile_deinit(saveFile_dir);
+    	if (result==amountSaves) {  //saved all of them ok	
+    		switch (nativeSaveDevice)
+    		{
+    			case NATIVESAVEDEVICE_SD:
+    				menu::MessageBox::getInstance().setMessage("Automatically saved to SD card");
+    				break;
+    			case NATIVESAVEDEVICE_USB:
+    				menu::MessageBox::getInstance().setMessage("Automatically saved to USB device");
+    				break;
+    			case NATIVESAVEDEVICE_CARDA:
+    				menu::MessageBox::getInstance().setMessage("Automatically saved to memcard in Slot A");
+    				break;
+    			case NATIVESAVEDEVICE_CARDB:
+    				menu::MessageBox::getInstance().setMessage("Automatically saved to memcard in Slot B");
+    				break;
+    		}
+    		flashramWritten = sramWritten = eepromWritten = mempakWritten = 0;  //nothing new written since save
+  		}
+  	  else		
+  	    menu::MessageBox::getInstance().setMessage("Failed to Save"); //one or more failed to save
+      
     }
   }
 	menu::Cursor::getInstance().clearCursorFocus();
