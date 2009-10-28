@@ -86,6 +86,14 @@ extern timers Timers;
        char autoSave; //TODO: Use me
        char autoLoad; //TODO: Use me
 
+struct {
+	char* key;
+	char* value; // Not a string, but a char pointer
+} OPTIONS[] =
+{ { "Audio", &audioEnabled },
+  { "FPS", &showFPSonScreen },
+};
+
 extern "C" void gfx_set_fb(unsigned int* fb1, unsigned int* fb2);
 // -- End plugin data --
 
@@ -186,8 +194,8 @@ int main(int argc, char* argv[]){
 		else GUI_draw();
 	}*/
 
-	while (menu->isRunning()) {	
-		PAD_ScanPads(); 
+	while (menu->isRunning()) {
+		PAD_ScanPads();
 		if(PAD_ButtonsHeld(0) == PAD_BUTTON_START)
 			break;
 	}
@@ -456,7 +464,7 @@ static void Initialise (void){
   memset (gp_fifo, 0, DEFAULT_FIFO_SIZE);
 
   GX_Init (gp_fifo, DEFAULT_FIFO_SIZE);
-	  
+
   // clears the bg to color and clears the z buffer
 //  GX_SetCopyClear ((GXColor){64,64,64,255}, 0x00000000);
   GX_SetCopyClear ((GXColor){0,0,0,255}, 0x00000000);
@@ -500,4 +508,34 @@ void video_mode_init(GXRModeObj *videomode,unsigned int *fb1, unsigned int *fb2)
 	rmode = videomode;
 	xfb[0] = fb1;
 	xfb[1] = fb2;
+}
+
+static void setOption(char* key, char value){
+	for(unsigned int i=0; i<sizeof(OPTIONS)/sizeof(OPTIONS[0]); ++i){
+		if(!strcmp(OPTIONS[i].key, key)){
+			*OPTIONS[i].value = value;
+			break;
+		}
+	}
+}
+
+static void readConfig(FILE* f){
+	char line[256];
+	while(fgets(line, 256, f)){
+		if(line[0] == '#') continue;
+		char* vs = line;
+		while(*vs != ' ' && *vs != '\t' && *vs != ':' && *vs != '=')
+				++vs;
+		*(vs++) = 0;
+		while(*vs == ' ' || *vs == '\t' || *vs == ':' || *vs == '=')
+				++vs;
+
+		setOption(line, atoi(vs));
+	}
+}
+
+static void writeConfig(FILE* f){
+	for(unsigned int i=0; i<sizeof(OPTIONS)/sizeof(OPTIONS[0]); ++i){
+		fprintf(f, "%s = %d\n", OPTIONS[i].key, *OPTIONS[i].value);
+	}
 }
