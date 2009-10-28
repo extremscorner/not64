@@ -40,6 +40,7 @@
 #include "../r4300/r4300.h"
 #include "../r4300/interupt.h"
 #include "../gc_memory/TLB-Cache.h"
+#include "wii64config.h"
 
 char* statespath = "/wii64/saves/";
 
@@ -66,8 +67,14 @@ char* savestates_save()
   int len, i;
 	
   /* fix the filename to %s.st%d format */
-	filename = malloc(strlen(statespath)+strlen(ROM_SETTINGS.goodname)+4+1);
-  strcpy(filename, statespath);
+	filename = malloc(strlen(statespath)+strlen(ROM_SETTINGS.goodname)+4+1+5);
+#ifdef HW_RVL
+  if(saveStateDevice==SAVESTATEDEVICE_USB)
+    strcpy(filename,"usb:");
+#endif
+  if(saveStateDevice==SAVESTATEDEVICE_SD)
+    strcpy(filename,"sd:"); //"sd:/" is any currently mounted SD on GC or Wii
+	strcat(filename, statespath);
   strcat(filename, ROM_SETTINGS.goodname);
 	strcat(filename, ".st");
 	sprintf(buf, "%d", savestates_slot);
@@ -142,8 +149,14 @@ char* savestates_load()
 	int len, i;
 		
 	/* fix the filename to %s.st%d format */
-	filename = malloc(strlen(statespath)+strlen(ROM_SETTINGS.goodname)+4+1);
-	strcpy(filename, statespath);
+	filename = malloc(strlen(statespath)+strlen(ROM_SETTINGS.goodname)+4+1+5);
+#ifdef HW_RVL
+  if(saveStateDevice==SAVESTATEDEVICE_USB)
+    strcpy(filename,"usb:");
+#endif
+  if(saveStateDevice==SAVESTATEDEVICE_SD)
+    strcpy(filename,"sd:"); //"sd:/" is any currently mounted SD on GC or Wii
+	strcat(filename, statespath);
   strcat(filename, ROM_SETTINGS.goodname);
 	strcat(filename, ".st");
 	sprintf(buf, "%d", savestates_slot);
