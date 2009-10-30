@@ -70,13 +70,6 @@ enum autoSave
 	AUTOSAVE_ENABLE
 };
 
-extern char autoLoad; //TODO: Use me
-enum autoLoad
-{
-	AUTOLOAD_DISABLE=0,
-	AUTOLOAD_ENABLE
-};
-
 extern char creditsScrolling;	//deprecated?
 
 extern unsigned long dynacore;

@@ -74,6 +74,7 @@ extern timers Timers;
        char padNeedScan;
        char wpadNeedScan;
        char shutdown;
+	   char saveStateDevice;
 
 extern void gfx_set_fb(unsigned int* fb1, unsigned int* fb2);
 // -- End plugin data --
