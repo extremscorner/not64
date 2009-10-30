@@ -14,6 +14,7 @@ public:
 	void init();
 	void drawInit();
 	void swapBuffers();
+	void clearEFB(GXColor color, u32 zvalue);
 	void newModelView();
 	void translate(float x, float y, float z);
 	void rotate(float degrees);
