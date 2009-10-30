@@ -157,7 +157,7 @@ void Graphics::swapBuffers()
 {
 //	printf("Graphics swapBuffers\n");
 //	if(which_fb==1) usleep(1000000);
-	GX_SetCopyClear((GXColor){0, 0, 0, 0xff}, GX_MAX_Z24);
+	GX_SetCopyClear((GXColor){0, 0, 0, 0xFF}, GX_MAX_Z24);
 	GX_CopyDisp(xfb[which_fb],GX_TRUE);
 	GX_Flush();
 
@@ -170,6 +170,16 @@ void Graphics::swapBuffers()
  	VIDEO_WaitVSync();
 	which_fb ^= 1;
 //	printf("Graphics endSwapBuffers\n");
+}
+
+void Graphics::clearEFB(GXColor color, u32 zvalue)
+{
+	GX_SetColorUpdate(GX_ENABLE);
+	GX_SetAlphaUpdate(GX_ENABLE);
+	GX_SetZMode(GX_ENABLE,GX_ALWAYS,GX_TRUE);
+	GX_SetCopyClear(color, zvalue);
+	GX_CopyDisp(xfb[which_fb],GX_TRUE);
+	GX_Flush();
 }
 
 void Graphics::newModelView()

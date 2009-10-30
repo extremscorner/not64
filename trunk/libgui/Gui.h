@@ -20,11 +20,11 @@ public:
 		static Gui obj;
 		return obj;
 	}
+	Graphics *gfx;
 
 private:
 	Gui();
 	~Gui();
-	Graphics *gfx;
 	FrameList frameList;
 };
 
