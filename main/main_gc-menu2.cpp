@@ -88,7 +88,6 @@ extern timers Timers;
 	   char nativeSaveDevice;
 	   char saveStateDevice;
        char autoSave;
-       char autoLoad;
        char widescreen = 0;
 
 struct {
@@ -162,7 +161,6 @@ int main(int argc, char* argv[]){
 	nativeSaveDevice = 0; // SD
 	saveStateDevice	 = 0; // SD
 	autoSave         = 0; // Don't Auto Save Game
-	autoLoad         = 0; // Don't Auto Load Save Game
 	creditsScrolling = 0; // Normal menu for now
 	dynacore         = 1; // Dynarec
 	widescreen		 = 0; // Stretch FB horizontally
@@ -306,7 +304,7 @@ int loadROM(fileBrowser_file* rom){
 
 	cpu_init();
   //TODO: auto load save here (don't popup dialog box if fail or success)
-  //if(autoLoad) ..
+  //if(autoSave) ..
 	return 0;
 }
 
