@@ -4,7 +4,7 @@
  *
  * Mupen64 homepage: http://mupen64.emulation64.com
  * email address: hacktarux@yahoo.fr
- * 
+ *
  * If you want to contribute to the project please contact
  * me first (maybe someone is already making what you are
  * planning to do).
@@ -134,7 +134,7 @@ void FIN_BLOCK()
 #endif
 	precomp_instr *inst = PC;
 	jump_to((PC-1)->addr+4);
-	
+
 	if (!skip_jump)
 	  {
 	     PC->ops();
@@ -143,7 +143,7 @@ void FIN_BLOCK()
 	  }
 	else
 	  PC->ops();
-	
+
 	if (dynacore) dyna_jump();
      }
 }
@@ -198,7 +198,7 @@ void JAL()
      {
 	reg[31]=PC->addr;
 	sign_extended(reg[31]);
-#ifndef PPC_DYNAREC	
+#ifndef PPC_DYNAREC
 	PC=actual->block+
 	  (((((PC-2)->f.j.inst_index<<2) | ((PC-1)->addr & 0xF0000000))-actual->start)>>2);
 #endif
@@ -219,7 +219,7 @@ void JAL_OUT()
      {
 	reg[31]=PC->addr;
 	sign_extended(reg[31]);
-	
+
 	jump_to(jump_target);
      }
    last_addr = PC->addr;
@@ -473,7 +473,7 @@ void BEQL()
 	if(!skip_jump)
 	  PC += (PC-2)->f.i.immediate-1;
      }
-   else 
+   else
      {
 	PC+=2;
 	update_count();
@@ -1271,7 +1271,7 @@ void LL()
 }
 
 void LWC1()
-{  
+{
    unsigned long long int temp;
    if (check_cop1_unusable()) return;
    PC++;
@@ -1309,7 +1309,7 @@ void SC()
       write_word_in_memory();
    }
    lsrt = llbit;*/
-   
+
    PC++;
    if(llbit)
      {
@@ -1471,7 +1471,7 @@ inline void jump_to_func()
 	else RecompCache_Update(addr>>12);
 #endif
    PC=actual->block+((addr-actual->start)>>2);
-   
+
    //if (dynacore) dyna_jump();
 }
 #endif
@@ -1563,7 +1563,7 @@ static int cpu_inited;
 void go()
 {
 	stop = 0;
-	
+
    if (!dynacore)
      {
 	//printf ("interpreter\n");
@@ -1578,10 +1578,10 @@ void go()
 	     //if ((debug_count+Count) >= 0x16b1360)
 	     /*if ((debug_count+Count) >= 0xf203ae0)
 	       {
-		  printf ("PC=%x:%x\n", (unsigned int)(PC->addr), 
+		  printf ("PC=%x:%x\n", (unsigned int)(PC->addr),
 			  (unsigned int)(rdram[(PC->addr&0xFFFFFF)/4]));
 		  for (j=0; j<16; j++)
-		    printf ("reg[%2d]:%8x%8x        reg[%d]:%8x%8x\n",   
+		    printf ("reg[%2d]:%8x%8x        reg[%d]:%8x%8x\n",
 			    j,
 			    (unsigned int)(reg[j] >> 32),
 			    (unsigned int)reg[j],
@@ -1597,12 +1597,12 @@ void go()
 			 ,(unsigned int)(debug_count+Count));
 		  getchar();
 	       }*/
-	     /*if ((debug_count+Count) >= 0x80000000) 
-	       printf("%x:%x, %x\n", (int)PC->addr, 
+	     /*if ((debug_count+Count) >= 0x80000000)
+	       printf("%x:%x, %x\n", (int)PC->addr,
 		      (int)rdram[(PC->addr & 0xFFFFFF)/4],
 		      (int)(debug_count+Count));*/
 #ifdef COMPARE_CORE
-	     if (PC->ops == FIN_BLOCK && 
+	     if (PC->ops == FIN_BLOCK &&
 		 (PC->addr < 0x80000000 || PC->addr >= 0xc0000000))
 		 virtual_to_physical_address(PC->addr, 2);
 	     compare_core();
@@ -1652,7 +1652,7 @@ void go()
 void cpu_init(void){
    long long CRC = 0;
    unsigned int j;
-   
+
    j=0;
    debug_count = 0;
    ROMCache_read((char*)SP_DMEM+0x40, 0x40, 0xFBC);
@@ -1664,10 +1664,10 @@ void cpu_init(void){
 	reg_cop0[i]=0;
 	reg_cop1_fgr_32[i]=0;
 	reg_cop1_fgr_64[i]=0;
-	
+
 	reg_cop1_double[i]=(double *)&reg_cop1_fgr_64[i];
 	reg_cop1_simple[i]=(float *)&reg_cop1_fgr_64[i];
-	
+
 	// --------------tlb------------------------
 	tlb_e[i].mask=0;
 	tlb_e[i].vpn2=0;
@@ -1683,7 +1683,7 @@ void cpu_init(void){
 	tlb_e[i].v_odd=0;
 	tlb_e[i].r=0;
 	//tlb_e[i].check_parity_mask=0x1000;
-	
+
 	tlb_e[i].start_even=0;
 	tlb_e[i].end_even=0;
 	tlb_e[i].phys_even=0;
@@ -1703,7 +1703,7 @@ void cpu_init(void){
    lo=0;
    FCR0=0x511;
    FCR31=0;
-   
+
    //--------
    /*reg[20]=1;
    reg[22]=0x3F;
@@ -1713,17 +1713,17 @@ void cpu_init(void){
    Config=0x66463;
    PRevID=0xb00;*/
    //--------
-   
+
    // the following values are extracted from the pj64 source code
    // thanks to Zilmar and Jabo
-   
+
    reg[6] = 0xFFFFFFFFA4001F0CLL;
    reg[7] = 0xFFFFFFFFA4001F08LL;
    reg[8] = 0x00000000000000C0LL;
    reg[10]= 0x0000000000000040LL;
    reg[11]= 0xFFFFFFFFA4000040LL;
    reg[29]= 0xFFFFFFFFA4001FF0LL;
-   
+
    Random = 31;
    Status= 0x34000000;
    Config= 0x6e463;
@@ -1734,7 +1734,7 @@ void cpu_init(void){
    EPC = 0xFFFFFFFF;
    BadVAddr = 0xFFFFFFFF;
    ErrorEPC = 0xFFFFFFFF;
-   
+
    for (i = 0x40/4; i < (0x1000/4); i++)
      CRC += SP_DMEM[i];
    switch(CRC) {
@@ -1757,7 +1757,7 @@ void cpu_init(void){
     default:
       CIC_Chip = 2;
    }
-   
+
    switch(ROM_HEADER->Country_code&0xFF)
      {
       case 0x44:
@@ -1874,14 +1874,14 @@ void cpu_init(void){
       reg[25]= 0x00000000465E3F72LL;
       break;
    }
-   
+
    rounding_mode = 0x33F;
 
    last_addr = 0xa4000040;
    next_interupt = 624999;
    init_interupt();
    interpcore = 0;
-   
+
    // I'm adding this from pure_interpreter()
    interp_addr = 0xa4000040;
    // FIXME: I'm making an assumption:
@@ -1894,7 +1894,7 @@ void cpu_init(void){
 
 void cpu_deinit(void){
 	// No need to check these if we were in the pure interp
-	if(dynacore != 2){
+	if(dynacore != 2 && !cpu_inited){
 		for (i=0; i<0x100000; i++) {
 		if (blocks[i]) {
 #ifdef PPC_DYNAREC
