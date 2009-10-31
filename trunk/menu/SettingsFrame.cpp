@@ -9,6 +9,12 @@
 //#include "../main/timers.h"
 #include "../main/wii64config.h"
 
+extern "C" {
+#include "../fileBrowser/fileBrowser.h"
+#include "../fileBrowser/fileBrowser-libfat.h"
+#include "../fileBrowser/fileBrowser-CARD.h"
+}
+
 void Func_TabGeneral();
 void Func_TabVideo();
 void Func_TabInput();
@@ -445,14 +451,40 @@ void Func_CpuDynarec()
 	if(hasLoadedROM && needInit) cpu_init();
 }
 
+extern void writeConfig(FILE* f);
+
 void Func_SaveSettingsSD()
 {
-	menu::MessageBox::getInstance().setMessage("TODO: Save settings.cfg to SD");
+  fileBrowser_file* configFile_file;
+  int (*configFile_init)(fileBrowser_file*) = fileBrowser_libfat_init;
+  configFile_file = &saveDir_libfat_Default;
+  if(configFile_init(configFile_file)) {                //only if device initialized ok
+    FILE* f = fopen( "sd:/wii64/settings.cfg", "wb" );  //attempt to open file
+    if(f) {
+      writeConfig(f);                                   //write out the config
+      fclose(f);
+      menu::MessageBox::getInstance().setMessage("Saved settings.cfg to SD");
+      return;
+    }
+  }
+	menu::MessageBox::getInstance().setMessage("Error saving settings.cfg to SD");
 }
 
 void Func_SaveSettingsUSB()
 {
-	menu::MessageBox::getInstance().setMessage("TODO: Save settings.cfg to USB");
+  fileBrowser_file* configFile_file;
+  int (*configFile_init)(fileBrowser_file*) = fileBrowser_libfat_init;
+  configFile_file = &saveDir_libfat_USB;
+  if(configFile_init(configFile_file)) {                //only if device initialized ok
+    FILE* f = fopen( "usb:/wii64/settings.cfg", "wb" ); //attempt to open file
+    if(f) {
+      writeConfig(f);                                   //write out the config
+      fclose(f);
+      menu::MessageBox::getInstance().setMessage("Saved settings.cfg to USB");
+      return;
+    }
+  }
+	menu::MessageBox::getInstance().setMessage("Error saving settings.cfg to USB");
 }
 
 void Func_ShowFpsOn()

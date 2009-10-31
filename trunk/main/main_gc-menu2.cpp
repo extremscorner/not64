@@ -177,14 +177,7 @@ int main(int argc, char* argv[]){
     configFile_file = &saveDir_libfat_USB;
     if(configFile_init(configFile_file)) {                //only if device initialized ok
       FILE* f = fopen( "usb:/wii64/settings.cfg", "rb" );  //attempt to open file
-      /*if(!f) {
-        f = fopen( "usb:/wii64/settings.cfg", "wb" );      //open fail, create file
-        if(f) {
-          writeConfig(f); //write a fresh one
-          fclose(f);
-        }
-      }
-      else */if(f) {        //open ok, read it
+      if(f) {        //open ok, read it
         readConfig(f);
         fclose(f);
       }
@@ -194,14 +187,7 @@ int main(int argc, char* argv[]){
     configFile_file = &saveDir_libfat_Default;
     if(configFile_init(configFile_file)) {                //only if device initialized ok
       FILE* f = fopen( "sd:/wii64/settings.cfg", "rb" );  //attempt to open file
-      /*if(!f) {
-        f = fopen( "sd:/wii64/settings.cfg", "wb" );      //open fail, create file
-        if(f) {
-          writeConfig(f); //write a fresh one
-          fclose(f);
-        }
-      }
-      else */if(f) {        //open ok, read it
+      if(f) {        //open ok, read it
         readConfig(f);
         fclose(f);
       }
