@@ -15,6 +15,7 @@
 
 #include <gccore.h>
 #include "../menu/MenuContext.h"
+#include "../libgui/MessageBox.h"
 //#include "../gui/gui_GX-menu.h"
 //#include "../gui/GUI.h"
 //#include "../gui/menu.h"
@@ -33,6 +34,7 @@ extern "C" {
 #include "../gc_memory/TLB-Cache.h"
 #include "../gc_memory/tlb.h"
 #include "../gc_memory/pif.h"
+#include "../gc_memory/Saves.h"
 #include "ROM-Cache.h"
 #include "../fileBrowser/fileBrowser.h"
 #include "../fileBrowser/fileBrowser-libfat.h"
@@ -289,8 +291,54 @@ int loadROM(fileBrowser_file* rom){
 	romOpen_input();
 
 	cpu_init();
-  //TODO: auto load save here (don't popup dialog box if fail or success)
-  //if(autoSave) ..
+
+  if(autoSave==AUTOSAVE_ENABLE) {
+    switch (nativeSaveDevice)
+    {
+    	case NATIVESAVEDEVICE_SD:
+    	case NATIVESAVEDEVICE_USB:
+    		// Adjust saveFile pointers
+    		saveFile_dir = (nativeSaveDevice==NATIVESAVEDEVICE_SD) ? &saveDir_libfat_Default:&saveDir_libfat_USB;
+    		saveFile_readFile  = fileBrowser_libfat_readFile;
+    		saveFile_writeFile = fileBrowser_libfat_writeFile;
+    		saveFile_init      = fileBrowser_libfat_init;
+    		saveFile_deinit    = fileBrowser_libfat_deinit;
+    		break;
+    	case NATIVESAVEDEVICE_CARDA:
+    	case NATIVESAVEDEVICE_CARDB:
+    		// Adjust saveFile pointers
+    		saveFile_dir       = (nativeSaveDevice==NATIVESAVEDEVICE_CARDA) ? &saveDir_CARD_SlotA:&saveDir_CARD_SlotB;
+    		saveFile_readFile  = fileBrowser_CARD_readFile;
+    		saveFile_writeFile = fileBrowser_CARD_writeFile;
+    		saveFile_init      = fileBrowser_CARD_init;
+    		saveFile_deinit    = fileBrowser_CARD_deinit;
+    		break;
+    }
+    // Try loading everything
+  	int result = 0;
+  	saveFile_init(saveFile_dir);
+  	result += loadEeprom(saveFile_dir);
+  	result += loadSram(saveFile_dir);
+  	result += loadMempak(saveFile_dir);
+  	result += loadFlashram(saveFile_dir);
+  	saveFile_deinit(saveFile_dir);
+  	
+  	switch (nativeSaveDevice)
+  	{
+  		case NATIVESAVEDEVICE_SD:
+  			if (result) menu::MessageBox::getInstance().setMessage("Found & loaded save from SD card");
+  			break;
+  		case NATIVESAVEDEVICE_USB:
+  			if (result) menu::MessageBox::getInstance().setMessage("Found & loaded save from USB device");
+  			break;
+  		case NATIVESAVEDEVICE_CARDA:
+  			if (result) menu::MessageBox::getInstance().setMessage("Found & loaded save from memcard in slot A");
+  			break;
+  		case NATIVESAVEDEVICE_CARDB:
+  			if (result) menu::MessageBox::getInstance().setMessage("Found & loaded save from memcard in slot A");
+  			break;
+  	}
+  }
 	return 0;
 }
 

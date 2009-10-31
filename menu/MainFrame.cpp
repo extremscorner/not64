@@ -190,7 +190,7 @@ void Func_PlayGame()
 	pauseAudio();
 
 	//TODO: make the MessageBox here not require an "ok", and just do "Saving to X" and vanish
-  if(autoSave) {
+  if(autoSave==AUTOSAVE_ENABLE) {
     if(flashramWritten || sramWritten || eepromWritten || mempakWritten) {  //something needs saving
       //menu::MessageBox::getInstance().setMessage("Automatically saving game .. ");
       switch (nativeSaveDevice)
