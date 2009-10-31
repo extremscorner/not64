@@ -153,40 +153,26 @@ void Func_LoadSave()
 	}
 
 	switch (nativeSaveDevice)
-	{
-		case NATIVESAVEDEVICE_SD:
-			// Adjust saveFile pointers
-			saveFile_dir = &saveDir_libfat_Default;
-			saveFile_readFile  = fileBrowser_libfat_readFile;
-			saveFile_writeFile = fileBrowser_libfat_writeFile;
-			saveFile_init      = fileBrowser_libfat_init;
-			saveFile_deinit    = fileBrowser_libfat_deinit;
-			break;
-		case NATIVESAVEDEVICE_USB:
-			// Adjust saveFile pointers
-			saveFile_dir = &saveDir_libfat_USB;
-			saveFile_readFile  = fileBrowser_libfat_readFile;
-			saveFile_writeFile = fileBrowser_libfat_writeFile;
-			saveFile_init      = fileBrowser_libfat_init;
-			saveFile_deinit    = fileBrowser_libfat_deinit;
-			break;
-		case NATIVESAVEDEVICE_CARDA:
-			// Adjust saveFile pointers
-			saveFile_dir       = &saveDir_CARD_SlotA;
-			saveFile_readFile  = fileBrowser_CARD_readFile;
-			saveFile_writeFile = fileBrowser_CARD_writeFile;
-			saveFile_init      = fileBrowser_CARD_init;
-			saveFile_deinit    = fileBrowser_CARD_deinit;
-			break;
-		case NATIVESAVEDEVICE_CARDB:
-			// Adjust saveFile pointers
-			saveFile_dir       = &saveDir_CARD_SlotB;
-			saveFile_readFile  = fileBrowser_CARD_readFile;
-			saveFile_writeFile = fileBrowser_CARD_writeFile;
-			saveFile_init      = fileBrowser_CARD_init;
-			saveFile_deinit    = fileBrowser_CARD_deinit;
-			break;
-	}
+  {
+  	case NATIVESAVEDEVICE_SD:
+  	case NATIVESAVEDEVICE_USB:
+  		// Adjust saveFile pointers
+  		saveFile_dir = (nativeSaveDevice==NATIVESAVEDEVICE_SD) ? &saveDir_libfat_Default:&saveDir_libfat_USB;
+  		saveFile_readFile  = fileBrowser_libfat_readFile;
+  		saveFile_writeFile = fileBrowser_libfat_writeFile;
+  		saveFile_init      = fileBrowser_libfat_init;
+  		saveFile_deinit    = fileBrowser_libfat_deinit;
+  		break;
+  	case NATIVESAVEDEVICE_CARDA:
+  	case NATIVESAVEDEVICE_CARDB:
+  		// Adjust saveFile pointers
+  		saveFile_dir       = (nativeSaveDevice==NATIVESAVEDEVICE_CARDA) ? &saveDir_CARD_SlotA:&saveDir_CARD_SlotB;
+  		saveFile_readFile  = fileBrowser_CARD_readFile;
+  		saveFile_writeFile = fileBrowser_CARD_writeFile;
+  		saveFile_init      = fileBrowser_CARD_init;
+  		saveFile_deinit    = fileBrowser_CARD_deinit;
+  		break;
+  }
 
 	// Try loading everything
 	int result = 0;
@@ -230,40 +216,26 @@ void Func_SaveGame()
     return;
   }
 	switch (nativeSaveDevice)
-	{
-		case NATIVESAVEDEVICE_SD:
-			// Adjust saveFile pointers
-			saveFile_dir = &saveDir_libfat_Default;
-			saveFile_readFile  = fileBrowser_libfat_readFile;
-			saveFile_writeFile = fileBrowser_libfat_writeFile;
-			saveFile_init      = fileBrowser_libfat_init;
-			saveFile_deinit    = fileBrowser_libfat_deinit;
-			break;
-		case NATIVESAVEDEVICE_USB:
-			// Adjust saveFile pointers
-			saveFile_dir = &saveDir_libfat_USB;
-			saveFile_readFile  = fileBrowser_libfat_readFile;
-			saveFile_writeFile = fileBrowser_libfat_writeFile;
-			saveFile_init      = fileBrowser_libfat_init;
-			saveFile_deinit    = fileBrowser_libfat_deinit;
-			break;
-		case NATIVESAVEDEVICE_CARDA:
-			// Adjust saveFile pointers
-			saveFile_dir       = &saveDir_CARD_SlotA;
-			saveFile_readFile  = fileBrowser_CARD_readFile;
-			saveFile_writeFile = fileBrowser_CARD_writeFile;
-			saveFile_init      = fileBrowser_CARD_init;
-			saveFile_deinit    = fileBrowser_CARD_deinit;
-			break;
-		case NATIVESAVEDEVICE_CARDB:
-			// Adjust saveFile pointers
-			saveFile_dir       = &saveDir_CARD_SlotB;
-			saveFile_readFile  = fileBrowser_CARD_readFile;
-			saveFile_writeFile = fileBrowser_CARD_writeFile;
-			saveFile_init      = fileBrowser_CARD_init;
-			saveFile_deinit    = fileBrowser_CARD_deinit;
-			break;
-	}
+  {
+  	case NATIVESAVEDEVICE_SD:
+  	case NATIVESAVEDEVICE_USB:
+  		// Adjust saveFile pointers
+  		saveFile_dir = (nativeSaveDevice==NATIVESAVEDEVICE_SD) ? &saveDir_libfat_Default:&saveDir_libfat_USB;
+  		saveFile_readFile  = fileBrowser_libfat_readFile;
+  		saveFile_writeFile = fileBrowser_libfat_writeFile;
+  		saveFile_init      = fileBrowser_libfat_init;
+  		saveFile_deinit    = fileBrowser_libfat_deinit;
+  		break;
+  	case NATIVESAVEDEVICE_CARDA:
+  	case NATIVESAVEDEVICE_CARDB:
+  		// Adjust saveFile pointers
+  		saveFile_dir       = (nativeSaveDevice==NATIVESAVEDEVICE_CARDA) ? &saveDir_CARD_SlotA:&saveDir_CARD_SlotB;
+  		saveFile_readFile  = fileBrowser_CARD_readFile;
+  		saveFile_writeFile = fileBrowser_CARD_writeFile;
+  		saveFile_init      = fileBrowser_CARD_init;
+  		saveFile_deinit    = fileBrowser_CARD_deinit;
+  		break;
+  }
 
 	// Try saving everything
 	int amountSaves = flashramWritten + sramWritten + eepromWritten + mempakWritten;
