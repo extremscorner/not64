@@ -61,7 +61,7 @@ char *toggle_audiodump()
     return "Stopped Dumping";
   }
   else {
-    AIdump = fopen("/dump.raw","wb");
+    AIdump = fopen("sd:/dump.raw","wb");
     if(AIdump)
       return "Starting Audio Dumping";
     return "Error creating file";
