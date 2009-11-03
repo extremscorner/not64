@@ -3,6 +3,7 @@
 #include "FileBrowserFrame.h"
 #include "../libgui/Button.h"
 #include "../libgui/resources.h"
+#include "../libgui/MessageBox.h"
 #include "../libgui/FocusManager.h"
 #include "../libgui/CursorManager.h"
 
@@ -210,16 +211,21 @@ void fileBrowserFrame_Error()
 	//disable all buttons
 	for (int i = 0; i < NUM_FRAME_BUTTONS; i++)
 		FRAME_BUTTONS[i].button->setActive(false);
+	for (int i = 1; i<NUM_FILE_SLOTS; i++)
+		FRAME_BUTTONS[i+2].buttonString = FRAME_STRINGS[2];
 	//set first entry to read 'error' and return to main menu
 	strcpy(feedback_string,"An error occured");
-	FRAME_BUTTONS[2].buttonString = feedback_string;
+/*	FRAME_BUTTONS[2].buttonString = feedback_string;
 	FRAME_BUTTONS[2].button->setClicked(Func_ReturnFromFileBrowserFrame);
 	FRAME_BUTTONS[2].button->setActive(true);
 	for (int i = 1; i<NUM_FILE_SLOTS; i++)
 		FRAME_BUTTONS[i+2].buttonString = FRAME_STRINGS[2];
 	FRAME_BUTTONS[2].button->setNextFocus(menu::Focus::DIRECTION_UP, NULL);
 	FRAME_BUTTONS[2].button->setNextFocus(menu::Focus::DIRECTION_DOWN, NULL);
-	menu::Focus::getInstance().clearPrimaryFocus();
+	pMenuContext->getFrame(MenuContext::FRAME_FILEBROWSER)->setDefaultFocus(FRAME_BUTTONS[2].button);
+	menu::Focus::getInstance().clearPrimaryFocus();*/
+	menu::MessageBox::getInstance().setMessage(feedback_string);
+	pMenuContext->setActiveFrame(MenuContext::FRAME_MAIN);
 }
 
 void fileBrowserFrame_FillPage()
@@ -278,7 +284,7 @@ void fileBrowserFrame_LoadFile(int i)
 			strcpy(feedback_string,"A read error occured");
 		}
 
-		//disable all buttons
+/*		//disable all buttons
 		for (int i = 0; i < NUM_FRAME_BUTTONS; i++)
 			FRAME_BUTTONS[i].button->setActive(false);
 		//set first entry to report 'success'/'error' and return to main menu
@@ -290,6 +296,8 @@ void fileBrowserFrame_LoadFile(int i)
 		for (int i = 1; i<NUM_FILE_SLOTS; i++)
 			FRAME_BUTTONS[i+2].buttonString = FRAME_STRINGS[2];
 		pMenuContext->getFrame(MenuContext::FRAME_FILEBROWSER)->setDefaultFocus(FRAME_BUTTONS[2].button);
-		menu::Focus::getInstance().clearPrimaryFocus();
+		menu::Focus::getInstance().clearPrimaryFocus();*/
+		menu::MessageBox::getInstance().setMessage(feedback_string);
+		pMenuContext->setActiveFrame(MenuContext::FRAME_MAIN);
 	}
 }
