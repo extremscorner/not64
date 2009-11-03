@@ -155,6 +155,7 @@ void Focus::clearPrimaryFocus()
 {
 	if(primaryFocusOwner) primaryFocusOwner->setFocus(false);
 	primaryFocusOwner = NULL;
+	frameSwitch = true;
 }
 
 } //namespace menu 

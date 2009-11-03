@@ -250,6 +250,8 @@ void fileBrowserFrame_FillPage()
 	}
 	if (current_page > 0) FRAME_BUTTONS[0].button->setActive(true);
 	if (current_page+1 < max_page) FRAME_BUTTONS[1].button->setActive(true);
+	if ((current_page == 0) && num_entries > 2) pMenuContext->getFrame(MenuContext::FRAME_FILEBROWSER)->setDefaultFocus(FRAME_BUTTONS[4].button);
+	else pMenuContext->getFrame(MenuContext::FRAME_FILEBROWSER)->setDefaultFocus(FRAME_BUTTONS[2].button);
 }
 
 void fileBrowserFrame_LoadFile(int i)
@@ -262,6 +264,7 @@ void fileBrowserFrame_LoadFile(int i)
 		fileBrowserFrame_OpenDirectory(dir);
 		free(dir);
 		menu::Focus::getInstance().clearPrimaryFocus();
+		if (num_entries > 2) pMenuContext->getFrame(MenuContext::FRAME_FILEBROWSER)->setDefaultFocus(FRAME_BUTTONS[4].button);
 	} else {
 		// We must select this file
 		int ret = loadROM( &dir_entries[i] );
@@ -286,6 +289,7 @@ void fileBrowserFrame_LoadFile(int i)
 		FRAME_BUTTONS[2].button->setNextFocus(menu::Focus::DIRECTION_DOWN, NULL);
 		for (int i = 1; i<NUM_FILE_SLOTS; i++)
 			FRAME_BUTTONS[i+2].buttonString = FRAME_STRINGS[2];
+		pMenuContext->getFrame(MenuContext::FRAME_FILEBROWSER)->setDefaultFocus(FRAME_BUTTONS[2].button);
 		menu::Focus::getInstance().clearPrimaryFocus();
 	}
 }

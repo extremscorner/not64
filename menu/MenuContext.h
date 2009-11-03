@@ -23,6 +23,7 @@ public:
 	bool isRunning();
 	void setActiveFrame(int frameIndex);
 	void setActiveFrame(int frameIndex, int submenu);
+	menu::Frame* getFrame(int frameIndex);
 	enum FrameIndices
 	{
 		FRAME_MAIN=1,
