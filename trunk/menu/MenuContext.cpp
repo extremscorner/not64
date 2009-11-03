@@ -113,6 +113,39 @@ void MenuContext::setActiveFrame(int frameIndex, int submenu)
 	if(currentActiveFrame) currentActiveFrame->activateSubmenu(submenu);
 }
 
+menu::Frame* MenuContext::getFrame(int frameIndex)
+{
+	menu::Frame* pFrame = NULL;
+	switch(frameIndex) {
+	case FRAME_MAIN:
+		pFrame = mainFrame;
+		break;
+	case FRAME_LOADROM:
+		pFrame = loadRomFrame;
+		break;
+	case FRAME_FILEBROWSER:
+		pFrame = fileBrowserFrame;
+		break;
+	case FRAME_CURRENTROM:
+		pFrame = currentRomFrame;
+		break;
+	case FRAME_LOADSAVE:
+		pFrame = loadSaveFrame;
+		break;
+	case FRAME_SAVEGAME:
+		pFrame = saveGameFrame;
+		break;
+	case FRAME_SETTINGS:
+		pFrame = settingsFrame;
+		break;
+	case FRAME_SELECTCPU:
+		pFrame = selectCPUFrame;
+		break;
+	}
+
+	return pFrame;
+}
+
 void MenuContext::draw()
 {
 	menu::Gui::getInstance().draw();
