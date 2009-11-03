@@ -92,6 +92,13 @@ FileBrowserFrame::FileBrowserFrame()
 												FRAME_BUTTONS[i].x+FRAME_BUTTONS[i].width, FRAME_BUTTONS[i].y, 
 												FRAME_BUTTONS[i].y+FRAME_BUTTONS[i].height);
 	}
+
+	for (int i = 2; i < NUM_FRAME_BUTTONS; i++)
+	{
+		FRAME_BUTTONS[i].button->setLabelMode(menu::Button::LABEL_SCROLLONFOCUS);
+		FRAME_BUTTONS[i].button->setLabelScissor(6);
+	}
+
 	setDefaultFocus(FRAME_BUTTONS[2].button);
 	setBackFunc(Func_ReturnFromFileBrowserFrame);
 	setEnabled(true);

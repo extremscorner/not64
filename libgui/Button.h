@@ -21,12 +21,22 @@ public:
 	void setClicked(ButtonFunc clickedFn);
 	void doClicked();
 	void setText(char** strPtr);
+	void setLabelMode(int mode);
+	void setLabelScissor(int scissor);
 	void setNormalImage(Image *image);
 	void setSelectedImage(Image *image);
 	void setFocusImage(Image *image);
+	void updateTime(float deltaTime);
 	void drawComponent(Graphics& gfx);
 	Component* updateFocus(int direction, int buttonsPressed);
 	void setButtonColors(GXColor *colors);
+	enum LabelMode
+	{
+		LABEL_CENTER=0,
+		LABEL_LEFT,
+		LABEL_SCROLL,
+		LABEL_SCROLLONFOCUS
+	};
 
 private:
 	bool active, selected;
@@ -34,6 +44,8 @@ private:
 	Image	*selectedImage;
 	Image	*focusImage;
 	char** buttonText;
+	int labelMode, labelScissor;
+	unsigned long StartTime;
 	float x, y, width, height;
 	GXColor	focusColor, inactiveColor, activeColor, selectedColor, labelColor;
 	ButtonFunc clickedFunc, returnFunc;

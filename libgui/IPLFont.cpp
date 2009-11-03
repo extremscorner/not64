@@ -327,4 +327,24 @@ void IplFont::drawStringAtOrigin(char *string, float scale)
 	drawString(x0, y0, string, scale, false);
 }
 
+int IplFont::getStringWidth(char *string, float scale)
+{
+	int strWidth = 0;
+	char* string_work = string;
+	while(*string_work)
+	{
+		unsigned char c = *string_work;
+		strWidth += (int) fontChars.font_size[c] * scale;
+		string_work++;
+	}
+	return strWidth;
+}
+
+int IplFont::getStringHeight(char *string, float scale)
+{
+	int strHeight = fontChars.fheight * scale;
+
+	return strHeight;
+}
+
 } //namespace menu 
