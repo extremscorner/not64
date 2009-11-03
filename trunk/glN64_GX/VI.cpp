@@ -1,6 +1,7 @@
 #ifdef __GX__
 #include <stdio.h>
 #include <gccore.h>
+#include <ogc/lwp_heap.h>
 # ifdef MENU_V2
 #include "../libgui/IPLFont.h"
 # else // MENU_V2
@@ -356,6 +357,8 @@ void VI_GX_cleanUp()
 	GX_SetZCompLoc(GX_TRUE);	// Do Z-compare before texturing.
 }
 
+extern heap_cntrl* GXtexCache;
+
 void VI_GX_renderCpuFramebuffer()
 {
 	//Only render N64 framebuffer in RDRAM and not EFB drawn by glN64
@@ -392,7 +395,23 @@ void VI_GX_renderCpuFramebuffer()
 	float px, py;
 	py=0.0f;
 
-	u16* FBtex = (u16*) memalign(32,640*480*2);
+	//Init texture cache heap if not yet inited
+	if(!GXtexCache)
+	{
+		GXtexCache = (heap_cntrl*)malloc(sizeof(heap_cntrl));
+#ifdef HW_RVL
+		__lwp_heap_init(GXtexCache, TEXCACHE_LO,GX_TEXTURE_CACHE_SIZE, 32);
+#else //HW_RVL
+		__lwp_heap_init(GXtexCache, memalign(32,GX_TEXTURE_CACHE_SIZE),GX_TEXTURE_CACHE_SIZE, 32);
+#endif //!HW_RVL
+	}
+	u16* FBtex = (u16*) __lwp_heap_allocate(GXtexCache,640*480*2);
+	while(!FBtex)
+	{
+		TextureCache_FreeNextTexture();
+		FBtex = (u16*) __lwp_heap_allocate(GXtexCache,640*480*2);
+	}
+//	u16* FBtex = (u16*) memalign(32,640*480*2);
 	GXTexObj	FBtexObj;
 
 	//N64 Framebuffer is in RGB5A1 format, so shift by 1 and retile.
@@ -477,7 +496,8 @@ void VI_GX_renderCpuFramebuffer()
 	GX_End();
 	GX_DrawDone();
 
-	free(FBtex);
+	__lwp_heap_free(GXtexCache, FBtex);
+//	free(FBtex);
 }
 
 void VI_GX_PreRetraceCallback(u32 retraceCnt)
