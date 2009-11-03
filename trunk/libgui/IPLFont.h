@@ -14,6 +14,8 @@ public:
 	void setColor(GXColor* fontColorPtr);
 	void drawString(int x, int y, char *string, float scale, bool centered);
 	void drawStringAtOrigin(char *string, float scale);
+	int getStringWidth(char *string, float scale);
+	int getStringHeight(char *string, float scale);
 	static IplFont& getInstance()
 	{
 		static IplFont obj;

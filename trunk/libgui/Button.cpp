@@ -3,6 +3,7 @@
 #include "IPLFont.h"
 #include "Image.h"
 #include "FocusManager.h"
+#include <math.h>
 
 namespace menu {
 
@@ -13,6 +14,9 @@ Button::Button(Image *image, char** label, float x, float y, float width, float 
 		  selectedImage(0),
 		  focusImage(0),
 		  buttonText(label),
+		  labelMode(LABEL_CENTER),
+		  labelScissor(0),
+		  StartTime(0),
 		  x(x),
 		  y(y),
 		  width(width),
@@ -71,6 +75,19 @@ void Button::setText(char** strPtr)
 	buttonText = strPtr;
 }
 
+#include "ogc/lwp_watchdog.h"
+
+void Button::setLabelMode(int mode)
+{
+	labelMode = mode;
+	if(labelMode >= LABEL_SCROLL) StartTime = ticks_to_microsecs(gettick());
+}
+
+void Button::setLabelScissor(int scissor)
+{
+	labelScissor = scissor;
+}
+
 void Button::setNormalImage(Image *image)
 {
 	normalImage = image;
@@ -85,6 +102,8 @@ void Button::setFocusImage(Image *image)
 {
 	focusImage = image;
 }
+
+#define SCROLL_PERIOD 4.0f
 
 void Button::drawComponent(Graphics& gfx)
 {
@@ -137,9 +156,60 @@ void Button::drawComponent(Graphics& gfx)
 
 	if (buttonText)
 	{
+		int strWidth, strHeight;
+		unsigned long CurrentTime;
+		float scrollWidth, time_sec, scrollOffset;
+		gfx.enableScissor(x + labelScissor, y, width - 2*labelScissor, height);
 		IplFont::getInstance().drawInit(labelColor);
-		IplFont::getInstance().drawString((int) (x+width/2), (int) (y+height/2), *buttonText, 1.0, true);
+		switch (labelMode)
+		{
+			case LABEL_CENTER:
+				IplFont::getInstance().drawString((int) (x+width/2), (int) (y+height/2), *buttonText, 1.0, true);
+				break;
+			case LABEL_LEFT:
+				strWidth = IplFont::getInstance().getStringWidth(*buttonText, 1.0);
+				strHeight = IplFont::getInstance().getStringHeight(*buttonText, 1.0);
+				IplFont::getInstance().drawString((int) (x+labelScissor), (int) (y+(height-strHeight)/2), *buttonText, 1.0, false);
+				break;
+			case LABEL_SCROLL:
+				strHeight = IplFont::getInstance().getStringHeight(*buttonText, 1.0);
+				scrollWidth = IplFont::getInstance().getStringWidth(*buttonText, 1.0)-width+2*labelScissor;
+				scrollWidth = scrollWidth < 0.0f ? 0.0 : scrollWidth;
+				CurrentTime = ticks_to_microsecs(gettick());
+				time_sec = (float)(CurrentTime - StartTime)/1000000.0f;
+				if (time_sec > SCROLL_PERIOD) StartTime = ticks_to_microsecs(gettick());
+				scrollOffset = fabsf(fmodf(time_sec,SCROLL_PERIOD)-SCROLL_PERIOD/2)/(SCROLL_PERIOD/2);
+				IplFont::getInstance().drawString((int) (x+labelScissor-(int)(scrollOffset*scrollWidth)), (int) (y+(height-strHeight)/2), *buttonText, 1.0, false);
+				break;
+			case LABEL_SCROLLONFOCUS:
+				if(getFocus())
+				{
+					strHeight = IplFont::getInstance().getStringHeight(*buttonText, 1.0);
+					scrollWidth = IplFont::getInstance().getStringWidth(*buttonText, 1.0)-width+2*labelScissor;
+					scrollWidth = scrollWidth < 0.0f ? 0.0 : scrollWidth;
+					CurrentTime = ticks_to_microsecs(gettick());
+					time_sec = (float)(CurrentTime - StartTime)/1000000.0f;
+					if (time_sec > SCROLL_PERIOD) StartTime = ticks_to_microsecs(gettick());
+					scrollOffset = fabsf(fmodf(time_sec,SCROLL_PERIOD)-SCROLL_PERIOD/2)/(SCROLL_PERIOD/2);
+					IplFont::getInstance().drawString((int) (x+labelScissor-(int)(scrollOffset*scrollWidth)), (int) (y+(height-strHeight)/2), *buttonText, 1.0, false);
+				}
+				else
+				{
+				strWidth = IplFont::getInstance().getStringWidth(*buttonText, 1.0);
+				strHeight = IplFont::getInstance().getStringHeight(*buttonText, 1.0);
+				IplFont::getInstance().drawString((int) (x+labelScissor), (int) (y+(height-strHeight)/2), *buttonText, 1.0, false);
+				}
+				break;
+		}
+		gfx.disableScissor();
 	}
+
+}
+
+void Button::updateTime(float deltaTime)
+{
+	//Overload in Component class
+	//Add interpolator class & update here?
 }
 
 Component* Button::updateFocus(int direction, int buttonsPressed)
