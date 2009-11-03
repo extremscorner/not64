@@ -34,10 +34,10 @@ void Func_SaveSettingsUSB();
 
 void Func_ShowFpsOn();
 void Func_ShowFpsOff();
-void Func_ShowDebugOn();
-void Func_ShowDebugOff();
 void Func_Widescreen4_3();
 void Func_Widescreen16_9();
+void Func_CpuFramebufferOn();
+void Func_CpuFramebufferOff();
 void Func_2xSaiTexturesOn();
 void Func_2xSaiTexturesOff();
 void Func_FbTexturesOn();
@@ -82,8 +82,8 @@ static char FRAME_STRINGS[32][23] =
 	  "Dynarec",
 	//Strings for Video tab
 	  "Show FPS",
-	  "Show Debug",
 	  "Screen Mode",
+	  "CPU Framebuffer",
 	  "2xSaI Tex",
 	  "FB Textures",
 	  "On",
@@ -138,10 +138,10 @@ struct ButtonInfo
 	//Buttons for Video Tab (starts at button[15])
 	{	NULL,	FRAME_STRINGS[20],	325.0,	100.0,	 75.0,	40.0,	 1,	17,	16,	16,	Func_ShowFpsOn,			Func_ReturnFromSettingsFrame }, // Show FPS: On
 	{	NULL,	FRAME_STRINGS[21],	420.0,	100.0,	 75.0,	40.0,	 1,	18,	15,	15,	Func_ShowFpsOff,		Func_ReturnFromSettingsFrame }, // Show FPS: Off
-	{	NULL,	FRAME_STRINGS[20],	325.0,	170.0,	 75.0,	40.0,	15,	19,	18,	18,	Func_ShowDebugOn,		Func_ReturnFromSettingsFrame }, // Show Debug: On
-	{	NULL,	FRAME_STRINGS[21],	420.0,	170.0,	 75.0,	40.0,	16,	20,	17,	17,	Func_ShowDebugOff,		Func_ReturnFromSettingsFrame }, // Show Debug: Off
-	{	NULL,	FRAME_STRINGS[22],	325.0,	240.0,	 75.0,	40.0,	17,	21,	20,	20,	Func_Widescreen4_3,		Func_ReturnFromSettingsFrame }, // Widescreen: 4:3
-	{	NULL,	FRAME_STRINGS[23],	420.0,	240.0,	 75.0,	40.0,	18,	22,	19,	19,	Func_Widescreen16_9,	Func_ReturnFromSettingsFrame }, // Widescreen: 16:9
+	{	NULL,	FRAME_STRINGS[22],	325.0,	170.0,	 75.0,	40.0,	15,	19,	18,	18,	Func_Widescreen4_3,		Func_ReturnFromSettingsFrame }, // Widescreen: 4:3
+	{	NULL,	FRAME_STRINGS[23],	420.0,	170.0,	 75.0,	40.0,	16,	20,	17,	17,	Func_Widescreen16_9,	Func_ReturnFromSettingsFrame }, // Widescreen: 16:9
+	{	NULL,	FRAME_STRINGS[20],	325.0,	240.0,	 75.0,	40.0,	17,	21,	20,	20,	Func_CpuFramebufferOn,	Func_ReturnFromSettingsFrame }, // CPU FB: On
+	{	NULL,	FRAME_STRINGS[21],	420.0,	240.0,	 75.0,	40.0,	18,	22,	19,	19,	Func_CpuFramebufferOff,	Func_ReturnFromSettingsFrame }, // CPU FB: Off
 	{	NULL,	FRAME_STRINGS[20],	325.0,	310.0,	 75.0,	40.0,	19,	23,	22,	22,	Func_2xSaiTexturesOn,	Func_ReturnFromSettingsFrame }, // 2xSai: On
 	{	NULL,	FRAME_STRINGS[21],	420.0,	310.0,	 75.0,	40.0,	20,	24,	21,	21,	Func_2xSaiTexturesOff,	Func_ReturnFromSettingsFrame }, // 2xSai: Off
 	{	NULL,	FRAME_STRINGS[20],	325.0,	380.0,	 75.0,	40.0,	21,	 1,	24,	24,	Func_FbTexturesOn,		Func_ReturnFromSettingsFrame }, // FbTex: On
@@ -176,7 +176,7 @@ struct TextBoxInfo
 	{	NULL,	FRAME_STRINGS[8],	155.0,	330.0,	 1.0,	true }, // Save settings.cfg: SD/USB
 	//TextBoxes for Video Tab (starts at textBox[4])
 	{	NULL,	FRAME_STRINGS[15],	190.0,	120.0,	 1.0,	true }, // Show FPS: On/Off
-	{	NULL,	FRAME_STRINGS[16],	190.0,	190.0,	 1.0,	true }, // Show DEBUG: On/Off
+	{	NULL,	FRAME_STRINGS[16],	190.0,	190.0,	 1.0,	true }, // CPU Framebuffer: On/Off
 	{	NULL,	FRAME_STRINGS[17],	190.0,	260.0,	 1.0,	true }, // Widescreen: 4x3/16x9
 	{	NULL,	FRAME_STRINGS[18],	190.0,	330.0,	 1.0,	true }, // 2xSai: On/Off
 	{	NULL,	FRAME_STRINGS[19],	190.0,	400.0,	 1.0,	true }, // FBTex: On/Off
@@ -288,10 +288,10 @@ void SettingsFrame::activateSubmenu(int submenu)
 			FRAME_BUTTONS[1].button->setSelected(true);
 			if (showFPSonScreen == FPS_SHOW)	FRAME_BUTTONS[15].button->setSelected(true);
 			else								FRAME_BUTTONS[16].button->setSelected(true);
-			if (printToScreen == DEBUG_SHOW)	FRAME_BUTTONS[17].button->setSelected(true);
+			if (widescreen == SCREENMODE_4x3)	FRAME_BUTTONS[17].button->setSelected(true);
 			else								FRAME_BUTTONS[18].button->setSelected(true);
-			if (widescreen == SCREENMODE_4x3)	FRAME_BUTTONS[19].button->setSelected(true);
-			else								FRAME_BUTTONS[20].button->setSelected(true);
+			if (renderCpuFramebuffer == CPUFRAMEBUFFER_ENABLE)	FRAME_BUTTONS[19].button->setSelected(true);
+			else												FRAME_BUTTONS[20].button->setSelected(true);
 			if (glN64_use2xSaiTextures == GLN64_2XSAI_ENABLE)	FRAME_BUTTONS[21].button->setSelected(true);
 			else												FRAME_BUTTONS[22].button->setSelected(true);
 			if (glN64_useFrameBufferTextures == GLN64_FBTEX_ENABLE)	FRAME_BUTTONS[23].button->setSelected(true);
@@ -521,18 +521,34 @@ void Func_ShowDebugOff()
 
 void Func_Widescreen4_3()
 {
-	for (int i = 19; i <= 20; i++)
+	for (int i = 17; i <= 18; i++)
 		FRAME_BUTTONS[i].button->setSelected(false);
-	FRAME_BUTTONS[19].button->setSelected(true);
+	FRAME_BUTTONS[17].button->setSelected(true);
 	widescreen = SCREENMODE_4x3;
 }
 
 void Func_Widescreen16_9()
 {
+	for (int i = 17; i <= 18; i++)
+		FRAME_BUTTONS[i].button->setSelected(false);
+	FRAME_BUTTONS[18].button->setSelected(true);
+	widescreen = SCREENMODE_16x9;
+}
+
+void Func_CpuFramebufferOn()
+{
+	for (int i = 19; i <= 20; i++)
+		FRAME_BUTTONS[i].button->setSelected(false);
+	FRAME_BUTTONS[19].button->setSelected(true);
+	renderCpuFramebuffer = CPUFRAMEBUFFER_ENABLE;
+}
+
+void Func_CpuFramebufferOff()
+{
 	for (int i = 19; i <= 20; i++)
 		FRAME_BUTTONS[i].button->setSelected(false);
 	FRAME_BUTTONS[20].button->setSelected(true);
-	widescreen = SCREENMODE_16x9;
+	renderCpuFramebuffer = CPUFRAMEBUFFER_DISABLE;
 }
 
 void Func_2xSaiTexturesOn()
