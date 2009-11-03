@@ -90,7 +90,7 @@ extern timers Timers;
 	   char nativeSaveDevice;
 	   char saveStateDevice;
        char autoSave;
-       char widescreen = 0;
+       char screenMode = 0;
 
 struct {
 	char* key;
@@ -102,7 +102,7 @@ struct {
   { "Debug", &printToScreen, DEBUG_HIDE, DEBUG_SHOW },
   { "FBTex", &glN64_useFrameBufferTextures, GLN64_FBTEX_DISABLE, GLN64_FBTEX_ENABLE },
   { "2xSaI", &glN64_use2xSaiTextures, GLN64_2XSAI_DISABLE, GLN64_2XSAI_ENABLE },
-  { "WideScreen", &widescreen, SCREENMODE_4x3, SCREENMODE_16x9 },
+  { "ScreenMode", &screenMode, SCREENMODE_4x3, SCREENMODE_16x9 },
   { "Core", ((char*)&dynacore)+3, DYNACORE_INTERPRETER, DYNACORE_PURE_INTERP },
   { "NativeDevice", &nativeSaveDevice, NATIVESAVEDEVICE_SD, NATIVESAVEDEVICE_CARDB },
   { "StatesDevice", &saveStateDevice, SAVESTATEDEVICE_SD, SAVESTATEDEVICE_USB },
@@ -165,7 +165,7 @@ int main(int argc, char* argv[]){
 	autoSave         = 0; // Don't Auto Save Game
 	creditsScrolling = 0; // Normal menu for now
 	dynacore         = 1; // Dynarec
-	widescreen		 = 0; // Stretch FB horizontally
+	screenMode		 = 0; // Stretch FB horizontally
 #ifdef GLN64_GX
 // glN64 specific  settings
  	glN64_useFrameBufferTextures = 0; // Disable FrameBuffer textures
@@ -474,7 +474,7 @@ static void Initialise (void){
 		memcpy( rmode, vmode, sizeof(GXRModeObj));
 / *		if(CONF_GetAspectRatio() == CONF_ASPECT_16_9)
 		{
-			widescreen = 1;
+			screenMode = 1;
 			vmode->fbWidth = VI_MAX_WIDTH_NTSC;
 			vmode->viWidth = VI_MAX_WIDTH_NTSC;
 //			vmode->viXOrigin = 80;

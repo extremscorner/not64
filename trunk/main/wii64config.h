@@ -80,8 +80,8 @@ enum dynacore
 	DYNACORE_PURE_INTERP
 };
 
-extern char widescreen;
-enum widescreen
+extern char screenMode;
+enum screenMode
 {
 	SCREENMODE_4x3=0,
 	SCREENMODE_16x9

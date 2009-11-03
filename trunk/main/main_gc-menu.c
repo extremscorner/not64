@@ -83,7 +83,7 @@ static u32* xfb[2] = { NULL, NULL };	/*** Framebuffers ***/
 //static GXRModeObj *vmode;				/*** Graphics Mode Object ***/
 GXRModeObj *vmode, *rmode;				/*** Graphics Mode Object ***/
 GXRModeObj vmode_phys, rmode_phys;		/*** Graphics Mode Object ***/
-char widescreen = 0;
+char screenMode = 0;
 int GX_xfb_offset = 0;
 
 // Dummy functions
@@ -123,7 +123,7 @@ int main(){
 	saveEnabled      = 0; // Don't save game
 	creditsScrolling = 0; // Normal menu for now
 	dynacore         = 1; // Dynarec
-	widescreen		 = 0; // Stretch FB horizontally
+	screenMode		 = 0; // Stretch FB horizontally
 #ifdef GLN64_GX
 // glN64 specific  settings
  	glN64_useFrameBufferTextures = 0; // Disable FrameBuffer textures
@@ -388,7 +388,7 @@ static void Initialise (void){
 		memcpy( rmode, vmode, sizeof(GXRModeObj));
 /*		if(CONF_GetAspectRatio() == CONF_ASPECT_16_9)
 		{
-			widescreen = 1;
+			screenMode = 1;
 			vmode->fbWidth = VI_MAX_WIDTH_NTSC;
 			vmode->viWidth = VI_MAX_WIDTH_NTSC;
 //			vmode->viXOrigin = 80;
