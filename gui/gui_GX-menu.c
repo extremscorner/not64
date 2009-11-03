@@ -105,7 +105,7 @@ extern long BGtexture_length;
 extern long BGtextureCI_length;
 extern long LOGOtexture_length;
 extern GXRModeObj *vmode, *rmode;
-extern char widescreen;
+extern char screenMode;
 extern int GX_xfb_offset;
 
 void draw_quad (u8, u8, u8, u8, u8);
