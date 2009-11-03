@@ -33,6 +33,7 @@ extern int GX_xfb_offset;
 #ifdef __GX__
 char printToScreen;
 char showFPSonScreen;
+char renderCpuFramebuffer;
 
 /*bool updateDEBUGflag;
 bool new_fb;
@@ -107,6 +108,20 @@ void VI_UpdateScreen()
 	}
 	glFinish();
 #else // !__GX__
+	if (renderCpuFramebuffer)
+	{
+		//Only render N64 framebuffer in RDRAM and not EFB
+		VI_GX_cleanUp();
+		VI_GX_renderCpuFramebuffer();
+		VI_GX_showStats();
+		VI_GX_showFPS();
+		VI_GX_showDEBUG();
+		GX_SetCopyClear ((GXColor){0,0,0,255}, 0xFFFFFF);
+		GX_CopyDisp (VI.xfb[VI.which_fb]+GX_xfb_offset, GX_FALSE);
+		GX_DrawDone(); //Wait until EFB->XFB copy is complete
+		VI.EFBcleared = false;
+		VI.copy_fb = true;
+	}
 
 	if (OGL.frameBufferTextures)
 	{
@@ -201,6 +216,8 @@ extern timers Timers;
 
 void VI_GX_showFPS(){
 	static char caption[25];
+
+	TimerUpdate();
 
 	sprintf(caption, "%.1f VI/s, %.1f FPS",Timers.vis,Timers.fps);
 	
@@ -337,6 +354,130 @@ void VI_GX_cleanUp()
 	GX_SetScissor(0,0,rmode->fbWidth,rmode->efbHeight);
 	GX_SetAlphaCompare(GX_ALWAYS,0,GX_AOP_AND,GX_ALWAYS,0);
 	GX_SetZCompLoc(GX_TRUE);	// Do Z-compare before texturing.
+}
+
+void VI_GX_renderCpuFramebuffer()
+{
+	//Only render N64 framebuffer in RDRAM and not EFB drawn by glN64
+	if (!(*REG.VI_STATUS & 3)) //bpp != 16 or 32
+	{
+#ifdef SHOW_DEBUG
+		sprintf(txtbuffer,"VI (CpuFramebuffer): No bits per pixel specified");
+		DEBUG_print(txtbuffer,DBG_VIINFO); 
+#endif
+		return; 
+	}
+	if (!*REG.VI_WIDTH)
+	{
+#ifdef SHOW_DEBUG
+		sprintf(txtbuffer,"VI (CpuFramebuffer): VI_WIDTH_REG is NULL");
+		DEBUG_print(txtbuffer,DBG_VIINFO); 
+#endif
+		return; 
+	}
+	int h_end = *REG.VI_H_START & 0x3FF;
+	int h_start = (*REG.VI_H_START >> 16) & 0x3FF;
+	int v_end = *REG.VI_V_START & 0x3FF;
+	int v_start = (*REG.VI_V_START >> 16) & 0x3FF;
+	float scale_x = ((int)*REG.VI_X_SCALE & 0xFFF) / 1024.0f;
+	float scale_y = (((int)*REG.VI_Y_SCALE & 0xFFF)>>1) / 1024.0f;
+
+	short *im16 = (short*)((char*)RDRAM + (*REG.VI_ORIGIN & 0x7FFFFF));
+
+	int minx = (640-(h_end-h_start))/2;
+	int maxx = 640-minx;
+	int miny = (480-(v_end-v_start))/2;
+	int maxy = 480-miny;
+	int ind = 0;
+	float px, py;
+	py=0.0f;
+
+	u16* FBtex = (u16*) memalign(32,640*480*2);
+	GXTexObj	FBtexObj;
+
+	//N64 Framebuffer is in RGB5A1 format, so shift by 1 and retile.
+	for (int j=0; j<480; j+=4)
+	{
+		for (int i=0; i<640; i+=4)
+		{
+			for (int jj=0; jj<4; jj++)
+			{
+				if (j+jj < miny || j+jj > maxy)
+				{
+					FBtex[ind++] = 0;
+					FBtex[ind++] = 0;
+					FBtex[ind++] = 0;
+					FBtex[ind++] = 0;
+				}
+				else
+				{
+					px = scale_x*i;
+					py = scale_y*(j+jj);
+					for (int ii=0; ii<4; ii++)
+					{
+						if (i+ii < minx || i+ii > maxx)
+							FBtex[ind++] = 0;
+						else
+							FBtex[ind++] = 0x8000 | (im16[((int)py*(*REG.VI_WIDTH)+(int)px)]>>1);
+						px += scale_x;
+					}
+				}
+			}
+		}
+	}
+
+	//Initialize texture
+	GX_InitTexObj(&FBtexObj, FBtex, 640, 480, GX_TF_RGB5A3, GX_CLAMP, GX_CLAMP, GX_FALSE); 
+	DCFlushRange(FBtex, 640*480*2);
+	GX_InvalidateTexAll();
+	GX_LoadTexObj(&FBtexObj, GX_TEXMAP0);
+
+	GX_SetBlendMode(GX_BM_NONE, GX_BL_ONE, GX_BL_ZERO, GX_LO_CLEAR); 
+	GX_SetAlphaCompare(GX_ALWAYS,0,GX_AOP_AND,GX_ALWAYS,0);
+	GX_SetZMode(GX_DISABLE,GX_ALWAYS,GX_FALSE);
+	GX_SetCullMode (GX_CULL_NONE);
+	GX_SetFog(GX_FOG_NONE,0.1,1.0,0.0,1.0,(GXColor) {0,0,0,255});
+
+	Mtx44 GXprojection;
+	guMtxIdentity(GXprojection);
+	guOrtho(GXprojection, 0, 480, 0, 640, 0.0f, 1.0f);
+	GX_LoadProjectionMtx(GXprojection, GX_ORTHOGRAPHIC); 
+	Mtx	GXmodelViewIdent;
+	guMtxIdentity(GXmodelViewIdent);
+	GX_LoadPosMtxImm(GXmodelViewIdent,GX_PNMTX0);
+	GX_SetViewport((f32) 0,(f32) 0,(f32) 640,(f32) 480, 0.0f, 1.0f);
+	GX_SetScissor((u32) 0,(u32) 0,(u32) 640,(u32) 480);	//Set to the same size as the viewport.
+	//set vertex description
+	GX_ClearVtxDesc();
+	GX_SetVtxDesc(GX_VA_PTNMTXIDX, GX_PNMTX0);
+	GX_SetVtxDesc(GX_VA_TEX0MTXIDX, GX_TEXMTX0);
+	GX_SetVtxDesc(GX_VA_POS, GX_DIRECT);
+	GX_SetVtxDesc(GX_VA_TEX0, GX_DIRECT);
+	//set vertex attribute formats
+	GX_SetVtxAttrFmt(GX_VTXFMT0, GX_VA_POS, GX_POS_XY, GX_F32, 0);
+	GX_SetVtxAttrFmt(GX_VTXFMT0, GX_VA_TEX0, GX_TEX_ST, GX_F32, 0);
+
+	//enable textures
+	GX_SetNumChans (0);
+	GX_SetNumTexGens (1);
+	GX_SetTexCoordGen(GX_TEXCOORD0, GX_TG_MTX2x4, GX_TG_TEX0, GX_IDENTITY);
+	GX_SetNumTevStages (1);
+	GX_SetTevOrder (GX_TEVSTAGE0, GX_TEXCOORD0, GX_TEXMAP0, GX_COLOR0A0);
+	GX_SetTevOp (GX_TEVSTAGE0, GX_REPLACE);
+
+	GX_Begin(GX_QUADS, GX_VTXFMT0, 4);
+		GX_Position2f32( 0.0f, 0.0f );
+		GX_TexCoord2f32( 0.0f, 0.0f );
+		GX_Position2f32( 640.0f, 0.0f );
+		GX_TexCoord2f32( 1.0f, 0.0f );
+		GX_Position2f32( 640.0f, 480.0f );
+		GX_TexCoord2f32( 1.0f, 1.0f );
+		GX_Position2f32( 0.0f, 480.0f );
+		GX_TexCoord2f32( 0.0f, 1.0f );
+	GX_End();
+	GX_DrawDone();
+
+	free(FBtex);
 }
 
 void VI_GX_PreRetraceCallback(u32 retraceCnt)

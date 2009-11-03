@@ -81,7 +81,8 @@ void new_frame(void) {
 		Fps_Counter = 0;
 	}
 
-	LastFPSTime = CurrentFPSTime ;
+	LastFPSTime = CurrentFPSTime;
+	Timers.lastFrameTime = CurrentFPSTime;
 }
 
 void new_vi(void) {
@@ -134,5 +135,14 @@ void new_vi(void) {
 	}
 
 	LastFPSTime = CurrentFPSTime ;
+	Timers.lastViTime = CurrentFPSTime;
     end_section(IDLE_SECTION);
+}
+
+void TimerUpdate(void) {
+	DWORD CurrentTime = ticks_to_microsecs(gettick());
+	if (CurrentTime - Timers.lastFrameTime > 1000000)
+		Timers.fps = 0.0f;
+	if (CurrentTime - Timers.lastViTime > 1000000) 
+		Timers.vis = 0.0f;
 }
