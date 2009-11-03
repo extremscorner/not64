@@ -111,8 +111,8 @@ void Func_LoadFromSD()
 	romFile_deinit( romFile_topLevel );
 	romFile_init( romFile_topLevel );
 
-	fileBrowserFrame_OpenDirectory(romFile_topLevel);
 	pMenuContext->setActiveFrame(MenuContext::FRAME_FILEBROWSER);
+	fileBrowserFrame_OpenDirectory(romFile_topLevel);
 }
 
 void Func_LoadFromDVD()
@@ -129,8 +129,8 @@ void Func_LoadFromDVD()
 	// Make sure the romFile system is ready before we browse the filesystem
 	romFile_init( romFile_topLevel );
 
-	fileBrowserFrame_OpenDirectory(romFile_topLevel);
 	pMenuContext->setActiveFrame(MenuContext::FRAME_FILEBROWSER);
+	fileBrowserFrame_OpenDirectory(romFile_topLevel);
 }
 
 void Func_LoadFromUSB()
@@ -149,8 +149,8 @@ void Func_LoadFromUSB()
 	romFile_deinit( romFile_topLevel );
 	romFile_init( romFile_topLevel );
 	
-	fileBrowserFrame_OpenDirectory(romFile_topLevel);
 	pMenuContext->setActiveFrame(MenuContext::FRAME_FILEBROWSER);
+	fileBrowserFrame_OpenDirectory(romFile_topLevel);
 #endif
 }
 
