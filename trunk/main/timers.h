@@ -14,11 +14,14 @@ typedef struct {
    char		limitVIs;		//0: NO VI Limit, 1: Limit VI/s, 2: Wait only if frame drawn
    char		useFpsModifier;	//Modify FPS?
    int		fpsModifier;	//Framerate modifier in %
+   unsigned long	lastFrameTime;
+   unsigned long	lastViTime;
 } timers;
 
 //extern timers Timers;
 
 void InitTimer();
+void TimerUpdate(void);
 
 #endif // __TIMERS_H__
 #ifdef __cplusplus

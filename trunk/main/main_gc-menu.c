@@ -128,6 +128,7 @@ int main(){
 // glN64 specific  settings
  	glN64_useFrameBufferTextures = 0; // Disable FrameBuffer textures
 	glN64_use2xSaiTextures = 0;	// Disable 2xSai textures
+	renderCpuFramebuffer = 0; // Disable CPU Framebuffer Rendering
 #endif //GLN64_GX
 	// 'Page flip' buttons so we know when it released
 	int which_pad = 0;

@@ -101,6 +101,13 @@ enum glN64_use2xSaiTextures
 	GLN64_2XSAI_DISABLE=0,
 	GLN64_2XSAI_ENABLE
 };
+
+extern char renderCpuFramebuffer;
+enum renderCpuFramebuffer
+{
+	CPUFRAMEBUFFER_DISABLE=0,
+	CPUFRAMEBUFFER_ENABLE
+};
 #endif //GLN64_GX
 
 
