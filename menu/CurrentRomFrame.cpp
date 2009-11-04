@@ -122,7 +122,7 @@ void Func_ShowRomInfo()
 	if(ROM_HEADER->Manufacturer_ID == 'N') sprintf(buffer,"Manufacturer: Nintendo\n");
 	else sprintf(buffer,"Manufacturer: %x\n", (unsigned int)(ROM_HEADER->Manufacturer_ID));
 	strcat(RomInfo,buffer);
-    countrycodestring(ROM_HEADER->Country_code, buffer2);
+    countrycodestring(ROM_HEADER->Country_code&0xFF, buffer2);
 	sprintf(buffer,"Country: %s\n",buffer2);
 	strcat(RomInfo,buffer);
 
