@@ -37,6 +37,11 @@ WPADData* Input::getWpad()
 {
 	return wiiPad;
 }
+
+int* Input::getWpadError()
+{
+	return wiiPadError;
+}
 #endif
 
 PADStatus* Input::getPad()
