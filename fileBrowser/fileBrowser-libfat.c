@@ -21,6 +21,9 @@ const DISC_INTERFACE* carda = &__io_gcsda;
 const DISC_INTERFACE* cardb = &__io_gcsdb;
 #endif
 
+char sdMounted  = 0;
+char usbMounted = 0;
+
 fileBrowser_file topLevel_libfat_Default =
 	{ "sd:/wii64/roms", // file name
 	  0, // sector
@@ -121,22 +124,32 @@ int fileBrowser_libfat_init(fileBrowser_file* f){
  	int res = 0;
 #ifdef HW_RVL
   if(f->name[0] == 's') {
-   	if(frontsd->startup()) {
-     	res |= fatMountSimple ("sd", frontsd);
-   	}
-   	else if(carda->startup() && !res) {
-   	  res |= fatMountSimple ("sd", carda);
+    if(!sdMounted) {
+     	if(frontsd->startup()) {
+       	res |= fatMountSimple ("sd", frontsd);
+     	}
+     	else if(carda->startup() && !res) {
+     	  res |= fatMountSimple ("sd", carda);
+   	  }
+   	  else if(cardb->startup() && !res) {
+     	  res |= fatMountSimple ("sd", cardb);
+   	  }
+   	  if(res) sdMounted = 1;
+   	  return res;
  	  }
- 	  else if(cardb->startup() && !res) {
-   	  res |= fatMountSimple ("sd", cardb);
- 	  }
- 	  return res;
+ 	  else
+ 	    return 1;
  	}
  	else if(f->name[0] == 'u') {
-   	if(usb->startup()) {
-   	  res |= fatMountSimple ("usb", usb);
+   	if(!usbMounted) {
+     	if(usb->startup()) {
+     	  res |= fatMountSimple ("usb", usb);
+      }
+      if(res) usbMounted = 1;
+      return res;
     }
-    return res;
+    else
+      return 1;
   }
   return res;
 #else
