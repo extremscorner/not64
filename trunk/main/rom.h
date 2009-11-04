@@ -73,4 +73,6 @@ extern rom_settings ROM_SETTINGS;
 
 int init_byte_swap(unsigned int magicWord);
 
+void countrycodestring(unsigned short countrycode, char *string);
+
 #endif

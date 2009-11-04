@@ -12,6 +12,8 @@ extern "C" {
 #include "../fileBrowser/fileBrowser-libfat.h"
 #include "../fileBrowser/fileBrowser-DVD.h"
 #include "../fileBrowser/fileBrowser-CARD.h"
+#include "../main/rom.h"
+#include "../main/wii64config.h"
 }
 
 void Func_PrevPage();
@@ -261,6 +263,8 @@ void fileBrowserFrame_FillPage()
 }
 
 extern BOOL hasLoadedROM;
+extern int rom_length;
+extern char autoSaveLoaded;
 void Func_SetPlayGame();
 
 void fileBrowserFrame_LoadFile(int i)
@@ -281,10 +285,47 @@ void fileBrowserFrame_LoadFile(int i)
 		if(!ret){	// If the read succeeded.
 			strcpy(feedback_string, "Loaded ");
 			strncat(feedback_string, filenameFromAbsPath(dir_entries[i].name), 36-7);
+
+			char RomInfo[512] = "";
+			char buffer [50];
+			char buffer2 [50];
+			strcat(RomInfo,feedback_string);
+			sprintf(buffer,"\n\nRom name: %s\n",ROM_SETTINGS.goodname);
+			strcat(RomInfo,buffer);
+			sprintf(buffer,"Rom size: %d Mb\n",rom_length/1024/1024);
+			strcat(RomInfo,buffer);
+			if(ROM_HEADER->Manufacturer_ID == 'N') sprintf(buffer,"Manufacturer: Nintendo\n");
+			else sprintf(buffer,"Manufacturer: %x\n", (unsigned int)(ROM_HEADER->Manufacturer_ID));
+			strcat(RomInfo,buffer);
+		    countrycodestring(ROM_HEADER->Country_code, buffer2);
+			sprintf(buffer,"Country: %s\n",buffer2);
+			strcat(RomInfo,buffer);
+			switch (autoSaveLoaded)
+			{
+			case NATIVESAVEDEVICE_NONE:
+				break;
+			case NATIVESAVEDEVICE_SD:
+				strcat(RomInfo,"\nFound & loaded save from SD card\n");
+				break;
+			case NATIVESAVEDEVICE_USB:
+				strcat(RomInfo,"\nFound & loaded save from USB device\n");
+				break;
+			case NATIVESAVEDEVICE_CARDA:
+				strcat(RomInfo,"\nFound & loaded save from memcard in slot A\n");
+				break;
+			case NATIVESAVEDEVICE_CARDB:
+				strcat(RomInfo,"\nFound & loaded save from memcard in slot B\n");
+				break;
+			}
+			autoSaveLoaded = NATIVESAVEDEVICE_NONE;
+
+			menu::MessageBox::getInstance().setMessage(RomInfo);
 		}
 		else		// If not.
 		{
 			strcpy(feedback_string,"A read error occured");
+
+			menu::MessageBox::getInstance().setMessage(feedback_string);
 		}
 
 /*		//disable all buttons
@@ -300,7 +341,7 @@ void fileBrowserFrame_LoadFile(int i)
 			FRAME_BUTTONS[i+2].buttonString = FRAME_STRINGS[2];
 		pMenuContext->getFrame(MenuContext::FRAME_FILEBROWSER)->setDefaultFocus(FRAME_BUTTONS[2].button);
 		menu::Focus::getInstance().clearPrimaryFocus();*/
-		menu::MessageBox::getInstance().setMessage(feedback_string);
+
 		pMenuContext->setActiveFrame(MenuContext::FRAME_MAIN);
 		if(hasLoadedROM) Func_SetPlayGame();
 	}

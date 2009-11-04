@@ -138,7 +138,18 @@ void Func_Settings()
 
 void Func_Credits()
 {
-	menu::MessageBox::getInstance().setMessage("Credits not implemented");
+	char CreditsInfo[256] = "";
+	strcat(CreditsInfo,"Wii64 Team:\n");
+	strcat(CreditsInfo,"tehpola - core  \n");
+	strcat(CreditsInfo,"sepp256 - graphics\n");
+	strcat(CreditsInfo,"    emu_kidid - general coding\n");
+	strcat(CreditsInfo,"\n");
+	strcat(CreditsInfo,"Special Thanks To:\n");
+	strcat(CreditsInfo,"Hacktarux - for Mupen64\n");
+	strcat(CreditsInfo,"Shagkur - for libOGC \n");
+	strcat(CreditsInfo,"Team Twiizers - for Wii homebrew\n");
+
+	menu::MessageBox::getInstance().setMessage(CreditsInfo);
 }
 
 void Func_ExitToLoader()

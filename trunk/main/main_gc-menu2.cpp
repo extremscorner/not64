@@ -243,6 +243,8 @@ extern BOOL mempakWritten;
 extern BOOL sramWritten;
 extern BOOL flashramWritten;
 BOOL hasLoadedROM = FALSE;
+char autoSaveLoaded = NATIVESAVEDEVICE_NONE;
+
 int loadROM(fileBrowser_file* rom){
 
 	// First, if there's already a loaded ROM
@@ -333,16 +335,20 @@ int loadROM(fileBrowser_file* rom){
   	switch (nativeSaveDevice)
   	{
   		case NATIVESAVEDEVICE_SD:
-  			if (result) menu::MessageBox::getInstance().setMessage("Found & loaded save from SD card");
+//			if (result) menu::MessageBox::getInstance().setMessage("Found & loaded save from SD card");
+  			if (result) autoSaveLoaded = NATIVESAVEDEVICE_SD;
   			break;
   		case NATIVESAVEDEVICE_USB:
-  			if (result) menu::MessageBox::getInstance().setMessage("Found & loaded save from USB device");
+//			if (result) menu::MessageBox::getInstance().setMessage("Found & loaded save from USB device");
+  			if (result) autoSaveLoaded = NATIVESAVEDEVICE_USB;
   			break;
   		case NATIVESAVEDEVICE_CARDA:
-  			if (result) menu::MessageBox::getInstance().setMessage("Found & loaded save from memcard in slot A");
+//			if (result) menu::MessageBox::getInstance().setMessage("Found & loaded save from memcard in slot A");
+  			if (result) autoSaveLoaded = NATIVESAVEDEVICE_CARDA;
   			break;
   		case NATIVESAVEDEVICE_CARDB:
-  			if (result) menu::MessageBox::getInstance().setMessage("Found & loaded save from memcard in slot A");
+ //			if (result) menu::MessageBox::getInstance().setMessage("Found & loaded save from memcard in slot B");
+  			if (result) autoSaveLoaded = NATIVESAVEDEVICE_CARDB;
   			break;
   	}
   }
