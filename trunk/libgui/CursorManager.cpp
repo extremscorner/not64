@@ -87,7 +87,10 @@ void Cursor::updateCursor()
 				if(	currentFrame == (*iteration).frame &&
 					(cursorX > (*iteration).xRange[0]) && (cursorX < (*iteration).xRange[1]) &&
 					(cursorY > (*iteration).yRange[0]) && (cursorY < (*iteration).yRange[1]))
+				{
 					setCursorFocus((*iteration).comp);
+					if (frameSwitch) break;
+				}
 			}
 			if (!hoverOverComponent) setCursorFocus(currentFrame);
 			return;
@@ -105,12 +108,18 @@ void Cursor::setCursorFocus(Component* component)
 {
 	int buttonsDown = 0;
 	int focusDirection = 0;
+	Component* newHoverOverComponent = NULL;
 
 #ifdef HW_RVL
 	if (buttonsPressed & WPAD_BUTTON_A) buttonsDown |= Focus::ACTION_SELECT;
 	if (buttonsPressed & WPAD_BUTTON_B) buttonsDown |= Focus::ACTION_BACK;
 #endif
-	if (component) hoverOverComponent = component->updateFocus(focusDirection,buttonsDown);
+	if (component) newHoverOverComponent = component->updateFocus(focusDirection,buttonsDown);
+	if (newHoverOverComponent) 
+	{
+		if (hoverOverComponent) hoverOverComponent->setFocus(false);
+		hoverOverComponent = newHoverOverComponent;
+	}
 
 }
 
