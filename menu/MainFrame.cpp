@@ -36,7 +36,7 @@ void Func_PlayGame();
 #define FRAME_BUTTONS mainFrameButtons
 #define FRAME_STRINGS mainFrameStrings
 
-static char FRAME_STRINGS[14][20] =
+char FRAME_STRINGS[7][20] =
 	{ "Load ROM",
 	  "Current ROM",
 	  "Settings",
@@ -167,6 +167,7 @@ extern BOOL eepromWritten;
 extern BOOL mempakWritten;
 extern BOOL flashramWritten;
 
+
 void Func_PlayGame()
 {
 	if(!hasLoadedROM)
@@ -246,5 +247,16 @@ void Func_PlayGame()
       
     }
   }
+	FRAME_BUTTONS[5].buttonString = FRAME_STRINGS[6];
 	menu::Cursor::getInstance().clearCursorFocus();
+}
+
+void Func_SetPlayGame()
+{
+	FRAME_BUTTONS[5].buttonString = FRAME_STRINGS[5];
+}
+
+void Func_SetResumeGame()
+{
+	FRAME_BUTTONS[5].buttonString = FRAME_STRINGS[6];
 }

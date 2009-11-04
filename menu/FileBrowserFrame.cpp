@@ -260,6 +260,9 @@ void fileBrowserFrame_FillPage()
 	else pMenuContext->getFrame(MenuContext::FRAME_FILEBROWSER)->setDefaultFocus(FRAME_BUTTONS[2].button);
 }
 
+extern BOOL hasLoadedROM;
+void Func_SetPlayGame();
+
 void fileBrowserFrame_LoadFile(int i)
 {
 	if(dir_entries[i].attr & FILE_BROWSER_ATTR_DIR){
@@ -299,5 +302,6 @@ void fileBrowserFrame_LoadFile(int i)
 		menu::Focus::getInstance().clearPrimaryFocus();*/
 		menu::MessageBox::getInstance().setMessage(feedback_string);
 		pMenuContext->setActiveFrame(MenuContext::FRAME_MAIN);
+		if(hasLoadedROM) Func_SetPlayGame();
 	}
 }

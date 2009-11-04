@@ -249,6 +249,7 @@ void SettingsFrame::activateSubmenu(int submenu)
 	{
 		FRAME_BUTTONS[i].button->setVisible(false);
 		FRAME_BUTTONS[i].button->setSelected(false);
+		FRAME_BUTTONS[i].button->setActive(false);
 	}
 	//All textBoxes: hide
 	for (int i = 0; i < NUM_FRAME_TEXTBOXES; i++)
@@ -264,6 +265,7 @@ void SettingsFrame::activateSubmenu(int submenu)
 				FRAME_BUTTONS[i].button->setVisible(true);
 				FRAME_BUTTONS[i].button->setNextFocus(menu::Focus::DIRECTION_DOWN, FRAME_BUTTONS[5].button);
 				FRAME_BUTTONS[i].button->setNextFocus(menu::Focus::DIRECTION_UP, FRAME_BUTTONS[13].button);
+				FRAME_BUTTONS[i].button->setActive(true);
 			}
 			for (int i = 0; i < 4; i++)
 				FRAME_TEXTBOXES[i].textBox->setVisible(true);
@@ -273,7 +275,10 @@ void SettingsFrame::activateSubmenu(int submenu)
 			if (dynacore == DYNACORE_PURE_INTERP)	FRAME_BUTTONS[11].button->setSelected(true);
 			else									FRAME_BUTTONS[12].button->setSelected(true);
 			for (int i = 5; i < 15; i++)
+			{
 				FRAME_BUTTONS[i].button->setVisible(true);
+				FRAME_BUTTONS[i].button->setActive(true);
+			}
 			break;
 		case SUBMENU_VIDEO:
 			setDefaultFocus(FRAME_BUTTONS[1].button);
@@ -282,6 +287,7 @@ void SettingsFrame::activateSubmenu(int submenu)
 				FRAME_BUTTONS[i].button->setVisible(true);
 				FRAME_BUTTONS[i].button->setNextFocus(menu::Focus::DIRECTION_DOWN, FRAME_BUTTONS[15].button);
 				FRAME_BUTTONS[i].button->setNextFocus(menu::Focus::DIRECTION_UP, FRAME_BUTTONS[23].button);
+				FRAME_BUTTONS[i].button->setActive(true);
 			}
 			for (int i = 4; i < 9; i++)
 				FRAME_TEXTBOXES[i].textBox->setVisible(true);
@@ -297,7 +303,10 @@ void SettingsFrame::activateSubmenu(int submenu)
 			if (glN64_useFrameBufferTextures == GLN64_FBTEX_ENABLE)	FRAME_BUTTONS[23].button->setSelected(true);
 			else													FRAME_BUTTONS[24].button->setSelected(true);
 			for (int i = 15; i < 25; i++)
+			{
 				FRAME_BUTTONS[i].button->setVisible(true);
+				FRAME_BUTTONS[i].button->setActive(true);
+			}
 			break;
 		case SUBMENU_INPUT:
 			setDefaultFocus(FRAME_BUTTONS[2].button);
@@ -306,10 +315,14 @@ void SettingsFrame::activateSubmenu(int submenu)
 				FRAME_BUTTONS[i].button->setVisible(true);
 				FRAME_BUTTONS[i].button->setNextFocus(menu::Focus::DIRECTION_DOWN, FRAME_BUTTONS[25].button);
 				FRAME_BUTTONS[i].button->setNextFocus(menu::Focus::DIRECTION_UP, FRAME_BUTTONS[26].button);
+				FRAME_BUTTONS[i].button->setActive(true);
 			}
 			FRAME_BUTTONS[2].button->setSelected(true);
 			for (int i = 25; i < 27; i++)
+			{
 				FRAME_BUTTONS[i].button->setVisible(true);
+				FRAME_BUTTONS[i].button->setActive(true);
+			}
 			break;
 		case SUBMENU_AUDIO:
 			setDefaultFocus(FRAME_BUTTONS[3].button);
@@ -318,6 +331,7 @@ void SettingsFrame::activateSubmenu(int submenu)
 				FRAME_BUTTONS[i].button->setVisible(true);
 				FRAME_BUTTONS[i].button->setNextFocus(menu::Focus::DIRECTION_DOWN, FRAME_BUTTONS[27].button);
 				FRAME_BUTTONS[i].button->setNextFocus(menu::Focus::DIRECTION_UP, FRAME_BUTTONS[27].button);
+				FRAME_BUTTONS[i].button->setActive(true);
 			}
 			for (int i = 9; i < 10; i++)
 				FRAME_TEXTBOXES[i].textBox->setVisible(true);
@@ -325,7 +339,10 @@ void SettingsFrame::activateSubmenu(int submenu)
 			if (audioEnabled == AUDIO_DISABLE)	FRAME_BUTTONS[27].button->setSelected(true);
 			else								FRAME_BUTTONS[28].button->setSelected(true);
 			for (int i = 27; i < 29; i++)
+			{
 				FRAME_BUTTONS[i].button->setVisible(true);
+				FRAME_BUTTONS[i].button->setActive(true);
+			}
 			break;
 		case SUBMENU_SAVES:
 			setDefaultFocus(FRAME_BUTTONS[4].button);
@@ -334,6 +351,7 @@ void SettingsFrame::activateSubmenu(int submenu)
 				FRAME_BUTTONS[i].button->setVisible(true);
 				FRAME_BUTTONS[i].button->setNextFocus(menu::Focus::DIRECTION_DOWN, FRAME_BUTTONS[29].button);
 				FRAME_BUTTONS[i].button->setNextFocus(menu::Focus::DIRECTION_UP, FRAME_BUTTONS[32].button);
+				FRAME_BUTTONS[i].button->setActive(true);
 			}
 			for (int i = 10; i < 11; i++)
 				FRAME_TEXTBOXES[i].textBox->setVisible(true);
@@ -341,7 +359,10 @@ void SettingsFrame::activateSubmenu(int submenu)
 			if (autoSave == AUTOSAVE_ENABLE)	FRAME_BUTTONS[29].button->setSelected(true);
 			else								FRAME_BUTTONS[30].button->setSelected(true);
 			for (int i = 29; i < NUM_FRAME_BUTTONS; i++)
+			{
 				FRAME_BUTTONS[i].button->setVisible(true);
+				FRAME_BUTTONS[i].button->setActive(true);
+			}
 			break;
 	}
 }

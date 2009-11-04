@@ -120,6 +120,8 @@ void cpu_init();
 void cpu_deinit();
 }
 
+void Func_SetPlayGame();
+
 void Func_ResetROM()
 {
 	if(hasLoadedROM)
@@ -137,6 +139,7 @@ void Func_ResetROM()
 		romOpen_input();
 		cpu_init();
 		menu::MessageBox::getInstance().setMessage("Game restarted");
+		Func_SetPlayGame();
 	}
 	else	
 	{

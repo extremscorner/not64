@@ -127,8 +127,37 @@ void MessageBox::drawMessageBox(Graphics& gfx)
 	gfx.drawImage(0, x, y+height/2, width/2, height/2, 0.0, width/16.0, height/16.0, 0.0);
 	gfx.drawImage(0, x+width/2, y+height/2, width/2, height/2, width/16.0, 0.0, height/16.0, 0.0);
 
+	//detect number of lines
+#define MAX_LINES 10
+	int ind = 0;
+	int numLines = 0;
+	int lineStart[MAX_LINES];
+	int lineEnd[MAX_LINES];
+	lineStart[numLines] = ind;
+	while (1)
+	{
+		if ((messageBoxText[ind]=='\n') || (messageBoxText[ind]=='\0')) 
+		{
+			lineEnd[numLines++] = ind;
+			if (numLines==MAX_LINES) break;
+			if (messageBoxText[ind]=='\0') break;
+			lineStart[numLines] = ++ind;
+		}
+		ind++;
+	}
+	
+	char tempStr[256];
 	IplFont::getInstance().drawInit(textColor);
-	IplFont::getInstance().drawString((int) (x+width/2), (int) (y+height/2)-20, messageBoxText, 1.0, true);
+	for (int i = 0; i < numLines; i++)
+	{
+		int heightOffset = -20*numLines/2+20*i;
+		int numChar = lineEnd[i]-lineStart[i]; 
+		numChar = numChar <= 255 ? numChar : 255;
+		strncpy(tempStr,&messageBoxText[lineStart[i]],numChar);
+		tempStr[numChar] = '\0';
+		IplFont::getInstance().drawString((int) (x+width/2), (int) (y+height/2)-20+heightOffset, tempStr, 1.0, true);
+	}
+//	IplFont::getInstance().drawString((int) (x+width/2), (int) (y+height/2)-20+heightOffset, messageBoxText, 1.0, true);
 
 	drawChildren(gfx);
 }
