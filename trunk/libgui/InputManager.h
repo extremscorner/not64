@@ -11,6 +11,7 @@ public:
 	void refreshInput();
 #ifdef HW_RVL
 	WPADData* getWpad();
+	int* getWpadError();
 #endif
 	PADStatus* getPad();
 	void clearInputData();

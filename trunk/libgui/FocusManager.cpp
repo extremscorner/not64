@@ -88,24 +88,46 @@ void Focus::updateFocus()
 		else if (wiiPad[i].btns_h ^ previousButtonsWii[i])
 		{
 			u32 currentButtonsDownWii = (wiiPad[i].btns_h ^ previousButtonsWii[i]) & wiiPad[i].btns_h;
-			switch (currentButtonsDownWii & 0xf00) {
-			case WPAD_BUTTON_LEFT:
-				focusDirection = DIRECTION_LEFT;
-				break;
-			case WPAD_BUTTON_RIGHT:
-				focusDirection = DIRECTION_RIGHT;
-				break;
-			case WPAD_BUTTON_DOWN:
-				focusDirection = DIRECTION_DOWN;
-				break;
-			case WPAD_BUTTON_UP:
-				focusDirection = DIRECTION_UP;
-				break;
-			default:
-				focusDirection = DIRECTION_NONE;
+			if (wiiPad[i].exp.type == WPAD_EXP_CLASSIC)
+			{
+				switch (currentButtonsDownWii & 0xc0030000) {
+				case WPAD_CLASSIC_BUTTON_LEFT:
+					focusDirection = DIRECTION_LEFT;
+					break;
+				case WPAD_CLASSIC_BUTTON_RIGHT:
+					focusDirection = DIRECTION_RIGHT;
+					break;
+				case WPAD_CLASSIC_BUTTON_DOWN:
+					focusDirection = DIRECTION_DOWN;
+					break;
+				case WPAD_CLASSIC_BUTTON_UP:
+					focusDirection = DIRECTION_UP;
+					break;
+				default:
+					focusDirection = DIRECTION_NONE;
+				}
 			}
-			if (currentButtonsDownWii & WPAD_BUTTON_A) buttonsDown |= ACTION_SELECT;
-			if (currentButtonsDownWii & WPAD_BUTTON_B) buttonsDown |= ACTION_BACK;
+			else
+			{
+				switch (currentButtonsDownWii & 0xf00) {
+				case WPAD_BUTTON_LEFT:
+					focusDirection = DIRECTION_LEFT;
+					break;
+				case WPAD_BUTTON_RIGHT:
+					focusDirection = DIRECTION_RIGHT;
+					break;
+				case WPAD_BUTTON_DOWN:
+					focusDirection = DIRECTION_DOWN;
+					break;
+				case WPAD_BUTTON_UP:
+					focusDirection = DIRECTION_UP;
+					break;
+				default:
+					focusDirection = DIRECTION_NONE;
+				}
+			}
+			if (currentButtonsDownWii & (WPAD_BUTTON_A | WPAD_CLASSIC_BUTTON_A)) buttonsDown |= ACTION_SELECT;
+			if (currentButtonsDownWii & (WPAD_BUTTON_B | WPAD_CLASSIC_BUTTON_B)) buttonsDown |= ACTION_BACK;
 			if (primaryFocusOwner) primaryFocusOwner = primaryFocusOwner->updateFocus(focusDirection,buttonsDown);
 			previousButtonsWii[i] = wiiPad[i].btns_h;
 			break;
