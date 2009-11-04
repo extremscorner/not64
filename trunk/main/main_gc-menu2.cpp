@@ -109,6 +109,7 @@ struct {
   { "AutoSave", &autoSave, AUTOSAVE_DISABLE, AUTOSAVE_ENABLE },
   { "LimitVIs", &Timers.limitVIs, LIMITVIS_NONE, LIMITVIS_WAIT_FOR_FRAME },
 };
+void handleConfigPair(char* kv);
 void readConfig(FILE* f);
 void writeConfig(FILE* f);
 
@@ -197,6 +198,11 @@ int main(int argc, char* argv[]){
     }
   }
 
+  // Handle options passed in through arguments
+  int i;
+  for(i=1; i<argc; ++i){
+	  handleConfigPair(argv[i]);
+  }
 
 	while (menu->isRunning()) {
 		PAD_ScanPads();
@@ -323,7 +329,7 @@ int loadROM(fileBrowser_file* rom){
   	result += loadMempak(saveFile_dir);
   	result += loadFlashram(saveFile_dir);
   	saveFile_deinit(saveFile_dir);
-  	
+
   	switch (nativeSaveDevice)
   	{
   		case NATIVESAVEDEVICE_SD:
@@ -570,18 +576,22 @@ void setOption(char* key, char value){
 	}
 }
 
+void handleConfigPair(char* kv){
+	char* vs = kv;
+	while(*vs != ' ' && *vs != '\t' && *vs != ':' && *vs != '=')
+			++vs;
+	*(vs++) = 0;
+	while(*vs == ' ' || *vs == '\t' || *vs == ':' || *vs == '=')
+			++vs;
+
+	setOption(kv, atoi(vs));
+}
+
 void readConfig(FILE* f){
 	char line[256];
 	while(fgets(line, 256, f)){
 		if(line[0] == '#') continue;
-		char* vs = line;
-		while(*vs != ' ' && *vs != '\t' && *vs != ':' && *vs != '=')
-				++vs;
-		*(vs++) = 0;
-		while(*vs == ' ' || *vs == '\t' || *vs == ':' || *vs == '=')
-				++vs;
-
-		setOption(line, atoi(vs));
+		handleConfigPair(line);
 	}
 }
 
