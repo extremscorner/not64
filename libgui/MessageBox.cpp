@@ -18,7 +18,7 @@ void Func_MessageBoxOK();
 static char FRAME_STRINGS[1][3] =
 	{ "OK"};
 
-#define MESSAGEBOX_TEXT_WIDTH 100
+#define MESSAGEBOX_TEXT_WIDTH 256
 char messageBoxText[MESSAGEBOX_TEXT_WIDTH];
 
 struct ButtonInfo
@@ -141,7 +141,7 @@ void MessageBox::drawMessageBox(Graphics& gfx)
 			lineEnd[numLines++] = ind;
 			if (numLines==MAX_LINES) break;
 			if (messageBoxText[ind]=='\0') break;
-			lineStart[numLines] = ++ind;
+			lineStart[numLines] = ind+1;
 		}
 		ind++;
 	}
