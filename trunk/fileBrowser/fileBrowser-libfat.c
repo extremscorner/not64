@@ -41,7 +41,7 @@ fileBrowser_file topLevel_libfat_USB =
 	 };
 
 fileBrowser_file saveDir_libfat_Default =
-	{ "sd:/wii64/saves/",
+	{ "sd:/wii64/saves",
 	  0,
 	  0,
 	  0,
@@ -49,7 +49,7 @@ fileBrowser_file saveDir_libfat_Default =
 	 };
 	 
 fileBrowser_file saveDir_libfat_USB =
-	{ "usb:/wii64/saves/",
+	{ "usb:/wii64/saves",
 	  0,
 	  0,
 	  0,

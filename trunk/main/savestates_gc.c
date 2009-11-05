@@ -67,7 +67,7 @@ char* savestates_save()
   int len, i;
 	
   /* fix the filename to %s.st%d format */
-	filename = malloc(strlen(statespath)+strlen(ROM_SETTINGS.goodname)+4+1+5);
+	filename = malloc(256);
 #ifdef HW_RVL
   if(saveStateDevice==SAVESTATEDEVICE_USB)
     strcpy(filename,"usb:");
@@ -76,6 +76,7 @@ char* savestates_save()
     strcpy(filename,"sd:"); //"sd:/" is any currently mounted SD on GC or Wii
 	strcat(filename, statespath);
   strcat(filename, ROM_SETTINGS.goodname);
+  strcat(filename, saveregionstr());
 	strcat(filename, ".st");
 	sprintf(buf, "%d", savestates_slot);
 	strcat(filename, buf);
@@ -149,7 +150,7 @@ char* savestates_load()
 	int len, i;
 		
 	/* fix the filename to %s.st%d format */
-	filename = malloc(strlen(statespath)+strlen(ROM_SETTINGS.goodname)+4+1+5);
+	filename = malloc(256);
 #ifdef HW_RVL
   if(saveStateDevice==SAVESTATEDEVICE_USB)
     strcpy(filename,"usb:");
@@ -158,6 +159,7 @@ char* savestates_load()
     strcpy(filename,"sd:"); //"sd:/" is any currently mounted SD on GC or Wii
 	strcat(filename, statespath);
   strcat(filename, ROM_SETTINGS.goodname);
+  strcat(filename, saveregionstr());
 	strcat(filename, ".st");
 	sprintf(buf, "%d", savestates_slot);
 	strcat(filename, buf);
