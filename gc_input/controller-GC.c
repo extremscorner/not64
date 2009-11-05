@@ -9,7 +9,7 @@ static int _GetKeys(int Control, BUTTONS * Keys )
 {
 	if(padNeedScan){ PAD_ScanPads(); padNeedScan = 0; }
 	BUTTONS* c = Keys;
-		
+
 	int b = PAD_ButtonsHeld(Control);
 	c->R_DPAD       = (b & PAD_BUTTON_RIGHT) ? 1 : 0;
 	c->L_DPAD       = (b & PAD_BUTTON_LEFT)  ? 1 : 0;
@@ -30,10 +30,10 @@ static int _GetKeys(int Control, BUTTONS * Keys )
 	s8 substickY = PAD_SubStickY(Control);
 	c->D_CBUTTON    = (substickY < -64)      ? 1 : 0;
 	c->U_CBUTTON    = (substickY >  64)      ? 1 : 0;
-	
+
 	c->X_AXIS       = PAD_StickX(Control);
 	c->Y_AXIS       = PAD_StickY(Control);
-	
+
 	// X+Y quits to menu
 	return (b & PAD_BUTTON_X) && (b & PAD_BUTTON_Y);
 }
@@ -72,9 +72,17 @@ controller_t controller_GC =
 
 static void init(void){
 	PAD_Init();
-	
+
 	PADStatus status[4];
-	PAD_Read(status);
+	do PAD_Read(status);
+	while((status[0].err != PAD_ERR_NO_CONTROLLER &&
+	       status[0].err != PAD_ERR_NONE) ||
+	      (status[1].err != PAD_ERR_NO_CONTROLLER &&
+		   status[1].err != PAD_ERR_NONE) ||
+	      (status[2].err != PAD_ERR_NO_CONTROLLER &&
+		   status[2].err != PAD_ERR_NONE) ||
+	      (status[3].err != PAD_ERR_NO_CONTROLLER &&
+		   status[3].err != PAD_ERR_NONE));
 	int i;
 	for(i=0; i<4; ++i)
 		controller_GC.available[i] = status[i].err != PAD_ERR_NO_CONTROLLER;

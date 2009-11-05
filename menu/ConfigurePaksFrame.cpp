@@ -149,7 +149,7 @@ void ConfigurePaksFrame::activateSubmenu(int submenu)
 {
 	Component* defaultFocus = this;
 
-	usleep(1000);			//This sleep prevents the PAD_Init() from failing
+//	usleep(1000);			//This sleep prevents the PAD_Init() from failing
 	control_info_init();	//TODO: This controller poll might need rethinking when we implement Input Configuration
 
 	//All buttons: hide; unselect

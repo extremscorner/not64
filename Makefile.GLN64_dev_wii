@@ -77,7 +77,8 @@ OBJ_PPC		=r4300/ppc/MIPS-to-PPC.o \
 
 OBJ_INPUT	=gc_input/main.o \
 		gc_input/controller-GC.o \
-		gc_input/controller-Classic.o
+		gc_input/controller-Classic.o \
+		gc_input/controller-WiimoteNunchuk.o
 
 OBJ_RSPHLE	=rsp_hle-ppc/main.o \
 		rsp_hle-ppc/jpeg.o \
