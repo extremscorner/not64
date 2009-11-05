@@ -196,7 +196,7 @@ void Func_PlayGame()
 	
 	menu::Gui::getInstance().gfx->clearEFB((GXColor){0, 0, 0, 0xFF}, 0x000000);
 
-	usleep(1000);			//This sleep prevents the PAD_Init() from failing
+//	usleep(1000);			//This sleep prevents the PAD_Init() from failing
 	control_info_init();	//TODO: This controller re-poll might need rethinking when we implement reconfigurable input
 
 	//Wait until 'A' button released before play/resume game
@@ -269,13 +269,13 @@ void Func_PlayGame()
     				menu::MessageBox::getInstance().fadeMessage("Automatically saved to SD card");
     				break;
     			case NATIVESAVEDEVICE_USB:
-    				menu::MessageBox::getInstance().setMessage("Automatically saved to USB device");
+    				menu::MessageBox::getInstance().fadeMessage("Automatically saved to USB device");
     				break;
     			case NATIVESAVEDEVICE_CARDA:
-    				menu::MessageBox::getInstance().setMessage("Automatically saved to memcard in Slot A");
+    				menu::MessageBox::getInstance().fadeMessage("Automatically saved to memcard in Slot A");
     				break;
     			case NATIVESAVEDEVICE_CARDB:
-    				menu::MessageBox::getInstance().setMessage("Automatically saved to memcard in Slot B");
+    				menu::MessageBox::getInstance().fadeMessage("Automatically saved to memcard in Slot B");
     				break;
     		}
     		flashramWritten = sramWritten = eepromWritten = mempakWritten = 0;  //nothing new written since save
