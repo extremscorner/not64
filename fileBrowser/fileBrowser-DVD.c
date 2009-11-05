@@ -13,6 +13,11 @@
 #include <di/di.h>
 #endif
 
+#ifdef HW_DOL
+#define mfpvr()   ({unsigned int rval; \
+      asm volatile("mfpvr %0" : "=r" (rval)); rval;})
+#endif
+
 /* DVD Globals */
 #define GC_CPU_VERSION 0x00083214
 extern int previously_initd;

@@ -219,10 +219,16 @@ void RecompCache_Init(void){
 		__lwp_heap_init(cache, malloc(RECOMP_CACHE_SIZE),
 		                RECOMP_CACHE_SIZE, 32);
 	}
+	
 	if(!meta_cache){
 		meta_cache = malloc(sizeof(heap_cntrl));
+#ifdef HW_RVL		
 		__lwp_heap_init(meta_cache, RECOMPMETA_LO,
 		                RECOMPMETA_SIZE, 32);
+#else
+    __lwp_heap_init(meta_cache, malloc(2*1024*1024),
+		                2*1024*1024, 32);
+#endif
 	}
 }
 

@@ -9,7 +9,7 @@
 #ifdef HW_RVL
 #define RECOMP_CACHE_SIZE (8*1024*1024)
 #else
-#define RECOMP_CACHE_SIZE (5*1024*1024)
+#define RECOMP_CACHE_SIZE (4*1024*1024)
 #endif
 
 // Allocate and free memory to be used for recompiled code
