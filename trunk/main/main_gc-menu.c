@@ -76,6 +76,7 @@ extern timers Timers;
        char wpadNeedScan;
        char shutdown;
 	   char saveStateDevice;
+	   char pakMode[4];
 
 extern void gfx_set_fb(unsigned int* fb1, unsigned int* fb2);
 // -- End plugin data --
@@ -125,6 +126,10 @@ int main(){
 	creditsScrolling = 0; // Normal menu for now
 	dynacore         = 1; // Dynarec
 	screenMode		 = 0; // Stretch FB horizontally
+	pakMode[0]		 = PAKMODE_MEMPAK; // memPak plugged into controller 1
+	pakMode[1]		 = PAKMODE_MEMPAK;
+	pakMode[2]		 = PAKMODE_MEMPAK;
+	pakMode[3]		 = PAKMODE_MEMPAK;
 #ifdef GLN64_GX
 // glN64 specific  settings
  	glN64_useFrameBufferTextures = 0; // Disable FrameBuffer textures
