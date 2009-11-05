@@ -10,7 +10,7 @@ Input::Input()
 #ifdef HW_RVL
 	CONF_Init();
 	WPAD_Init();
-	WPAD_SetIdleTimeout(30);
+	WPAD_SetIdleTimeout(120);
 	WPAD_SetVRes(WPAD_CHAN_ALL, 640, 480);
 	WPAD_SetDataFormat(WPAD_CHAN_ALL, WPAD_FMT_BTNS_ACC_IR); 
 #endif
