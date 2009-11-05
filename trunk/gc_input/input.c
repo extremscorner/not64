@@ -10,6 +10,7 @@
 #include "Controller_#1.1.h"
 #include "PakIO.h"
 #include "controller.h"
+#include "../main/wii64config.h"
 
 #ifdef USE_GUI
 
@@ -214,7 +215,8 @@ EXPORT void CALL InitiateControllers (CONTROL_INFO ControlInfo)
 			controllers[i].number  = w;
 			controllers[i].control->assign(w,i);
 			control_info.Controls[i].Present = 1;
-			control_info.Controls[i].Plugin  = PLUGIN_MEMPAK;
+			if (pakMode[i] == PAKMODE_MEMPAK)	control_info.Controls[i].Plugin  = PLUGIN_MEMPAK;
+			else								control_info.Controls[i].Plugin  = PLUGIN_RAW;
 			// Don't assign the next type over this one or the same controller
 			++num_assigned[t];
 			break; 

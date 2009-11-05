@@ -1,5 +1,6 @@
 #include "MenuContext.h"
 #include "SettingsFrame.h"
+#include "ConfigurePaksFrame.h"
 #include "../libgui/Button.h"
 #include "../libgui/TextBox.h"
 #include "../libgui/resources.h"
@@ -147,8 +148,8 @@ struct ButtonInfo
 	{	NULL,	FRAME_STRINGS[20],	325.0,	380.0,	 75.0,	40.0,	21,	 1,	24,	24,	Func_FbTexturesOn,		Func_ReturnFromSettingsFrame }, // FbTex: On
 	{	NULL,	FRAME_STRINGS[21],	420.0,	380.0,	 75.0,	40.0,	22,	 1,	23,	23,	Func_FbTexturesOff,		Func_ReturnFromSettingsFrame }, // FbTex: Off
 	//Buttons for Input Tab (starts at button[25])
-	{	NULL,	FRAME_STRINGS[24],	180.0,	100.0,	280.0,	40.0,	 2,	26,	-1,	-1,	Func_ConfigureInput,	Func_ReturnFromSettingsFrame }, // Show FPS: On
-	{	NULL,	FRAME_STRINGS[25],	180.0,	170.0,	280.0,	40.0,	25,	 2,	-1,	-1,	Func_ConfigurePaks,		Func_ReturnFromSettingsFrame }, // Show FPS: Off
+	{	NULL,	FRAME_STRINGS[24],	180.0,	100.0,	280.0,	40.0,	 2,	26,	-1,	-1,	Func_ConfigureInput,	Func_ReturnFromSettingsFrame }, // Configure Mappings
+	{	NULL,	FRAME_STRINGS[25],	180.0,	170.0,	280.0,	40.0,	25,	 2,	-1,	-1,	Func_ConfigurePaks,		Func_ReturnFromSettingsFrame }, // Configure Paks
 	//Buttons for Audio Tab (starts at button[27])
 	{	NULL,	FRAME_STRINGS[27],	345.0,	100.0,	 75.0,	40.0,	 3,	 3,	28,	28,	Func_DisableAudioYes,	Func_ReturnFromSettingsFrame }, // Disable Audio: Yes
 	{	NULL,	FRAME_STRINGS[28],	440.0,	100.0,	 75.0,	40.0,	 3,	 3,	27,	27,	Func_DisableAudioNo,	Func_ReturnFromSettingsFrame }, // Disable Audio: No
@@ -230,6 +231,8 @@ SettingsFrame::SettingsFrame()
 
 SettingsFrame::~SettingsFrame()
 {
+	for (int i = 0; i < NUM_FRAME_TEXTBOXES; i++)
+		delete FRAME_TEXTBOXES[i].textBox;
 	for (int i = 0; i < NUM_FRAME_BUTTONS; i++)
 	{
 		menu::Cursor::getInstance().removeComponent(this, FRAME_BUTTONS[i].button);
@@ -611,7 +614,8 @@ void Func_ConfigureInput()
 
 void Func_ConfigurePaks()
 {
-	menu::MessageBox::getInstance().setMessage("Controller Paks not implemented");
+//	menu::MessageBox::getInstance().setMessage("Controller Paks not implemented");
+	pMenuContext->setActiveFrame(MenuContext::FRAME_CONFIGUREPAKS,ConfigurePaksFrame::SUBMENU_REINIT);
 }
 
 void Func_DisableAudioYes()

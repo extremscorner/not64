@@ -81,6 +81,7 @@ void Focus::updateFocus()
 			if (currentButtonsDownGC & PAD_BUTTON_A) buttonsDown |= ACTION_SELECT;
 			if (currentButtonsDownGC & PAD_BUTTON_B) buttonsDown |= ACTION_BACK;
 			if (primaryFocusOwner) primaryFocusOwner = primaryFocusOwner->updateFocus(focusDirection,buttonsDown);
+			else primaryFocusOwner = currentFrame->updateFocus(focusDirection,buttonsDown);
 			previousButtonsGC[i] = currentButtonsGC;
 			break;
 		}
@@ -129,6 +130,7 @@ void Focus::updateFocus()
 			if (currentButtonsDownWii & (WPAD_BUTTON_A | WPAD_CLASSIC_BUTTON_A)) buttonsDown |= ACTION_SELECT;
 			if (currentButtonsDownWii & (WPAD_BUTTON_B | WPAD_CLASSIC_BUTTON_B)) buttonsDown |= ACTION_BACK;
 			if (primaryFocusOwner) primaryFocusOwner = primaryFocusOwner->updateFocus(focusDirection,buttonsDown);
+			else primaryFocusOwner = currentFrame->updateFocus(focusDirection,buttonsDown);
 			previousButtonsWii[i] = wiiPad[i].btns_h;
 			break;
 		}

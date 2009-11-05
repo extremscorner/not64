@@ -13,7 +13,8 @@ MenuContext::MenuContext(GXRModeObj *vmode)
 		  loadSaveFrame(0),
 		  saveGameFrame(0),
 		  settingsFrame(0),
-		  selectCPUFrame(0)
+		  selectCPUFrame(0),
+		  configurePaksFrame(0)
 {
 	pMenuContext = this;
 
@@ -27,6 +28,7 @@ MenuContext::MenuContext(GXRModeObj *vmode)
 	saveGameFrame = new SaveGameFrame();
 	settingsFrame = new SettingsFrame();
 	selectCPUFrame = new SelectCPUFrame();
+	configurePaksFrame = new ConfigurePaksFrame();
 
 	menu::Gui::getInstance().addFrame(mainFrame);
 	menu::Gui::getInstance().addFrame(loadRomFrame);
@@ -36,6 +38,7 @@ MenuContext::MenuContext(GXRModeObj *vmode)
 	menu::Gui::getInstance().addFrame(saveGameFrame);
 	menu::Gui::getInstance().addFrame(settingsFrame);
 	menu::Gui::getInstance().addFrame(selectCPUFrame);
+	menu::Gui::getInstance().addFrame(configurePaksFrame);
 
 	menu::Focus::getInstance().setFocusActive(true);
 	setActiveFrame(FRAME_MAIN);
@@ -43,6 +46,7 @@ MenuContext::MenuContext(GXRModeObj *vmode)
 
 MenuContext::~MenuContext()
 {
+	delete configurePaksFrame;
 	delete selectCPUFrame;
 	delete settingsFrame;
 	delete saveGameFrame;
@@ -97,6 +101,8 @@ void MenuContext::setActiveFrame(int frameIndex)
 	case FRAME_SELECTCPU:
 		currentActiveFrame = selectCPUFrame;
 		break;
+	case FRAME_CONFIGUREPAKS:
+		currentActiveFrame = configurePaksFrame;
 	}
 
 	if(currentActiveFrame)
