@@ -39,6 +39,7 @@ unsigned int MALLOC_MEM2 = 0;
 #include "../gc_memory/tlb.h"
 #include "../gc_memory/pif.h"
 #include "ROM-Cache.h"
+#include "wii64config.h"
 
 /* NECESSARY FUNCTIONS AND VARIABLES */
 

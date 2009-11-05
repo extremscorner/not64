@@ -1,6 +1,7 @@
 #ifdef __GX__
 #include <stdio.h>
 #include <gccore.h>
+#include <malloc.h>
 #include <ogc/lwp_heap.h>
 # ifdef MENU_V2
 #include "../libgui/IPLFont.h"
@@ -398,7 +399,7 @@ void VI_GX_renderCpuFramebuffer()
 	//Init texture cache heap if not yet inited
 	if(!GXtexCache)
 	{
-		GXtexCache = (heap_cntrl*)malloc(sizeof(heap_cntrl));
+		GXtexCache = (heap_cntrl*)memalign(32,sizeof(heap_cntrl));
 #ifdef HW_RVL
 		__lwp_heap_init(GXtexCache, TEXCACHE_LO,GX_TEXTURE_CACHE_SIZE, 32);
 #else //HW_RVL
