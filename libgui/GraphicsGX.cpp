@@ -33,7 +33,10 @@ Graphics::Graphics(GXRModeObj *rmode)
 		vmode->viXOrigin = (VI_MAX_WIDTH_PAL - 678) / 2;
 	}
 #endif
+	vmode->efbHeight = viewportHeight;
+
 	VIDEO_Configure(vmode);
+	
 
 	xfb[0] = MEM_K0_TO_K1(SYS_AllocateFramebuffer(vmode));
 	xfb[1] = MEM_K0_TO_K1(SYS_AllocateFramebuffer(vmode));
