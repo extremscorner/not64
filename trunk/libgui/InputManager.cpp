@@ -2,8 +2,10 @@
 #include "FocusManager.h"
 #include "CursorManager.h"
 
-namespace menu {
+void ShutdownWii();
 
+namespace menu {
+	
 Input::Input()
 {
 	PAD_Init();
@@ -13,6 +15,9 @@ Input::Input()
 	WPAD_SetIdleTimeout(120);
 	WPAD_SetVRes(WPAD_CHAN_ALL, 640, 480);
 	WPAD_SetDataFormat(WPAD_CHAN_ALL, WPAD_FMT_BTNS_ACC_IR); 
+	WPAD_SetPowerButtonCallback((WPADShutdownCallback)ShutdownWii);
+	SYS_SetPowerCallback(ShutdownWii);
+
 #endif
 //	VIDEO_SetPostRetraceCallback (PAD_ScanPads);
 }

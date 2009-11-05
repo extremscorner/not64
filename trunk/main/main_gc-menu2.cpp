@@ -86,7 +86,7 @@ extern timers Timers;
        char creditsScrolling;
        char padNeedScan;
        char wpadNeedScan;
-       char shutdown;
+       char shutdown = 0;
 	   char nativeSaveDevice;
 	   char saveStateDevice;
        char autoSave;

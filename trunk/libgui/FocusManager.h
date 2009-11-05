@@ -16,6 +16,7 @@ public:
 	void setFocusActive(bool active);
 	void clearInputData();
 	void clearPrimaryFocus();
+	void setFreezeAction(bool freezeAction);
 	enum FocusDirection
 	{
 		DIRECTION_NONE=0,
@@ -39,7 +40,7 @@ public:
 private:
 	Focus();
 	~Focus();
-	bool focusActive, pressed, frameSwitch, clearInput;
+	bool focusActive, pressed, frameSwitch, clearInput, freezeAction;
 	int buttonsPressed, previousButtonsPressed;
 	u32 previousButtonsWii[4];
 	u16 previousButtonsGC[4];

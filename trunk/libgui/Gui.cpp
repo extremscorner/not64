@@ -6,9 +6,18 @@
 #include "MessageBox.h"
 #include "LoadingBar.h"
 
+extern "C" {
+#ifdef WII
+#include <di/di.h>
+#endif 
+}
+
+extern char shutdown;
+
 namespace menu {
 
 Gui::Gui()
+	: fade(9)
 {
 }
 
@@ -50,6 +59,41 @@ void Gui::draw()
 	if (MessageBox::getInstance().getActive()) MessageBox::getInstance().drawMessageBox(*gfx);
 	if (LoadingBar::getInstance().getActive()) LoadingBar::getInstance().drawLoadingBar(*gfx);
 	Cursor::getInstance().drawCursor(*gfx);
+
+	if(shutdown)
+	{
+		Cursor::getInstance().setFreezeAction(true);
+		Focus::getInstance().setFreezeAction(true);
+		gfx->enableBlending(true);
+		gfx->setTEV(GX_PASSCLR);
+		gfx->setDepth(-10.0f);
+		gfx->newModelView();
+		gfx->loadModelView();
+		gfx->loadOrthographic();
+
+		gfx->setColor((GXColor){0, 0, 0, fade});
+		gfx->fillRect(0, 0, 640, 480);
+		
+		if(fade == 255)
+		{
+			VIDEO_SetBlack(true);
+			VIDEO_Flush();
+		 	VIDEO_WaitVSync();
+			if(shutdown==1)	//Power off System
+				SYS_ResetSystem(SYS_POWEROFF, 0, 0);
+			else			//Return to Loader
+			{
+#ifdef WII
+				DI_Close();
+#endif
+				void (*rld)() = (void (*)()) 0x80001800;
+				rld();
+			}
+		}
+
+		char increment = 3;
+		fade = fade +increment > 255 ? 255 : fade + increment;
+	}
 
 	gfx->swapBuffers();
 }

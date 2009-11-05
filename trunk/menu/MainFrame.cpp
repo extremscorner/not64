@@ -3,6 +3,7 @@
 #include "SettingsFrame.h"
 #include "../libgui/Button.h"
 #include "../libgui/resources.h"
+#include "../libgui/InputManager.h"
 #include "../libgui/FocusManager.h"
 #include "../libgui/CursorManager.h"
 #include "../libgui/MessageBox.h"
@@ -152,13 +153,17 @@ void Func_Credits()
 	menu::MessageBox::getInstance().setMessage(CreditsInfo);
 }
 
+extern char shutdown;
+
 void Func_ExitToLoader()
 {
-#ifdef WII
-	DI_Close();
-#endif
-	void (*rld)() = (void (*)()) 0x80001800;
-	rld();
+	if(menu::MessageBox::getInstance().askMessage("Are you sure you want to exit to loader?"))
+		shutdown = 2;
+//#ifdef WII
+//	DI_Close();
+//#endif
+//	void (*rld)() = (void (*)()) 0x80001800;
+//	rld();
 }
 
 extern "C" {
@@ -193,6 +198,23 @@ void Func_PlayGame()
 
 	usleep(1000);			//This sleep prevents the PAD_Init() from failing
 	control_info_init();	//TODO: This controller re-poll might need rethinking when we implement reconfigurable input
+
+	//Wait until 'A' button released before play/resume game
+	int buttonHeld = 1;
+	while(buttonHeld)
+	{
+		buttonHeld = 0;
+/* //For some reason the following code makes MessageBox crash
+		menu::Input::getInstance().refreshInput();
+#ifdef HW_RVL
+		WPADData* wiiPad = menu::Input::getInstance().getWpad();
+#endif
+		for (int i=0; i<4; i++)
+		{
+			if(PAD_ButtonsHeld(i) & PAD_BUTTON_A) buttonHeld++;
+			if(wiiPad[i].btns_h & (WPAD_BUTTON_A | WPAD_CLASSIC_BUTTON_A)) buttonHeld++;
+		}*/
+	}
 
 	resumeAudio();
 	resumeInput();
@@ -244,7 +266,7 @@ void Func_PlayGame()
     		switch (nativeSaveDevice)
     		{
     			case NATIVESAVEDEVICE_SD:
-    				menu::MessageBox::getInstance().setMessage("Automatically saved to SD card");
+    				menu::MessageBox::getInstance().fadeMessage("Automatically saved to SD card");
     				break;
     			case NATIVESAVEDEVICE_USB:
     				menu::MessageBox::getInstance().setMessage("Automatically saved to USB device");
