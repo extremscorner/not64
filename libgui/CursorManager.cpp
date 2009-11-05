@@ -22,6 +22,7 @@ Cursor::Cursor()
 		  pressed(false),
 		  frameSwitch(true),
 		  clearInput(true),
+		  freezeAction(false),
 		  buttonsPressed(0),
 		  activeChan(-1)
 {
@@ -115,6 +116,7 @@ void Cursor::setCursorFocus(Component* component)
 	if (buttonsPressed & WPAD_BUTTON_A) buttonsDown |= Focus::ACTION_SELECT;
 	if (buttonsPressed & WPAD_BUTTON_B) buttonsDown |= Focus::ACTION_BACK;
 #endif
+	if (freezeAction) buttonsDown = 0;
 	if (component) newHoverOverComponent = component->updateFocus(focusDirection,buttonsDown);
 	if (newHoverOverComponent) 
 	{
@@ -208,6 +210,11 @@ void Cursor::clearCursorFocus()
 {
 	if (hoverOverComponent) hoverOverComponent->setFocus(false);
 	cursorX = cursorY = 0.0f;
+}
+
+void Cursor::setFreezeAction(bool freeze)
+{
+	freezeAction = freeze;
 }
 
 } //namespace menu 

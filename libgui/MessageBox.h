@@ -13,6 +13,10 @@ class MessageBox : public Frame
 {
 public:
 	void setMessage(const char* text);
+	int askMessage(const char* text);
+	void fadeMessage(const char* text);
+	void setReturnValue(int returnValue);
+	int getReturnValue();
 	void deactivate();
 	bool getActive();
 	void drawMessageBox(Graphics& gfx);
@@ -32,6 +36,8 @@ private:
 	Frame *currentCursorFrame;
 	Frame *currentFocusFrame;
 	GXColor boxColor, textColor;
+	int returnValue;
+	float messageFade;
 
 };
 

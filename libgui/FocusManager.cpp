@@ -10,6 +10,7 @@ Focus::Focus()
 		  pressed(false),
 		  frameSwitch(true),
 		  clearInput(true),
+		  freezeAction(false),
 		  buttonsPressed(0),
 		  focusList(0),
 		  primaryFocusOwner(0),
@@ -80,6 +81,11 @@ void Focus::updateFocus()
 			}
 			if (currentButtonsDownGC & PAD_BUTTON_A) buttonsDown |= ACTION_SELECT;
 			if (currentButtonsDownGC & PAD_BUTTON_B) buttonsDown |= ACTION_BACK;
+			if (freezeAction)
+			{
+				focusDirection = DIRECTION_NONE;
+				buttonsDown = 0;
+			}
 			if (primaryFocusOwner) primaryFocusOwner = primaryFocusOwner->updateFocus(focusDirection,buttonsDown);
 			else primaryFocusOwner = currentFrame->updateFocus(focusDirection,buttonsDown);
 			previousButtonsGC[i] = currentButtonsGC;
@@ -129,6 +135,11 @@ void Focus::updateFocus()
 			}
 			if (currentButtonsDownWii & (WPAD_BUTTON_A | WPAD_CLASSIC_BUTTON_A)) buttonsDown |= ACTION_SELECT;
 			if (currentButtonsDownWii & (WPAD_BUTTON_B | WPAD_CLASSIC_BUTTON_B)) buttonsDown |= ACTION_BACK;
+			if (freezeAction)
+			{
+				focusDirection = DIRECTION_NONE;
+				buttonsDown = 0;
+			}
 			if (primaryFocusOwner) primaryFocusOwner = primaryFocusOwner->updateFocus(focusDirection,buttonsDown);
 			else primaryFocusOwner = currentFrame->updateFocus(focusDirection,buttonsDown);
 			previousButtonsWii[i] = wiiPad[i].btns_h;
@@ -180,6 +191,11 @@ void Focus::clearPrimaryFocus()
 	if(primaryFocusOwner) primaryFocusOwner->setFocus(false);
 	primaryFocusOwner = NULL;
 	frameSwitch = true;
+}
+
+void Focus::setFreezeAction(bool freeze)
+{
+	freezeAction = freeze;
 }
 
 } //namespace menu 

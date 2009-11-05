@@ -17,6 +17,7 @@ public:
 	Frame* getCurrentFrame();
 	void clearInputData();
 	void clearCursorFocus();
+	void setFreezeAction(bool freezeAction);
 	static Cursor& getInstance()
 	{
 		static Cursor obj;
@@ -40,7 +41,7 @@ private:
 	Image *pointerImage, *grabImage;
 	float cursorX, cursorY, cursorRot, imageCenterX, imageCenterY;
 	Component *foundComponent, *hoverOverComponent;
-	bool pressed, frameSwitch, clearInput;
+	bool pressed, frameSwitch, clearInput, freezeAction;
 	int buttonsPressed, previousButtonsPressed[4], activeChan;
 };
 

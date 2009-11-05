@@ -26,6 +26,7 @@ private:
 	Gui();
 	~Gui();
 	FrameList frameList;
+	char fade;
 };
 
 } //namespace menu 
