@@ -15,7 +15,21 @@
 #include "../gui/GUI.h"
 #include "ROM-Cache.h"
 #include "rom.h"
+
+void DUMMY_print(char* string) { }
+void DUMMY_setLoadProg(float percent) { }
+void DUMMY_draw() { }
+
+#ifdef MENU_V2
+void LoadingBar_showBar(float percent, const char* string);
+#define PRINT DUMMY_print
+#define SETLOADPROG DUMMY_setLoadProg
+#define DRAWGUI DUMMY_draw
+#else
 #define PRINT GUI_print
+#define SETLOADPROG GUI_setLoadProg
+#define DRAWGUI GUI_draw
+#endif
 
 #define BLOCK_MASK  (BLOCK_SIZE-1)
 #define OFFSET_MASK (0xFFFFFFFF-BLOCK_MASK)
@@ -193,8 +207,10 @@ void ROMCache_read(u32* ram_dest, u32 rom_offset, u32 length){
 int ROMCache_load(fileBrowser_file* file){
 	char txt[64];
 	
+#ifndef MENU_V2
 	GUI_clear();
 	GUI_centerText(true);
+#endif
 	sprintf(txt, "Loading ROM %s into ARAM. Please be patient...", ROM_too_big ? "partially" : "fully");
 	PRINT(txt);
 	
@@ -225,13 +241,16 @@ int ROMCache_load(fileBrowser_file* file){
 				offset += bytes_read;
 				
 				if(!loads_til_update--){
-					GUI_setLoadProg((float)i/available + (float)offset/(available*BLOCK_SIZE));
-					GUI_draw();
+					SETLOADPROG((float)i/available + (float)offset/(available*BLOCK_SIZE));
+					DRAWGUI();
+#ifdef MENU_V2
+			LoadingBar_showBar((float)i/available + (float)offset/(available*BLOCK_SIZE), txt);
+#endif
 					loads_til_update = 32;
 				}
 				
 			} while(offset != BLOCK_SIZE);
-			GUI_setLoadProg( -1.0f );
+			SETLOADPROG( -1.0f );
 		}
 	} else {
 		ARAM_block_alloc_contiguous(&ROM, 'R', ROM_size / BLOCK_SIZE);
@@ -252,13 +271,14 @@ int ROMCache_load(fileBrowser_file* file){
 			offset += bytes_read;
 			
 			if(!loads_til_update--){
-				GUI_setLoadProg( (float)offset/ROM_size );
-				GUI_draw();
+				SETLOADPROG( (float)offset/ROM_size );
+				DRAWGUI();
+				LoadingBar_showBar((float)offset/ROM_size, txt);
 				loads_til_update = 32;
 			}
 			
 		} while(bytes_read == bytes_to_read && offset != ROM_size);
-		GUI_setLoadProg( -1.0f );
+		SETLOADPROG( -1.0f );
 	}
 	free(buffer);
 	return 0; //should fix to return if reads were successful

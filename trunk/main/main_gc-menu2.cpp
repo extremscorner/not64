@@ -186,6 +186,7 @@ int main(int argc, char* argv[]){
   //config stuff
   fileBrowser_file* configFile_file;
   int (*configFile_init)(fileBrowser_file*) = fileBrowser_libfat_init;
+#ifdef HW_RVL
   if(argv[0][0] == 'u') {  //assume USB
     configFile_file = &saveDir_libfat_USB;
     if(configFile_init(configFile_file)) {                //only if device initialized ok
@@ -196,7 +197,9 @@ int main(int argc, char* argv[]){
       }
     }
   }
-  else /*if((argv[0][0]=='s') || (argv[0][0]=='/'))*/ { //assume SD
+  else /*if((argv[0][0]=='s') || (argv[0][0]=='/'))*/ 
+#endif  
+  { //assume SD
     configFile_file = &saveDir_libfat_Default;
     if(configFile_init(configFile_file)) {                //only if device initialized ok
       FILE* f = fopen( "sd:/wii64/settings.cfg", "rb" );  //attempt to open file
@@ -206,13 +209,13 @@ int main(int argc, char* argv[]){
       }
     }
   }
-
+#ifdef HW_RVL
   // Handle options passed in through arguments
   int i;
   for(i=1; i<argc; ++i){
 	  handleConfigPair(argv[i]);
   }
-
+#endif
 	while (menu->isRunning()) {
 		PAD_ScanPads();
 		if(PAD_ButtonsHeld(0) == PAD_BUTTON_START)
