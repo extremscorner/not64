@@ -226,8 +226,8 @@ void RecompCache_Init(void){
 		__lwp_heap_init(meta_cache, RECOMPMETA_LO,
 		                RECOMPMETA_SIZE, 32);
 #else
-    __lwp_heap_init(meta_cache, malloc(2*1024*1024),
-		                2*1024*1024, 32);
+    __lwp_heap_init(meta_cache, malloc(1*1024*1024),
+		                1*1024*1024, 32);
 #endif
 	}
 }
