@@ -39,6 +39,7 @@ OBJ		=main/rom_gc.o \
 		menu/SaveGameFrame.o \
 		menu/SettingsFrame.o\
 		menu/SelectCPUFrame.o\
+		menu/ConfigurePaksFrame.o\
 		libgui/Button.o \
 		libgui/Component.o \
 		libgui/CursorManager.o \

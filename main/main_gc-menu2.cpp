@@ -60,7 +60,7 @@ static void Initialise(void);
 static void gfx_info_init(void);
 static void audio_info_init(void);
 static void rsp_info_init(void);
-static void control_info_init(void);
+void control_info_init(void);
 // -- End init functions --
 
 // -- Plugin data --
@@ -91,6 +91,7 @@ extern timers Timers;
 	   char saveStateDevice;
        char autoSave;
        char screenMode = 0;
+	   char pakMode[4];
 
 struct {
 	char* key;
@@ -108,6 +109,10 @@ struct {
   { "StatesDevice", &saveStateDevice, SAVESTATEDEVICE_SD, SAVESTATEDEVICE_USB },
   { "AutoSave", &autoSave, AUTOSAVE_DISABLE, AUTOSAVE_ENABLE },
   { "LimitVIs", &Timers.limitVIs, LIMITVIS_NONE, LIMITVIS_WAIT_FOR_FRAME },
+  { "Pak1", &pakMode[0], PAKMODE_MEMPAK, PAKMODE_RUMBLEPAK },
+  { "Pak2", &pakMode[1], PAKMODE_MEMPAK, PAKMODE_RUMBLEPAK },
+  { "Pak3", &pakMode[2], PAKMODE_MEMPAK, PAKMODE_RUMBLEPAK },
+  { "Pak4", &pakMode[3], PAKMODE_MEMPAK, PAKMODE_RUMBLEPAK },
 };
 void handleConfigPair(char* kv);
 void readConfig(FILE* f);
@@ -167,6 +172,10 @@ int main(int argc, char* argv[]){
 	creditsScrolling = 0; // Normal menu for now
 	dynacore         = 1; // Dynarec
 	screenMode		 = 0; // Stretch FB horizontally
+	pakMode[0]		 = PAKMODE_MEMPAK; // memPak plugged into controller 1
+	pakMode[1]		 = PAKMODE_MEMPAK;
+	pakMode[2]		 = PAKMODE_MEMPAK;
+	pakMode[3]		 = PAKMODE_MEMPAK;
 #ifdef GLN64_GX
 // glN64 specific  settings
  	glN64_useFrameBufferTextures = 0; // Disable FrameBuffer textures
@@ -405,7 +414,7 @@ static void audio_info_init(void){
 	initiateAudio(audio_info);
 }
 
-static void control_info_init(void){
+void control_info_init(void){
 	control_info.MemoryBswaped = TRUE;
 	control_info.HEADER = (BYTE*)ROM_HEADER;
 	control_info.Controls = Controls;

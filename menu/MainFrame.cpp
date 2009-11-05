@@ -172,12 +172,14 @@ void resumeAudio(void); void resumeInput(void);
 void go(void); 
 }
 
+void control_info_init();
+
 extern char autoSave;
 extern BOOL sramWritten;
 extern BOOL eepromWritten;
 extern BOOL mempakWritten;
 extern BOOL flashramWritten;
-
+extern "C" unsigned int usleep(unsigned int us);
 
 void Func_PlayGame()
 {
@@ -188,6 +190,9 @@ void Func_PlayGame()
 	}
 	
 	menu::Gui::getInstance().gfx->clearEFB((GXColor){0, 0, 0, 0xFF}, 0x000000);
+
+	usleep(1000);			//This sleep prevents the PAD_Init() from failing
+	control_info_init();	//TODO: This controller re-poll might need rethinking when we implement reconfigurable input
 
 	resumeAudio();
 	resumeInput();

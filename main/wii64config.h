@@ -88,6 +88,13 @@ enum screenMode
 	SCREENMODE_16x9
 };
 
+extern char pakMode[4];
+enum pakMode
+{
+	PAKMODE_MEMPAK=0,
+	PAKMODE_RUMBLEPAK
+};
+
 #ifdef GLN64_GX
 extern char glN64_useFrameBufferTextures;
 enum glN64_useFrameBufferTextures
