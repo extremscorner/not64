@@ -37,9 +37,10 @@
 #define PRINT printf
 #endif
 
-#include "../r4300/r4300.h"
 #include "memory.h"
+#include "../r4300/r4300.h"
 #include "../main/guifuncs.h"
+#include "../fileBrowser/fileBrowser.h"
 
 
 #include <ogc/card.h>
@@ -73,8 +74,8 @@ int loadFlashram(fileBrowser_file* savepath){
 	int i, result = 0;
 	fileBrowser_file saveFile;
 	memcpy(&saveFile, savepath, sizeof(fileBrowser_file));
-	strcat((char*)saveFile.name, ROM_SETTINGS.goodname);
-	strcat((char*)saveFile.name, ".fla");
+	memset(&saveFile.name[0],0,FILE_BROWSER_MAX_PATH_LEN);
+	sprintf((char*)saveFile.name,"%s/%s%s.fla",savepath->name,ROM_SETTINGS.goodname,saveregionstr());
 
 	if(saveFile_readFile(&saveFile, &i, 4) == 4) {  //file exists
 		saveFile.offset = 0;
@@ -97,8 +98,8 @@ int saveFlashram(fileBrowser_file* savepath){
   if(!flashramWritten) return 0;
 	fileBrowser_file saveFile;
 	memcpy(&saveFile, savepath, sizeof(fileBrowser_file));
-	strcat((char*)saveFile.name, ROM_SETTINGS.goodname);
-	strcat((char*)saveFile.name, ".fla");
+	memset(&saveFile.name[0],0,FILE_BROWSER_MAX_PATH_LEN);
+	sprintf((char*)saveFile.name,"%s/%s%s.fla",savepath->name,ROM_SETTINGS.goodname,saveregionstr());
 
 	if(saveFile_writeFile(&saveFile, flashram, 0x20000)!=0x20000)
 	  return -1;

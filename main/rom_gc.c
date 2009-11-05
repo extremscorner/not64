@@ -255,5 +255,47 @@ void countrycodestring(unsigned short countrycode, char *string)
     }
 }
 
-
+char *saveregionstr()
+{
+    switch (ROM_HEADER->Country_code&0xFF)
+    {
+    case 0:    /* Demo */
+        return "(Demo)";
+        break;
+    case '7':  /* Beta */
+        return "(Beta)";
+        break;
+    case 0x41: /* Japan / USA */
+        return "(JU)";
+        break;
+    case 0x44: /* Germany */
+        return "(G)";
+        break;
+    case 0x45: /* USA */
+        return "(U)";
+        break;
+    case 0x46: /* France */
+        return "(F)";
+        break;
+    case 'I':  /* Italy */
+        return "(I)";
+        break;
+    case 0x4A: /* Japan */
+        return "(J)";
+        break;
+    case 'S':  /* Spain */
+        return "(S)";
+        break;
+    case 0x55: case 0x59:  /* Australia */
+        return "(A)";
+        break;
+    case 0x50: case 0x58: case 0x20:
+    case 0x21: case 0x38: case 0x70:
+        return "(E)";
+        break;
+    default:
+        return "(Unk)";
+        break;
+    }
+}
 

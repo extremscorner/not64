@@ -34,21 +34,21 @@
 //#define PRINT printf
 #endif
 
-#include <ogc/card.h>
+#include <stdio.h>
+#include <malloc.h>
 #include "dma.h"
 #include "memory.h"
 #include "../main/rom.h"
 #include "../main/ROM-Cache.h"
-#include <stdio.h>
+#include "../main/guifuncs.h"
 #include "../r4300/r4300.h"
 #include "../r4300/interupt.h"
 #include "../r4300/macros.h"
 #include "../r4300/Invalid_Code.h"
-#include <malloc.h>
+#include "../r4300/ops.h"
+#include "../fileBrowser/fileBrowser.h"
 #include "pif.h"
 #include "flashram.h"
-#include "../main/guifuncs.h"
-#include "../r4300/ops.h"
 #include "Saves.h"
 
 #ifdef USE_EXPANSION
@@ -70,8 +70,8 @@ int loadSram(fileBrowser_file* savepath){
 	int i, result = 0;
 	fileBrowser_file saveFile;
 	memcpy(&saveFile, savepath, sizeof(fileBrowser_file));
-	strcat((char*)saveFile.name, ROM_SETTINGS.goodname);
-	strcat((char*)saveFile.name, ".sra");
+	memset(&saveFile.name[0],0,FILE_BROWSER_MAX_PATH_LEN);
+	sprintf((char*)saveFile.name,"%s/%s%s.sra",savepath->name,ROM_SETTINGS.goodname,saveregionstr());
 
 	if(saveFile_readFile(&saveFile, &i, 4) == 4){ //file exists
 		saveFile.offset = 0;
@@ -95,8 +95,8 @@ int saveSram(fileBrowser_file* savepath){
   if(!sramWritten) return 0;
 	fileBrowser_file saveFile;
 	memcpy(&saveFile, savepath, sizeof(fileBrowser_file));
-	strcat((char*)saveFile.name, ROM_SETTINGS.goodname);
-	strcat((char*)saveFile.name, ".sra");
+	memset(&saveFile.name[0],0,FILE_BROWSER_MAX_PATH_LEN);
+	sprintf((char*)saveFile.name,"%s/%s%s.sra",savepath->name,ROM_SETTINGS.goodname,saveregionstr());
 
 	if(saveFile_writeFile(&saveFile, sram, 0x8000)!=0x8000)
 	  return -1;
