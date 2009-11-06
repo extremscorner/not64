@@ -25,6 +25,7 @@ public:
 
 private:
 	void drawQuad(u8 v0, u8 v1, u8 v2, u8 v3, u8 c);
+	void drawLine(u8 v0, u8 v1, u8 c);
 	int logoMode;
 	float x, y, z, size;
 	float rotateAuto, rotateX, rotateY;

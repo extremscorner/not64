@@ -182,7 +182,8 @@ u8 logo_colors[] ATTRIBUTE_ALIGN (32) =
 	254,  32,  21, 255,		// 2 orange/red
 	255, 192,   1, 255,		// 3 yellow/gold
 	230,   1,   1, 255,		// 4 red
-	190, 190, 190, 255,		// 4 light gray
+	190, 190, 190, 255,		// 5 light gray
+	255, 255, 255, 128,		// 6 white
 };
 
 
@@ -272,6 +273,8 @@ void Logo::drawComponent(Graphics& gfx)
 
 	GX_SetCullMode (GX_CULL_BACK); // show only the outside facing quads
 	GX_SetZMode(GX_ENABLE,GX_GEQUAL,GX_TRUE);
+
+	GX_SetLineWidth(12,GX_TO_ZERO);
 
 	// setup the vertex descriptor
 	GX_ClearVtxDesc ();
@@ -422,6 +425,73 @@ void Logo::drawComponent(Graphics& gfx)
 		drawQuad (43, 44, 71, 70, 5);
 		drawQuad (44, 46, 60, 71, 5);
 		GX_End ();
+
+		GX_Begin (GX_LINES, GX_VTXFMT0, 216);
+
+		drawQuad ( 0,  9,  9, 10, 6);	//Side A
+		drawQuad (10,  8,  8, 11, 6);
+		drawQuad (11, 12, 12,  3, 6);
+		drawQuad ( 3,  2,  2,  7, 6);
+		drawQuad ( 7,  5,  5,  4, 6);
+		drawQuad ( 4,  6,  6,  1, 6);
+		drawLine ( 1,  0, 6);
+
+		drawQuad (22, 23, 23, 21, 6);	//Side B
+		drawQuad (21, 24, 24, 25, 6);
+		drawQuad (25, 16, 16, 15, 6);
+		drawQuad (15, 20, 20, 18, 6);
+		drawQuad (18, 17, 17, 19, 6);
+		drawQuad (19, 14, 14, 13, 6);
+
+		drawQuad (35, 36, 36, 34, 6);	//Side C
+		drawQuad (34, 37, 37, 38, 6);
+		drawQuad (38, 29, 29, 28, 6);
+		drawQuad (28, 33, 33, 31, 6);
+		drawQuad (31, 30, 30, 32, 6);
+		drawQuad (32, 27, 27, 26, 6);
+
+		drawQuad (48, 49, 49, 47, 6);	//Side D
+		drawQuad (47, 50, 50, 51, 6);
+		drawLine (42, 41, 6);
+		drawQuad (41, 46, 46, 44, 6);
+		drawQuad (44, 43, 43, 45, 6);
+		drawQuad (45, 40, 40, 39, 6);
+
+		drawQuad (10, 52, 11, 53, 6);	//Top 
+		drawQuad (23, 53, 24, 54, 6);
+		drawQuad (36, 54, 37, 55, 6);
+		drawQuad (49, 55, 50, 52, 6);
+		drawQuad ( 8, 56, 21, 57, 6);
+		drawQuad (34, 58, 47, 59, 6);
+		drawQuad (52, 56, 56, 53, 6);
+		drawQuad (53, 57, 57, 54, 6);
+		drawQuad (54, 58, 58, 55, 6);
+		drawQuad (55, 59, 59, 52, 6);
+		drawQuad (52, 72, 53, 73, 6);	//Center Vertical
+		drawQuad (54, 74, 55, 75, 6);
+
+		drawQuad ( 1, 72,  2, 73, 6);	//bottom
+		drawQuad (14, 73, 15, 74, 6);
+		drawQuad (27, 74, 28, 75, 6);
+		drawQuad (40, 75, 41, 72, 6);
+
+		drawQuad ( 6, 60,  4, 64, 6);	//middle, radial
+		drawQuad ( 5, 65,  7, 61, 6);
+		drawQuad (19, 61, 17, 66, 6);
+		drawQuad (18, 67, 20, 62, 6);
+		drawQuad (32, 62, 30, 68, 6);
+		drawQuad (31, 69, 33, 63, 6);
+		drawQuad (45, 63, 43, 70, 6);
+		drawQuad (44, 71, 46, 60, 6);
+
+		drawQuad (60, 64, 64, 65, 6);	//middle, circumference
+		drawQuad (65, 61, 61, 66, 6);
+		drawQuad (66, 67, 67, 62, 6);
+		drawQuad (62, 68, 68, 69, 6);
+		drawQuad (69, 63, 63, 70, 6);
+		drawQuad (70, 71, 71, 60, 6);
+
+		GX_End ();
 	}
 		
 	gfx.drawInit();
@@ -439,6 +509,17 @@ void Logo::drawQuad(u8 v0, u8 v1, u8 v2, u8 v3, u8 c)
 	GX_Position1x8 (v2);
 	GX_Color1x8 (c);
 	GX_Position1x8 (v3);
+	GX_Color1x8 (c);
+}
+
+void Logo::drawLine(u8 v0, u8 v1, u8 c)
+{
+	// draws a line from 2 vertex idx and one color idx
+	// one 8bit position idx
+	GX_Position1x8 (v0);
+	// one 8bit color idx
+	GX_Color1x8 (c);
+	GX_Position1x8 (v1);
 	GX_Color1x8 (c);
 }
 
