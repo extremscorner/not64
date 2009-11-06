@@ -2142,19 +2142,26 @@ static int DSLL(MIPS_instr mips){
 	RegMapping rd = mapRegister64New( MIPS_GET_RD(mips) );
 	int sa = MIPS_GET_SA(mips);
 
-	// Shift MSW left by SA
-	GEN_SLWI(ppc, rd.hi, rt.hi, sa);
-	set_next_dst(ppc);
-	// Extract the bits shifted out of the LSW
-	// FIXME: If sa is 0, this wouldn't work properly
-	GEN_RLWINM(ppc, 0, rt.lo, sa, 32-sa, 31);
-	set_next_dst(ppc);
-	// Insert those bits into the MSW
-	GEN_OR(ppc, rd.hi, rd.hi, 0);
-	set_next_dst(ppc);
-	// Shift LSW left by SA
-	GEN_SLWI(ppc, rd.lo, rt.lo, sa);
-	set_next_dst(ppc);
+	if(sa){
+		// Shift MSW left by SA
+		GEN_SLWI(ppc, rd.hi, rt.hi, sa);
+		set_next_dst(ppc);
+		// Extract the bits shifted out of the LSW
+		GEN_RLWINM(ppc, 0, rt.lo, sa, 32-sa, 31);
+		set_next_dst(ppc);
+		// Insert those bits into the MSW
+		GEN_OR(ppc, rd.hi, rd.hi, 0);
+		set_next_dst(ppc);
+		// Shift LSW left by SA
+		GEN_SLWI(ppc, rd.lo, rt.lo, sa);
+		set_next_dst(ppc);
+	} else {
+		// Copy over the register
+		GEN_ADDI(ppc, rd.hi, rt.hi, 0);
+		set_next_dst(ppc);
+		GEN_ADDI(ppc, rd.lo, rt.lo, 0);
+		set_next_dst(ppc);
+	}
 
 	return CONVERT_SUCCESS;
 #endif
@@ -2171,19 +2178,26 @@ static int DSRL(MIPS_instr mips){
 	RegMapping rd = mapRegister64New( MIPS_GET_RD(mips) );
 	int sa = MIPS_GET_SA(mips);
 
-	// Shift LSW right by SA
-	GEN_SRWI(ppc, rd.lo, rt.lo, sa);
-	set_next_dst(ppc);
-	// Extract the bits shifted out of the MSW
-	// FIXME: If sa is 0, this wouldn't work properly
-	GEN_RLWINM(ppc, 0, rt.hi, 32-sa, 0, sa-1);
-	set_next_dst(ppc);
-	// Insert those bits into the LSW
-	GEN_OR(ppc, rd.lo, rt.lo, 0);
-	set_next_dst(ppc);
-	// Shift MSW right by SA
-	GEN_SRWI(ppc, rd.hi, rt.hi, sa);
-	set_next_dst(ppc);
+	if(sa){
+		// Shift LSW right by SA
+		GEN_SRWI(ppc, rd.lo, rt.lo, sa);
+		set_next_dst(ppc);
+		// Extract the bits shifted out of the MSW
+		GEN_RLWINM(ppc, 0, rt.hi, 32-sa, 0, sa-1);
+		set_next_dst(ppc);
+		// Insert those bits into the LSW
+		GEN_OR(ppc, rd.lo, rd.lo, 0);
+		set_next_dst(ppc);
+		// Shift MSW right by SA
+		GEN_SRWI(ppc, rd.hi, rt.hi, sa);
+		set_next_dst(ppc);
+	} else {
+		// Copy over the register
+		GEN_ADDI(ppc, rd.hi, rt.hi, 0);
+		set_next_dst(ppc);
+		GEN_ADDI(ppc, rd.lo, rt.lo, 0);
+		set_next_dst(ppc);
+	}
 
 	return CONVERT_SUCCESS;
 #endif
@@ -2200,19 +2214,26 @@ static int DSRA(MIPS_instr mips){
 	RegMapping rd = mapRegister64New( MIPS_GET_RD(mips) );
 	int sa = MIPS_GET_SA(mips);
 
-	// Shift LSW right by SA
-	GEN_SRWI(ppc, rd.lo, rt.lo, sa);
-	set_next_dst(ppc);
-	// Extract the bits shifted out of the MSW
-	// FIXME: If sa is 0, this wouldn't work properly
-	GEN_RLWINM(ppc, 0, rt.hi, 32-sa, 0, sa-1);
-	set_next_dst(ppc);
-	// Insert those bits into the LSW
-	GEN_OR(ppc, rd.lo, rt.lo, 0);
-	set_next_dst(ppc);
-	// Shift (arithmetically) MSW right by SA
-	GEN_SRAWI(ppc, rd.hi, rt.hi, sa);
-	set_next_dst(ppc);
+	if(sa){
+		// Shift LSW right by SA
+		GEN_SRWI(ppc, rd.lo, rt.lo, sa);
+		set_next_dst(ppc);
+		// Extract the bits shifted out of the MSW
+		GEN_RLWINM(ppc, 0, rt.hi, 32-sa, 0, sa-1);
+		set_next_dst(ppc);
+		// Insert those bits into the LSW
+		GEN_OR(ppc, rd.lo, rd.lo, 0);
+		set_next_dst(ppc);
+		// Shift (arithmetically) MSW right by SA
+		GEN_SRAWI(ppc, rd.hi, rt.hi, sa);
+		set_next_dst(ppc);
+	} else {
+		// Copy over the register
+		GEN_ADDI(ppc, rd.hi, rt.hi, 0);
+		set_next_dst(ppc);
+		GEN_ADDI(ppc, rd.lo, rt.lo, 0);
+		set_next_dst(ppc);
+	}
 
 	return CONVERT_SUCCESS;
 #endif

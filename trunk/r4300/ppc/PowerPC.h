@@ -166,7 +166,7 @@ PowerPC_instr Instruction(int opcode, ...);
 // X-Form
 #define PPC_FUNC_ADD             266
 #define PPC_FUNC_ADDC            10
-#define PPC_FUNC_ADDE            38
+#define PPC_FUNC_ADDE            138
 #define PPC_FUNC_ADDME           234
 #define PPC_FUNC_ADDZE           202
 
