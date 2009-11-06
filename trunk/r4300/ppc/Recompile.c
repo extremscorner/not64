@@ -261,6 +261,7 @@ void init_block(MIPS_instr* mips_code, PowerPC_block* ppc_block){
 		     blocks[paddr>>12]->funcs = NULL;
 		     blocks[paddr>>12]->start_address = paddr & ~0xFFF;
 		     blocks[paddr>>12]->end_address = (paddr & ~0xFFF) + 0x1000;
+		     init_block(mips_code, blocks[paddr>>12]);
 		}
 
 		paddr += ppc_block->end_address - ppc_block->start_address - 4;
@@ -271,6 +272,7 @@ void init_block(MIPS_instr* mips_code, PowerPC_block* ppc_block){
 		     blocks[paddr>>12]->funcs = NULL;
 		     blocks[paddr>>12]->start_address = paddr & ~0xFFF;
 		     blocks[paddr>>12]->end_address = (paddr & ~0xFFF) + 0x1000;
+		     init_block(mips_code + 0xffc, blocks[paddr>>12]);
 		}
 
 	} else {
@@ -287,6 +289,7 @@ void init_block(MIPS_instr* mips_code, PowerPC_block* ppc_block){
 					= (start+0x20000000) & ~0xFFF;
 				blocks[(start+0x20000000)>>12]->end_address
 					= ((start+0x20000000) & ~0xFFF) + 0x1000;
+				init_block(mips_code, blocks[(start+0x20000000)>>12]);
 			}
 		}
 		if(start >= 0xa0000000 && end < 0xc0000000 &&
@@ -300,6 +303,7 @@ void init_block(MIPS_instr* mips_code, PowerPC_block* ppc_block){
 					= (start-0x20000000) & ~0xFFF;
 				blocks[(start-0x20000000)>>12]->end_address
 					= ((start-0x20000000) & ~0xFFF) + 0x1000;
+				init_block(mips_code, blocks[(start-0x20000000)>>12]);
 			}
 		}
 	}
