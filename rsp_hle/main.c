@@ -263,7 +263,7 @@ __declspec(dllexport) DWORD DoRspCycles ( DWORD Cycles )
 #ifdef __WIN32__
 		       MessageBox(NULL, s, "unknown task", MB_OK);
 #else
-		       printf("%s\n", s);
+//		       printf("%s\n", s);
 #endif
 		    }
 	       }
@@ -278,7 +278,7 @@ __declspec(dllexport) DWORD DoRspCycles ( DWORD Cycles )
 #ifdef __WIN32__
 	MessageBox(NULL, s, "unknown task", MB_OK);
 #else
-	printf("%s\n", s);
+	//printf("%s\n", s);
 #endif
 
 	if (task->ucode_size <= 0x1000)
