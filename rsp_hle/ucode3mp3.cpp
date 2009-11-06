@@ -6,7 +6,9 @@
 # include <stdio.h>
 #endif
 
+extern "C" {
 #include "hle.h"
+}
 
 static u16 DeWindowLUT [0x420] = {
 	0x0000, 0xFFF3, 0x005D, 0xFF38, 0x037A, 0xF736, 0x0B37, 0xC00E,

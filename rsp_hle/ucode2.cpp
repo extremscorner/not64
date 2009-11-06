@@ -7,7 +7,9 @@
 # include <stdio.h>
 #endif
 
+extern "C" {
 #include "hle.h"
+}
 
 extern u8 BufferSpace[0x10000];
 
@@ -32,6 +34,8 @@ extern u16 ResampleLUT [0x200];
 
 bool isMKABI = false;
 bool isZeldaABI = false;
+
+void init_ucode2() { isMKABI = isZeldaABI = false; }
 
 static void LOADADPCM2 () { // Loads an ADPCM table - Works 100% Now 03-13-01
 	u32 v0;

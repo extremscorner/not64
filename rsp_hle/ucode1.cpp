@@ -5,7 +5,9 @@
 # include <string.h>
 #endif
 
+extern "C" {
 #include "hle.h"
+}
 //#include "rsp.h"
 //#define SAFE_MEMORY
 /*
