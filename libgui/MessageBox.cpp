@@ -226,7 +226,7 @@ void MessageBox::drawMessageBox(Graphics& gfx)
 	gfx.drawImage(0, x+width/2, y+height/2, width/2, height/2, width/16.0, 0.0, height/16.0, 0.0);
 
 	//detect number of lines
-#define MAX_LINES 10
+#define MAX_LINES 12
 	int ind = 0;
 	int numLines = 0;
 	int lineStart[MAX_LINES];
