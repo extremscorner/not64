@@ -101,7 +101,14 @@ OBJ_INPUT	=gc_input/main.o \
 		gc_input/controller-Classic.o \
 		gc_input/controller-WiimoteNunchuk.o
 
-OBJ_RSPHLE	=rsp_hle-ppc/main.o \
+OBJ_RSPHLE	=rsp_hle/main.o \
+		rsp_hle/jpeg.o \
+		rsp_hle/ucode3.o \
+		rsp_hle/ucode2.o \
+		rsp_hle/ucode1.o \
+		rsp_hle/ucode3mp3.o
+		
+OBJ_RSPHLEPPC	=rsp_hle-ppc/main.o \
 		rsp_hle-ppc/jpeg.o \
 		rsp_hle-ppc/ucode3.o \
 		rsp_hle-ppc/ucode2.o \
