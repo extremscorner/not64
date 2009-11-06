@@ -4,7 +4,7 @@
  *
  * Mupen64 homepage: http://mupen64.emulation64.com
  * email address: hacktarux@yahoo.fr
- * 
+ *
  * If you want to contribute to the project please contact
  * me first (maybe someone is already making what you are
  * planning to do).
@@ -34,9 +34,11 @@
 
 #ifdef _BIG_ENDIAN
 #define S 0
+#define S16 0
 #define S8 0
 #else
 #define S 1
+#define S16 2
 #define S8 3
 #endif
 
@@ -75,25 +77,25 @@ typedef struct
 {
    unsigned long type;
    unsigned long flags;
-   
+
    unsigned long ucode_boot;
    unsigned long ucode_boot_size;
 
    unsigned long ucode;
    unsigned long ucode_size;
-   
+
    unsigned long ucode_data;
    unsigned long ucode_data_size;
-   
+
    unsigned long dram_stack;
    unsigned long dram_stack_size;
-   
+
    unsigned long output_buff;
    unsigned long output_buff_size;
-   
+
    unsigned long data_ptr;
    unsigned long data_size;
-   
+
    unsigned long yield_data_ptr;
    unsigned long yield_data_size;
 } OSTask_t;
