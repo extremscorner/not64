@@ -71,18 +71,20 @@ controller_t controller_GC =
 	 };
 
 static void init(void){
+	int attempts = 64;
 	PAD_Init();
 
 	PADStatus status[4];
 	do PAD_Read(status);
-	while((status[0].err != PAD_ERR_NO_CONTROLLER &&
-	       status[0].err != PAD_ERR_NONE) ||
-	      (status[1].err != PAD_ERR_NO_CONTROLLER &&
-		   status[1].err != PAD_ERR_NONE) ||
-	      (status[2].err != PAD_ERR_NO_CONTROLLER &&
-		   status[2].err != PAD_ERR_NONE) ||
-	      (status[3].err != PAD_ERR_NO_CONTROLLER &&
-		   status[3].err != PAD_ERR_NONE));
+	while(((status[0].err != PAD_ERR_NO_CONTROLLER &&
+	        status[0].err != PAD_ERR_NONE) ||
+	       (status[1].err != PAD_ERR_NO_CONTROLLER &&
+		    status[1].err != PAD_ERR_NONE) ||
+	       (status[2].err != PAD_ERR_NO_CONTROLLER &&
+		    status[2].err != PAD_ERR_NONE) ||
+	       (status[3].err != PAD_ERR_NO_CONTROLLER &&
+		    status[3].err != PAD_ERR_NONE)) &&
+		  attempts--);
 	int i;
 	for(i=0; i<4; ++i)
 		controller_GC.available[i] = status[i].err != PAD_ERR_NO_CONTROLLER;
