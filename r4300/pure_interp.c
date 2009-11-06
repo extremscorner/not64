@@ -3335,14 +3335,8 @@ if ((interp_addr >= 0x80000000) && (interp_addr < 0xc0000000))
      }
    else
      {
-     	static unsigned long last_addr, last_phys;
 	unsigned long addr = interp_addr, phys;
-	if(addr >> 12 != last_addr >> 12)
-		phys = virtual_to_physical_address(interp_addr, 2);
-	else
-		phys = (last_phys&0xFFFFF000) | (addr&0xFFF);
-	last_addr = addr;
-	last_phys = phys;
+	phys = virtual_to_physical_address(interp_addr, 2);
 	if (phys != 0x00000000) interp_addr = phys;
 	else 
 	  {
