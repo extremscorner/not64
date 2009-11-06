@@ -216,11 +216,7 @@ int main(int argc, char* argv[]){
 	  handleConfigPair(argv[i]);
   }
 #endif
-	while (menu->isRunning()) {
-		PAD_ScanPads();
-		if(PAD_ButtonsHeld(0) == PAD_BUTTON_START)
-			break;
-	}
+	while (menu->isRunning()) {}
 
 	delete menu;
 

@@ -48,13 +48,12 @@ void Cursor::updateCursor()
 
 #ifdef HW_RVL
 	WPADData* wiiPad = Input::getInstance().getWpad();
-	int* wiiPadError = Input::getInstance().getWpadError();
 	for (int i = 0; i < 4; i++)
 	{
 	//cycle through all 4 wiimotes
 	//take first one pointing at screen
 	//if (aimed at screen): set cursorX, cursorY, cursorRot, clear focusActive
-		if(wiiPad[i].ir.valid && wiiPad[i].err == WPAD_ERR_NONE && !wiiPadError[i])
+		if(wiiPad[i].ir.valid && wiiPad[i].err == WPAD_ERR_NONE)
 		{
 			if(activeChan != i)
 			{

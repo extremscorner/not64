@@ -34,20 +34,15 @@ void Input::refreshInput()
 	PAD_Read(gcPad);
 	PAD_Clamp(gcPad);
 #ifdef HW_RVL
-	for (int i = WPAD_CHAN_0; i < WPAD_MAX_WIIMOTES; i++)
-		wiiPadError[i] = WPAD_ReadEvent(i, &wiiPad[i]);
+	WPAD_ScanPads();
+	wiiPad = WPAD_Data(0);
 #endif
 }
 
 #ifdef HW_RVL
 WPADData* Input::getWpad()
 {
-	return &wiiPad[0];
-}
-
-int* Input::getWpadError()
-{
-	return &wiiPadError[0];
+	return wiiPad;
 }
 #endif
 
