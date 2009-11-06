@@ -9,6 +9,8 @@ namespace menu {
 #define FONT_TEX_SIZE_I4 ((512*512)>>1)
 #define FONT_SIZE_ANSI (288 + 131072)
 
+#define STRHEIGHT_OFFSET 6
+
 extern "C" void __SYS_ReadROM(void *buf,u32 len,u32 offset);
 
 IplFont::IplFont()
@@ -265,7 +267,7 @@ void IplFont::drawString(int x, int y, char *string, float scale, bool centered)
 	if(centered)
 	{
 		int strWidth = 0;
-		int strHeight = fontChars.fheight * scale;
+		int strHeight = (fontChars.fheight+STRHEIGHT_OFFSET) * scale;
 		char* string_work = string;
 //		while(*string_work && (x < back_framewidth))
 		while(*string_work)
@@ -323,7 +325,7 @@ void IplFont::drawStringAtOrigin(char *string, float scale)
 		string_work++;
 	}
 	x0 = (int) -x/2;
-	y0 = (int) -fontChars.fheight*scale/2;
+	y0 = (int) -(fontChars.fheight+STRHEIGHT_OFFSET)*scale/2;
 	drawString(x0, y0, string, scale, false);
 }
 
@@ -342,7 +344,7 @@ int IplFont::getStringWidth(char *string, float scale)
 
 int IplFont::getStringHeight(char *string, float scale)
 {
-	int strHeight = fontChars.fheight * scale;
+	int strHeight = (fontChars.fheight+STRHEIGHT_OFFSET) * scale;
 
 	return strHeight;
 }

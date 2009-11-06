@@ -195,8 +195,8 @@ void Button::drawComponent(Graphics& gfx)
 	case BUTTON_STYLEA_NORMAL:
 		if (getFocus())	focusImage->activateImage(GX_TEXMAP0);
 		else			normalImage->activateImage(GX_TEXMAP0);
-		gfx.drawImage(0, x, y, width/2, 56, 0.0, width/8.0, 0.0, 1.0);
-		gfx.drawImage(0, x+width/2, y, width/2, 56, width/8.0, 0.0, 0.0, 1.0);
+		gfx.drawImage(0, x, y, width/2, height, 0.0, width/8.0, 0.0, 1.0);
+		gfx.drawImage(0, x+width/2, y, width/2, height, width/8.0, 0.0, 0.0, 1.0);
 		break;
 	case BUTTON_STYLEA_SELECT:
 		if (selected)
@@ -209,8 +209,8 @@ void Button::drawComponent(Graphics& gfx)
 			if (getFocus())	focusImage->activateImage(GX_TEXMAP0);
 			else			normalImage->activateImage(GX_TEXMAP0);
 		}
-		gfx.drawImage(0, x, y, width/2, 56, 0.0, width/8.0, 0.0, 1.0);
-		gfx.drawImage(0, x+width/2, y, width/2, 56, width/8.0, 0.0, 0.0, 1.0);
+		gfx.drawImage(0, x, y, width/2, height, 0.0, width/8.0, 0.0, 1.0);
+		gfx.drawImage(0, x+width/2, y, width/2, height, width/8.0, 0.0, 0.0, 1.0);
 		break;
 	}
 
