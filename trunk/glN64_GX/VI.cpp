@@ -302,8 +302,8 @@ void VI_GX_showLoadProg(float percent)
 	GX_Color4u8(GXcol1.r, GXcol1.g, GXcol1.b, GXcol1.a);
 	GX_End();
 #else //!MENU_V2
-	float x = 480;
-	float y = 75;
+	float x = 530;
+	float y = 30;
 	float width = 80;
 	float height = 56;
 
