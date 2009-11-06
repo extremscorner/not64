@@ -181,7 +181,8 @@ u8 logo_colors[] ATTRIBUTE_ALIGN (32) =
 	  1,  29, 169, 255,		// 1 blue
 	254,  32,  21, 255,		// 2 orange/red
 	255, 192,   1, 255,		// 3 yellow/gold
-	255,   1,   1, 255,		// 4 red
+	230,   1,   1, 255,		// 4 red
+	190, 190, 190, 255,		// 4 light gray
 };
 
 
@@ -241,6 +242,9 @@ void Logo::drawComponent(Graphics& gfx)
 	guLookAt (v, &cam, &up, &look);
 	rotateAuto++;
 
+	u16 pad0 = PAD_ButtonsDown(0);
+	if (pad0 & PAD_TRIGGER_Z) logoMode = (logoMode+1) % 2;
+
 	//libOGC was changed such that sticks are now clamped and don't have to be by us
 	stickX = PAD_SubStickX(0);
 	stickY = PAD_SubStickY(0);
@@ -253,11 +257,13 @@ void Logo::drawComponent(Graphics& gfx)
 	guMtxIdentity (m);
 	guMtxRotAxisDeg (tmp, &axisX, 25);			//change to isometric view
 	guMtxConcat (m, tmp, m);
+	guMtxRotAxisDeg (tmp, &axisX, 180);			//flip rightside-up
+	guMtxConcat (m, tmp, m);
 	guMtxRotAxisDeg (tmp, &axisX, -rotateY);
 	guMtxConcat (m, tmp, m);
-	guMtxRotAxisDeg (tmp, &axisY, -rotateX);
+	guMtxRotAxisDeg (tmp, &axisY, rotateX);
 	guMtxConcat (m, tmp, m);
-	guMtxRotAxisDeg (tmp, &axisY, rotateAuto);		//slowly rotate logo
+	guMtxRotAxisDeg (tmp, &axisY, -rotateAuto);		//slowly rotate logo
 	guMtxConcat (m, tmp, m);
 	guMtxTransApply (m, m, x, y, z);
 	guMtxConcat (v, m, mv);
@@ -278,7 +284,8 @@ void Logo::drawComponent(Graphics& gfx)
 	GX_SetVtxAttrFmt (GX_VTXFMT0, GX_VA_CLR0, GX_CLR_RGBA, GX_RGBA8, 0);
 	
 	// set the array stride
-	GX_SetArray (GX_VA_POS, N_verts, 3 * sizeof (s8));
+	if(logoMode == LOGO_N)		GX_SetArray (GX_VA_POS, N_verts, 3 * sizeof (s8));
+	else if(logoMode == LOGO_M)	GX_SetArray (GX_VA_POS, M_verts, 3 * sizeof (s8));
 	GX_SetArray (GX_VA_CLR0, logo_colors, 4 * sizeof (u8));
 	
 	GX_SetNumChans (1);
@@ -286,8 +293,10 @@ void Logo::drawComponent(Graphics& gfx)
 	GX_SetTevOrder (GX_TEVSTAGE0, GX_TEXCOORDNULL, GX_TEXMAP_NULL, GX_COLOR0A0);
 	GX_SetTevOp (GX_TEVSTAGE0, GX_PASSCLR);
 
-	// 'N'
-	GX_Begin (GX_QUADS, GX_VTXFMT0, 160);  //40 quads, so 160 verts
+	if (logoMode == LOGO_N)
+	{
+		// 'N'
+		GX_Begin (GX_QUADS, GX_VTXFMT0, 160);  //40 quads, so 160 verts
 		drawQuad ( 0,  6,  7,  1, 0); //Side A, green
 		drawQuad ( 7,  4,  2,  5, 0);
 		drawQuad ( 2,  8,  9,  3, 0);
@@ -328,14 +337,16 @@ void Logo::drawComponent(Graphics& gfx)
 		drawQuad (12, 54, 45, 15, 0);
 		drawQuad (22, 55, 46, 25, 2);
 		drawQuad (32, 52, 47, 35, 0); 
-	GX_End ();
-/*
-	// 'M'
-	GX_Begin (GX_QUADS, GX_VTXFMT0, 160);  //40 quads, so 160 verts
+		GX_End ();
+	}
+	else if (logoMode == LOGO_M)
+	{
+		// 'M'
+		GX_Begin (GX_QUADS, GX_VTXFMT0, 272);  //68 quads, so 272 verts 40+12+16
 		drawQuad ( 0,  9, 10,  1, 4); //Side A, red
 		drawQuad ( 6, 10,  8,  4, 4);
 		drawQuad ( 4,  8,  8,  5, 4);
-		drawQuad ( 5, 10, 11,  7, 4);
+		drawQuad ( 5,  8, 11,  7, 4);
 		drawQuad ( 2, 11, 12,  3, 4);
 		drawQuad (40, 45, 63, 75, 4); //Side A1
 		drawQuad (63, 55, 58, 69, 4);
@@ -344,45 +355,75 @@ void Logo::drawComponent(Graphics& gfx)
 		drawQuad (62, 20, 15, 74, 4);
 
 		drawQuad (13, 22, 23, 14, 4); //Side B, red
-		drawQuad (18, 23, 21, 17, 4);
+		drawQuad (19, 23, 21, 17, 4);
 		drawQuad (17, 21, 21, 18, 4);
 		drawQuad (18, 21, 24, 20, 4);
 		drawQuad (15, 24, 25, 16, 4);
+		drawQuad ( 1,  6, 60, 72, 4); //Side B1
+		drawQuad (52, 59, 71, 60, 4);
+		drawQuad (71, 59, 59, 70, 4);
+		drawQuad (70, 59, 55, 63, 4);
+		drawQuad (75, 63, 33, 28, 4);
 
-		drawQuad ( 1,  5, 44, 52, 1); //Side B1 <- not done!
+		drawQuad (26, 35, 36, 27, 4); //Side C, red
+		drawQuad (32, 36, 34, 30, 4);
+		drawQuad (30, 34, 34, 31, 4);
+		drawQuad (31, 34, 37, 33, 4);
+		drawQuad (28, 37, 38, 29, 4);
+		drawQuad (14, 19, 61, 73, 4); //Side C1
+		drawQuad (61, 53, 56, 65, 4);
+		drawQuad (65, 56, 56, 64, 4);
+		drawQuad (64, 56, 52, 60, 4);
+		drawQuad (72, 60, 46, 41, 4);
 
-		drawQuad (52, 48, 43, 47, 1);
-		drawQuad (51, 43, 28, 24, 1);
-		drawQuad (20, 26, 27, 21, 0); //Side C, green
-		drawQuad (27, 24, 22, 25, 0);
-		drawQuad (22, 28, 29, 23, 0);
-		drawQuad (11, 15, 45, 53, 0); //Side C1
-		drawQuad (53, 49, 40, 44, 0);
-		drawQuad (48, 40, 38, 34, 0);
-		drawQuad (30, 36, 37, 31, 1); //Side D, blue
-		drawQuad (37, 34, 32, 35, 1);
-		drawQuad (32, 38, 39, 33, 1);
-		drawQuad (21, 25, 46, 54, 1); //Side D1
-		drawQuad (54, 50, 41, 45, 1);
-		drawQuad (49, 41,  8,  4, 1);
-		drawQuad ( 6, 38, 40,  7, 3); //Top, yellow
-		drawQuad ( 8, 41, 17,  9, 3);
-		drawQuad (42, 27, 19, 18, 3);
-		drawQuad (37, 29, 28, 43, 3); 
-		drawQuad ( 7, 40, 49,  4, 2); //Top, red(green?)
-		drawQuad (17, 41, 50, 14, 0);
-		drawQuad (27, 42, 51, 24, 2);
-		drawQuad (37, 43, 48, 34, 0); 
-		drawQuad ( 0,  1, 52, 32, 3); //Bottom, yellow
-		drawQuad ( 3, 11, 53,  2, 3);
-		drawQuad (13, 21, 54, 12, 3);
-		drawQuad (23, 31, 55, 22, 3); 
-		drawQuad ( 2, 53, 44,  5, 2); //Bottom, red(green?)
-		drawQuad (12, 54, 45, 15, 0);
-		drawQuad (22, 55, 46, 25, 2);
-		drawQuad (32, 52, 47, 35, 0); 
-	GX_End ();
-*/
+		drawQuad (39, 48, 49, 40, 4); //Side D, red
+		drawQuad (45, 49, 47, 43, 4);
+		drawQuad (43, 47, 47, 44, 4);
+		drawQuad (44, 47, 50, 46, 4);
+		drawQuad (41, 50, 51, 42, 4);
+		drawQuad (27, 32, 62, 74, 4); //Side D1
+		drawQuad (62, 54, 57, 67, 4);
+		drawQuad (67, 57, 57, 66, 4);
+		drawQuad (66, 57, 53, 61, 4);
+		drawQuad (73, 61,  7,  2, 4);
+
+		drawQuad (10,  9, 50, 52, 5); //Top, gray
+		drawQuad (49, 48, 37, 55, 5);
+		drawQuad (36, 35, 24, 54, 5);
+		drawQuad (23, 22, 11, 53, 5);
+
+		drawQuad (59, 52, 50, 47, 5); //Top-slanted, gray
+		drawQuad (47, 49, 55, 59, 5);
+		drawQuad (58, 55, 37, 34, 5);
+		drawQuad (34, 36, 54, 58, 5);
+		drawQuad (57, 54, 24, 21, 5);
+		drawQuad (21, 23, 53, 57, 5);
+		drawQuad (56, 53, 11,  8, 5);
+		drawQuad ( 8, 10, 52, 56, 5);
+
+		drawQuad ( 0,  1, 72, 41, 5); //Bottom, gray
+		drawQuad (39, 40, 75, 28, 5);
+		drawQuad (26, 27, 74, 15, 5);
+		drawQuad (13, 14, 73,  2, 5);
+
+		drawQuad ( 6,  4, 64, 60, 5); //Bottom-slanted, gray
+		drawQuad ( 4,  5, 65, 64, 5);
+		drawQuad ( 5,  7, 61, 65, 5);
+
+		drawQuad (19, 17, 66, 61, 5);
+		drawQuad (17, 18, 67, 66, 5);
+		drawQuad (18, 20, 62, 67, 5);
+
+		drawQuad (32, 30, 68, 62, 5);
+		drawQuad (30, 31, 69, 68, 5);
+		drawQuad (31, 33, 63, 69, 5);
+
+		drawQuad (45, 43, 70, 63, 5);
+		drawQuad (43, 44, 71, 70, 5);
+		drawQuad (44, 46, 60, 71, 5);
+		GX_End ();
+	}
+		
 	gfx.drawInit();
 }
 
