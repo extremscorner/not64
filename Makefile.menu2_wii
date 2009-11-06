@@ -40,6 +40,7 @@ OBJ		=main/rom_gc.o \
 		menu/SettingsFrame.o\
 		menu/SelectCPUFrame.o\
 		menu/ConfigurePaksFrame.o\
+		menu/MenuResources.o \
 		libgui/Button.o \
 		libgui/Component.o \
 		libgui/CursorManager.o \
@@ -47,10 +48,12 @@ OBJ		=main/rom_gc.o \
 		libgui/Frame.o \
 		libgui/GraphicsGX.o \
 		libgui/Gui.o \
+		libgui/GuiResources.o \
 		libgui/Image.o \
 		libgui/InputManager.o \
 		libgui/IPLFont.o \
 		libgui/LoadingBar.o \
+		libgui/Logo.o \
 		libgui/MessageBox.o \
 		libgui/resources.o \
 		libgui/TextBox.o \

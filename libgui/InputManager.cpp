@@ -4,6 +4,8 @@
 
 void ShutdownWii();
 
+
+
 namespace menu {
 	
 Input::Input()
@@ -40,18 +42,18 @@ void Input::refreshInput()
 #ifdef HW_RVL
 WPADData* Input::getWpad()
 {
-	return wiiPad;
+	return &wiiPad[0];
 }
 
 int* Input::getWpadError()
 {
-	return wiiPadError;
+	return &wiiPadError[0];
 }
 #endif
 
 PADStatus* Input::getPad()
 {
-	return gcPad;
+	return &gcPad[0];
 }
 
 void Input::clearInputData()

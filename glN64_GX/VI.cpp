@@ -5,6 +5,7 @@
 #include <ogc/lwp_heap.h>
 # ifdef MENU_V2
 #include "../libgui/IPLFont.h"
+#include "../menu/MenuResources.h"
 # else // MENU_V2
 #include "../gui/font.h"
 # endif //!MENU_V2
@@ -241,6 +242,7 @@ void VI_GX_showFPS(){
 
 void VI_GX_showLoadProg(float percent)
 {
+#ifndef MENU_V2
 	GXColor GXcol1 = {0,128,255,255};
 	GXColor GXcol2 = {0,64,128,255};
 	float xbar[3] = {425,425,550};
@@ -299,6 +301,61 @@ void VI_GX_showLoadProg(float percent)
 	GX_Position2f32(xbar[0], ybar[1]);
 	GX_Color4u8(GXcol1.r, GXcol1.g, GXcol1.b, GXcol1.a);
 	GX_End();
+#else //!MENU_V2
+	float x = 480;
+	float y = 75;
+	float width = 80;
+	float height = 56;
+
+	Mtx44 GXprojection2D;
+	Mtx GXmodelView2D;
+
+	GXTexObj texObj;
+//	GX_InitTexObj(&texObj, LoadingTexture, width, height, GX_TF_RGBA8, GX_CLAMP, GX_CLAMP, GX_FALSE);
+	GX_InitTexObj(&texObj, LoadingTexture, width, height, GX_TF_RGB5A3, GX_CLAMP, GX_CLAMP, GX_FALSE);
+	GX_LoadTexObj(&texObj, GX_TEXMAP0);
+
+	guMtxIdentity(GXmodelView2D);
+	GX_LoadPosMtxImm(GXmodelView2D,GX_PNMTX2);
+	guOrtho(GXprojection2D, 0, 480, 0, 640, 0, 1);
+	GX_LoadProjectionMtx(GXprojection2D, GX_ORTHOGRAPHIC); //load current 2D projection matrix
+
+	GX_ClearVtxDesc();
+	GX_SetVtxDesc(GX_VA_PTNMTXIDX, GX_PNMTX2);
+	GX_SetVtxDesc(GX_VA_POS, GX_DIRECT);
+	GX_SetVtxDesc(GX_VA_TEX0, GX_DIRECT);
+	//set vertex attribute formats here
+	GX_SetVtxAttrFmt(GX_VTXFMT1, GX_VA_POS, GX_POS_XY, GX_F32, 0);
+	GX_SetVtxAttrFmt(GX_VTXFMT1, GX_VA_TEX0, GX_TEX_ST, GX_F32, 0);
+
+	//disable textures
+	GX_SetNumChans (0);
+	GX_SetNumTexGens (1);
+	GX_SetTevOrder (GX_TEVSTAGE0, GX_TEXCOORD0, GX_TEXMAP0, GX_COLORNULL);
+	GX_SetTevOp (GX_TEVSTAGE0, GX_REPLACE);
+	//set blend mode
+	GX_SetBlendMode(GX_BM_BLEND, GX_BL_SRCALPHA, GX_BL_INVSRCALPHA, GX_LO_CLEAR); //Fix src alpha
+	GX_SetColorUpdate(GX_ENABLE);
+	GX_SetAlphaUpdate(GX_ENABLE);
+	GX_SetDstAlpha(GX_DISABLE, 0xFF);
+	GX_SetZMode(GX_DISABLE,GX_ALWAYS,GX_FALSE);
+	GX_SetZTexture(GX_ZT_DISABLE,GX_TF_Z16,0);	//GX_ZT_DISABLE or GX_ZT_REPLACE; set in gDP.cpp
+	GX_SetZCompLoc(GX_TRUE);	// Do Z-compare before texturing.
+	//set cull mode
+	GX_SetCullMode (GX_CULL_NONE);
+
+	GX_Begin(GX_QUADS, GX_VTXFMT1, 4);
+		GX_Position2f32(x, y);
+		GX_TexCoord2f32(0,0);
+		GX_Position2f32(x+width, y);
+		GX_TexCoord2f32(1,0);
+		GX_Position2f32(x+width, y+height);
+		GX_TexCoord2f32(1,1);
+		GX_Position2f32(x, y+height);
+		GX_TexCoord2f32(0,1);
+	GX_End();
+
+#endif //MENU_V2
 
 	if (VI.copy_fb)	GX_CopyDisp (VI.xfb[VI.which_fb]+GX_xfb_offset, GX_FALSE);
 	else			GX_CopyDisp (VI.xfb[VI.which_fb^1]+GX_xfb_offset, GX_FALSE);

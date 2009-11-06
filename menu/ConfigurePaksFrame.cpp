@@ -45,6 +45,7 @@ static char FRAME_STRINGS[7][13] =
 struct ButtonInfo
 {
 	menu::Button	*button;
+	int				buttonStyle;
 	char*			buttonString;
 	float			x;
 	float			y;
@@ -57,15 +58,15 @@ struct ButtonInfo
 	ButtonFunc		clickedFunc;
 	ButtonFunc		returnFunc;
 } FRAME_BUTTONS[NUM_FRAME_BUTTONS] =
-{ //	button	buttonString		x		y		width	height	Up	Dwn	Lft	Rt	clickFunc				returnFunc
-	{	NULL,	FRAME_STRINGS[0],	295.0,	100.0,	160.0,	40.0,	 6,	 2,	 1,	 1,	Func_Controller1Mempak,	Func_ReturnFromConfigurePaksFrame }, // Controller 1: Mempak
-	{	NULL,	FRAME_STRINGS[1],	465.0,	100.0,	160.0,	40.0,	 7,	 3,	 0,	 0,	Func_Controller1Rumble,	Func_ReturnFromConfigurePaksFrame }, // Controller 1: Rumblepak
-	{	NULL,	FRAME_STRINGS[0],	295.0,	170.0,	160.0,	40.0,	 0,	 4,	 3,	 3,	Func_Controller2Mempak,	Func_ReturnFromConfigurePaksFrame }, // Controller 2: Mempak
-	{	NULL,	FRAME_STRINGS[1],	465.0,	170.0,	160.0,	40.0,	 1,	 5,	 2,	 2,	Func_Controller2Rumble,	Func_ReturnFromConfigurePaksFrame }, // Controller 2: Rumblepak
-	{	NULL,	FRAME_STRINGS[0],	295.0,	240.0,	160.0,	40.0,	 2,	 6,	 5,	 5,	Func_Controller3Mempak,	Func_ReturnFromConfigurePaksFrame }, // Controller 3: Mempak
-	{	NULL,	FRAME_STRINGS[1],	465.0,	240.0,	160.0,	40.0,	 3,	 7,	 4,	 4,	Func_Controller3Rumble,	Func_ReturnFromConfigurePaksFrame }, // Controller 3: Rumblepak
-	{	NULL,	FRAME_STRINGS[0],	295.0,	310.0,	160.0,	40.0,	 4,	 0,	 7,	 7,	Func_Controller4Mempak,	Func_ReturnFromConfigurePaksFrame }, // Controller 4: Mempak
-	{	NULL,	FRAME_STRINGS[1],	465.0,	310.0,	160.0,	40.0,	 5,	 1,	 6,	 6,	Func_Controller4Rumble,	Func_ReturnFromConfigurePaksFrame }, // Controller 4: Rumblepak
+{ //	button	buttonStyle	buttonString		x		y		width	height	Up	Dwn	Lft	Rt	clickFunc				returnFunc
+	{	NULL,	BTN_A_SEL,	FRAME_STRINGS[0],	295.0,	100.0,	160.0,	40.0,	 6,	 2,	 1,	 1,	Func_Controller1Mempak,	Func_ReturnFromConfigurePaksFrame }, // Controller 1: Mempak
+	{	NULL,	BTN_A_SEL,	FRAME_STRINGS[1],	465.0,	100.0,	160.0,	40.0,	 7,	 3,	 0,	 0,	Func_Controller1Rumble,	Func_ReturnFromConfigurePaksFrame }, // Controller 1: Rumblepak
+	{	NULL,	BTN_A_SEL,	FRAME_STRINGS[0],	295.0,	170.0,	160.0,	40.0,	 0,	 4,	 3,	 3,	Func_Controller2Mempak,	Func_ReturnFromConfigurePaksFrame }, // Controller 2: Mempak
+	{	NULL,	BTN_A_SEL,	FRAME_STRINGS[1],	465.0,	170.0,	160.0,	40.0,	 1,	 5,	 2,	 2,	Func_Controller2Rumble,	Func_ReturnFromConfigurePaksFrame }, // Controller 2: Rumblepak
+	{	NULL,	BTN_A_SEL,	FRAME_STRINGS[0],	295.0,	240.0,	160.0,	40.0,	 2,	 6,	 5,	 5,	Func_Controller3Mempak,	Func_ReturnFromConfigurePaksFrame }, // Controller 3: Mempak
+	{	NULL,	BTN_A_SEL,	FRAME_STRINGS[1],	465.0,	240.0,	160.0,	40.0,	 3,	 7,	 4,	 4,	Func_Controller3Rumble,	Func_ReturnFromConfigurePaksFrame }, // Controller 3: Rumblepak
+	{	NULL,	BTN_A_SEL,	FRAME_STRINGS[0],	295.0,	310.0,	160.0,	40.0,	 4,	 0,	 7,	 7,	Func_Controller4Mempak,	Func_ReturnFromConfigurePaksFrame }, // Controller 4: Mempak
+	{	NULL,	BTN_A_SEL,	FRAME_STRINGS[1],	465.0,	310.0,	160.0,	40.0,	 5,	 1,	 6,	 6,	Func_Controller4Rumble,	Func_ReturnFromConfigurePaksFrame }, // Controller 4: Rumblepak
 };
 
 struct TextBoxInfo
@@ -90,17 +91,13 @@ struct TextBoxInfo
 
 ConfigurePaksFrame::ConfigurePaksFrame()
 {
-	buttonImage = new menu::Image(ButtonTexture, 16, 16, GX_TF_I8, GX_CLAMP, GX_CLAMP, GX_FALSE);
-	buttonFocusImage = new menu::Image(ButtonFocusTexture, 16, 16, GX_TF_I8, GX_CLAMP, GX_CLAMP, GX_FALSE);
 	for (int i = 0; i < NUM_FRAME_BUTTONS; i++)
-		FRAME_BUTTONS[i].button = new menu::Button(buttonImage, &FRAME_BUTTONS[i].buttonString, 
+		FRAME_BUTTONS[i].button = new menu::Button(FRAME_BUTTONS[i].buttonStyle, &FRAME_BUTTONS[i].buttonString, 
 										FRAME_BUTTONS[i].x, FRAME_BUTTONS[i].y, 
 										FRAME_BUTTONS[i].width, FRAME_BUTTONS[i].height);
 
 	for (int i = 0; i < NUM_FRAME_BUTTONS; i++)
 	{
-		FRAME_BUTTONS[i].button->setFocusImage(buttonFocusImage);
-		FRAME_BUTTONS[i].button->setSelectedImage(buttonFocusImage);
 		if (FRAME_BUTTONS[i].focusUp != -1) FRAME_BUTTONS[i].button->setNextFocus(menu::Focus::DIRECTION_UP, FRAME_BUTTONS[FRAME_BUTTONS[i].focusUp].button);
 		if (FRAME_BUTTONS[i].focusDown != -1) FRAME_BUTTONS[i].button->setNextFocus(menu::Focus::DIRECTION_DOWN, FRAME_BUTTONS[FRAME_BUTTONS[i].focusDown].button);
 		if (FRAME_BUTTONS[i].focusLeft != -1) FRAME_BUTTONS[i].button->setNextFocus(menu::Focus::DIRECTION_LEFT, FRAME_BUTTONS[FRAME_BUTTONS[i].focusLeft].button);
@@ -137,8 +134,6 @@ ConfigurePaksFrame::~ConfigurePaksFrame()
 		menu::Cursor::getInstance().removeComponent(this, FRAME_BUTTONS[i].button);
 		delete FRAME_BUTTONS[i].button;
 	}
-	delete buttonFocusImage;
-	delete buttonImage;
 
 }
 

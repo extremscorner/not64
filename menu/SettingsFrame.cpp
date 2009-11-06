@@ -106,6 +106,7 @@ static char FRAME_STRINGS[32][23] =
 struct ButtonInfo
 {
 	menu::Button	*button;
+	int				buttonStyle;
 	char*			buttonString;
 	float			x;
 	float			y;
@@ -118,46 +119,46 @@ struct ButtonInfo
 	ButtonFunc		clickedFunc;
 	ButtonFunc		returnFunc;
 } FRAME_BUTTONS[NUM_FRAME_BUTTONS] =
-{ //	button	buttonString		x		y		width	height	Up	Dwn	Lft	Rt	clickFunc				returnFunc
+{ //	button	buttonStyle buttonString		x		y		width	height	Up	Dwn	Lft	Rt	clickFunc				returnFunc
 	//Buttons for Tabs (starts at button[0])
-	{	NULL,	FRAME_STRINGS[0],	 25.0,	 30.0,	110.0,	40.0,	-1,	-1,	 4,	 1,	Func_TabGeneral,		Func_ReturnFromSettingsFrame }, // General tab
-	{	NULL,	FRAME_STRINGS[1],	155.0,	 30.0,	100.0,	40.0,	-1,	-1,	 0,	 2,	Func_TabVideo,			Func_ReturnFromSettingsFrame }, // Video tab
-	{	NULL,	FRAME_STRINGS[2],	275.0,	 30.0,	100.0,	40.0,	-1,	-1,	 1,	 3,	Func_TabInput,			Func_ReturnFromSettingsFrame }, // Input tab
-	{	NULL,	FRAME_STRINGS[3],	395.0,	 30.0,	100.0,	40.0,	-1,	-1,	 2,	 4,	Func_TabAudio,			Func_ReturnFromSettingsFrame }, // Audio tab
-	{	NULL,	FRAME_STRINGS[4],	515.0,	 30.0,	100.0,	40.0,	-1,	-1,	 3,	 0,	Func_TabSaves,			Func_ReturnFromSettingsFrame }, // Saves tab
+	{	NULL,	BTN_A_SEL,	FRAME_STRINGS[0],	 25.0,	 30.0,	110.0,	40.0,	-1,	-1,	 4,	 1,	Func_TabGeneral,		Func_ReturnFromSettingsFrame }, // General tab
+	{	NULL,	BTN_A_SEL,	FRAME_STRINGS[1],	155.0,	 30.0,	100.0,	40.0,	-1,	-1,	 0,	 2,	Func_TabVideo,			Func_ReturnFromSettingsFrame }, // Video tab
+	{	NULL,	BTN_A_SEL,	FRAME_STRINGS[2],	275.0,	 30.0,	100.0,	40.0,	-1,	-1,	 1,	 3,	Func_TabInput,			Func_ReturnFromSettingsFrame }, // Input tab
+	{	NULL,	BTN_A_SEL,	FRAME_STRINGS[3],	395.0,	 30.0,	100.0,	40.0,	-1,	-1,	 2,	 4,	Func_TabAudio,			Func_ReturnFromSettingsFrame }, // Audio tab
+	{	NULL,	BTN_A_SEL,	FRAME_STRINGS[4],	515.0,	 30.0,	100.0,	40.0,	-1,	-1,	 3,	 0,	Func_TabSaves,			Func_ReturnFromSettingsFrame }, // Saves tab
 	//Buttons for General Tab (starts at button[5])
-	{	NULL,	FRAME_STRINGS[9],	295.0,	100.0,	 55.0,	40.0,	 0,	 9,	 8,	 6,	Func_NativeSaveSD,		Func_ReturnFromSettingsFrame }, // Native Save: SD
-	{	NULL,	FRAME_STRINGS[10],	360.0,	100.0,	 70.0,	40.0,	 0,	10,	 5,	 7,	Func_NativeSaveUSB,		Func_ReturnFromSettingsFrame }, // Native Save: USB
-	{	NULL,	FRAME_STRINGS[11],	440.0,	100.0,	 90.0,	40.0,	 0,	10,	 6,	 8,	Func_NativeSaveCardA,	Func_ReturnFromSettingsFrame }, // Native Save: Card A
-	{	NULL,	FRAME_STRINGS[12],	540.0,	100.0,	 90.0,	40.0,	 0,	10,	 7,	 5,	Func_NativeSaveCardB,	Func_ReturnFromSettingsFrame }, // Native Save: Card B
-	{	NULL,	FRAME_STRINGS[9],	295.0,	170.0,	 55.0,	40.0,	 5,	11,	10,	10,	Func_SaveStateSD,		Func_ReturnFromSettingsFrame }, // Save State: SD
-	{	NULL,	FRAME_STRINGS[10],	360.0,	170.0,	 70.0,	40.0,	 6,	11,	 9,	 9,	Func_SaveStateUSB,		Func_ReturnFromSettingsFrame }, // Save State: USB
-	{	NULL,	FRAME_STRINGS[13],	295.0,	240.0,	160.0,	40.0,	 9,	13,	12,	12,	Func_CpuPureInterp,		Func_ReturnFromSettingsFrame }, // CPU: Pure Interp
-	{	NULL,	FRAME_STRINGS[14],	465.0,	240.0,	130.0,	40.0,	10,	14,	11,	11,	Func_CpuDynarec,		Func_ReturnFromSettingsFrame }, // CPU: Dynarec
-	{	NULL,	FRAME_STRINGS[9],	295.0,	310.0,	 55.0,	40.0,	11,	 0,	14,	14,	Func_SaveSettingsSD,	Func_ReturnFromSettingsFrame }, // Save Settings: SD
-	{	NULL,	FRAME_STRINGS[10],	360.0,	310.0,	 70.0,	40.0,	11,	 0,	13,	13,	Func_SaveSettingsUSB,	Func_ReturnFromSettingsFrame }, // Save Settings: USB
+	{	NULL,	BTN_A_SEL,	FRAME_STRINGS[9],	295.0,	100.0,	 55.0,	40.0,	 0,	 9,	 8,	 6,	Func_NativeSaveSD,		Func_ReturnFromSettingsFrame }, // Native Save: SD
+	{	NULL,	BTN_A_SEL,	FRAME_STRINGS[10],	360.0,	100.0,	 70.0,	40.0,	 0,	10,	 5,	 7,	Func_NativeSaveUSB,		Func_ReturnFromSettingsFrame }, // Native Save: USB
+	{	NULL,	BTN_A_SEL,	FRAME_STRINGS[11],	440.0,	100.0,	 90.0,	40.0,	 0,	10,	 6,	 8,	Func_NativeSaveCardA,	Func_ReturnFromSettingsFrame }, // Native Save: Card A
+	{	NULL,	BTN_A_SEL,	FRAME_STRINGS[12],	540.0,	100.0,	 90.0,	40.0,	 0,	10,	 7,	 5,	Func_NativeSaveCardB,	Func_ReturnFromSettingsFrame }, // Native Save: Card B
+	{	NULL,	BTN_A_SEL,	FRAME_STRINGS[9],	295.0,	170.0,	 55.0,	40.0,	 5,	11,	10,	10,	Func_SaveStateSD,		Func_ReturnFromSettingsFrame }, // Save State: SD
+	{	NULL,	BTN_A_SEL,	FRAME_STRINGS[10],	360.0,	170.0,	 70.0,	40.0,	 6,	11,	 9,	 9,	Func_SaveStateUSB,		Func_ReturnFromSettingsFrame }, // Save State: USB
+	{	NULL,	BTN_A_SEL,	FRAME_STRINGS[13],	295.0,	240.0,	160.0,	40.0,	 9,	13,	12,	12,	Func_CpuPureInterp,		Func_ReturnFromSettingsFrame }, // CPU: Pure Interp
+	{	NULL,	BTN_A_SEL,	FRAME_STRINGS[14],	465.0,	240.0,	130.0,	40.0,	10,	14,	11,	11,	Func_CpuDynarec,		Func_ReturnFromSettingsFrame }, // CPU: Dynarec
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[9],	295.0,	310.0,	 55.0,	40.0,	11,	 0,	14,	14,	Func_SaveSettingsSD,	Func_ReturnFromSettingsFrame }, // Save Settings: SD
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[10],	360.0,	310.0,	 70.0,	40.0,	11,	 0,	13,	13,	Func_SaveSettingsUSB,	Func_ReturnFromSettingsFrame }, // Save Settings: USB
 	//Buttons for Video Tab (starts at button[15])
-	{	NULL,	FRAME_STRINGS[20],	325.0,	100.0,	 75.0,	40.0,	 1,	17,	16,	16,	Func_ShowFpsOn,			Func_ReturnFromSettingsFrame }, // Show FPS: On
-	{	NULL,	FRAME_STRINGS[21],	420.0,	100.0,	 75.0,	40.0,	 1,	18,	15,	15,	Func_ShowFpsOff,		Func_ReturnFromSettingsFrame }, // Show FPS: Off
-	{	NULL,	FRAME_STRINGS[22],	325.0,	170.0,	 75.0,	40.0,	15,	19,	18,	18,	Func_ScreenMode4_3,		Func_ReturnFromSettingsFrame }, // ScreenMode: 4:3
-	{	NULL,	FRAME_STRINGS[23],	420.0,	170.0,	 75.0,	40.0,	16,	20,	17,	17,	Func_ScreenMode16_9,	Func_ReturnFromSettingsFrame }, // ScreenMode: 16:9
-	{	NULL,	FRAME_STRINGS[20],	325.0,	240.0,	 75.0,	40.0,	17,	21,	20,	20,	Func_CpuFramebufferOn,	Func_ReturnFromSettingsFrame }, // CPU FB: On
-	{	NULL,	FRAME_STRINGS[21],	420.0,	240.0,	 75.0,	40.0,	18,	22,	19,	19,	Func_CpuFramebufferOff,	Func_ReturnFromSettingsFrame }, // CPU FB: Off
-	{	NULL,	FRAME_STRINGS[20],	325.0,	310.0,	 75.0,	40.0,	19,	23,	22,	22,	Func_2xSaiTexturesOn,	Func_ReturnFromSettingsFrame }, // 2xSai: On
-	{	NULL,	FRAME_STRINGS[21],	420.0,	310.0,	 75.0,	40.0,	20,	24,	21,	21,	Func_2xSaiTexturesOff,	Func_ReturnFromSettingsFrame }, // 2xSai: Off
-	{	NULL,	FRAME_STRINGS[20],	325.0,	380.0,	 75.0,	40.0,	21,	 1,	24,	24,	Func_FbTexturesOn,		Func_ReturnFromSettingsFrame }, // FbTex: On
-	{	NULL,	FRAME_STRINGS[21],	420.0,	380.0,	 75.0,	40.0,	22,	 1,	23,	23,	Func_FbTexturesOff,		Func_ReturnFromSettingsFrame }, // FbTex: Off
+	{	NULL,	BTN_A_SEL,	FRAME_STRINGS[20],	325.0,	100.0,	 75.0,	40.0,	 1,	17,	16,	16,	Func_ShowFpsOn,			Func_ReturnFromSettingsFrame }, // Show FPS: On
+	{	NULL,	BTN_A_SEL,	FRAME_STRINGS[21],	420.0,	100.0,	 75.0,	40.0,	 1,	18,	15,	15,	Func_ShowFpsOff,		Func_ReturnFromSettingsFrame }, // Show FPS: Off
+	{	NULL,	BTN_A_SEL,	FRAME_STRINGS[22],	325.0,	170.0,	 75.0,	40.0,	15,	19,	18,	18,	Func_ScreenMode4_3,		Func_ReturnFromSettingsFrame }, // ScreenMode: 4:3
+	{	NULL,	BTN_A_SEL,	FRAME_STRINGS[23],	420.0,	170.0,	 75.0,	40.0,	16,	20,	17,	17,	Func_ScreenMode16_9,	Func_ReturnFromSettingsFrame }, // ScreenMode: 16:9
+	{	NULL,	BTN_A_SEL,	FRAME_STRINGS[20],	325.0,	240.0,	 75.0,	40.0,	17,	21,	20,	20,	Func_CpuFramebufferOn,	Func_ReturnFromSettingsFrame }, // CPU FB: On
+	{	NULL,	BTN_A_SEL,	FRAME_STRINGS[21],	420.0,	240.0,	 75.0,	40.0,	18,	22,	19,	19,	Func_CpuFramebufferOff,	Func_ReturnFromSettingsFrame }, // CPU FB: Off
+	{	NULL,	BTN_A_SEL,	FRAME_STRINGS[20],	325.0,	310.0,	 75.0,	40.0,	19,	23,	22,	22,	Func_2xSaiTexturesOn,	Func_ReturnFromSettingsFrame }, // 2xSai: On
+	{	NULL,	BTN_A_SEL,	FRAME_STRINGS[21],	420.0,	310.0,	 75.0,	40.0,	20,	24,	21,	21,	Func_2xSaiTexturesOff,	Func_ReturnFromSettingsFrame }, // 2xSai: Off
+	{	NULL,	BTN_A_SEL,	FRAME_STRINGS[20],	325.0,	380.0,	 75.0,	40.0,	21,	 1,	24,	24,	Func_FbTexturesOn,		Func_ReturnFromSettingsFrame }, // FbTex: On
+	{	NULL,	BTN_A_SEL,	FRAME_STRINGS[21],	420.0,	380.0,	 75.0,	40.0,	22,	 1,	23,	23,	Func_FbTexturesOff,		Func_ReturnFromSettingsFrame }, // FbTex: Off
 	//Buttons for Input Tab (starts at button[25])
-	{	NULL,	FRAME_STRINGS[24],	180.0,	100.0,	280.0,	40.0,	 2,	26,	-1,	-1,	Func_ConfigureInput,	Func_ReturnFromSettingsFrame }, // Configure Mappings
-	{	NULL,	FRAME_STRINGS[25],	180.0,	170.0,	280.0,	40.0,	25,	 2,	-1,	-1,	Func_ConfigurePaks,		Func_ReturnFromSettingsFrame }, // Configure Paks
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[24],	180.0,	100.0,	280.0,	40.0,	 2,	26,	-1,	-1,	Func_ConfigureInput,	Func_ReturnFromSettingsFrame }, // Configure Mappings
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[25],	180.0,	170.0,	280.0,	40.0,	25,	 2,	-1,	-1,	Func_ConfigurePaks,		Func_ReturnFromSettingsFrame }, // Configure Paks
 	//Buttons for Audio Tab (starts at button[27])
-	{	NULL,	FRAME_STRINGS[27],	345.0,	100.0,	 75.0,	40.0,	 3,	 3,	28,	28,	Func_DisableAudioYes,	Func_ReturnFromSettingsFrame }, // Disable Audio: Yes
-	{	NULL,	FRAME_STRINGS[28],	440.0,	100.0,	 75.0,	40.0,	 3,	 3,	27,	27,	Func_DisableAudioNo,	Func_ReturnFromSettingsFrame }, // Disable Audio: No
+	{	NULL,	BTN_A_SEL,	FRAME_STRINGS[27],	345.0,	100.0,	 75.0,	40.0,	 3,	 3,	28,	28,	Func_DisableAudioYes,	Func_ReturnFromSettingsFrame }, // Disable Audio: Yes
+	{	NULL,	BTN_A_SEL,	FRAME_STRINGS[28],	440.0,	100.0,	 75.0,	40.0,	 3,	 3,	27,	27,	Func_DisableAudioNo,	Func_ReturnFromSettingsFrame }, // Disable Audio: No
 	//Buttons for Saves Tab (starts at button[29])
-	{	NULL,	FRAME_STRINGS[27],	375.0,	100.0,	 75.0,	40.0,	 4,	31,	30,	30,	Func_AutoSaveNativeYes,	Func_ReturnFromSettingsFrame }, // Auto Save Native: Yes
-	{	NULL,	FRAME_STRINGS[28],	470.0,	100.0,	 75.0,	40.0,	 4,	31,	29,	29,	Func_AutoSaveNativeNo,	Func_ReturnFromSettingsFrame }, // Auto Save Native: No
-	{	NULL,	FRAME_STRINGS[30],	365.0,	170.0,	190.0,	40.0,	29,	32,	-1,	-1,	Func_CopySaves,			Func_ReturnFromSettingsFrame }, // Copy Saves
-	{	NULL,	FRAME_STRINGS[31],	365.0,	240.0,	190.0,	40.0,	31,	 4,	-1,	-1,	Func_DeleteSaves,		Func_ReturnFromSettingsFrame }, // Delete Saves
+	{	NULL,	BTN_A_SEL,	FRAME_STRINGS[27],	375.0,	100.0,	 75.0,	40.0,	 4,	31,	30,	30,	Func_AutoSaveNativeYes,	Func_ReturnFromSettingsFrame }, // Auto Save Native: Yes
+	{	NULL,	BTN_A_SEL,	FRAME_STRINGS[28],	470.0,	100.0,	 75.0,	40.0,	 4,	31,	29,	29,	Func_AutoSaveNativeNo,	Func_ReturnFromSettingsFrame }, // Auto Save Native: No
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[30],	365.0,	170.0,	190.0,	40.0,	29,	32,	-1,	-1,	Func_CopySaves,			Func_ReturnFromSettingsFrame }, // Copy Saves
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[31],	365.0,	240.0,	190.0,	40.0,	31,	 4,	-1,	-1,	Func_DeleteSaves,		Func_ReturnFromSettingsFrame }, // Delete Saves
 };
 
 struct TextBoxInfo
@@ -191,17 +192,13 @@ struct TextBoxInfo
 SettingsFrame::SettingsFrame()
 		: activeSubmenu(SUBMENU_GENERAL)
 {
-	buttonImage = new menu::Image(ButtonTexture, 16, 16, GX_TF_I8, GX_CLAMP, GX_CLAMP, GX_FALSE);
-	buttonFocusImage = new menu::Image(ButtonFocusTexture, 16, 16, GX_TF_I8, GX_CLAMP, GX_CLAMP, GX_FALSE);
 	for (int i = 0; i < NUM_FRAME_BUTTONS; i++)
-		FRAME_BUTTONS[i].button = new menu::Button(buttonImage, &FRAME_BUTTONS[i].buttonString, 
+		FRAME_BUTTONS[i].button = new menu::Button(FRAME_BUTTONS[i].buttonStyle, &FRAME_BUTTONS[i].buttonString, 
 										FRAME_BUTTONS[i].x, FRAME_BUTTONS[i].y, 
 										FRAME_BUTTONS[i].width, FRAME_BUTTONS[i].height);
 
 	for (int i = 0; i < NUM_FRAME_BUTTONS; i++)
 	{
-		FRAME_BUTTONS[i].button->setFocusImage(buttonFocusImage);
-		FRAME_BUTTONS[i].button->setSelectedImage(buttonFocusImage);
 		if (FRAME_BUTTONS[i].focusUp != -1) FRAME_BUTTONS[i].button->setNextFocus(menu::Focus::DIRECTION_UP, FRAME_BUTTONS[FRAME_BUTTONS[i].focusUp].button);
 		if (FRAME_BUTTONS[i].focusDown != -1) FRAME_BUTTONS[i].button->setNextFocus(menu::Focus::DIRECTION_DOWN, FRAME_BUTTONS[FRAME_BUTTONS[i].focusDown].button);
 		if (FRAME_BUTTONS[i].focusLeft != -1) FRAME_BUTTONS[i].button->setNextFocus(menu::Focus::DIRECTION_LEFT, FRAME_BUTTONS[FRAME_BUTTONS[i].focusLeft].button);
@@ -238,8 +235,6 @@ SettingsFrame::~SettingsFrame()
 		menu::Cursor::getInstance().removeComponent(this, FRAME_BUTTONS[i].button);
 		delete FRAME_BUTTONS[i].button;
 	}
-	delete buttonFocusImage;
-	delete buttonImage;
 
 }
 
@@ -662,6 +657,7 @@ void Func_DeleteSaves()
 
 void Func_ReturnFromSettingsFrame()
 {
+	menu::Gui::getInstance().menuLogo->setLocation(580.0, 70.0, -50.0);
 	pMenuContext->setActiveFrame(MenuContext::FRAME_MAIN);
 }
 
