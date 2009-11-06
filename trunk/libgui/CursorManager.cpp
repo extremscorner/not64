@@ -135,9 +135,9 @@ void Cursor::drawCursor(Graphics& gfx)
 
 		gfx.setDepth(-10.0f);
 		gfx.newModelView();
-		gfx.translate(-imageCenterX, -imageCenterY, 0.0f);
 		gfx.rotate(cursorRot);
-		gfx.translate(cursorX, cursorY, 0.0f);
+		gfx.translate(-imageCenterX, -imageCenterY, 0.0f);
+		gfx.translateApply(cursorX, cursorY, 0.0f);
 		gfx.loadModelView();
 		gfx.loadOrthographic();
 
