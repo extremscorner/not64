@@ -21,7 +21,7 @@ static char FRAME_STRINGS[2][7] =
 	{ "OK",
 	  "Cancel"};
 
-#define MESSAGEBOX_TEXT_WIDTH 256
+#define MESSAGEBOX_TEXT_WIDTH 512
 char messageBoxText[MESSAGEBOX_TEXT_WIDTH];
 
 struct ButtonInfo
