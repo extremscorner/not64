@@ -41,9 +41,9 @@ struct ButtonInfo
 	ButtonFunc		returnFunc;
 } FRAME_BUTTONS[NUM_FRAME_BUTTONS] =
 { //	button	buttonStyle	buttonString		x		y		width	height	Up	Dwn	Lft	Rt	clickFunc				returnFunc
-	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[0],	220.0,	340.0,	200.0,	50.0,	-1,	-1,	-1,	-1,	Func_MessageBoxCancel,	Func_MessageBoxCancel }, // OK
-	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[0],	145.0,	340.0,	150.0,	50.0,	-1,	-1,	 2,	 2,	Func_MessageBoxOK,		Func_MessageBoxCancel }, // OK (OK/Cancel)
-	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[1],	345.0,	340.0,	150.0,	50.0,	-1,	-1,	 1,	 1,	Func_MessageBoxCancel,	Func_MessageBoxCancel }, // Cancel (OK/Cancel)
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[0],	220.0,	340.0,	200.0,	56.0,	-1,	-1,	-1,	-1,	Func_MessageBoxCancel,	Func_MessageBoxCancel }, // OK
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[0],	145.0,	340.0,	150.0,	56.0,	-1,	-1,	 2,	 2,	Func_MessageBoxOK,		Func_MessageBoxCancel }, // OK (OK/Cancel)
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[1],	345.0,	340.0,	150.0,	56.0,	-1,	-1,	 1,	 1,	Func_MessageBoxCancel,	Func_MessageBoxCancel }, // Cancel (OK/Cancel)
 };
 
 MessageBox::MessageBox()

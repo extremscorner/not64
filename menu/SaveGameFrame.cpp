@@ -54,11 +54,11 @@ struct ButtonInfo
 	ButtonFunc		returnFunc;
 } FRAME_BUTTONS[NUM_FRAME_BUTTONS] =
 { //	button	buttonStyle buttonString		x		y		width	height	Up	Dwn	Lft	Rt	clickFunc			returnFunc
-	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[0],	150.0,	 50.0,	340.0,	40.0,	 3,	 1,	-1,	-1,	Func_SaveGameCardA,	Func_ReturnFromSaveGameFrame }, // Save To Card A
-	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[1],	150.0,	150.0,	340.0,	40.0,	 0,	 2,	-1,	-1,	Func_SaveGameCardB,	Func_ReturnFromSaveGameFrame }, // Save To Card B
-	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[2],	150.0,	250.0,	340.0,	40.0,	 1,	 3,	-1,	-1,	Func_SaveGameSD,	Func_ReturnFromSaveGameFrame }, // Save To SD
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[0],	150.0,	 50.0,	340.0,	56.0,	 3,	 1,	-1,	-1,	Func_SaveGameCardA,	Func_ReturnFromSaveGameFrame }, // Save To Card A
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[1],	150.0,	150.0,	340.0,	56.0,	 0,	 2,	-1,	-1,	Func_SaveGameCardB,	Func_ReturnFromSaveGameFrame }, // Save To Card B
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[2],	150.0,	250.0,	340.0,	56.0,	 1,	 3,	-1,	-1,	Func_SaveGameSD,	Func_ReturnFromSaveGameFrame }, // Save To SD
 #ifdef HW_RVL
-	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[3],	150.0,	350.0,	340.0,	40.0,	 2,	 0,	-1,	-1,	Func_SaveGameWiiFS,	Func_ReturnFromSaveGameFrame }, // Save To Wii FS
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[3],	150.0,	350.0,	340.0,	56.0,	 2,	 0,	-1,	-1,	Func_SaveGameWiiFS,	Func_ReturnFromSaveGameFrame }, // Save To Wii FS
 #endif
 };
 

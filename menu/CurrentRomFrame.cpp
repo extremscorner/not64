@@ -57,13 +57,13 @@ struct ButtonInfo
 	ButtonFunc		returnFunc;
 } FRAME_BUTTONS[NUM_FRAME_BUTTONS] =
 { //	button	buttonStyle	buttonString		x		y		width	height	Up	Dwn	Lft	Rt	clickFunc			returnFunc
-	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[0],	150.0,	 60.0,	340.0,	40.0,	 5,	 1,	-1,	-1,	Func_ShowRomInfo,	Func_ReturnFromCurrentRomFrame }, // Show ROM Info
-	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[1],	150.0,	120.0,	340.0,	40.0,	 0,	 2,	-1,	-1,	Func_ResetROM,		Func_ReturnFromCurrentRomFrame }, // Reset ROM
-	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[2],	150.0,	180.0,	340.0,	40.0,	 1,	 3,	-1,	-1,	Func_LoadSave,		Func_ReturnFromCurrentRomFrame }, // Load Native Save
-	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[3],	150.0,	240.0,	340.0,	40.0,	 2,	 4,	-1,	-1,	Func_SaveGame,		Func_ReturnFromCurrentRomFrame }, // Save Native Save
-	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[4],	150.0,	300.0,	220.0,	40.0,	 3,	 5,	 6,	 6,	Func_LoadState,		Func_ReturnFromCurrentRomFrame }, // Load State 
-	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[5],	150.0,	360.0,	220.0,	40.0,	 4,	 0,	 6,	 6,	Func_SaveState,		Func_ReturnFromCurrentRomFrame }, // Save State 
-	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[6],	390.0,	330.0,	100.0,	40.0,	 3,	 0,	 4,	 4,	Func_StateCycle,	Func_ReturnFromCurrentRomFrame }, // Cycle State 
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[0],	150.0,	 60.0,	340.0,	56.0,	 5,	 1,	-1,	-1,	Func_ShowRomInfo,	Func_ReturnFromCurrentRomFrame }, // Show ROM Info
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[1],	150.0,	120.0,	340.0,	56.0,	 0,	 2,	-1,	-1,	Func_ResetROM,		Func_ReturnFromCurrentRomFrame }, // Reset ROM
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[2],	150.0,	180.0,	340.0,	56.0,	 1,	 3,	-1,	-1,	Func_LoadSave,		Func_ReturnFromCurrentRomFrame }, // Load Native Save
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[3],	150.0,	240.0,	340.0,	56.0,	 2,	 4,	-1,	-1,	Func_SaveGame,		Func_ReturnFromCurrentRomFrame }, // Save Native Save
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[4],	150.0,	300.0,	220.0,	56.0,	 3,	 5,	 6,	 6,	Func_LoadState,		Func_ReturnFromCurrentRomFrame }, // Load State 
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[5],	150.0,	360.0,	220.0,	56.0,	 4,	 0,	 6,	 6,	Func_SaveState,		Func_ReturnFromCurrentRomFrame }, // Save State 
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[6],	390.0,	330.0,	100.0,	56.0,	 3,	 0,	 4,	 4,	Func_StateCycle,	Func_ReturnFromCurrentRomFrame }, // Cycle State 
 };
 
 CurrentRomFrame::CurrentRomFrame()

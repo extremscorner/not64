@@ -35,8 +35,8 @@ struct ButtonInfo
 	ButtonFunc		returnFunc;
 } FRAME_BUTTONS[NUM_FRAME_BUTTONS] =
 { //	button	buttonStyle	buttonString		x		y		width	height	Up	Dwn	Lft	Rt	clickFunc				returnFunc
-	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[0],	150.0,	150.0,	340.0,	40.0,	 1,	 1,	-1,	-1,	Func_ChoosePureInterp,	Func_ReturnFromSelectCPUFrame }, // Pure Interpreter
-	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[1],	150.0,	250.0,	340.0,	40.0,	 0,	 0,	-1,	-1,	Func_ChooseDynarec,		Func_ReturnFromSelectCPUFrame }, // Dynarec
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[0],	150.0,	150.0,	340.0,	56.0,	 1,	 1,	-1,	-1,	Func_ChoosePureInterp,	Func_ReturnFromSelectCPUFrame }, // Pure Interpreter
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[1],	150.0,	250.0,	340.0,	56.0,	 0,	 0,	-1,	-1,	Func_ChooseDynarec,		Func_ReturnFromSelectCPUFrame }, // Dynarec
 };
 
 SelectCPUFrame::SelectCPUFrame()
