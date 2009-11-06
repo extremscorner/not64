@@ -659,9 +659,14 @@ static int DADDIU(MIPS_instr mips){
 	RegMapping rs = mapRegister64( MIPS_GET_RS(mips) );
 	RegMapping rt = mapRegister64New( MIPS_GET_RT(mips) );
 
+	// Sign extend the immediate for the MSW
+	GEN_ADDI(ppc, 0, 0, (MIPS_GET_IMMED(mips)&0x8000) ? ~0 : 0);
+	set_next_dst(ppc);
+	// Add the immediate to the LSW
 	GEN_ADDIC(ppc, rt.lo, rs.lo, MIPS_GET_IMMED(mips));
 	set_next_dst(ppc);
-	GEN_ADDZE(ppc, rt.hi, rs.hi);
+	// Add the MSW with the sign-extension and the carry
+	GEN_ADDE(ppc, rt.hi, rs.hi, 0);
 	set_next_dst(ppc);
 
 	return CONVERT_SUCCESS;
