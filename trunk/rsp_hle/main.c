@@ -337,8 +337,8 @@ __declspec(dllexport) void RomClosed (void)
      {
 	rsp.DMEM[i] = rsp.IMEM[i] = 0;
      }
-/*   init_ucode1();
-   init_ucode2();*/
+   //init_ucode1();
+   init_ucode2();
 #ifdef __WIN32__
    firstTime = TRUE;
 #endif
