@@ -138,15 +138,24 @@ void Func_Settings()
 void Func_Credits()
 {
 	char CreditsInfo[256] = "";
+#ifdef HW_RVL
+	strcat(CreditsInfo,"Wii64 - Version Beta 1\n");
+#else
+	strcat(CreditsInfo,"Cube64 - Version Beta 1\n");
+#endif
+	strcat(CreditsInfo,"\n");
 	strcat(CreditsInfo,"Wii64 Team:\n");
 	strcat(CreditsInfo,"tehpola - core  \n");
 	strcat(CreditsInfo,"sepp256 - graphics\n");
 	strcat(CreditsInfo,"    emu_kidid - general coding\n");
 	strcat(CreditsInfo,"\n");
 	strcat(CreditsInfo,"Special Thanks To:\n");
+	strcat(CreditsInfo,"       drmr - for menu graphics\n");
 	strcat(CreditsInfo,"Hacktarux - for Mupen64\n");
-	strcat(CreditsInfo,"Shagkur - for libOGC \n");
+	strcat(CreditsInfo,"Wintermute/Shagkur - devkitPro/libOGC\n");
+#ifdef HW_RVL
 	strcat(CreditsInfo,"Team Twiizers - for Wii homebrew\n");
+#endif
 
 	menu::MessageBox::getInstance().setMessage(CreditsInfo);
 }
