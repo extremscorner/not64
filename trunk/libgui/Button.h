@@ -35,6 +35,7 @@ public:
 	void drawComponent(Graphics& gfx);
 	Component* updateFocus(int direction, int buttonsPressed);
 	void setButtonColors(GXColor *colors);
+	void setLabelColor(GXColor color);
 	enum LabelMode
 	{
 		LABEL_CENTER=0,
