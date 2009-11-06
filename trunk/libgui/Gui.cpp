@@ -22,7 +22,7 @@ Gui::Gui()
 	: fade(9)
 {
 	menuLogo = new Logo();
-	menuLogo->setLocation(580.0, 70.0, -50.0);
+	menuLogo->setLocation(570.0, 70.0, -150.0);
 	menuLogo->setVisible(true);
 }
 

@@ -1,6 +1,7 @@
 #include "Logo.h"
 #include "GraphicsGX.h"
 #include <math.h>
+#include "ogc/lwp_watchdog.h"
 
 namespace menu {
 
@@ -85,7 +86,7 @@ s8 N_verts[] ATTRIBUTE_ALIGN (32) =
 #define LOGO_M_Z2 15
 #define LOGO_M_Z3 30
 
-// 'N' logo vertex data
+// 'M' logo vertex data
 s8 M_verts[] ATTRIBUTE_ALIGN (32) =
 { // x y z
 	-LOGO_M_X3, -LOGO_M_Y3,  LOGO_M_Z3,		//  0, 0 (side A, XY plane, Z=LOGO_M_Z3)
@@ -174,22 +175,145 @@ s8 M_verts[] ATTRIBUTE_ALIGN (32) =
 	-LOGO_M_X2, -LOGO_M_Y3, -LOGO_M_Z2,		// 75,1D		  1A 1B  
 };
 
+#define LOGO_W_Y0  0
+#define LOGO_W_Y1 16
+#define LOGO_W_Y2 16
+#define LOGO_W_Y3 32
+#define LOGO_W_Y4 64
+#define LOGO_W_YOFFSET 32
+#define LOGO_W_YSCALE 4
+#define LOGO_W_X0  0
+#define LOGO_W_X1  7
+#define LOGO_W_X2 15
+#define LOGO_W_X3 30
+#define LOGO_W_X2L1 (LOGO_W_X2+(LOGO_W_Y2/LOGO_W_YSCALE))
+#define LOGO_W_X3L1 (LOGO_W_X3+(LOGO_W_Y2/LOGO_W_YSCALE))
+#define LOGO_W_X2L2 (LOGO_W_X2+(LOGO_W_Y3/LOGO_W_YSCALE))
+#define LOGO_W_X3L2 (LOGO_W_X3+(LOGO_W_Y3/LOGO_W_YSCALE))
+#define LOGO_W_X2L3 (LOGO_W_X2+(LOGO_W_Y4/LOGO_W_YSCALE))
+#define LOGO_W_X3L3 (LOGO_W_X3+(LOGO_W_Y4/LOGO_W_YSCALE))
+#define LOGO_W_Z0  0
+#define LOGO_W_Z1  7
+#define LOGO_W_Z2 15
+#define LOGO_W_Z3 30
+#define LOGO_W_Z2L1 (LOGO_W_Z2+(LOGO_W_Y2/LOGO_W_YSCALE))
+#define LOGO_W_Z3L1 (LOGO_W_Z3+(LOGO_W_Y2/LOGO_W_YSCALE))
+#define LOGO_W_Z2L2 (LOGO_W_Z2+(LOGO_W_Y3/LOGO_W_YSCALE))
+#define LOGO_W_Z3L2 (LOGO_W_Z3+(LOGO_W_Y3/LOGO_W_YSCALE))
+#define LOGO_W_Z2L3 (LOGO_W_Z2+(LOGO_W_Y4/LOGO_W_YSCALE))
+#define LOGO_W_Z3L3 (LOGO_W_Z3+(LOGO_W_Y4/LOGO_W_YSCALE))
+
+// 'W' logo vertex data
+s8 W_verts[] ATTRIBUTE_ALIGN (32) =
+{ // x y z
+	-LOGO_W_X3L3, -LOGO_W_Y4,  LOGO_W_Z3L3,		//  0, 0 (side A, XY plane, Z=LOGO_W_Z3)
+	-LOGO_W_X2L3, -LOGO_W_Y4,  LOGO_W_Z3L3,		//  1, 1		   9 A   B C		-Y0
+	 LOGO_W_X2L3, -LOGO_W_Y4,  LOGO_W_Z3L3,		//  2, 2		 	   8			-Y1, L1?
+	 LOGO_W_X3L3, -LOGO_W_Y4,  LOGO_W_Z3L3,		//  3, 3		    6     7			-Y2, L1
+	-LOGO_W_X1,   -LOGO_W_Y3,  LOGO_W_Z3L2,		//  4, 4		       45			-Y3, L2
+	 LOGO_W_X1,   -LOGO_W_Y3,  LOGO_W_Z3L2,		//  5, 5		0 1         2 3		-Y4, L3
+	-LOGO_W_X2L1, -LOGO_W_Y2,  LOGO_W_Z3L1,		//  6, 6
+	 LOGO_W_X2L1, -LOGO_W_Y2,  LOGO_W_Z3L1,		//  7, 7
+	 LOGO_W_X0,   -LOGO_W_Y1,  LOGO_W_Z3L1,		//  8, 8
+	-LOGO_W_X3,   -LOGO_W_Y0,  LOGO_W_Z3,		//  9, 9
+	-LOGO_W_X2,   -LOGO_W_Y0,  LOGO_W_Z3,		// 10, A
+	 LOGO_W_X2,   -LOGO_W_Y0,  LOGO_W_Z3,		// 11, B
+	 LOGO_W_X3,   -LOGO_W_Y0,  LOGO_W_Z3,		// 12, C
+
+	 LOGO_W_Z3L3, -LOGO_W_Y4,  LOGO_W_X3L3, 	// 13, 0 (side B, -ZY plane, X=LOGO_W_Z3)
+	 LOGO_W_Z3L3, -LOGO_W_Y4,  LOGO_W_X2L3, 	// 14, 1		   9 A   B C		-Y0
+	 LOGO_W_Z3L3, -LOGO_W_Y4, -LOGO_W_X2L3, 	// 15, 2		 	   8			-Y1, L1?
+	 LOGO_W_Z3L3, -LOGO_W_Y4, -LOGO_W_X3L3, 	// 16, 3		    6     7			-Y2, L1
+	 LOGO_W_Z3L2, -LOGO_W_Y3,  LOGO_W_X1,   	// 17, 4		       45			-Y3, L2
+	 LOGO_W_Z3L2, -LOGO_W_Y3, -LOGO_W_X1,   	// 18, 5		0 1         2 3		-Y4, L3
+	 LOGO_W_Z3L1, -LOGO_W_Y2,  LOGO_W_X2L1,		// 19, 6
+	 LOGO_W_Z3L1, -LOGO_W_Y2, -LOGO_W_X2L1, 	// 20, 7
+	 LOGO_W_Z3L1, -LOGO_W_Y1, -LOGO_W_X0,   	// 21, 8
+	 LOGO_W_Z3,   -LOGO_W_Y0,  LOGO_W_X3,   	// 22, 9
+	 LOGO_W_Z3,   -LOGO_W_Y0,  LOGO_W_X2,   	// 23, A
+	 LOGO_W_Z3,   -LOGO_W_Y0, -LOGO_W_X2,   	// 24, B
+	 LOGO_W_Z3,   -LOGO_W_Y0, -LOGO_W_X3,   	// 25, C
+
+	 LOGO_W_X3L3, -LOGO_W_Y4, -LOGO_W_Z3L3,		// 26, 0 (side C, -XY plane, Z=-LOGO_W_Z3)
+	 LOGO_W_X2L3, -LOGO_W_Y4, -LOGO_W_Z3L3,		// 27, 1		   9 A   B C		-Y0
+	-LOGO_W_X2L3, -LOGO_W_Y4, -LOGO_W_Z3L3,		// 28, 2		 	   8			-Y1, L1?
+	-LOGO_W_X3L3, -LOGO_W_Y4, -LOGO_W_Z3L3,		// 29, 3		    6     7			-Y2, L1
+	 LOGO_W_X1,   -LOGO_W_Y3, -LOGO_W_Z3L2,		// 30, 4		       45			-Y3, L2
+	-LOGO_W_X1,   -LOGO_W_Y3, -LOGO_W_Z3L2,		// 31, 5		0 1         2 3		-Y4, L3
+	 LOGO_W_X2L1, -LOGO_W_Y2, -LOGO_W_Z3L1,		// 32, 6
+	-LOGO_W_X2L1, -LOGO_W_Y2, -LOGO_W_Z3L1,		// 33, 7
+	-LOGO_W_X0,   -LOGO_W_Y1, -LOGO_W_Z3L1,		// 34, 8
+	 LOGO_W_X3,   -LOGO_W_Y0, -LOGO_W_Z3,		// 35, 9
+	 LOGO_W_X2,   -LOGO_W_Y0, -LOGO_W_Z3,		// 36, A
+	-LOGO_W_X2,   -LOGO_W_Y0, -LOGO_W_Z3,		// 37, B
+	-LOGO_W_X3,   -LOGO_W_Y0, -LOGO_W_Z3,		// 38, C
+
+	-LOGO_W_Z3L3, -LOGO_W_Y4, -LOGO_W_X3L3, 	// 39, 0 (side D, ZY plane, X=-LOGO_W_Z3)
+	-LOGO_W_Z3L3, -LOGO_W_Y4, -LOGO_W_X2L3, 	// 40, 1		9 A    B C
+	-LOGO_W_Z3L3, -LOGO_W_Y4,  LOGO_W_X2L3, 	// 41, 2			8
+	-LOGO_W_Z3L3, -LOGO_W_Y4,  LOGO_W_X3L3, 	// 42, 3		  6    7
+	-LOGO_W_Z3L2, -LOGO_W_Y3, -LOGO_W_X1,   	// 43, 4		    45  
+	-LOGO_W_Z3L2, -LOGO_W_Y3,  LOGO_W_X1,   	// 44, 5		0 1    2 3
+	-LOGO_W_Z3L1, -LOGO_W_Y2, -LOGO_W_X2L1,		// 45, 6
+	-LOGO_W_Z3L1, -LOGO_W_Y2,  LOGO_W_X2L1, 	// 46, 7
+	-LOGO_W_Z3L1, -LOGO_W_Y1,  LOGO_W_X0,   	// 47, 8
+	-LOGO_W_Z3,   -LOGO_W_Y0, -LOGO_W_X3,   	// 48, 9
+	-LOGO_W_Z3,   -LOGO_W_Y0, -LOGO_W_X2,   	// 49, A
+	-LOGO_W_Z3,   -LOGO_W_Y0,  LOGO_W_X2,   	// 50, B
+	-LOGO_W_Z3,   -LOGO_W_Y0,  LOGO_W_X3,   	// 51, C
+
+	-LOGO_W_X2,   -LOGO_W_Y0,  LOGO_W_Z2,		// 52,9A (top, XZ plane, Y=-LOGO_W_Y0)
+	 LOGO_W_X2,   -LOGO_W_Y0,  LOGO_W_Z2,		// 53,9B		
+	 LOGO_W_X2,   -LOGO_W_Y0, -LOGO_W_Z2,		// 54,9C		  9D 9C
+	-LOGO_W_X2,   -LOGO_W_Y0, -LOGO_W_Z2,		// 55,9D		  9A 9B  
+
+	 LOGO_W_X0,   -LOGO_W_Y1,  LOGO_W_Z2L1,		// 56,8A (upper-middle, XZ plane, Y=-LOGO_W_Y1, L1?)
+	 LOGO_W_X2L1, -LOGO_W_Y1,  LOGO_W_Z0,  		// 57,8B		       8C
+	 LOGO_W_X0,	  -LOGO_W_Y1, -LOGO_W_Z2L1,		// 58,8C	        8D    8B
+	-LOGO_W_X2L1, -LOGO_W_Y1,  LOGO_W_Z0,  		// 59,8D	           8A     
+
+	-LOGO_W_X2L1, -LOGO_W_Y2,  LOGO_W_Z2L1,		// 60,6A (center-middle, XZ plane, Y=-LOGO_W_Y2, L1)
+	 LOGO_W_X2L1, -LOGO_W_Y2,  LOGO_W_Z2L1,		// 61,6B		
+	 LOGO_W_X2L1, -LOGO_W_Y2, -LOGO_W_Z2L1,		// 62,6C		  6D 6C
+	-LOGO_W_X2L1, -LOGO_W_Y2, -LOGO_W_Z2L1,		// 63,6D		  6A 6B  
+
+	-LOGO_W_X1,   -LOGO_W_Y3,  LOGO_W_Z2L2,		// 64,4A (lower-middle, XZ plane, Y=-LOGO_W_Y3, L2)
+	 LOGO_W_X1,   -LOGO_W_Y3,  LOGO_W_Z2L2,		// 65,4B		
+	 LOGO_W_X2L2, -LOGO_W_Y3,  LOGO_W_Z1,		// 66,4C		  4F 4E
+	 LOGO_W_X2L2, -LOGO_W_Y3, -LOGO_W_Z1,		// 67,4D	   4G       4D 
+	 LOGO_W_X1,   -LOGO_W_Y3, -LOGO_W_Z2L2,		// 68,4E       4H       4C
+	-LOGO_W_X1,   -LOGO_W_Y3, -LOGO_W_Z2L2,		// 69,4F		  4A 4B
+	-LOGO_W_X2L2, -LOGO_W_Y3, -LOGO_W_Z1,		// 70,4G		  
+	-LOGO_W_X2L2, -LOGO_W_Y3,  LOGO_W_Z1,		// 71,4H		    
+
+	-LOGO_W_X2L3, -LOGO_W_Y4,  LOGO_W_Z2L3,		// 72,1A (bottom, XZ plane, Y=-LOGO_W_Y4, L3)
+	 LOGO_W_X2L3, -LOGO_W_Y4,  LOGO_W_Z2L3,		// 73,1B		
+	 LOGO_W_X2L3, -LOGO_W_Y4, -LOGO_W_Z2L3,		// 74,1C		  1D 1C
+	-LOGO_W_X2L3, -LOGO_W_Y4, -LOGO_W_Z2L3,		// 75,1D		  1A 1B  
+};
+
 // N64 logo color data
 u8 logo_colors[] ATTRIBUTE_ALIGN (32) =
 { // r, g, b, a
+	//'N' logo colors
 	  8, 147,  48, 255,		// 0 green
 	  1,  29, 169, 255,		// 1 blue
 	254,  32,  21, 255,		// 2 orange/red
 	255, 192,   1, 255,		// 3 yellow/gold
+	//'M' logo colors
 	230,   1,   1, 255,		// 4 red
 	190, 190, 190, 255,		// 5 light gray
 	255, 255, 255, 128,		// 6 white
+	//'W' logo colors
+	243, 243, 243, 255,		// 7 white
+	102, 112, 123, 255,		// 8 gray
+	101, 193, 244, 192,		// 9 wii slot blue
 };
 
+#define LOGO_MODE_MAX 3
 
 Logo::Logo()
-		: logoMode(LOGO_N),
-		  x(0),
+		: x(0),
 		  y(0),
 		  size(1),
 		  rotateAuto(0),
@@ -197,6 +321,8 @@ Logo::Logo()
 		  rotateY(0)
 {
 	setVisible(false);
+	srand ( gettick() );
+	logoMode = rand() % LOGO_MODE_MAX;
 }
 
 Logo::~Logo()
@@ -220,10 +346,6 @@ void Logo::setMode(int mode)
 	logoMode = mode;
 }
 
-//#include "ogc/lwp_watchdog.h"
-
-//#define SCROLL_PERIOD 4.0f
-
 void Logo::updateTime(float deltaTime)
 {
 	//Overload in Component class
@@ -244,7 +366,7 @@ void Logo::drawComponent(Graphics& gfx)
 	rotateAuto++;
 
 	u16 pad0 = PAD_ButtonsDown(0);
-	if (pad0 & PAD_TRIGGER_Z) logoMode = (logoMode+1) % 2;
+	if (pad0 & PAD_TRIGGER_Z) logoMode = (logoMode+1) % 3;
 
 	//libOGC was changed such that sticks are now clamped and don't have to be by us
 	stickX = PAD_SubStickX(0);
@@ -256,16 +378,34 @@ void Logo::drawComponent(Graphics& gfx)
 
 	// move the logo out in front of us and rotate it
 	guMtxIdentity (m);
-	guMtxRotAxisDeg (tmp, &axisX, 25);			//change to isometric view
-	guMtxConcat (m, tmp, m);
-	guMtxRotAxisDeg (tmp, &axisX, 180);			//flip rightside-up
-	guMtxConcat (m, tmp, m);
-	guMtxRotAxisDeg (tmp, &axisX, -rotateY);
-	guMtxConcat (m, tmp, m);
-	guMtxRotAxisDeg (tmp, &axisY, rotateX);
-	guMtxConcat (m, tmp, m);
-	guMtxRotAxisDeg (tmp, &axisY, -rotateAuto);		//slowly rotate logo
-	guMtxConcat (m, tmp, m);
+	if(logoMode == LOGO_W)	
+	{
+		guMtxRotAxisDeg (tmp, &axisX, 25);			//change to isometric view
+		guMtxConcat (m, tmp, m);
+		guMtxRotAxisDeg (tmp, &axisX, -rotateY);
+		guMtxConcat (m, tmp, m);
+		guMtxRotAxisDeg (tmp, &axisY, -rotateX);
+		guMtxConcat (m, tmp, m);
+		guMtxRotAxisDeg (tmp, &axisY, rotateAuto);		//slowly rotate logo
+		guMtxConcat (m, tmp, m);
+		guMtxScale (tmp, 0.8f, 1.0f, 0.8f);
+		guMtxConcat (m, tmp, m);
+		guMtxTrans (tmp, 0, LOGO_W_YOFFSET, 0);
+		guMtxConcat (m, tmp, m);
+	}
+	else
+	{
+		guMtxRotAxisDeg (tmp, &axisX, 25);			//change to isometric view
+		guMtxConcat (m, tmp, m);
+		guMtxRotAxisDeg (tmp, &axisX, 180);			//flip rightside-up
+		guMtxConcat (m, tmp, m);
+		guMtxRotAxisDeg (tmp, &axisX, -rotateY);
+		guMtxConcat (m, tmp, m);
+		guMtxRotAxisDeg (tmp, &axisY, rotateX);
+		guMtxConcat (m, tmp, m);
+		guMtxRotAxisDeg (tmp, &axisY, -rotateAuto);		//slowly rotate logo
+		guMtxConcat (m, tmp, m);
+	}
 	guMtxTransApply (m, m, x, y, z);
 	guMtxConcat (v, m, mv);
 	// load the modelview matrix into matrix memory
@@ -274,7 +414,7 @@ void Logo::drawComponent(Graphics& gfx)
 	GX_SetCullMode (GX_CULL_BACK); // show only the outside facing quads
 	GX_SetZMode(GX_ENABLE,GX_GEQUAL,GX_TRUE);
 
-	GX_SetLineWidth(12,GX_TO_ZERO);
+	GX_SetLineWidth(8,GX_TO_ZERO);
 
 	// setup the vertex descriptor
 	GX_ClearVtxDesc ();
@@ -289,6 +429,7 @@ void Logo::drawComponent(Graphics& gfx)
 	// set the array stride
 	if(logoMode == LOGO_N)		GX_SetArray (GX_VA_POS, N_verts, 3 * sizeof (s8));
 	else if(logoMode == LOGO_M)	GX_SetArray (GX_VA_POS, M_verts, 3 * sizeof (s8));
+	else if(logoMode == LOGO_W)	GX_SetArray (GX_VA_POS, W_verts, 3 * sizeof (s8));
 	GX_SetArray (GX_VA_CLR0, logo_colors, 4 * sizeof (u8));
 	
 	GX_SetNumChans (1);
@@ -426,6 +567,11 @@ void Logo::drawComponent(Graphics& gfx)
 		drawQuad (44, 46, 60, 71, 5);
 		GX_End ();
 
+		guMtxTransApply (m, m, 0, 0, -2);
+		guMtxConcat (v, m, mv);
+		// load the modelview matrix into matrix memory
+		GX_LoadPosMtxImm (mv, GX_PNMTX0);
+
 		GX_Begin (GX_LINES, GX_VTXFMT0, 216);
 
 		drawQuad ( 0,  9,  9, 10, 6);	//Side A
@@ -493,7 +639,165 @@ void Logo::drawComponent(Graphics& gfx)
 
 		GX_End ();
 	}
+	else if (logoMode == LOGO_W)
+	{
+		// 'W'
+		GX_Begin (GX_QUADS, GX_VTXFMT0, 272);  //68 quads, so 272 verts 40+12+16
+		drawQuad ( 0,  9, 10,  1, 7); //Side A, red
+		drawQuad ( 6, 10,  8,  4, 7);
+		drawQuad ( 4,  8,  8,  5, 7);
+		drawQuad ( 5,  8, 11,  7, 7);
+		drawQuad ( 2, 11, 12,  3, 7);
+		drawQuad (40, 45, 63, 75, 7); //Side A1
+		drawQuad (63, 55, 58, 69, 7);
+		drawQuad (69, 58, 58, 68, 7);
+		drawQuad (68, 58, 54, 62, 7);
+		drawQuad (62, 20, 15, 74, 7);
+
+		drawQuad (13, 22, 23, 14, 7); //Side B, red
+		drawQuad (19, 23, 21, 17, 7);
+		drawQuad (17, 21, 21, 18, 7);
+		drawQuad (18, 21, 24, 20, 7);
+		drawQuad (15, 24, 25, 16, 7);
+		drawQuad ( 1,  6, 60, 72, 7); //Side B1
+		drawQuad (52, 59, 71, 60, 7);
+		drawQuad (71, 59, 59, 70, 7);
+		drawQuad (70, 59, 55, 63, 7);
+		drawQuad (75, 63, 33, 28, 7);
+
+		drawQuad (26, 35, 36, 27, 7); //Side C, red
+		drawQuad (32, 36, 34, 30, 7);
+		drawQuad (30, 34, 34, 31, 7);
+		drawQuad (31, 34, 37, 33, 7);
+		drawQuad (28, 37, 38, 29, 7);
+		drawQuad (14, 19, 61, 73, 7); //Side C1
+		drawQuad (61, 53, 56, 65, 7);
+		drawQuad (65, 56, 56, 64, 7);
+		drawQuad (64, 56, 52, 60, 7);
+		drawQuad (72, 60, 46, 41, 7);
+
+		drawQuad (39, 48, 49, 40, 7); //Side D, red
+		drawQuad (45, 49, 47, 43, 7);
+		drawQuad (43, 47, 47, 44, 7);
+		drawQuad (44, 47, 50, 46, 7);
+		drawQuad (41, 50, 51, 42, 7);
+		drawQuad (27, 32, 62, 74, 7); //Side D1
+		drawQuad (62, 54, 57, 67, 7);
+		drawQuad (67, 57, 57, 66, 7);
+		drawQuad (66, 57, 53, 61, 7);
+		drawQuad (73, 61,  7,  2, 7);
+
+		drawQuad (10,  9, 50, 52, 8); //Top, gray
+		drawQuad (49, 48, 37, 55, 8);
+		drawQuad (36, 35, 24, 54, 8);
+		drawQuad (23, 22, 11, 53, 8);
+
+		drawQuad (59, 52, 50, 47, 8); //Top-slanted, gray
+		drawQuad (47, 49, 55, 59, 8);
+		drawQuad (58, 55, 37, 34, 8);
+		drawQuad (34, 36, 54, 58, 8);
+		drawQuad (57, 54, 24, 21, 8);
+		drawQuad (21, 23, 53, 57, 8);
+		drawQuad (56, 53, 11,  8, 8);
+		drawQuad ( 8, 10, 52, 56, 8);
+
+		drawQuad ( 0,  1, 72, 41, 8); //Bottom, gray
+		drawQuad (39, 40, 75, 28, 8);
+		drawQuad (26, 27, 74, 15, 8);
+		drawQuad (13, 14, 73,  2, 8);
+
+		drawQuad ( 6,  4, 64, 60, 8); //Bottom-slanted, gray
+		drawQuad ( 4,  5, 65, 64, 8);
+		drawQuad ( 5,  7, 61, 65, 8);
+
+		drawQuad (19, 17, 66, 61, 8);
+		drawQuad (17, 18, 67, 66, 8);
+		drawQuad (18, 20, 62, 67, 8);
+
+		drawQuad (32, 30, 68, 62, 8);
+		drawQuad (30, 31, 69, 68, 8);
+		drawQuad (31, 33, 63, 69, 8);
+
+		drawQuad (45, 43, 70, 63, 8);
+		drawQuad (43, 44, 71, 70, 8);
+		drawQuad (44, 46, 60, 71, 8);
+		GX_End ();
+
+		guMtxTransApply (m, m, 0, 0, -2);
+		guMtxConcat (v, m, mv);
+		// load the modelview matrix into matrix memory
+		GX_LoadPosMtxImm (mv, GX_PNMTX0);
+
+		GX_Begin (GX_LINES, GX_VTXFMT0, 216);
+
+		drawQuad ( 0,  9,  9, 10, 9);	//Side A
+		drawQuad (10,  8,  8, 11, 9);
+		drawQuad (11, 12, 12,  3, 9);
+		drawQuad ( 3,  2,  2,  7, 9);
+		drawQuad ( 7,  5,  5,  4, 9);
+		drawQuad ( 4,  6,  6,  1, 9);
+		drawLine ( 1,  0, 9);
+
+		drawQuad (22, 23, 23, 21, 9);	//Side B
+		drawQuad (21, 24, 24, 25, 9);
+		drawQuad (25, 16, 16, 15, 9);
+		drawQuad (15, 20, 20, 18, 9);
+		drawQuad (18, 17, 17, 19, 9);
+		drawQuad (19, 14, 14, 13, 9);
+
+		drawQuad (35, 36, 36, 34, 9);	//Side C
+		drawQuad (34, 37, 37, 38, 9);
+		drawQuad (38, 29, 29, 28, 9);
+		drawQuad (28, 33, 33, 31, 9);
+		drawQuad (31, 30, 30, 32, 9);
+		drawQuad (32, 27, 27, 26, 9);
+
+		drawQuad (48, 49, 49, 47, 9);	//Side D
+		drawQuad (47, 50, 50, 51, 9);
+		drawLine (42, 41, 9);
+		drawQuad (41, 46, 46, 44, 9);
+		drawQuad (44, 43, 43, 45, 9);
+		drawQuad (45, 40, 40, 39, 9);
+
+		drawQuad (10, 52, 11, 53, 9);	//Top 
+		drawQuad (23, 53, 24, 54, 9);
+		drawQuad (36, 54, 37, 55, 9);
+		drawQuad (49, 55, 50, 52, 9);
+		drawQuad ( 8, 56, 21, 57, 9);
+		drawQuad (34, 58, 47, 59, 9);
+		drawQuad (52, 56, 56, 53, 9);
+		drawQuad (53, 57, 57, 54, 9);
+		drawQuad (54, 58, 58, 55, 9);
+		drawQuad (55, 59, 59, 52, 9);
+		drawQuad (52, 72, 53, 73, 9);	//Center Vertical
+		drawQuad (54, 74, 55, 75, 9);
+
+		drawQuad ( 1, 72,  2, 73, 9);	//bottom
+		drawQuad (14, 73, 15, 74, 9);
+		drawQuad (27, 74, 28, 75, 9);
+		drawQuad (40, 75, 41, 72, 9);
+
+		drawQuad ( 6, 60,  4, 64, 9);	//middle, radial
+		drawQuad ( 5, 65,  7, 61, 9);
+		drawQuad (19, 61, 17, 66, 9);
+		drawQuad (18, 67, 20, 62, 9);
+		drawQuad (32, 62, 30, 68, 9);
+		drawQuad (31, 69, 33, 63, 9);
+		drawQuad (45, 63, 43, 70, 9);
+		drawQuad (44, 71, 46, 60, 9);
+
+		drawQuad (60, 64, 64, 65, 9);	//middle, circumference
+		drawQuad (65, 61, 61, 66, 9);
+		drawQuad (66, 67, 67, 62, 9);
+		drawQuad (62, 68, 68, 69, 9);
+		drawQuad (69, 63, 63, 70, 9);
+		drawQuad (70, 71, 71, 60, 9);
+
+		GX_End ();
+	}
 		
+	//Reset GX state:
+	GX_SetLineWidth(6,GX_TO_ZERO);
 	gfx.drawInit();
 }
 
