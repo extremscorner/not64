@@ -192,6 +192,13 @@ void Graphics::newModelView()
 
 void Graphics::translate(float x, float y, float z)
 {
+	Mtx tmp;
+	guMtxTrans (tmp, x, y, z);
+	guMtxConcat (currentModelViewMtx, tmp, currentModelViewMtx);
+}
+
+void Graphics::translateApply(float x, float y, float z)
+{
 	guMtxTransApply(currentModelViewMtx,currentModelViewMtx,x,y,z);
 }
 
