@@ -193,7 +193,6 @@ void Func_PlayGame()
 	}
 	
 	//Wait until 'A' button released before play/resume game
-
 	menu::Cursor::getInstance().setFreezeAction(true);
 	menu::Focus::getInstance().setFreezeAction(true);
 	int buttonHeld = 1;
@@ -201,16 +200,12 @@ void Func_PlayGame()
 	{
 		buttonHeld = 0;
 		menu::Gui::getInstance().draw();
-//		WPADData* wiiPad = menu::Input::getInstance().getWpad();
 		for (int i=0; i<4; i++)
 		{
-//			if(PAD_ButtonsHeld(i) & PAD_BUTTON_A) buttonHeld++;
+			if(PAD_ButtonsHeld(i) & PAD_BUTTON_A) buttonHeld++;
 #ifdef HW_RVL
-//		wiiPadError[i] = WPAD_ReadEvent(i, &wiiPad[i]);
-//			WPADData* wiiPad = WPAD_Data(i);
-//			if(wiiPad->err == WPAD_ERR_NONE && (wiiPad->btns_h & WPAD_BUTTON_A)) buttonHeld++;
-//			if(wiiPad->btns_h & (WPAD_BUTTON_A | WPAD_CLASSIC_BUTTON_A)) buttonHeld++;
-//			if (wiiPad[i].exp.type == WPAD_EXP_CLASSIC)
+			WPADData* wiiPad = WPAD_Data(i);
+			if(wiiPad->err == WPAD_ERR_NONE && wiiPad->btns_h & (WPAD_BUTTON_A | WPAD_CLASSIC_BUTTON_A)) buttonHeld++;
 #endif
 		}
 	}
@@ -234,10 +229,8 @@ void Func_PlayGame()
 	pauseInput();
 	pauseAudio();
 
-	//TODO: make the MessageBox here not require an "ok", and just do "Saving to X" and vanish
   if(autoSave==AUTOSAVE_ENABLE) {
     if(flashramWritten || sramWritten || eepromWritten || mempakWritten) {  //something needs saving
-      //menu::MessageBox::getInstance().setMessage("Automatically saving game .. ");
       switch (nativeSaveDevice)
     	{
     		case NATIVESAVEDEVICE_SD:

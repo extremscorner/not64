@@ -11,7 +11,6 @@ public:
 	void refreshInput();
 #ifdef HW_RVL
 	WPADData* getWpad();
-	int* getWpadError();
 #endif
 	PADStatus* getPad();
 	void clearInputData();
@@ -26,8 +25,7 @@ private:
 	~Input();
 	PADStatus gcPad[4];
 #ifdef HW_RVL
-	WPADData wiiPad[4];
-	int wiiPadError[4];
+	WPADData *wiiPad;
 #endif
 
 };
