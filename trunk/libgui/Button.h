@@ -4,6 +4,10 @@
 //#include "GuiTypes.h"
 #include "Component.h"
 
+#define BTN_DEFAULT menu::Button::BUTTON_DEFAULT
+#define BTN_A_NRM menu::Button::BUTTON_STYLEA_NORMAL
+#define BTN_A_SEL menu::Button::BUTTON_STYLEA_SELECT
+
 typedef void (*ButtonFunc)( void );
 
 namespace menu {
@@ -11,7 +15,7 @@ namespace menu {
 class Button : public Component
 {
 public:
-	Button(Image *image, char** label, float x, float y, float width, float height);
+	Button(int style, char** label, float x, float y, float width, float height);
 	~Button();
 	void setActive(bool active);
 	bool getActive();
@@ -24,8 +28,9 @@ public:
 	void setLabelMode(int mode);
 	void setLabelScissor(int scissor);
 	void setNormalImage(Image *image);
-	void setSelectedImage(Image *image);
 	void setFocusImage(Image *image);
+	void setSelectedImage(Image *image);
+	void setSelectedFocusImage(Image *image);
 	void updateTime(float deltaTime);
 	void drawComponent(Graphics& gfx);
 	Component* updateFocus(int direction, int buttonsPressed);
@@ -38,13 +43,21 @@ public:
 		LABEL_SCROLLONFOCUS
 	};
 
+	enum ButtonStyle
+	{
+		BUTTON_DEFAULT=0,
+		BUTTON_STYLEA_NORMAL,
+		BUTTON_STYLEA_SELECT
+	};
+
 private:
 	bool active, selected;
 	Image	*normalImage;
-	Image	*selectedImage;
 	Image	*focusImage;
+	Image	*selectedImage;
+	Image	*selectedFocusImage;
 	char** buttonText;
-	int labelMode, labelScissor;
+	int buttonStyle, labelMode, labelScissor;
 	unsigned long StartTime;
 	float x, y, width, height;
 	GXColor	focusColor, inactiveColor, activeColor, selectedColor, labelColor;

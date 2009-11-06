@@ -1,5 +1,6 @@
 #include "MessageBox.h"
 #include "GraphicsGX.h"
+#include "GuiResources.h"
 #include "resources.h"
 #include "Button.h"
 #include "CursorManager.h"
@@ -26,6 +27,7 @@ char messageBoxText[MESSAGEBOX_TEXT_WIDTH];
 struct ButtonInfo
 {
 	menu::Button	*button;
+	int				buttonStyle;
 	char*			buttonString;
 	float			x;
 	float			y;
@@ -38,10 +40,10 @@ struct ButtonInfo
 	ButtonFunc		clickedFunc;
 	ButtonFunc		returnFunc;
 } FRAME_BUTTONS[NUM_FRAME_BUTTONS] =
-{ //	button	buttonString		x		y		width	height	Up	Dwn	Lft	Rt	clickFunc				returnFunc
-	{	NULL,	FRAME_STRINGS[0],	220.0,	340.0,	200.0,	50.0,	-1,	-1,	-1,	-1,	Func_MessageBoxCancel,	Func_MessageBoxCancel }, // OK
-	{	NULL,	FRAME_STRINGS[0],	145.0,	340.0,	150.0,	50.0,	-1,	-1,	 2,	 2,	Func_MessageBoxOK,		Func_MessageBoxCancel }, // OK (OK/Cancel)
-	{	NULL,	FRAME_STRINGS[1],	345.0,	340.0,	150.0,	50.0,	-1,	-1,	 1,	 1,	Func_MessageBoxCancel,	Func_MessageBoxCancel }, // Cancel (OK/Cancel)
+{ //	button	buttonStyle	buttonString		x		y		width	height	Up	Dwn	Lft	Rt	clickFunc				returnFunc
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[0],	220.0,	340.0,	200.0,	50.0,	-1,	-1,	-1,	-1,	Func_MessageBoxCancel,	Func_MessageBoxCancel }, // OK
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[0],	145.0,	340.0,	150.0,	50.0,	-1,	-1,	 2,	 2,	Func_MessageBoxOK,		Func_MessageBoxCancel }, // OK (OK/Cancel)
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[1],	345.0,	340.0,	150.0,	50.0,	-1,	-1,	 1,	 1,	Func_MessageBoxCancel,	Func_MessageBoxCancel }, // Cancel (OK/Cancel)
 };
 
 MessageBox::MessageBox()
@@ -52,18 +54,16 @@ MessageBox::MessageBox()
 		  currentFocusFrame(0),
 		  returnValue(0)
 {
-	buttonImage = new menu::Image(ButtonTexture, 16, 16, GX_TF_I8, GX_CLAMP, GX_CLAMP, GX_FALSE);
-	buttonFocusImage = new menu::Image(ButtonFocusTexture, 16, 16, GX_TF_I8, GX_CLAMP, GX_CLAMP, GX_FALSE);
+	buttonImage = Resources::getInstance().getImage(Resources::IMAGE_DEFAULT_BUTTON);
+	buttonFocusImage = Resources::getInstance().getImage(Resources::IMAGE_DEFAULT_BUTTONFOCUS);
 
 	for (int i = 0; i < NUM_FRAME_BUTTONS; i++)
-		FRAME_BUTTONS[i].button = new menu::Button(buttonImage, &FRAME_BUTTONS[i].buttonString, 
+		FRAME_BUTTONS[i].button = new menu::Button(FRAME_BUTTONS[i].buttonStyle, &FRAME_BUTTONS[i].buttonString, 
 										FRAME_BUTTONS[i].x, FRAME_BUTTONS[i].y, 
 										FRAME_BUTTONS[i].width, FRAME_BUTTONS[i].height);
 
 	for (int i = 0; i < NUM_FRAME_BUTTONS; i++)
 	{
-		FRAME_BUTTONS[i].button->setFocusImage(buttonFocusImage);
-		FRAME_BUTTONS[i].button->setSelectedImage(buttonFocusImage);
 		if (FRAME_BUTTONS[i].focusUp != -1) FRAME_BUTTONS[i].button->setNextFocus(Focus::DIRECTION_UP, FRAME_BUTTONS[FRAME_BUTTONS[i].focusUp].button);
 		if (FRAME_BUTTONS[i].focusDown != -1) FRAME_BUTTONS[i].button->setNextFocus(Focus::DIRECTION_DOWN, FRAME_BUTTONS[FRAME_BUTTONS[i].focusDown].button);
 		if (FRAME_BUTTONS[i].focusLeft != -1) FRAME_BUTTONS[i].button->setNextFocus(Focus::DIRECTION_LEFT, FRAME_BUTTONS[FRAME_BUTTONS[i].focusLeft].button);
@@ -94,8 +94,6 @@ MessageBox::~MessageBox()
 		Cursor::getInstance().removeComponent(this, FRAME_BUTTONS[i].button);
 		delete FRAME_BUTTONS[i].button;
 	}
-	delete buttonFocusImage;
-	delete buttonImage;
 }
 
 void MessageBox::setMessage(const char* string)

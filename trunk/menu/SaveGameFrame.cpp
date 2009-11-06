@@ -40,6 +40,7 @@ static char FRAME_STRINGS[4][22] =
 struct ButtonInfo
 {
 	menu::Button	*button;
+	int				buttonStyle;
 	char*			buttonString;
 	float			x;
 	float			y;
@@ -52,27 +53,24 @@ struct ButtonInfo
 	ButtonFunc		clickedFunc;
 	ButtonFunc		returnFunc;
 } FRAME_BUTTONS[NUM_FRAME_BUTTONS] =
-{ //	button	buttonString		x		y		width	height	Up	Dwn	Lft	Rt	clickFunc			returnFunc
-	{	NULL,	FRAME_STRINGS[0],	150.0,	 50.0,	340.0,	40.0,	 3,	 1,	-1,	-1,	Func_SaveGameCardA,	Func_ReturnFromSaveGameFrame }, // Save To Card A
-	{	NULL,	FRAME_STRINGS[1],	150.0,	150.0,	340.0,	40.0,	 0,	 2,	-1,	-1,	Func_SaveGameCardB,	Func_ReturnFromSaveGameFrame }, // Save To Card B
-	{	NULL,	FRAME_STRINGS[2],	150.0,	250.0,	340.0,	40.0,	 1,	 3,	-1,	-1,	Func_SaveGameSD,	Func_ReturnFromSaveGameFrame }, // Save To SD
+{ //	button	buttonStyle buttonString		x		y		width	height	Up	Dwn	Lft	Rt	clickFunc			returnFunc
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[0],	150.0,	 50.0,	340.0,	40.0,	 3,	 1,	-1,	-1,	Func_SaveGameCardA,	Func_ReturnFromSaveGameFrame }, // Save To Card A
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[1],	150.0,	150.0,	340.0,	40.0,	 0,	 2,	-1,	-1,	Func_SaveGameCardB,	Func_ReturnFromSaveGameFrame }, // Save To Card B
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[2],	150.0,	250.0,	340.0,	40.0,	 1,	 3,	-1,	-1,	Func_SaveGameSD,	Func_ReturnFromSaveGameFrame }, // Save To SD
 #ifdef HW_RVL
-	{	NULL,	FRAME_STRINGS[3],	150.0,	350.0,	340.0,	40.0,	 2,	 0,	-1,	-1,	Func_SaveGameWiiFS,	Func_ReturnFromSaveGameFrame }, // Save To Wii FS
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[3],	150.0,	350.0,	340.0,	40.0,	 2,	 0,	-1,	-1,	Func_SaveGameWiiFS,	Func_ReturnFromSaveGameFrame }, // Save To Wii FS
 #endif
 };
 
 SaveGameFrame::SaveGameFrame()
 {
-	buttonImage = new menu::Image(ButtonTexture, 16, 16, GX_TF_I8, GX_CLAMP, GX_CLAMP, GX_FALSE);
-	buttonFocusImage = new menu::Image(ButtonFocusTexture, 16, 16, GX_TF_I8, GX_CLAMP, GX_CLAMP, GX_FALSE);
 	for (int i = 0; i < NUM_FRAME_BUTTONS; i++)
-		FRAME_BUTTONS[i].button = new menu::Button(buttonImage, &FRAME_BUTTONS[i].buttonString, 
+		FRAME_BUTTONS[i].button = new menu::Button(FRAME_BUTTONS[i].buttonStyle, &FRAME_BUTTONS[i].buttonString, 
 										FRAME_BUTTONS[i].x, FRAME_BUTTONS[i].y, 
 										FRAME_BUTTONS[i].width, FRAME_BUTTONS[i].height);
 
 	for (int i = 0; i < NUM_FRAME_BUTTONS; i++)
 	{
-		FRAME_BUTTONS[i].button->setFocusImage(buttonFocusImage);
 		if (FRAME_BUTTONS[i].focusUp != -1) FRAME_BUTTONS[i].button->setNextFocus(menu::Focus::DIRECTION_UP, FRAME_BUTTONS[FRAME_BUTTONS[i].focusUp].button);
 		if (FRAME_BUTTONS[i].focusDown != -1) FRAME_BUTTONS[i].button->setNextFocus(menu::Focus::DIRECTION_DOWN, FRAME_BUTTONS[FRAME_BUTTONS[i].focusDown].button);
 		if (FRAME_BUTTONS[i].focusLeft != -1) FRAME_BUTTONS[i].button->setNextFocus(menu::Focus::DIRECTION_LEFT, FRAME_BUTTONS[FRAME_BUTTONS[i].focusLeft].button);
@@ -98,8 +96,6 @@ SaveGameFrame::~SaveGameFrame()
 		menu::Cursor::getInstance().removeComponent(this, FRAME_BUTTONS[i].button);
 		delete FRAME_BUTTONS[i].button;
 	}
-	delete buttonFocusImage;
-	delete buttonImage;
 
 }
 

@@ -5,6 +5,8 @@
 #include "FocusManager.h"
 #include "MessageBox.h"
 #include "LoadingBar.h"
+#include "GuiResources.h"
+#include "../main/wii64config.h"
 
 extern "C" {
 #ifdef WII
@@ -19,10 +21,14 @@ namespace menu {
 Gui::Gui()
 	: fade(9)
 {
+	menuLogo = new Logo();
+	menuLogo->setLocation(580.0, 70.0, -50.0);
+	menuLogo->setVisible(true);
 }
 
 Gui::~Gui()
 {
+	delete menuLogo;
 	delete gfx;
 }
 
@@ -51,11 +57,19 @@ void Gui::draw()
 	//Update time??
 	//Get graphics framework and pass to Frame draw fns?
 	gfx->drawInit();
+	//Draw Menu Backdrop
+	Resources::getInstance().getImage(Resources::IMAGE_MENU_BACKGROUND)->activateImage(GX_TEXMAP0);
+	gfx->setTEV(GX_REPLACE);
+	gfx->enableBlending(false);
+	if(screenMode)	gfx->drawImage(0, 0, 0, 640, 480, 0, 1, 0, 1);
+	else			gfx->drawImage(0, 0, 0, 640, 480, (848.0-640.0)/2/848.0, 1.0 - (848.0-640.0)/2/848.0, 0, 1);
 	FrameList::const_iterator iteration;
 	for (iteration = frameList.begin(); iteration != frameList.end(); iteration++)
 	{
 		(*iteration)->drawChildren(*gfx);
 	}
+//	menuLogo->drawComponent(*gfx);
+	menuLogo->draw(*gfx);
 	if (MessageBox::getInstance().getActive()) MessageBox::getInstance().drawMessageBox(*gfx);
 	if (LoadingBar::getInstance().getActive()) LoadingBar::getInstance().drawLoadingBar(*gfx);
 	Cursor::getInstance().drawCursor(*gfx);

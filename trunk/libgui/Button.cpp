@@ -1,4 +1,5 @@
 #include "Button.h"
+#include "GuiResources.h"
 #include "GraphicsGX.h"
 #include "IPLFont.h"
 #include "Image.h"
@@ -7,13 +8,15 @@
 
 namespace menu {
 
-Button::Button(Image *image, char** label, float x, float y, float width, float height)
+Button::Button(int style, char** label, float x, float y, float width, float height)
 		: active(false),
 		  selected(false),
 		  normalImage(0),
-		  selectedImage(0),
 		  focusImage(0),
+		  selectedImage(0),
+		  selectedFocusImage(0),
 		  buttonText(label),
+		  buttonStyle(style),
 		  labelMode(LABEL_CENTER),
 		  labelScissor(0),
 		  StartTime(0),
@@ -24,10 +27,37 @@ Button::Button(Image *image, char** label, float x, float y, float width, float 
 		  clickedFunc(0),
 		  returnFunc(0)
 {
-	setType(TYPE_BUTTON);
-	setNormalImage(image);
 						//Focus color			Inactive color		  Active color			Selected color		  Label color
 	GXColor colors[5] = {{255, 100, 100, 255}, {255, 255, 255,  70}, {255, 255, 255, 130}, {255, 255, 255, 255}, {255, 255, 255, 255}};
+
+	setType(TYPE_BUTTON);
+	switch(buttonStyle)
+	{
+	case BUTTON_DEFAULT:
+		setNormalImage(Resources::getInstance().getImage(Resources::IMAGE_DEFAULT_BUTTON));
+		setFocusImage(Resources::getInstance().getImage(Resources::IMAGE_DEFAULT_BUTTONFOCUS));
+		setSelectedImage(Resources::getInstance().getImage(Resources::IMAGE_DEFAULT_BUTTONFOCUS));
+		break;
+	case BUTTON_STYLEA_NORMAL:
+		setNormalImage(Resources::getInstance().getImage(Resources::IMAGE_STYLEA_BUTTON));
+		setFocusImage(Resources::getInstance().getImage(Resources::IMAGE_STYLEA_BUTTONFOCUS));
+		height = 56;
+		break;
+	case BUTTON_STYLEA_SELECT:
+		setNormalImage(Resources::getInstance().getImage(Resources::IMAGE_STYLEA_BUTTONSELECTOFF));
+		setFocusImage(Resources::getInstance().getImage(Resources::IMAGE_STYLEA_BUTTONSELECTOFFFOCUS));
+		setSelectedImage(Resources::getInstance().getImage(Resources::IMAGE_STYLEA_BUTTONSELECTON));
+		setSelectedFocusImage(Resources::getInstance().getImage(Resources::IMAGE_STYLEA_BUTTONSELECTONFOCUS));
+		height = 56;
+		break;
+	}
+	if (buttonStyle != BUTTON_DEFAULT)
+	{
+		colors[0] = (GXColor) {255, 255, 255, 255};
+		colors[1] = (GXColor) {127, 127, 127, 255};
+		colors[2] = (GXColor) {255, 255, 255, 255};
+	}
+
 	setButtonColors(colors);
 }
 
@@ -93,14 +123,19 @@ void Button::setNormalImage(Image *image)
 	normalImage = image;
 }
 
+void Button::setFocusImage(Image *image)
+{
+	focusImage = image;
+}
+
 void Button::setSelectedImage(Image *image)
 {
 	selectedImage = image;
 }
 
-void Button::setFocusImage(Image *image)
+void Button::setSelectedFocusImage(Image *image)
 {
-	focusImage = image;
+	selectedFocusImage = image;
 }
 
 #define SCROLL_PERIOD 4.0f
@@ -136,22 +171,47 @@ void Button::drawComponent(Graphics& gfx)
 	gfx.loadModelView();
 	gfx.loadOrthographic();
 
-//	gfx.fillRect(x, y, width, height);
-	normalImage->activateImage(GX_TEXMAP0);
-	gfx.drawImage(0, x, y, width/2, height/2, 0.0, width/16.0, 0.0, height/16.0);
-	gfx.drawImage(0, x+width/2, y, width/2, height/2, width/16.0, 0.0, 0.0, height/16.0);
-	gfx.drawImage(0, x, y+height/2, width/2, height/2, 0.0, width/16.0, height/16.0, 0.0);
-	gfx.drawImage(0, x+width/2, y+height/2, width/2, height/2, width/16.0, 0.0, height/16.0, 0.0);
-//	gfx.drawImage(0, x, y, width, height, 0.0, 1.0, 0.0, 1.0);
-
-	if (selected)
+	switch (buttonStyle)
 	{
-		gfx.setColor(selectedColor);
-		if(selectedImage) selectedImage->activateImage(GX_TEXMAP0);
+	case BUTTON_DEFAULT:
+//	gfx.fillRect(x, y, width, height);
+		normalImage->activateImage(GX_TEXMAP0);
 		gfx.drawImage(0, x, y, width/2, height/2, 0.0, width/16.0, 0.0, height/16.0);
 		gfx.drawImage(0, x+width/2, y, width/2, height/2, width/16.0, 0.0, 0.0, height/16.0);
 		gfx.drawImage(0, x, y+height/2, width/2, height/2, 0.0, width/16.0, height/16.0, 0.0);
 		gfx.drawImage(0, x+width/2, y+height/2, width/2, height/2, width/16.0, 0.0, height/16.0, 0.0);
+//	gfx.drawImage(0, x, y, width, height, 0.0, 1.0, 0.0, 1.0);
+
+		if (selected)
+		{
+			gfx.setColor(selectedColor);
+			if(selectedImage) selectedImage->activateImage(GX_TEXMAP0);
+			gfx.drawImage(0, x, y, width/2, height/2, 0.0, width/16.0, 0.0, height/16.0);
+			gfx.drawImage(0, x+width/2, y, width/2, height/2, width/16.0, 0.0, 0.0, height/16.0);
+			gfx.drawImage(0, x, y+height/2, width/2, height/2, 0.0, width/16.0, height/16.0, 0.0);
+			gfx.drawImage(0, x+width/2, y+height/2, width/2, height/2, width/16.0, 0.0, height/16.0, 0.0);
+		}
+		break;
+	case BUTTON_STYLEA_NORMAL:
+		if (getFocus())	focusImage->activateImage(GX_TEXMAP0);
+		else			normalImage->activateImage(GX_TEXMAP0);
+		gfx.drawImage(0, x, y, width/2, 56, 0.0, width/8.0, 0.0, 1.0);
+		gfx.drawImage(0, x+width/2, y, width/2, 56, width/8.0, 0.0, 0.0, 1.0);
+		break;
+	case BUTTON_STYLEA_SELECT:
+		if (selected)
+		{
+			if (getFocus())	selectedFocusImage->activateImage(GX_TEXMAP0);
+			else			selectedImage->activateImage(GX_TEXMAP0);
+		}
+		else
+		{
+			if (getFocus())	focusImage->activateImage(GX_TEXMAP0);
+			else			normalImage->activateImage(GX_TEXMAP0);
+		}
+		gfx.drawImage(0, x, y, width/2, 56, 0.0, width/8.0, 0.0, 1.0);
+		gfx.drawImage(0, x+width/2, y, width/2, 56, width/8.0, 0.0, 0.0, 1.0);
+		break;
 	}
 
 	if (buttonText)
@@ -160,7 +220,8 @@ void Button::drawComponent(Graphics& gfx)
 		unsigned long CurrentTime;
 		float scrollWidth, time_sec, scrollOffset;
 		gfx.enableScissor(x + labelScissor, y, width - 2*labelScissor, height);
-		IplFont::getInstance().drawInit(labelColor);
+		if(active)	IplFont::getInstance().drawInit(labelColor);
+		else		IplFont::getInstance().drawInit(inactiveColor);
 		switch (labelMode)
 		{
 			case LABEL_CENTER:

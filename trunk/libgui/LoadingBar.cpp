@@ -1,5 +1,6 @@
 #include "LoadingBar.h"
 #include "GraphicsGX.h"
+#include "GuiResources.h"
 #include "resources.h"
 #include "CursorManager.h"
 #include "FocusManager.h"
@@ -20,8 +21,8 @@ LoadingBar::LoadingBar()
 		  currentFocusFrame(0),
 		  percentComplete(0.0f)
 {
-	buttonImage = new menu::Image(ButtonTexture, 16, 16, GX_TF_I8, GX_CLAMP, GX_CLAMP, GX_FALSE);
-	buttonFocusImage = new menu::Image(ButtonFocusTexture, 16, 16, GX_TF_I8, GX_CLAMP, GX_CLAMP, GX_FALSE);
+	buttonImage = Resources::getInstance().getImage(Resources::IMAGE_DEFAULT_BUTTON);
+	buttonFocusImage = Resources::getInstance().getImage(Resources::IMAGE_DEFAULT_BUTTONFOCUS);
 
 	showFrame();
 
@@ -34,8 +35,6 @@ LoadingBar::LoadingBar()
 
 LoadingBar::~LoadingBar()
 {
-	delete buttonFocusImage;
-	delete buttonImage;
 }
 
 void LoadingBar::showBar(float percent, const char* string)

@@ -44,6 +44,7 @@ static char FRAME_STRINGS[3][5] =
 struct ButtonInfo
 {
 	menu::Button	*button;
+	int				buttonStyle;
 	char*			buttonString;
 	float			x;
 	float			y;
@@ -56,33 +57,30 @@ struct ButtonInfo
 	ButtonFunc		clickedFunc;
 	ButtonFunc		returnFunc;
 } FRAME_BUTTONS[NUM_FRAME_BUTTONS] =
-{ //	button	buttonString		x		y		width	height	Up	Dwn	Lft	Rt	clickFunc		returnFunc
-	{	NULL,	FRAME_STRINGS[0],	 35.0,	220.0,	 70.0,	40.0,	-1,	-1,	-1,	 2,	Func_PrevPage,	Func_ReturnFromFileBrowserFrame }, // Prev
-	{	NULL,	FRAME_STRINGS[1],	535.0,	220.0,	 70.0,	40.0,	-1,	-1,	 2,	-1,	Func_NextPage,	Func_ReturnFromFileBrowserFrame }, // Next
-	{	NULL,	FRAME_STRINGS[2],	120.0,	 40.0,	400.0,	35.0,	11,	 3,	 0,	 1,	Func_Select1,	Func_ReturnFromFileBrowserFrame }, // File Button 1
-	{	NULL,	FRAME_STRINGS[2],	120.0,	 80.0,	400.0,	35.0,	 2,	 4,	 0,	 1,	Func_Select2,	Func_ReturnFromFileBrowserFrame }, // File Button 2
-	{	NULL,	FRAME_STRINGS[2],	120.0,	120.0,	400.0,	35.0,	 3,	 5,	 0,	 1,	Func_Select3,	Func_ReturnFromFileBrowserFrame }, // File Button 3
-	{	NULL,	FRAME_STRINGS[2],	120.0,	160.0,	400.0,	35.0,	 4,	 6,	 0,	 1,	Func_Select4,	Func_ReturnFromFileBrowserFrame }, // File Button 4
-	{	NULL,	FRAME_STRINGS[2],	120.0,	200.0,	400.0,	35.0,	 5,	 7,	 0,	 1,	Func_Select5,	Func_ReturnFromFileBrowserFrame }, // File Button 5
-	{	NULL,	FRAME_STRINGS[2],	120.0,	240.0,	400.0,	35.0,	 6,	 8,	 0,	 1,	Func_Select6,	Func_ReturnFromFileBrowserFrame }, // File Button 6
-	{	NULL,	FRAME_STRINGS[2],	120.0,	280.0,	400.0,	35.0,	 7,	 9,	 0,	 1,	Func_Select7,	Func_ReturnFromFileBrowserFrame }, // File Button 7
-	{	NULL,	FRAME_STRINGS[2],	120.0,	320.0,	400.0,	35.0,	 8,	10,	 0,	 1,	Func_Select8,	Func_ReturnFromFileBrowserFrame }, // File Button 8
-	{	NULL,	FRAME_STRINGS[2],	120.0,	360.0,	400.0,	35.0,	 9,	11,	 0,	 1,	Func_Select9,	Func_ReturnFromFileBrowserFrame }, // File Button 9
-	{	NULL,	FRAME_STRINGS[2],	120.0,	400.0,	400.0,	35.0,	10,	 2,	 0,	 1,	Func_Select10,	Func_ReturnFromFileBrowserFrame }, // File Button 10
+{ //	button	buttonStyle		buttonString		x		y		width	height	Up	Dwn	Lft	Rt	clickFunc		returnFunc
+	{	NULL,	BTN_DEFAULT,	FRAME_STRINGS[0],	 35.0,	220.0,	 70.0,	40.0,	-1,	-1,	-1,	 2,	Func_PrevPage,	Func_ReturnFromFileBrowserFrame }, // Prev
+	{	NULL,	BTN_DEFAULT,	FRAME_STRINGS[1],	535.0,	220.0,	 70.0,	40.0,	-1,	-1,	 2,	-1,	Func_NextPage,	Func_ReturnFromFileBrowserFrame }, // Next
+	{	NULL,	BTN_DEFAULT,	FRAME_STRINGS[2],	120.0,	 40.0,	400.0,	35.0,	11,	 3,	 0,	 1,	Func_Select1,	Func_ReturnFromFileBrowserFrame }, // File Button 1
+	{	NULL,	BTN_DEFAULT,	FRAME_STRINGS[2],	120.0,	 80.0,	400.0,	35.0,	 2,	 4,	 0,	 1,	Func_Select2,	Func_ReturnFromFileBrowserFrame }, // File Button 2
+	{	NULL,	BTN_DEFAULT,	FRAME_STRINGS[2],	120.0,	120.0,	400.0,	35.0,	 3,	 5,	 0,	 1,	Func_Select3,	Func_ReturnFromFileBrowserFrame }, // File Button 3
+	{	NULL,	BTN_DEFAULT,	FRAME_STRINGS[2],	120.0,	160.0,	400.0,	35.0,	 4,	 6,	 0,	 1,	Func_Select4,	Func_ReturnFromFileBrowserFrame }, // File Button 4
+	{	NULL,	BTN_DEFAULT,	FRAME_STRINGS[2],	120.0,	200.0,	400.0,	35.0,	 5,	 7,	 0,	 1,	Func_Select5,	Func_ReturnFromFileBrowserFrame }, // File Button 5
+	{	NULL,	BTN_DEFAULT,	FRAME_STRINGS[2],	120.0,	240.0,	400.0,	35.0,	 6,	 8,	 0,	 1,	Func_Select6,	Func_ReturnFromFileBrowserFrame }, // File Button 6
+	{	NULL,	BTN_DEFAULT,	FRAME_STRINGS[2],	120.0,	280.0,	400.0,	35.0,	 7,	 9,	 0,	 1,	Func_Select7,	Func_ReturnFromFileBrowserFrame }, // File Button 7
+	{	NULL,	BTN_DEFAULT,	FRAME_STRINGS[2],	120.0,	320.0,	400.0,	35.0,	 8,	10,	 0,	 1,	Func_Select8,	Func_ReturnFromFileBrowserFrame }, // File Button 8
+	{	NULL,	BTN_DEFAULT,	FRAME_STRINGS[2],	120.0,	360.0,	400.0,	35.0,	 9,	11,	 0,	 1,	Func_Select9,	Func_ReturnFromFileBrowserFrame }, // File Button 9
+	{	NULL,	BTN_DEFAULT,	FRAME_STRINGS[2],	120.0,	400.0,	400.0,	35.0,	10,	 2,	 0,	 1,	Func_Select10,	Func_ReturnFromFileBrowserFrame }, // File Button 10
 };
 
 FileBrowserFrame::FileBrowserFrame()
 {
-	buttonImage = new menu::Image(ButtonTexture, 16, 16, GX_TF_I8, GX_CLAMP, GX_CLAMP, GX_FALSE);
-	buttonFocusImage = new menu::Image(ButtonFocusTexture, 16, 16, GX_TF_I8, GX_CLAMP, GX_CLAMP, GX_FALSE);
 	for (int i = 0; i < NUM_FRAME_BUTTONS; i++)
-		FRAME_BUTTONS[i].button = new menu::Button(buttonImage, &FRAME_BUTTONS[i].buttonString, 
+		FRAME_BUTTONS[i].button = new menu::Button(FRAME_BUTTONS[i].buttonStyle, &FRAME_BUTTONS[i].buttonString, 
 										FRAME_BUTTONS[i].x, FRAME_BUTTONS[i].y, 
 										FRAME_BUTTONS[i].width, FRAME_BUTTONS[i].height);
 
 	for (int i = 0; i < NUM_FRAME_BUTTONS; i++)
 	{
-		FRAME_BUTTONS[i].button->setFocusImage(buttonFocusImage);
 		if (FRAME_BUTTONS[i].focusUp != -1) FRAME_BUTTONS[i].button->setNextFocus(menu::Focus::DIRECTION_UP, FRAME_BUTTONS[FRAME_BUTTONS[i].focusUp].button);
 		if (FRAME_BUTTONS[i].focusDown != -1) FRAME_BUTTONS[i].button->setNextFocus(menu::Focus::DIRECTION_DOWN, FRAME_BUTTONS[FRAME_BUTTONS[i].focusDown].button);
 		if (FRAME_BUTTONS[i].focusLeft != -1) FRAME_BUTTONS[i].button->setNextFocus(menu::Focus::DIRECTION_LEFT, FRAME_BUTTONS[FRAME_BUTTONS[i].focusLeft].button);
@@ -115,8 +113,6 @@ FileBrowserFrame::~FileBrowserFrame()
 		menu::Cursor::getInstance().removeComponent(this, FRAME_BUTTONS[i].button);
 		delete FRAME_BUTTONS[i].button;
 	}
-	delete buttonFocusImage;
-	delete buttonImage;
 
 }
 

@@ -2,8 +2,6 @@
 #define CONFIGUREPAKSFRAME_H
 
 #include "../libgui/Frame.h"
-#include "../libgui/Button.h"
-#include "../libgui/Image.h"
 #include "MenuTypes.h"
 
 class ConfigurePaksFrame : public menu::Frame
@@ -20,9 +18,6 @@ public:
 	};
 
 private:
-	MenuContext *menuContext;
-	menu::Image *buttonImage;
-	menu::Image *buttonFocusImage;
 
 };
 

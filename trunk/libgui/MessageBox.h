@@ -2,7 +2,6 @@
 #define MESSAGEBOX_H
 
 #include "Frame.h"
-#include "Button.h"
 #include "Image.h"
 #include "Gui.h"
 #include "GuiTypes.h"

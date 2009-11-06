@@ -2,8 +2,9 @@
 #include "MainFrame.h"
 #include "SettingsFrame.h"
 #include "../libgui/Button.h"
+#include "../libgui/Gui.h"
 #include "../libgui/resources.h"
-#include "../libgui/InputManager.h"
+//#include "../libgui/InputManager.h"
 #include "../libgui/FocusManager.h"
 #include "../libgui/CursorManager.h"
 #include "../libgui/MessageBox.h"
@@ -50,6 +51,7 @@ char FRAME_STRINGS[7][20] =
 struct ButtonInfo
 {
 	menu::Button	*button;
+	int				buttonStyle;
 	char*			buttonString;
 	float			x;
 	float			y;
@@ -62,27 +64,24 @@ struct ButtonInfo
 	ButtonFunc		clickedFunc;
 	ButtonFunc		returnFunc;
 } FRAME_BUTTONS[NUM_MAIN_BUTTONS] =
-{ //	button	buttonString		x		y		width	height	Up	Dwn	Lft	Rt	clickFunc				returnFunc
-	{	NULL,	FRAME_STRINGS[0],	195.0,	 60.0,	250.0,	40.0,	 5,	 1,	-1,	-1,	Func_LoadROM,			NULL }, // Load ROM
-	{	NULL,	FRAME_STRINGS[1],	195.0,	120.0,	250.0,	40.0,	 0,	 2,	-1,	-1,	Func_CurrentROM,		NULL }, // Current ROM
-	{	NULL,	FRAME_STRINGS[2],	195.0,	180.0,	250.0,	40.0,	 1,	 3,	-1,	-1,	Func_Settings,			NULL }, // Settings
-	{	NULL,	FRAME_STRINGS[3],	195.0,	240.0,	250.0,	40.0,	 2,	 4,	-1,	-1,	Func_Credits,			NULL }, // Credits
-	{	NULL,	FRAME_STRINGS[4],	195.0,	300.0,	250.0,	40.0,	 3,	 5,	-1,	-1,	Func_ExitToLoader,		NULL }, // Exit to Loader
-	{	NULL,	FRAME_STRINGS[5],	195.0,	360.0,	250.0,	40.0,	 4,	 0,	-1,	-1,	Func_PlayGame,			NULL }, // Play/Resume Game
+{ //	button	buttonStyle	buttonString		x		y		width	height	Up	Dwn	Lft	Rt	clickFunc				returnFunc
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[0],	195.0,	 60.0,	250.0,	40.0,	 5,	 1,	-1,	-1,	Func_LoadROM,			NULL }, // Load ROM
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[1],	195.0,	120.0,	250.0,	40.0,	 0,	 2,	-1,	-1,	Func_CurrentROM,		NULL }, // Current ROM
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[2],	195.0,	180.0,	250.0,	40.0,	 1,	 3,	-1,	-1,	Func_Settings,			NULL }, // Settings
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[3],	195.0,	240.0,	250.0,	40.0,	 2,	 4,	-1,	-1,	Func_Credits,			NULL }, // Credits
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[4],	195.0,	300.0,	250.0,	40.0,	 3,	 5,	-1,	-1,	Func_ExitToLoader,		NULL }, // Exit to Loader
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[5],	195.0,	360.0,	250.0,	40.0,	 4,	 0,	-1,	-1,	Func_PlayGame,			NULL }, // Play/Resume Game
 };
 
 MainFrame::MainFrame()
 {
-	buttonImage = new menu::Image(ButtonTexture, 16, 16, GX_TF_I8, GX_CLAMP, GX_CLAMP, GX_FALSE);
-	buttonFocusImage = new menu::Image(ButtonFocusTexture, 16, 16, GX_TF_I8, GX_CLAMP, GX_CLAMP, GX_FALSE);
 	for (int i = 0; i < NUM_MAIN_BUTTONS; i++)
-		FRAME_BUTTONS[i].button = new menu::Button(buttonImage, &FRAME_BUTTONS[i].buttonString, 
+		FRAME_BUTTONS[i].button = new menu::Button(FRAME_BUTTONS[i].buttonStyle, &FRAME_BUTTONS[i].buttonString, 
 										FRAME_BUTTONS[i].x, FRAME_BUTTONS[i].y, 
 										FRAME_BUTTONS[i].width, FRAME_BUTTONS[i].height);
 
 	for (int i = 0; i < NUM_MAIN_BUTTONS; i++)
 	{
-		FRAME_BUTTONS[i].button->setFocusImage(buttonFocusImage);
 		if (FRAME_BUTTONS[i].focusUp != -1) FRAME_BUTTONS[i].button->setNextFocus(menu::Focus::DIRECTION_UP, FRAME_BUTTONS[FRAME_BUTTONS[i].focusUp].button);
 		if (FRAME_BUTTONS[i].focusDown != -1) FRAME_BUTTONS[i].button->setNextFocus(menu::Focus::DIRECTION_DOWN, FRAME_BUTTONS[FRAME_BUTTONS[i].focusDown].button);
 		if (FRAME_BUTTONS[i].focusLeft != -1) FRAME_BUTTONS[i].button->setNextFocus(menu::Focus::DIRECTION_LEFT, FRAME_BUTTONS[FRAME_BUTTONS[i].focusLeft].button);
@@ -107,8 +106,6 @@ MainFrame::~MainFrame()
 		menu::Cursor::getInstance().removeComponent(this, FRAME_BUTTONS[i].button);
 		delete FRAME_BUTTONS[i].button;
 	}
-	delete buttonFocusImage;
-	delete buttonImage;
 
 }
 
@@ -134,6 +131,7 @@ void Func_CurrentROM()
 
 void Func_Settings()
 {
+	menu::Gui::getInstance().menuLogo->setLocation(580.0, 410.0, -50.0);
 	pMenuContext->setActiveFrame(MenuContext::FRAME_SETTINGS,SettingsFrame::SUBMENU_GENERAL);
 }
 
@@ -194,27 +192,35 @@ void Func_PlayGame()
 		return;
 	}
 	
-	menu::Gui::getInstance().gfx->clearEFB((GXColor){0, 0, 0, 0xFF}, 0x000000);
-
-//	usleep(1000);			//This sleep prevents the PAD_Init() from failing
-	control_info_init();	//TODO: This controller re-poll might need rethinking when we implement reconfigurable input
-
 	//Wait until 'A' button released before play/resume game
+
+	menu::Cursor::getInstance().setFreezeAction(true);
+	menu::Focus::getInstance().setFreezeAction(true);
 	int buttonHeld = 1;
 	while(buttonHeld)
 	{
 		buttonHeld = 0;
-/* //For some reason the following code makes MessageBox crash
-		menu::Input::getInstance().refreshInput();
-#ifdef HW_RVL
-		WPADData* wiiPad = menu::Input::getInstance().getWpad();
-#endif
+		menu::Gui::getInstance().draw();
+//		WPADData* wiiPad = menu::Input::getInstance().getWpad();
 		for (int i=0; i<4; i++)
 		{
-			if(PAD_ButtonsHeld(i) & PAD_BUTTON_A) buttonHeld++;
-			if(wiiPad[i].btns_h & (WPAD_BUTTON_A | WPAD_CLASSIC_BUTTON_A)) buttonHeld++;
-		}*/
+//			if(PAD_ButtonsHeld(i) & PAD_BUTTON_A) buttonHeld++;
+#ifdef HW_RVL
+//		wiiPadError[i] = WPAD_ReadEvent(i, &wiiPad[i]);
+//			WPADData* wiiPad = WPAD_Data(i);
+//			if(wiiPad->err == WPAD_ERR_NONE && (wiiPad->btns_h & WPAD_BUTTON_A)) buttonHeld++;
+//			if(wiiPad->btns_h & (WPAD_BUTTON_A | WPAD_CLASSIC_BUTTON_A)) buttonHeld++;
+//			if (wiiPad[i].exp.type == WPAD_EXP_CLASSIC)
+#endif
+		}
 	}
+	menu::Cursor::getInstance().setFreezeAction(false);
+	menu::Focus::getInstance().setFreezeAction(false);
+
+	menu::Gui::getInstance().gfx->clearEFB((GXColor){0, 0, 0, 0xFF}, 0x000000);
+
+//	usleep(1000);			//This sleep prevents the PAD_Init() from failing
+	control_info_init();	//TODO: This controller re-poll might need rethinking when we implement reconfigurable input
 
 	resumeAudio();
 	resumeInput();
