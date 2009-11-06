@@ -333,4 +333,12 @@ void Button::setButtonColors(GXColor *colors)
 	labelColor.a = colors[4].a;
 }
 
+void Button::setLabelColor(GXColor color)
+{
+	labelColor.r = color.r;
+	labelColor.g = color.g;
+	labelColor.b = color.b;
+	labelColor.a = color.a;
+}
+
 } //namespace menu 

@@ -234,7 +234,10 @@ void fileBrowserFrame_FillPage()
 
 	//disable all buttons
 	for (int i = 0; i < NUM_FRAME_BUTTONS; i++)
+	{
 		FRAME_BUTTONS[i].button->setActive(false);
+		FRAME_BUTTONS[i].button->setLabelColor((GXColor) {255,255,255,255});
+	}
 	//set entries according to page
 	for (int i = 0; i < NUM_FILE_SLOTS; i++)
 	{
@@ -243,6 +246,8 @@ void fileBrowserFrame_FillPage()
 			FRAME_BUTTONS[i+2].buttonString = filenameFromAbsPath(dir_entries[i+(current_page*NUM_FILE_SLOTS)].name);
 			FRAME_BUTTONS[i+2].button->setClicked(FRAME_BUTTONS[i+2].clickedFunc);
 			FRAME_BUTTONS[i+2].button->setActive(true);
+			if(dir_entries[i+(current_page*NUM_FILE_SLOTS)].attr & FILE_BROWSER_ATTR_DIR)
+				FRAME_BUTTONS[i+2].button->setLabelColor((GXColor) {255,50,50,255});
 		}
 		else
 			FRAME_BUTTONS[i+2].buttonString = FRAME_STRINGS[2];
