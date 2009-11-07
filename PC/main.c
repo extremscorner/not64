@@ -3,41 +3,48 @@
 #include <string.h>
 #include <malloc.h>
 
-void show_usage()
+void show_usage(char **argv)
 {
-     printf("Usage: save_convert inputsave outputsave\n");
-     exit(0);
+     printf("Usage: %s inputsave outputsave\n",argv[0]);
+     exit(-1);
 }
 
 int main(int argc, char **argv) {
     int fsize = 0;
     int i = 0;
-    char *buffer = NULL;
-    short *buffer_short = NULL;
-    FILE *in;
-    FILE *out;
 
     if(argc!=3)
-        show_usage();
+        show_usage(argv);
     
-    in = fopen(argv[1],"rb");
+    printf("PC->GC/Wii Save swapper\n\n");
+    printf("Opening input file ..\n");
+    FILE *in = fopen(argv[1],"rb");
     if(!in)
     {
-        printf("Error opening %s\n",argv[1]);
-        exit(1);
+        printf("Error opening input file %s\n",argv[1]);
+        exit(-1);
     }
-    out = fopen(argv[2],"wb");
+    printf("Creating output file ..\n");
+    FILE *out = fopen(argv[2],"wb");
     if(!out)
     {
-        printf("Error creating %s\n",argv[2]);
-        exit(1);
+        printf("Error creating output file %s\n",argv[2]);
+        fclose(in);
+        exit(-1);
     }
     
     fseek(in, 0, SEEK_END);
     fsize = ftell(in);
     fseek(in, 0, SEEK_SET);
-    
-    buffer = (char*)malloc(fsize);
+    if(!fsize)
+    {
+      printf("File size error\n");
+      fclose(in);
+      fclose(out);
+      exit(-1);
+    }
+    printf("Swapping ..\n");
+    char *buffer = (char*)malloc(fsize);
     if(buffer == NULL)
     {
         printf("Error allocating %i bytes for save!\n",fsize);
@@ -53,7 +60,7 @@ int main(int argc, char **argv) {
         buffer[i+1] = temp_byte;
     }
     
-    buffer_short = (short*)malloc(fsize);
+    short *buffer_short = (short*)malloc(fsize);
     memcpy(buffer_short,buffer,fsize);
     
     unsigned short temp_short = 0;
@@ -63,11 +70,14 @@ int main(int argc, char **argv) {
         buffer_short[i]   = buffer_short[i+1];
         buffer_short[i+1] = temp_short;
     }
+    printf("Writing swapped file ..\n\n");
+    fwrite(buffer_short,1, fsize, out);    
     
-    fwrite(buffer_short,1, fsize, out);
-        
     fclose(in);
     fclose(out);
+    free(buffer);
+    free(buffer_short);
+    printf("done !!\n");
     
     return 0;
 }
