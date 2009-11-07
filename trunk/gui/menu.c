@@ -4,6 +4,7 @@
 
 #include "menu.h"
 #include "GUI.h"
+#include "../main/savestates.h"
 #include "../fileBrowser/fileBrowser.h"
 #include "../fileBrowser/fileBrowser-libfat.h"
 #include "../fileBrowser/fileBrowser-DVD.h"
@@ -590,17 +591,35 @@ static inline void menuStack_push(menu_item*);
 
 /* "State Management" menu item */
 
+  static char* menuV1_loadstate() {
+    if(!hasLoadedROM) 
+      return "No ROM Loaded";
+    if(!savestates_exists())
+      return "No Save exists";
+    else {
+      savestates_job = LOADSTATE;
+      return "Gameplay will resume from the savestate";
+    }
+  }
+  static char* menuV1_savestate() {
+    if(!hasLoadedROM) 
+      return "No ROM Loaded";
+    else {
+      savestates_job = SAVESTATE;
+      return "Gameplay will be saved once resumed";
+    }
+  }
 	static int which_slot;
 	static char* state_cycleSlot();
 
 	static menu_item state_subMenu[] =
 		{{ "Save State",
 		   MENU_ATTR_SPECIAL,
-		   { .func = savestates_save }
+		   { .func = menuV1_savestate }
 		  },
 		 { "Load State",
 		   MENU_ATTR_NONE,
-		   { .func = savestates_load }
+		   { .func = menuV1_loadstate }
 		  },
 		 { "Slot: 0",
 		   MENU_ATTR_NONE,
