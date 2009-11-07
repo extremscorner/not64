@@ -40,6 +40,7 @@
 #include "../r4300/r4300.h"
 #include "../r4300/interupt.h"
 #include "../gc_memory/TLB-Cache.h"
+#include "../fileBrowser/fileBrowser-libfat.h"
 #include "wii64config.h"
 
 char* statespath = "/wii64/saves/";
@@ -111,7 +112,7 @@ void savestates_save()
    	
   if(!f)
   	return;
-      
+  pauseRemovalThread();    
   gzwrite(f, &rdram_register, sizeof(RDRAM_register));
 	gzwrite(f, &MI_register, sizeof(mips_register));
 	gzwrite(f, &pi_register, sizeof(PI_register));
@@ -162,6 +163,7 @@ void savestates_save()
 	gzwrite(f, buf, len);
 	
 	gzclose(f);
+	continueRemovalThread();
 }
 
 void savestates_load()
@@ -190,7 +192,7 @@ void savestates_load()
 	
 	if (!f)
 		return;
-
+  pauseRemovalThread();
   gzread(f, &rdram_register, sizeof(RDRAM_register));
 	gzread(f, &MI_register, sizeof(mips_register));
 	gzread(f, &pi_register, sizeof(PI_register));
@@ -267,4 +269,5 @@ void savestates_load()
 	
 	gzclose(f);
 	last_addr = interp_addr;
+	continueRemovalThread();
 }
