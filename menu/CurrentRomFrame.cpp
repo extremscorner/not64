@@ -283,14 +283,18 @@ void Func_SaveGame()
 
 void Func_LoadState()
 {
-	char* txt = savestates_load();
-	menu::MessageBox::getInstance().setMessage(&txt[0]);
+  if(!savestates_exists())
+    menu::MessageBox::getInstance().setMessage("Save doesn't exist");
+  else {
+    savestates_job = LOADSTATE;
+    menu::MessageBox::getInstance().setMessage("Gameplay will resume from the savestate");
+  }
 }
 
 void Func_SaveState()
 {
-	char* txt = savestates_save();
-	menu::MessageBox::getInstance().setMessage(&txt[0]);
+  savestates_job = SAVESTATE;
+	menu::MessageBox::getInstance().setMessage("Gameplay will be saved once resumed");
 }
 
 static unsigned int which_slot = 0;
