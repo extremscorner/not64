@@ -331,13 +331,13 @@ void gen_interupt()
    //if (!skip_jump)
      //printf("interrupt:%x (%x)\n", q->type, Count);
    if (stop == 1) dyna_stop();
-   /*
+   
    if (savestates_job & LOADSTATE) 
      {
 	savestates_load();
 	savestates_job &= ~LOADSTATE;
 	return;
-     }*/
+     }
    
    if (skip_jump /*&& !dynacore*/)
      {
@@ -515,10 +515,10 @@ void gen_interupt()
 	break;
      }
    exception_general();
-   /*
+   
    if (savestates_job & SAVESTATE) 
      {
 	savestates_save();
 	savestates_job &= ~SAVESTATE;
-     }*/
+     }
 }

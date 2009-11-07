@@ -32,8 +32,9 @@
 
 extern int savestates_job;
 
-char* savestates_save();
-char* savestates_load();
+void savestates_save();
+void savestates_load();
+int  savestates_exists();
 
 void savestates_select_slot(unsigned int s);
 void savestates_select_filename();

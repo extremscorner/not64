@@ -57,11 +57,36 @@ void savestates_select_slot(unsigned int s)
    savestates_slot = s;
 }
 	
-char* savestates_save()
+//returns 0 on file not existing
+int savestates_exists()
 {
-  if(!hasLoadedROM)
-		return "A ROM must be loaded first";
-  
+  gzFile f;
+	char *filename, buf[1024];
+  filename = malloc(256);
+#ifdef HW_RVL
+  if(saveStateDevice==SAVESTATEDEVICE_USB)
+    strcpy(filename,"usb:");
+#endif
+  if(saveStateDevice==SAVESTATEDEVICE_SD)
+    strcpy(filename,"sd:"); //"sd:/" is any currently mounted SD on GC or Wii
+	strcat(filename, statespath);
+  strcat(filename, ROM_SETTINGS.goodname);
+  strcat(filename, saveregionstr());
+	strcat(filename, ".st");
+	sprintf(buf, "%d", savestates_slot);
+	strcat(filename, buf);
+
+	f = gzopen(filename, "rb");
+  free(filename);
+   	
+  if(!f)
+    return 0;
+  fclose(f);
+  return 1;
+}
+
+void savestates_save()
+{ 
   gzFile f;
 	char *filename, buf[1024];
   int len, i;
@@ -85,7 +110,7 @@ char* savestates_save()
   free(filename);
    	
   if(!f)
-  	return "Error Saving State";
+  	return;
       
   gzwrite(f, &rdram_register, sizeof(RDRAM_register));
 	gzwrite(f, &MI_register, sizeof(mips_register));
@@ -137,14 +162,10 @@ char* savestates_save()
 	gzwrite(f, buf, len);
 	
 	gzclose(f);
-	return "Save Successful";
 }
 
-char* savestates_load()
+void savestates_load()
 {
-	if(!hasLoadedROM)
-		return "A ROM must be loaded first";
-		
 	gzFile f = NULL;
 	char *filename, buf[1024];
 	int len, i;
@@ -168,7 +189,7 @@ char* savestates_load()
 	free(filename);
 	
 	if (!f)
-		return "Save doesn't exist";
+		return;
 
   gzread(f, &rdram_register, sizeof(RDRAM_register));
 	gzread(f, &MI_register, sizeof(mips_register));
@@ -246,5 +267,4 @@ char* savestates_load()
 	
 	gzclose(f);
 	last_addr = interp_addr;
-	return "Load Successful";
 }

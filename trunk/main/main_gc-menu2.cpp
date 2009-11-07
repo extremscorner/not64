@@ -35,6 +35,7 @@ extern "C" {
 #include "../gc_memory/tlb.h"
 #include "../gc_memory/pif.h"
 #include "../gc_memory/Saves.h"
+#include "../main/savestates.h"
 #include "ROM-Cache.h"
 #include "../fileBrowser/fileBrowser.h"
 #include "../fileBrowser/fileBrowser-libfat.h"
@@ -255,6 +256,7 @@ char autoSaveLoaded = NATIVESAVEDEVICE_NONE;
 
 int loadROM(fileBrowser_file* rom){
 
+  savestates_job = 0; //clear all pending save states
 	// First, if there's already a loaded ROM
 	if(hasLoadedROM){
 		// Unload it, and deinit everything
