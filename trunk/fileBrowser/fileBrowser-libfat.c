@@ -218,38 +218,29 @@ int fileBrowser_libfat_writeFile(fileBrowser_file* file, void* buffer, unsigned 
     - returns 1 on ok
 */
 int fileBrowser_libfat_init(fileBrowser_file* f){
- 	int res = 0;
+ 	
+  int res = 0;
  	
  	if(!rThreadCreated) InitRemovalThread();
 #ifdef HW_RVL
   if(f->name[0] == 's') {      //SD
     if(!sdMounted) {           //if there's nothing currently mounted
       pauseRemovalThread();
-      if(sdNeedsUnmount) fatUnmount("sd");
-      switch(sdNeedsUnmount){  //unmount previous devices
-        case FRONTSD:  
-          frontsd->shutdown();
-          frontsd->startup();  //some cards fail without this
-          break;
-        case CARD_A:
-          carda->shutdown();
-          break;
-        case CARD_B:
-          cardb->shutdown();
-          break;
+      if(sdNeedsUnmount) {
+        fatUnmount("sd");
+        sdNeedsUnmount = 0;
       }
-      sdNeedsUnmount = 0;
-     	if(frontsd->startup()) {
-       	res |= fatMountSimple ("sd", frontsd);
-       	if(res) sdMounted = FRONTSD;
+    	if(fatMountSimple ("sd", frontsd)) {
+       	sdMounted = FRONTSD;
+       	res = 1;
      	}
-     	else if(carda->startup() && !res) {
-     	  res |= fatMountSimple ("sd", carda);
-     	  if(res) sdMounted = CARD_A;
+     	else if(fatMountSimple ("sd", carda)) {
+     	  sdMounted = CARD_A;
+     	  res = 1;
    	  }
-   	  else if(cardb->startup() && !res) {
-     	  res |= fatMountSimple ("sd", cardb);
-     	  if(res) sdMounted = CARD_B;
+   	  else if(fatMountSimple ("sd", cardb)) {
+     	  sdMounted = CARD_B;
+     	  res = 1;
    	  }
    	  continueRemovalThread();
    	  return res;
@@ -262,19 +253,16 @@ int fileBrowser_libfat_init(fileBrowser_file* f){
      	pauseRemovalThread();
      	if(usbNeedsUnmount) {
      	  fatUnmount("usb");
-        usb->shutdown();
+     	  usbNeedsUnmount=0;
       }
-     	if(usb->startup()) {
-     	  res |= fatMountSimple ("usb", usb);
-      }
-      if(res) usbMounted = 1;
+     	if(fatMountSimple ("usb", usb))
+        usbMounted = 1;
       continueRemovalThread();
-      return res;
+      return usbMounted;
     }
     else
       return 1;
   }
-  continueRemovalThread();
   return res;
 #else
   if(!sdMounted) {           //GC has only SD
@@ -301,7 +289,7 @@ int fileBrowser_libfat_init(fileBrowser_file* f){
    	continueRemovalThread();
   	return res;
   }
-  return 1;
+  return res;
 #endif
 }
 
