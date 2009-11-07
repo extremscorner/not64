@@ -20,4 +20,7 @@ int fileBrowser_libfat_deinit(fileBrowser_file* f);
 int fileBrowser_libfatROM_readFile(fileBrowser_file*, void*, unsigned int);
 int fileBrowser_libfatROM_deinit(fileBrowser_file* f);
 
+void pauseRemovalThread();
+void continueRemovalThread();
+
 #endif

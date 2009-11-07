@@ -226,6 +226,7 @@ void Func_PlayGame()
 //	usleep(1000);			//This sleep prevents the PAD_Init() from failing
 	control_info_init();	//TODO: This controller re-poll might need rethinking when we implement reconfigurable input
 
+	pauseRemovalThread();
 	resumeAudio();
 	resumeInput();
 #ifdef DEBUGON
@@ -237,7 +238,8 @@ void Func_PlayGame()
 #endif
 	pauseInput();
 	pauseAudio();
-
+  continueRemovalThread();
+	
   if(autoSave==AUTOSAVE_ENABLE) {
     if(flashramWritten || sramWritten || eepromWritten || mempakWritten) {  //something needs saving
       switch (nativeSaveDevice)
