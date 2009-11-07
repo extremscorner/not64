@@ -17,7 +17,7 @@
 #include "main.h"
 #include "rom.h"
 #include "plugin.h"
-
+#include "savestates.h"
 #include <gccore.h>
 #include "../gui/gui_GX-menu.h"
 #include "../gui/GUI.h"
@@ -207,6 +207,7 @@ extern BOOL flashramWritten;
 BOOL hasLoadedROM = FALSE;
 int loadROM(fileBrowser_file* rom){
 
+  savestates_job = 0;
 	// First, if there's already a loaded ROM
 	if(hasLoadedROM){
 		// Unload it, and deinit everything
