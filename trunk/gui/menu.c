@@ -56,6 +56,7 @@ extern BOOL hasLoadedROM;
 	static char* playGame_func(){
 		if(!hasLoadedROM) return "Please load a ROM first";
 		
+		pauseRemovalThread();
 		resumeAudio();
 		resumeInput();
 		GUI_toggle();
@@ -63,6 +64,7 @@ extern BOOL hasLoadedROM;
 		GUI_toggle();
 		pauseInput();
 		pauseAudio();
+		continueRemovalThread();
 		return NULL;
 	}
 
