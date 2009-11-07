@@ -200,7 +200,7 @@ PowerPC_func* recompile_block(PowerPC_block* ppc_block, unsigned int addr){
 	// Flush any remaining mapped registers
 	flushRegisters(); //start_new_mapping();
 	// In case we couldn't compile the whole function, use a pad
-	if(need_pad)
+  if(need_pad || isJmpDst[src_last-1-ppc_block->mips_code])
 		genJumpPad();
 
 	// Allocate the func buffers and copy the code
