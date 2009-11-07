@@ -10,6 +10,8 @@
 #include "fileBrowser.h"
 #include <sdcard/gcsd.h>
 
+extern BOOL hasLoadedROM;
+
 #ifdef HW_RVL
 #include <sdcard/wiisd_io.h>
 #include <ogc/usbstorage.h>
@@ -219,10 +221,10 @@ int fileBrowser_libfat_init(fileBrowser_file* f){
  	int res = 0;
  	
  	if(!rThreadCreated) InitRemovalThread();
- 	pauseRemovalThread();
 #ifdef HW_RVL
   if(f->name[0] == 's') {      //SD
     if(!sdMounted) {           //if there's nothing currently mounted
+      pauseRemovalThread();
       if(sdNeedsUnmount) fatUnmount("sd");
       switch(sdNeedsUnmount){  //unmount previous devices
         case FRONTSD:  
@@ -252,13 +254,12 @@ int fileBrowser_libfat_init(fileBrowser_file* f){
    	  continueRemovalThread();
    	  return res;
  	  }
- 	  else {
-   	  continueRemovalThread();
+ 	  else
  	    return 1;
-	  }
  	}
  	else if(f->name[0] == 'u') {
    	if(!usbMounted) {
+     	pauseRemovalThread();
      	if(usbNeedsUnmount) {
      	  fatUnmount("usb");
         usb->shutdown();
@@ -270,15 +271,14 @@ int fileBrowser_libfat_init(fileBrowser_file* f){
       continueRemovalThread();
       return res;
     }
-    else {
-      continueRemovalThread();
+    else
       return 1;
-    }
   }
   continueRemovalThread();
   return res;
 #else
   if(!sdMounted) {           //GC has only SD
+    pauseRemovalThread();
     if(sdNeedsUnmount) fatUnmount("sd");
     switch(sdNeedsUnmount){  //unmount previous devices
       case CARD_A:
@@ -301,7 +301,6 @@ int fileBrowser_libfat_init(fileBrowser_file* f){
    	continueRemovalThread();
   	return res;
   }
-  continueRemovalThread();
   return 1;
 #endif
 }
@@ -327,14 +326,16 @@ int fileBrowser_libfatROM_deinit(fileBrowser_file* f){
 }
 	
 int fileBrowser_libfatROM_readFile(fileBrowser_file* file, void* buffer, unsigned int length){
-  pauseRemovalThread();
+  if(!hasLoadedROM)     //don't do this ingame
+    pauseRemovalThread();
 	if(!fd) fd = fopen( file->name, "rb");
 	
 	fseek(fd, file->offset, SEEK_SET);
 	int bytes_read = fread(buffer, 1, length, fd);
 	if(bytes_read > 0) file->offset += bytes_read;
   
-	continueRemovalThread();
+	if(!hasLoadedROM)
+	  continueRemovalThread();
 	return bytes_read;
 }
 
