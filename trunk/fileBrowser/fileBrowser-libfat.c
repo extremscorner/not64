@@ -321,7 +321,7 @@ int fileBrowser_libfatROM_deinit(fileBrowser_file* f){
 }
 	
 int fileBrowser_libfatROM_readFile(fileBrowser_file* file, void* buffer, unsigned int length){
-  if(!hasLoadedROM)     //don't do this ingame
+  if(stop)     //do this only in the menu
     pauseRemovalThread();
 	if(!fd) fd = fopen( file->name, "rb");
 	
@@ -329,7 +329,7 @@ int fileBrowser_libfatROM_readFile(fileBrowser_file* file, void* buffer, unsigne
 	int bytes_read = fread(buffer, 1, length, fd);
 	if(bytes_read > 0) file->offset += bytes_read;
   
-	if(!hasLoadedROM)
+	if(stop)
 	  continueRemovalThread();
 	return bytes_read;
 }
