@@ -66,8 +66,8 @@ int init_byte_swap(u32 magicWord){
 	return ROM_byte_swap;
 }
 
-#define TOTAL_NUM_16KBIT 40
-static unsigned int CRC_TABLE[40][2] = {
+#define TOTAL_NUM_16KBIT 36
+static unsigned int CRC_TABLE[36][2] = {
   { 0x514B6900, 0xB4B19881},  //Banjo to Kazooie no Daibouken 2 (J) [!]
   { 0x155B7CDF, 0xF0DA7325},  //Banjo-Tooie (A) [!]
   { 0xC9176D39, 0xEA4779D1},  //Banjo-Tooie (E) [!]
@@ -76,11 +76,11 @@ static unsigned int CRC_TABLE[40][2] = {
   { 0x30C7AC50, 0x7704072D},  //Conker's Bad Fur Day (U) [!]
   { 0x83F3931E, 0xCB72223D},  //Cruis'n World (E) [!]
   { 0xDFE61153, 0xD76118E6},  //Cruis'n World (U) [!]
-  { 0x11936D8C, 0x6F2C4B43},  //Donkey Kong 64 (E) [!]
+  /*{ 0x11936D8C, 0x6F2C4B43},  //Donkey Kong 64 (E) [!]
   { 0x053C89A7, 0xA5064302},  //Donkey Kong 64 (J) [!]
   { 0xEC58EABF, 0xAD7C7169},  //Donkey Kong 64 (U) [!]
   { 0x0DD4ABAB, 0xB5A2A91E},  //Donkey Kong 64 - Kiosk (U) [!]
-  { 0xB6306E99, 0xB63ED2B2},  //Doraemon 2 - Hikari no Shinden (J) [!]
+  */{ 0xB6306E99, 0xB63ED2B2},  //Doraemon 2 - Hikari no Shinden (J) [!]
   { 0xA8275140, 0xB9B056E8},  //Doraemon 3 - Nobi Dai no Machi SOS! (J) [!]
   { 0x202A8EE4, 0x83F88B89},  //Excitebike 64 (E) [!]
   { 0x861C3519, 0xF6091CE5},  //Excitebike 64 (J) [!]
