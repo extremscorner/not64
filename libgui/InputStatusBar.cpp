@@ -64,7 +64,7 @@ void InputStatusBar::drawComponent(Graphics& gfx)
 				IplFont::getInstance().drawInit(activeColor);
 			else
 				IplFont::getInstance().drawInit(inactiveColor);
-			sprintf (statusText, "Pad%d: GC%d", i, padAssign[i]);
+			sprintf (statusText, "Pad%d: GC%d", i+1, padAssign[i]+1);
 
 			//build text
 			//draw with appropriate color
@@ -78,25 +78,25 @@ void InputStatusBar::drawComponent(Graphics& gfx)
 			{
 				assign_controller(i, &controller_Classic, (int)padAssign[i]);
 				IplFont::getInstance().drawInit(activeColor);
-				sprintf (statusText, "Pad%d: CC%d", i, padAssign[i]);
+				sprintf (statusText, "Pad%d: CC%d", i+1, padAssign[i]+1);
 			}
 			else if (controller_WiimoteNunchuk.available[(int)padAssign[i]])
 			{
 				assign_controller(i, &controller_WiimoteNunchuk, (int)padAssign[i]);
 				IplFont::getInstance().drawInit(activeColor);
-				sprintf (statusText, "Pad%d: WM+N%d", i, padAssign[i]);
+				sprintf (statusText, "Pad%d: WM+N%d", i+1, padAssign[i]+1);
 			}
 			else
 			{
 				IplFont::getInstance().drawInit(inactiveColor);
-				sprintf (statusText, "Pad%d: Wii%d", i, padAssign[i]);
+				sprintf (statusText, "Pad%d: Wii%d", i+1, padAssign[i]+1);
 			}
 
 			break;
 #endif
 		case PADTYPE_NONE:
 			IplFont::getInstance().drawInit(inactiveColor);
-				sprintf (statusText, "Pad%d: None", i);
+				sprintf (statusText, "Pad%d: None", i+1);
 			break;
 		}
 		IplFont::getInstance().drawString((int) 540, (int) 150+30*i, statusText, 1.0, true);
