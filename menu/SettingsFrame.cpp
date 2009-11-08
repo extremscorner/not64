@@ -92,7 +92,7 @@ static char FRAME_STRINGS[32][23] =
 	  "4:3",
 	  "16:9",
 	//Strings for Input tab
-	  "Configure Mappings",
+	  "Configure Input",
 	  "Configure Paks",
 	//Strings for Audio tab
 	  "Disable Audio",
@@ -604,7 +604,8 @@ void Func_FbTexturesOff()
 
 void Func_ConfigureInput()
 {
-	menu::MessageBox::getInstance().setMessage("Input configuration not implemented");
+//	menu::MessageBox::getInstance().setMessage("Input configuration not implemented");
+	pMenuContext->setActiveFrame(MenuContext::FRAME_CONFIGUREINPUT,ConfigureInputFrame::SUBMENU_REINIT);
 }
 
 void Func_ConfigurePaks()

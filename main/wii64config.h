@@ -88,6 +88,13 @@ enum screenMode
 	SCREENMODE_16x9
 };
 
+extern char padAutoAssign;
+enum padAutoAssign
+{
+	PADAUTOASSIGN_MANUAL=0,
+	PADAUTOASSIGN_AUTOMATIC
+};
+
 extern char padType[4];
 enum padType
 {
@@ -95,6 +102,7 @@ enum padType
 	PADTYPE_GAMECUBE,
 	PADTYPE_WII
 };
+
 extern char padAssign[4];
 enum padAssign
 {

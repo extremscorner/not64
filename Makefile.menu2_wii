@@ -34,12 +34,13 @@ OBJ		=main/rom_gc.o \
 		menu/MainFrame.o \
 		menu/LoadRomFrame.o \
 		menu/FileBrowserFrame.o \
+		menu/ConfigureInputFrame.o\
+		menu/ConfigurePaksFrame.o\
 		menu/CurrentRomFrame.o \
 		menu/LoadSaveFrame.o \
 		menu/SaveGameFrame.o \
 		menu/SettingsFrame.o\
 		menu/SelectCPUFrame.o\
-		menu/ConfigurePaksFrame.o\
 		menu/MenuResources.o \
 		libgui/Button.o \
 		libgui/Component.o \

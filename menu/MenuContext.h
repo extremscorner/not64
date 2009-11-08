@@ -12,6 +12,7 @@
 #include "SaveGameFrame.h"
 #include "SettingsFrame.h"
 #include "SelectCPUFrame.h"
+#include "ConfigureInputFrame.h"
 #include "ConfigurePaksFrame.h"
 
 #include "MenuTypes.h"
@@ -35,6 +36,7 @@ public:
 		FRAME_SAVEGAME,
 		FRAME_SETTINGS,
 		FRAME_SELECTCPU,
+		FRAME_CONFIGUREINPUT,
 		FRAME_CONFIGUREPAKS
 		
 	};
@@ -50,6 +52,7 @@ private:
 	SaveGameFrame *saveGameFrame;
 	SettingsFrame *settingsFrame;
 	SelectCPUFrame *selectCPUFrame;
+	ConfigureInputFrame *configureInputFrame;
 	ConfigurePaksFrame *configurePaksFrame;
 
 };
