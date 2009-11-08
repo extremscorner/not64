@@ -92,6 +92,8 @@ extern timers Timers;
 	   char saveStateDevice;
        char autoSave;
        char screenMode = 0;
+	   char padType[4];
+	   char padAssign[4];
 	   char pakMode[4];
 
 struct {
@@ -110,6 +112,14 @@ struct {
   { "StatesDevice", &saveStateDevice, SAVESTATEDEVICE_SD, SAVESTATEDEVICE_USB },
   { "AutoSave", &autoSave, AUTOSAVE_DISABLE, AUTOSAVE_ENABLE },
   { "LimitVIs", &Timers.limitVIs, LIMITVIS_NONE, LIMITVIS_WAIT_FOR_FRAME },
+/*  { "PadType1", &padType[0], PADTYPE_NONE, PADTYPE_WII },
+  { "PadType2", &padType[1], PADTYPE_NONE, PADTYPE_WII },
+  { "PadType3", &padType[2], PADTYPE_NONE, PADTYPE_WII },
+  { "PadType4", &padType[3], PADTYPE_NONE, PADTYPE_WII },
+  { "PadAssign1", &padAssign[0], PADASSIGN_INPUT0, PADASSIGN_INPUT3 },
+  { "PadAssign2", &padAssign[1], PADASSIGN_INPUT0, PADASSIGN_INPUT3 },
+  { "PadAssign3", &padAssign[2], PADASSIGN_INPUT0, PADASSIGN_INPUT3 },
+  { "PadAssign4", &padAssign[3], PADASSIGN_INPUT0, PADASSIGN_INPUT3 },*/
   { "Pak1", &pakMode[0], PAKMODE_MEMPAK, PAKMODE_RUMBLEPAK },
   { "Pak2", &pakMode[1], PAKMODE_MEMPAK, PAKMODE_RUMBLEPAK },
   { "Pak3", &pakMode[2], PAKMODE_MEMPAK, PAKMODE_RUMBLEPAK },
@@ -173,6 +183,14 @@ int main(int argc, char* argv[]){
 	creditsScrolling = 0; // Normal menu for now
 	dynacore         = 1; // Dynarec
 	screenMode		 = 0; // Stretch FB horizontally
+	padType[0]		 = PADTYPE_NONE;
+	padType[1]		 = PADTYPE_NONE;
+	padType[2]		 = PADTYPE_NONE;
+	padType[3]		 = PADTYPE_NONE;
+	padAssign[0]	 = PADASSIGN_INPUT0;
+	padAssign[1]	 = PADASSIGN_INPUT1;
+	padAssign[2]	 = PADASSIGN_INPUT2;
+	padAssign[3]	 = PADASSIGN_INPUT3;
 	pakMode[0]		 = PAKMODE_MEMPAK; // memPak plugged into controller 1
 	pakMode[1]		 = PAKMODE_MEMPAK;
 	pakMode[2]		 = PAKMODE_MEMPAK;
@@ -301,7 +319,7 @@ int loadROM(fileBrowser_file* rom){
 
 	gfx_info_init();
 	audio_info_init();
-	control_info_init();
+//	control_info_init();
 	rsp_info_init();
 
 	romOpen_gfx();

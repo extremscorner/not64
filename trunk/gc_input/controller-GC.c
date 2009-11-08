@@ -5,10 +5,15 @@
 #include <ogc/pad.h>
 #include "controller.h"
 
+u32 gc_connected;
+
 static int _GetKeys(int Control, BUTTONS * Keys )
 {
-	if(padNeedScan){ PAD_ScanPads(); padNeedScan = 0; }
+	if(padNeedScan){ gc_connected = PAD_ScanPads(); padNeedScan = 0; }
 	BUTTONS* c = Keys;
+
+	controller_GC.available[Control] = (gc_connected & (1<<Control)) ? 1 : 0;
+	if (!controller_GC.available[Control]) return 0;
 
 	int b = PAD_ButtonsHeld(Control);
 	c->R_DPAD       = (b & PAD_BUTTON_RIGHT) ? 1 : 0;
@@ -71,21 +76,10 @@ controller_t controller_GC =
 	 };
 
 static void init(void){
-	int attempts = 64;
-	PAD_Init();
 
-	PADStatus status[4];
-	do PAD_Read(status);
-	while(((status[0].err != PAD_ERR_NO_CONTROLLER &&
-	        status[0].err != PAD_ERR_NONE) ||
-	       (status[1].err != PAD_ERR_NO_CONTROLLER &&
-		    status[1].err != PAD_ERR_NONE) ||
-	       (status[2].err != PAD_ERR_NO_CONTROLLER &&
-		    status[2].err != PAD_ERR_NONE) ||
-	       (status[3].err != PAD_ERR_NO_CONTROLLER &&
-		    status[3].err != PAD_ERR_NONE)) &&
-		  attempts--);
+	if(padNeedScan){ gc_connected = PAD_ScanPads(); padNeedScan = 0; }
+
 	int i;
 	for(i=0; i<4; ++i)
-		controller_GC.available[i] = status[i].err != PAD_ERR_NO_CONTROLLER;
+		controller_GC.available[i] = (gc_connected & (1<<i));
 }

@@ -29,9 +29,6 @@ private:
 	int logoMode;
 	float x, y, z, size;
 	float rotateAuto, rotateX, rotateY;
-/*	unsigned long StartTime;
-	float x, y, width, height;
-	GXColor	focusColor, inactiveColor, activeColor, selectedColor, labelColor;*/
 
 };
 

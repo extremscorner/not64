@@ -167,6 +167,20 @@ EXPORT void CALL GetDllInfo ( PLUGIN_INFO * PluginInfo )
 extern int stop;
 EXPORT void CALL GetKeys(int Control, BUTTONS * Keys )
 {
+#if defined(WII) && !defined(NO_BT)
+	//Need to switch between Classic and WiimoteNunchuck if user swapped extensions
+	if (padType[virtualControllers[Control].number] == PADTYPE_WII)
+	{
+		if (virtualControllers[Control].control == &controller_Classic &&
+			!controller_Classic.available[virtualControllers[Control].number] &&
+			controller_WiimoteNunchuk.available[virtualControllers[Control].number])
+			assign_controller(Control, &controller_WiimoteNunchuk, virtualControllers[Control].number);
+		else if (virtualControllers[Control].control == &controller_WiimoteNunchuk &&
+			!controller_WiimoteNunchuk.available[virtualControllers[Control].number] &&
+			controller_Classic.available[virtualControllers[Control].number])
+			assign_controller(Control, &controller_Classic, virtualControllers[Control].number);
+	}
+#endif
 	if( DO_CONTROL(Control, GetKeys, Keys) ) stop = 1;
 }
 
@@ -186,6 +200,11 @@ EXPORT void CALL InitiateControllers (CONTROL_INFO ControlInfo)
 
 	init_controller_ts();
 
+	// 'Initialize' the unmapped virtual controllers
+//	for(i=0; i<4; ++i){
+//		unassign_controller(i);
+//	}
+
 	int num_assigned[num_controller_t];
 	memset(num_assigned, 0, sizeof(num_assigned));
 
@@ -201,6 +220,9 @@ EXPORT void CALL InitiateControllers (CONTROL_INFO ControlInfo)
 			if(w == 4) continue;
 
 			assign_controller(i, type, w);
+			padType[i] = type == &controller_GC ? PADTYPE_GAMECUBE : PADTYPE_WII;
+			padAssign[i] = w;
+
 			// Don't assign the next type over this one or the same controller
 			++num_assigned[t];
 			break;
@@ -208,9 +230,11 @@ EXPORT void CALL InitiateControllers (CONTROL_INFO ControlInfo)
 		if(t == num_controller_t)
 			break;
 	}
+
 	// 'Initialize' the unmapped virtual controllers
 	for(; i<4; ++i){
 		unassign_controller(i);
+		padType[i] = PADTYPE_NONE;
 	}
 }
 

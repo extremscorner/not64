@@ -3,6 +3,7 @@
 #include "SettingsFrame.h"
 #include "../libgui/Button.h"
 #include "../libgui/Gui.h"
+#include "../libgui/InputStatusBar.h"
 #include "../libgui/resources.h"
 //#include "../libgui/InputManager.h"
 #include "../libgui/FocusManager.h"
@@ -75,6 +76,9 @@ struct ButtonInfo
 
 MainFrame::MainFrame()
 {
+	inputStatusBar = new menu::InputStatusBar(450,100);
+	add(inputStatusBar);
+
 	for (int i = 0; i < NUM_MAIN_BUTTONS; i++)
 		FRAME_BUTTONS[i].button = new menu::Button(FRAME_BUTTONS[i].buttonStyle, &FRAME_BUTTONS[i].buttonString, 
 										FRAME_BUTTONS[i].x, FRAME_BUTTONS[i].y, 
@@ -106,7 +110,7 @@ MainFrame::~MainFrame()
 		menu::Cursor::getInstance().removeComponent(this, FRAME_BUTTONS[i].button);
 		delete FRAME_BUTTONS[i].button;
 	}
-
+	delete inputStatusBar;
 }
 
 extern MenuContext *pMenuContext;
@@ -184,7 +188,7 @@ void resumeAudio(void); void resumeInput(void);
 void go(void); 
 }
 
-void control_info_init();
+//void control_info_init();
 
 extern char autoSave;
 extern BOOL sramWritten;
@@ -224,7 +228,7 @@ void Func_PlayGame()
 	menu::Gui::getInstance().gfx->clearEFB((GXColor){0, 0, 0, 0xFF}, 0x000000);
 
 //	usleep(1000);			//This sleep prevents the PAD_Init() from failing
-	control_info_init();	//TODO: This controller re-poll might need rethinking when we implement reconfigurable input
+//	control_info_init();	//TODO: This controller re-poll might need rethinking when we implement reconfigurable input
 
 	pauseRemovalThread();
 	resumeAudio();
