@@ -1,13 +1,13 @@
 /**
- * Mupen64 - tx.h
- * Copyright (C) 2002 Hacktarux
- *
- * Mupen64 homepage: http://mupen64.emulation64.com
- * email address: hacktarux@yahoo.fr
+ * Wii64 - tx_GX.h
+ * Copyright (C) 2002 Hacktarux 
+ * Copyright (C) 2007, 2008 sepp256
  * 
- * If you want to contribute to the project please contact
- * me first (maybe someone is already making what you are
- * planning to do).
+ * N64 GX plugin, based off Hacktarux's soft_gfx
+ * by sepp256 for Mupen64-GC
+ *
+ * Wii64 homepage: http://www.emulatemii.com
+ * email address: sepp256@gmail.com
  *
  *
  * This program is free software; you can redistribute it and/
@@ -19,11 +19,6 @@
  * ful, but WITHOUT ANY WARRANTY; without even the implied war-
  * ranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  * See the GNU General Public Licence for more details.
- *
- * You should have received a copy of the GNU General Public
- * Licence along with this program; if not, write to the Free
- * Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139,
- * USA.
  *
 **/
 
