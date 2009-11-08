@@ -483,6 +483,37 @@ bool OGL_Start()
 	//Set 'window height' to efb dimensions
 	OGL.width = 640;
 	OGL.height = 480;
+
+	//Reset gDP and combiner colors between ROMs. This fixes fillColor when changing ROMs.
+	combiner.vertex.color = ZERO;
+	combiner.vertex.secondaryColor = ZERO;
+	combiner.vertex.alpha = ZERO;
+	gDP.primColor.m = 0;
+	gDP.primColor.r = 0.0f;
+	gDP.primColor.g = 0.0f;
+	gDP.primColor.b = 0.0f;
+	gDP.primColor.a = 0.0f;
+	gDP.primColor.l = 0.0f;
+	gDP.envColor.r = 0.0f;
+	gDP.envColor.g = 0.0f;
+	gDP.envColor.b = 0.0f;
+	gDP.envColor.a = 0.0f;
+	gDP.fogColor.r = 0.0f;
+	gDP.fogColor.g = 0.0f;
+	gDP.fogColor.b = 0.0f;
+	gDP.fogColor.a = 0.0f;
+	gDP.blendColor.r = 0.0f;
+	gDP.blendColor.g = 0.0f;
+	gDP.blendColor.b = 0.0f;
+	gDP.blendColor.a = 0.0f;
+	gDP.fillColor.r = 0.0f;
+	gDP.fillColor.g = 0.0f;
+	gDP.fillColor.b = 0.0f;
+	gDP.fillColor.a = 0.0f;
+	gDP.fillColor.z = 0.0f;
+	gDP.fillColor.dz = 0.0f;
+	gDP.primDepth.z = 0.0f;
+	gDP.primDepth.deltaZ = 0.0f;
 #endif // __GX__
 	OGL_InitExtensions();
 	OGL_InitStates();
@@ -1981,6 +2012,9 @@ void OGL_ReadScreen( void **dest, long *width, long *height )
 }
 
 #endif // __LINUX__
+
+#define BLACK			{0,0,0,0}
+#define WHITE			{255,255,255,255}
 
 #ifdef __GX__
 void OGL_GXinitDlist()
