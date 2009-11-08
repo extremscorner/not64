@@ -98,6 +98,7 @@ MessageBox::~MessageBox()
 
 void MessageBox::setMessage(const char* string)
 {
+	if (messageFade > 0.0f) messageFade = 0.0f;
 	messageBoxActive = true;
 	FRAME_BUTTONS[0].button->setVisible(true);
 	FRAME_BUTTONS[0].button->setActive(true);
@@ -121,6 +122,7 @@ void MessageBox::setMessage(const char* string)
 
 int MessageBox::askMessage(const char* string)
 {
+	if (messageFade > 0.0f) messageFade = 0.0f;
 	messageBoxActive = true;
 	FRAME_BUTTONS[0].button->setVisible(false);
 	FRAME_BUTTONS[0].button->setActive(false);
