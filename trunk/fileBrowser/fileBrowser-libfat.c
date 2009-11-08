@@ -69,12 +69,16 @@ fileBrowser_file saveDir_libfat_USB =
 
 void continueRemovalThread()
 {
+  if(rThreadRun)
+    return;
   rThreadRun = 1;
   LWP_ResumeThread(removalThread);
 }
 
 void pauseRemovalThread()
 {
+  if(!rThreadRun)
+    return;
   rThreadRun = 0;
 
   // wait for thread to finish
