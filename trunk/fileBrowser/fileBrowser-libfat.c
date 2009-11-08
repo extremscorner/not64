@@ -228,6 +228,12 @@ int fileBrowser_libfat_init(fileBrowser_file* f){
       pauseRemovalThread();
       if(sdNeedsUnmount) {
         fatUnmount("sd");
+        if(sdNeedsUnmount==FRONTSD)
+          frontsd->shutdown();
+        else if(sdNeedsUnmount==CARD_A)
+          carda->shutdown();
+        else if(sdNeedsUnmount==CARD_B)
+          cardb->shutdown();
         sdNeedsUnmount = 0;
       }
     	if(fatMountSimple ("sd", frontsd)) {
@@ -253,6 +259,7 @@ int fileBrowser_libfat_init(fileBrowser_file* f){
      	pauseRemovalThread();
      	if(usbNeedsUnmount) {
      	  fatUnmount("usb");
+     	  usb->shutdown();
      	  usbNeedsUnmount=0;
       }
      	if(fatMountSimple ("usb", usb))
