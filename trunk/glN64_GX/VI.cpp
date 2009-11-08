@@ -406,6 +406,9 @@ void VI_GX_showStats()
 
 void VI_GX_cleanUp()
 {
+	GX_SetNumTevStages(1);
+	GX_SetTevOp(GX_TEVSTAGE0,GX_MODULATE);
+
 	GX_SetFog(GX_FOG_NONE,0,1,0,1,(GXColor){0,0,0,255});
 	GX_SetViewport(0,0,rmode->fbWidth,rmode->efbHeight,0,1);
 	GX_SetCoPlanar(GX_DISABLE);
