@@ -69,6 +69,7 @@ void InputStatusBar::drawComponent(Graphics& gfx)
 			//build text
 			//draw with appropriate color
 			break;
+#ifdef HW_RVL
 		case PADTYPE_WII:
 			wpad = WPAD_Data((int)padAssign[i]);
 			controller_Classic.available[(int)padAssign[i]] = (wpad->err == WPAD_ERR_NONE && wpad->exp.type == WPAD_EXP_CLASSIC) ? 1 : 0;
@@ -92,6 +93,7 @@ void InputStatusBar::drawComponent(Graphics& gfx)
 			}
 
 			break;
+#endif
 		case PADTYPE_NONE:
 			IplFont::getInstance().drawInit(inactiveColor);
 				sprintf (statusText, "Pad%d: None", i);

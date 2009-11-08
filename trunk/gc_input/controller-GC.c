@@ -2,6 +2,7 @@
    by Mike Slegeir for Mupen64-GC
  */
 
+#include <string.h>
 #include <ogc/pad.h>
 #include "controller.h"
 
@@ -11,6 +12,7 @@ static int _GetKeys(int Control, BUTTONS * Keys )
 {
 	if(padNeedScan){ gc_connected = PAD_ScanPads(); padNeedScan = 0; }
 	BUTTONS* c = Keys;
+	memset(c, 0, sizeof(BUTTONS));
 
 	controller_GC.available[Control] = (gc_connected & (1<<Control)) ? 1 : 0;
 	if (!controller_GC.available[Control]) return 0;

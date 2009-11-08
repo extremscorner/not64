@@ -2,6 +2,7 @@
    by Mike Slegeir for Mupen64-GC
  */
 
+#include <string.h>
 #include <math.h>
 #include <wiiuse/wpad.h>
 #include "controller.h"
@@ -28,6 +29,7 @@ static int _GetKeys(int Control, BUTTONS * Keys )
 	if(wpadNeedScan){ WPAD_ScanPads(); wpadNeedScan = 0; }
 	WPADData* wpad = WPAD_Data(Control);
 	BUTTONS* c = Keys;
+	memset(c, 0, sizeof(BUTTONS));
 
 	// Only use a connected classic controller
 	if(wpad->err == WPAD_ERR_NONE &&

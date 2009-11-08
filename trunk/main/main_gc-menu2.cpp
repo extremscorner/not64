@@ -92,6 +92,7 @@ extern timers Timers;
 	   char saveStateDevice;
        char autoSave;
        char screenMode = 0;
+	   char padAutoAssign;
 	   char padType[4];
 	   char padAssign[4];
 	   char pakMode[4];
@@ -183,6 +184,7 @@ int main(int argc, char* argv[]){
 	creditsScrolling = 0; // Normal menu for now
 	dynacore         = 1; // Dynarec
 	screenMode		 = 0; // Stretch FB horizontally
+	padAutoAssign	 = PADAUTOASSIGN_AUTOMATIC;
 	padType[0]		 = PADTYPE_NONE;
 	padType[1]		 = PADTYPE_NONE;
 	padType[2]		 = PADTYPE_NONE;

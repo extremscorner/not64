@@ -55,7 +55,7 @@ void Gui::draw()
 	Input::getInstance().refreshInput();
 	Cursor::getInstance().updateCursor();
 	Focus::getInstance().updateFocus();
-	control_info_init();
+	if(padAutoAssign) control_info_init();
 	//Update time??
 	//Get graphics framework and pass to Frame draw fns?
 	gfx->drawInit();
