@@ -9,6 +9,9 @@
 #include "Controller_#1.1.h"
 
 extern char padNeedScan, wpadNeedScan;
+extern u32 gc_connected;
+
+void control_info_init(void);
 
 typedef struct {
 	// Call GetKeys to read in BUTTONS for a controller of this type

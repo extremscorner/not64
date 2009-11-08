@@ -51,6 +51,7 @@ OBJ		=main/rom_gc.o \
 		libgui/GuiResources.o \
 		libgui/Image.o \
 		libgui/InputManager.o \
+		libgui/InputStatusBar.o \
 		libgui/IPLFont.o \
 		libgui/LoadingBar.o \
 		libgui/Logo.o \

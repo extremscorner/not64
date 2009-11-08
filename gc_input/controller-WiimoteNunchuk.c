@@ -29,6 +29,19 @@ static int _GetKeys(int Control, BUTTONS * Keys )
 	WPADData* wpad = WPAD_Data(Control);
 	BUTTONS* c = Keys;
 
+	// Only use a connected nunchuck controller
+	if(wpad->err == WPAD_ERR_NONE &&
+	   wpad->exp.type == WPAD_EXP_NUNCHUK){
+		controller_WiimoteNunchuk.available[Control] = 1;
+	} else {
+		controller_WiimoteNunchuk.available[Control] = 0;
+		if(wpad->err == WPAD_ERR_NONE &&
+		   wpad->exp.type == WPAD_EXP_CLASSIC){
+			controller_Classic.available[Control] = 1;
+		}
+		return 0;
+	}
+
 	int b  = wpad->btns_h;
 	int d2 = b & WPAD_BUTTON_2;
 	c->R_DPAD       = (b & WPAD_BUTTON_RIGHT && d2)  ? 1 : 0;

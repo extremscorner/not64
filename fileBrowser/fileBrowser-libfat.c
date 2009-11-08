@@ -11,6 +11,7 @@
 #include <sdcard/gcsd.h>
 
 extern BOOL hasLoadedROM;
+extern int stop;
 
 #ifdef HW_RVL
 #include <sdcard/wiisd_io.h>

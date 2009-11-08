@@ -1,6 +1,8 @@
 #include "InputManager.h"
 #include "FocusManager.h"
 #include "CursorManager.h"
+#include "../gc_input/controller.h"
+
 
 void ShutdownWii();
 
@@ -30,10 +32,11 @@ Input::~Input()
 
 void Input::refreshInput()
 {
-	PAD_ScanPads();
+	if(padNeedScan){ gc_connected = PAD_ScanPads(); padNeedScan = 0; }
 	PAD_Read(gcPad);
 	PAD_Clamp(gcPad);
 #ifdef HW_RVL
+	if(wpadNeedScan){ WPAD_ScanPads(); wpadNeedScan = 0; }
 	WPAD_ScanPads();
 	wiiPad = WPAD_Data(0);
 #endif

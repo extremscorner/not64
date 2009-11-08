@@ -7,6 +7,7 @@
 #include "LoadingBar.h"
 #include "GuiResources.h"
 #include "../main/wii64config.h"
+#include "../gc_input/controller.h"
 
 extern "C" {
 #ifdef WII
@@ -54,6 +55,7 @@ void Gui::draw()
 	Input::getInstance().refreshInput();
 	Cursor::getInstance().updateCursor();
 	Focus::getInstance().updateFocus();
+	control_info_init();
 	//Update time??
 	//Get graphics framework and pass to Frame draw fns?
 	gfx->drawInit();
