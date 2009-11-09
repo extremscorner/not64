@@ -1023,6 +1023,7 @@ void OGL_AddTriangle( SPVertex *vertices, int v0, int v1, int v2 )
 		OGL.vertices[OGL.numVertices].z = gDP.otherMode.depthSource == G_ZS_PRIM ? gDP.primDepth.z * vertices[v[i]].w : vertices[v[i]].z;
 #else // !__GX__
 		//TODO: primDepthZ should now be handled with a Ztex. Verify this.
+		//Note: Could also handle primDepthZ by manipulating the Projection matrix
 //		OGL.vertices[OGL.numVertices].z = (gDP.otherMode.depthSource == G_ZS_PRIM) && !(OGL.GXuseProj) ? gDP.primDepth.z * vertices[v[i]].w : vertices[v[i]].z;
 		OGL.vertices[OGL.numVertices].z = vertices[v[i]].z;
 #endif // __GX__
@@ -1112,6 +1113,10 @@ void OGL_AddTriangle( SPVertex *vertices, int v0, int v1, int v2 )
 		OGL_DrawTriangles();
 }
 
+#ifdef SHOW_DEBUG
+	int CntTriProj, CntTriProjW, CntTriOther, CntTriNear, CntTriPolyOffset;
+#endif
+
 void OGL_DrawTriangles()
 {
 	if (OGL.usePolygonStipple && (gDP.otherMode.alphaCompare == G_AC_DITHER) && !(gDP.otherMode.alphaCvgSel))
@@ -1159,9 +1164,16 @@ void OGL_DrawTriangles()
 			{
 				if(OGL.GXuseProjW)
 				{
-					CopyMatrix( OGL.GXprojTemp, OGL.GXprojW );
-					OGL.GXprojTemp[2][2] += GXpolyOffsetFactor;
-					GX_LoadProjectionMtx(OGL.GXprojTemp, GX_PERSPECTIVE); 
+					if(!OGL.GXuseProjWnear)
+					{
+						CopyMatrix( OGL.GXprojTemp, OGL.GXprojW );
+						OGL.GXprojTemp[2][2] += GXpolyOffsetFactor;
+						GX_LoadProjectionMtx(OGL.GXprojTemp, GX_PERSPECTIVE); 
+					}
+					else
+					{
+						GX_LoadProjectionMtx(OGL.GXprojWnear, GX_PERSPECTIVE); 
+					}
 				}
 				else
 				{
@@ -1176,16 +1188,38 @@ void OGL_DrawTriangles()
 		{
 			if(OGL.GXuseProj)
 			{
-				if(OGL.GXproj[3][2] == -1)
-					GX_LoadProjectionMtx(OGL.GXproj, GX_PERSPECTIVE);
+				if(!(gSP.geometryMode & G_ZBUFFER))
+				{
+					CopyMatrix( OGL.GXprojTemp, OGL.GXproj );
+					OGL.GXprojTemp[2][2] =  0.0;
+					OGL.GXprojTemp[2][3] = -1.0;
+					if(OGL.GXprojTemp[3][2] == -1)
+						GX_LoadProjectionMtx(OGL.GXprojTemp, GX_PERSPECTIVE);
+					else
+						GX_LoadProjectionMtx(OGL.GXprojTemp, GX_ORTHOGRAPHIC); 
+				}
 				else
-					GX_LoadProjectionMtx(OGL.GXproj, GX_ORTHOGRAPHIC); 
+				{
+					if(OGL.GXproj[3][2] == -1)
+						GX_LoadProjectionMtx(OGL.GXproj, GX_PERSPECTIVE);
+					else
+						GX_LoadProjectionMtx(OGL.GXproj, GX_ORTHOGRAPHIC); 
+				}
 				GX_LoadPosMtxImm(OGL.GXmodelView,GX_PNMTX0);
 			}
 			else
 			{
 				if(OGL.GXuseProjW)
-					GX_LoadProjectionMtx(OGL.GXprojW, GX_PERSPECTIVE); 
+				{
+					if(!OGL.GXuseProjWnear)
+					{
+						GX_LoadProjectionMtx(OGL.GXprojW, GX_PERSPECTIVE); 
+					}
+					else
+					{
+						GX_LoadProjectionMtx(OGL.GXprojWnear, GX_PERSPECTIVE); 
+					}
+				}
 				else
 					GX_LoadProjectionMtx(OGL.GXprojIdent, GX_ORTHOGRAPHIC); 
 				GX_LoadPosMtxImm(OGL.GXmodelViewIdent,GX_PNMTX0);
@@ -1235,13 +1269,18 @@ void OGL_DrawTriangles()
 	GX_SetVtxAttrFmt(GX_VTXFMT0, GX_VA_TEX2, GX_TEX_ST, GX_F32, 0);
 
 
+#ifdef SHOW_DEBUG
 	if (!OGL.GXuseProj)
 	{
-#ifdef SHOW_DEBUG
 		sprintf(txtbuffer,"OGL: using software MTX xforms");
 		DEBUG_print(txtbuffer,4);
-#endif
 	}
+	if (OGL.GXuseProj) CntTriProj += OGL.numTriangles;
+	else if (OGL.GXuseProjW) CntTriProjW += OGL.numTriangles;
+	else CntTriOther += OGL.numTriangles;
+	if (OGL.GXuseProjW && OGL.GXuseProjWnear) CntTriNear += OGL.numTriangles;
+	if (OGL.GXpolyOffset) CntTriPolyOffset += OGL.numTriangles;
+#endif
 
 	GX_Begin(GX_TRIANGLES, GX_VTXFMT0, OGL.numVertices);
 	for (int i = 0; i < OGL.numVertices; i++) {
@@ -2056,6 +2095,7 @@ void OGL_GXinitDlist()
 	//Reset projection matrix
 	guMtxIdentity(OGL.GXproj);
 	guMtxIdentity(OGL.GXprojW);
+	guMtxIdentity(OGL.GXprojWnear);
 	guMtxIdentity(OGL.GXprojIdent);
 	//N64 Z clip space is backwards, so mult z components by -1
 	//N64 Z [-1,1] whereas GC Z [-1,0], so mult by 0.5 and shift by -0.5
@@ -2063,6 +2103,10 @@ void OGL_GXinitDlist()
 	OGL.GXproj[2][3] = GXprojZOffset; //-0.5;
 	OGL.GXprojW[3][2] = -1;
 	OGL.GXprojW[3][3] = 0;
+	OGL.GXprojWnear[2][2] = 0.0f;
+	OGL.GXprojWnear[2][3] = -0.5f;
+	OGL.GXprojWnear[3][2] = -1.0f;
+	OGL.GXprojWnear[3][3] = 0.0f;
 	OGL.GXprojIdent[2][2] = GXprojZScale; //0.5;
 	OGL.GXprojIdent[2][3] = GXprojZOffset; //-0.5;
 	GX_LoadProjectionMtx(OGL.GXprojIdent, GX_ORTHOGRAPHIC);
@@ -2072,6 +2116,7 @@ void OGL_GXinitDlist()
 	cache.GXprimDepthCnt = cache.GXZTexPrimCnt = cache.GXnoZTexPrimCnt = 0;
 
 	//Not sure if this is needed.  Clipping is a slow process...
+	//Note: gx.h has GX_CLIP_ENABLE and GX_CLIP_DISABLE backwards!!
 //	GX_SetClipMode(GX_CLIP_ENABLE);
 //	GX_SetClipMode(GX_CLIP_DISABLE);
 

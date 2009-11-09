@@ -332,6 +332,7 @@ void gSPMatrix( u32 matrix, u8 param )
 			{
 				OGL.GXprojW[2][2] = -GXprojZOffset - (GXprojZScale*gSP.matrix.projection[2][2]/gSP.matrix.projection[2][3]);
 				OGL.GXprojW[2][3] = GXprojZScale*(gSP.matrix.projection[3][2] - (gSP.matrix.projection[2][2]*gSP.matrix.projection[3][3]/gSP.matrix.projection[2][3]));
+//				OGL.GXprojW[2][3] = OGL.GXprojW[2][3]-0.25;
 				OGL.GXuseProjW = true;
 			}
 			else
@@ -347,6 +348,7 @@ void gSPMatrix( u32 matrix, u8 param )
 			//N64 Z [-1,1] whereas GC Z [-1,0], so mult by 0.5 and shift by -0.5
 			OGL.GXproj[2][2] = 0.5*OGL.GXproj[2][2] - 0.5*OGL.GXproj[3][2];
 			OGL.GXproj[2][3] = 0.5*OGL.GXproj[2][3] - 0.5*OGL.GXproj[3][3];
+//			OGL.GXproj[2][3] = OGL.GXproj[2][3]-0.25;
 		}
 	}
 	else
@@ -417,6 +419,12 @@ void gSPDMAMatrix( u32 matrix, u8 index, u8 multiply )
 	//N64 Z [-1,1] whereas GC Z [-1,0], so mult by 0.5 and shift by -0.5
 	OGL.GXproj[2][2] = 0.5*OGL.GXproj[2][2] - 0.5*OGL.GXproj[3][2];
 	OGL.GXproj[2][3] = 0.5*OGL.GXproj[2][3] - 0.5*OGL.GXproj[3][3];
+//	OGL.GXproj[2][3] = OGL.GXproj[2][3]-0.25;
+
+#ifdef SHOW_DEBUG
+	sprintf(txtbuffer,"gSP: gSPDMAMatrix");
+	DEBUG_print(txtbuffer,6);
+#endif
 
 	for (int j=0; j<3; j++)
 		for (int i=0; i<4; i++)
@@ -501,6 +509,10 @@ void gSPForceMatrix( u32 mptr )
 	RSP_LoadMatrix( gSP.matrix.combined, RSP_SegmentToPhysical( mptr ) );
 
 #ifdef __GX__
+#ifdef SHOW_DEBUG
+	sprintf(txtbuffer,"gSP: gSPForceMatrix");
+	DEBUG_print(txtbuffer,7);
+#endif
 	if (OGL.GXuseProj)
 	{
 		if (OGL.numTriangles)
@@ -511,6 +523,7 @@ void gSPForceMatrix( u32 mptr )
 		{
 			OGL.GXprojW[2][2] = -GXprojZOffset - (GXprojZScale*gSP.matrix.projection[2][2]/gSP.matrix.projection[2][3]);
 			OGL.GXprojW[2][3] = GXprojZScale*(gSP.matrix.projection[3][2] - (gSP.matrix.projection[2][2]*gSP.matrix.projection[3][3]/gSP.matrix.projection[2][3]));
+//			OGL.GXprojW[2][3] = OGL.GXprojW[2][3]-0.25;
 			OGL.GXuseProjW = true;
 		}
 		else
@@ -1144,6 +1157,9 @@ void gSPTriangle( s32 v0, s32 v1, s32 v2, s32 flag )
 				if (((gSP.vertices[v[i]].zClip < 0.0f) && (gSP.vertices[v[j]].zClip >= 0.0f)) ||
 					((gSP.vertices[v[i]].zClip >= 0.0f) && (gSP.vertices[v[j]].zClip < 0.0f)))
 				{
+					//catch div0 case which will give infinite vertex coords
+					if (((gSP.vertices[v[j]].z - gSP.vertices[v[i]].z) + (gSP.vertices[v[j]].w - gSP.vertices[v[i]].w)) == 0.0f)
+						return;
 					f32 percent = (-gSP.vertices[v[i]].w - gSP.vertices[v[i]].z) / ((gSP.vertices[v[j]].z - gSP.vertices[v[i]].z) + (gSP.vertices[v[j]].w - gSP.vertices[v[i]].w));
 
 					gSPInterpolateVertex( &clippedVertices[clippedIndex], percent, &gSP.vertices[v[i]], &gSP.vertices[v[j]] );
@@ -1174,6 +1190,11 @@ void gSPTriangle( s32 v0, s32 v1, s32 v2, s32 flag )
 			if (clippedIndex == 4)
 				OGL_AddTriangle( clippedVertices, 0, 2, 3 );
 
+			//Flush triangle cache before drawing near triangles
+			OGL_DrawTriangles();
+			OGL.GXuseProjWnear = true;
+			OGL.GXupdateMtx = true;
+
 #ifndef __GX__
 			glDisable( GL_POLYGON_OFFSET_FILL );
 #else // !__GX__
@@ -1186,9 +1207,14 @@ void gSPTriangle( s32 v0, s32 v1, s32 v2, s32 flag )
 
 //			glDepthFunc( GL_LEQUAL );
 
-/*			OGL_AddTriangle( nearVertices, 0, 1, 2 );
+			OGL_AddTriangle( nearVertices, 0, 1, 2 );
 			if (nearIndex == 4)
-				OGL_AddTriangle( nearVertices, 0, 2, 3 );*/
+				OGL_AddTriangle( nearVertices, 0, 2, 3 );
+
+			//Flush near triangles from cache
+			OGL_DrawTriangles();
+			OGL.GXuseProjWnear = false;
+			OGL.GXupdateMtx = true;
 
 #ifndef __GX__
 			if (gDP.otherMode.depthMode == ZMODE_DEC)
@@ -1574,6 +1600,10 @@ void gSPInsertMatrix( u32 where, u32 num )
 	}
 
 #ifdef __GX__
+#ifdef SHOW_DEBUG
+	sprintf(txtbuffer,"gSP: gSPInsertMatrix");
+	DEBUG_print(txtbuffer,8);
+#endif
 	if(OGL.GXuseProj)
 	{
 		if (OGL.numTriangles)
@@ -1584,6 +1614,7 @@ void gSPInsertMatrix( u32 where, u32 num )
 		{
 			OGL.GXprojW[2][2] = -GXprojZOffset - (GXprojZScale*gSP.matrix.projection[2][2]/gSP.matrix.projection[2][3]);
 			OGL.GXprojW[2][3] = GXprojZScale*(gSP.matrix.projection[3][2] - (gSP.matrix.projection[2][2]*gSP.matrix.projection[3][3]/gSP.matrix.projection[2][3]));
+//			OGL.GXprojW[2][3] = OGL.GXprojW[2][3]-0.25;
 			OGL.GXuseProjW = true;
 		}
 		else
