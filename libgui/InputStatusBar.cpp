@@ -66,7 +66,9 @@ InputStatusBar::~InputStatusBar()
 
 void InputStatusBar::drawComponent(Graphics& gfx)
 {
+#ifdef HW_RVL
 	WPADData* wpad;
+#endif
 	GXColor activeColor = (GXColor) {255, 255, 255, 255};
 	GXColor inactiveColor = (GXColor) {128, 128, 128, 128};
 	char statusText[20];
