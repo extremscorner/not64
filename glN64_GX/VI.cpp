@@ -396,11 +396,24 @@ void VI_GX_showDEBUG()
 	GX_SetTevSwapMode(GX_TEVSTAGE0, GX_TEV_SWAP0, GX_TEV_SWAP0);
 }
 
+#ifdef SHOW_DEBUG
+	extern int CntTriProj, CntTriProjW, CntTriOther, CntTriNear, CntTriPolyOffset;
+#endif
+
 void VI_GX_showStats()
 {
 #ifdef SHOW_DEBUG
 	sprintf(txtbuffer,"texCache: %d bytes in %d cached textures; %d FB textures",cache.cachedBytes,cache.numCached,frameBuffer.numBuffers);
 	DEBUG_print(txtbuffer,DBG_CACHEINFO); 
+
+	sprintf(txtbuffer,"TriMatr: %d Proj; %d ProjW; %d Other; %d ProjWnear; %d PolyOff",CntTriProj,CntTriProjW,CntTriOther,CntTriNear,CntTriPolyOffset);
+	DEBUG_print(txtbuffer,DBG_CACHEINFO+1); 
+	CntTriProj = 0;
+	CntTriProjW = 0;
+	CntTriOther = 0;
+	CntTriNear = 0;
+	CntTriPolyOffset = 0;
+
 #endif
 }
 
