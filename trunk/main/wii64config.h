@@ -119,7 +119,7 @@ enum pakMode
 	PAKMODE_RUMBLEPAK
 };
 
-#ifdef GLN64_GX
+//#ifdef GLN64_GX
 extern char glN64_useFrameBufferTextures;
 enum glN64_useFrameBufferTextures
 {
@@ -140,7 +140,7 @@ enum renderCpuFramebuffer
 	CPUFRAMEBUFFER_DISABLE=0,
 	CPUFRAMEBUFFER_ENABLE
 };
-#endif //GLN64_GX
+//#endif //GLN64_GX
 
 
 #endif //WII64CONFIG_H

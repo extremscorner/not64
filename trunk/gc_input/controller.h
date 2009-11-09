@@ -55,7 +55,7 @@ extern controller_t* controller_ts[num_controller_t];
 
 #define num_controller_t 1
 extern controller_t controller_GC;
-controller_t* controller_ts[num_controller_t];
+extern controller_t* controller_ts[num_controller_t];
 
 #endif // WII && !NO_BT
 

@@ -34,12 +34,14 @@ OBJ		=main/rom_gc.o \
 		menu/MainFrame.o \
 		menu/LoadRomFrame.o \
 		menu/FileBrowserFrame.o \
+		menu/ConfigureInputFrame.o\
+		menu/ConfigurePaksFrame.o\
 		menu/CurrentRomFrame.o \
 		menu/LoadSaveFrame.o \
 		menu/SaveGameFrame.o \
 		menu/SettingsFrame.o\
 		menu/SelectCPUFrame.o\
-		menu/ConfigurePaksFrame.o\
+		menu/MenuResources.o \
 		libgui/Button.o \
 		libgui/Component.o \
 		libgui/CursorManager.o \
@@ -47,10 +49,13 @@ OBJ		=main/rom_gc.o \
 		libgui/Frame.o \
 		libgui/GraphicsGX.o \
 		libgui/Gui.o \
+		libgui/GuiResources.o \
 		libgui/Image.o \
 		libgui/InputManager.o \
+		libgui/InputStatusBar.o \
 		libgui/IPLFont.o \
 		libgui/LoadingBar.o \
+		libgui/Logo.o \
 		libgui/MessageBox.o \
 		libgui/resources.o \
 		libgui/TextBox.o \
@@ -100,7 +105,14 @@ OBJ_PPC		=r4300/ppc/MIPS-to-PPC.o \
 OBJ_INPUT	=gc_input/main.o \
 		gc_input/controller-GC.o
 
-OBJ_RSPHLE	=rsp_hle-ppc/main.o \
+OBJ_RSPHLE	=rsp_hle/main.o \
+		rsp_hle/jpeg.o \
+		rsp_hle/ucode3.o \
+		rsp_hle/ucode2.o \
+		rsp_hle/ucode1.o \
+		rsp_hle/ucode3mp3.o
+		
+OBJ_RSPHLEPPC	=rsp_hle-ppc/main.o \
 		rsp_hle-ppc/jpeg.o \
 		rsp_hle-ppc/ucode3.o \
 		rsp_hle-ppc/ucode2.o \
@@ -263,7 +275,8 @@ glN64_GX/F3DWRUS.o:		glN64_GX/F3DWRUS.cpp
 
 mupen64gc-glN64.elf:	$(OBJ) $(OBJ_INPUT) $(OBJ_GLN64_GX) $(OBJ_AUDIO) $(OBJ_RSPHLE) $(OBJ_PPC)
 		$(LD) $^ $(LDFLAGS) $(LIBPATHS) $(LIB) -Wl -o $@
-		powerpc-gekko-objcopy -O binary $@ mupen64gc-glN64.dol
+#		powerpc-gekko-objcopy -O binary $@ mupen64gc-glN64.dol
+		DolTool -d mupen64gc-glN64.elf
 
 install:
 	cp mupen64 "$(PREFIX)bin"

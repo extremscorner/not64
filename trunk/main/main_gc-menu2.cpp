@@ -81,7 +81,11 @@ extern char printToSD;
 #ifdef GLN64_GX
 extern char glN64_useFrameBufferTextures;
 extern char glN64_use2xSaiTextures;
-#endif //GLN64_GX
+#else //GLN64_GX
+char glN64_useFrameBufferTextures;
+char glN64_use2xSaiTextures;
+char renderCpuFramebuffer;
+#endif //!GLN64_GX
 extern timers Timers;
        char saveEnabled;
        char creditsScrolling;
@@ -104,7 +108,7 @@ struct {
 } OPTIONS[] =
 { { "Audio", &audioEnabled, AUDIO_DISABLE, AUDIO_ENABLE },
   { "FPS", &showFPSonScreen, FPS_HIDE, FPS_SHOW },
-  { "Debug", &printToScreen, DEBUG_HIDE, DEBUG_SHOW },
+//  { "Debug", &printToScreen, DEBUG_HIDE, DEBUG_SHOW },
   { "FBTex", &glN64_useFrameBufferTextures, GLN64_FBTEX_DISABLE, GLN64_FBTEX_ENABLE },
   { "2xSaI", &glN64_use2xSaiTextures, GLN64_2XSAI_DISABLE, GLN64_2XSAI_ENABLE },
   { "ScreenMode", &screenMode, SCREENMODE_4x3, SCREENMODE_16x9 },
@@ -174,7 +178,7 @@ int main(int argc, char* argv[]){
 	// Default Settings
 	audioEnabled     = 1; // Audio
 	showFPSonScreen  = 1; // Show FPS on Screen
-	printToScreen    = 0; // Show DEBUG text on screen
+	printToScreen    = 1; // Show DEBUG text on screen
 	printToSD        = 0; // Disable SD logging
 	Timers.limitVIs  = 0; // Sync to Audio
 	saveEnabled      = 0; // Don't save game
@@ -319,13 +323,14 @@ int loadROM(fileBrowser_file* rom){
 	// Init everything for this ROM
 	init_memory();
 
+	gfx_set_fb(xfb[0], xfb[1]);
 	gfx_info_init();
 	audio_info_init();
 //	control_info_init();
 	rsp_info_init();
 
 	romOpen_gfx();
-	gfx_set_fb(xfb[0], xfb[1]);
+//	gfx_set_fb(xfb[0], xfb[1]);
 	romOpen_audio();
 	romOpen_input();
 
