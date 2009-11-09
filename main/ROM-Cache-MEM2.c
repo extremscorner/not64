@@ -161,7 +161,7 @@ int ROMCache_load(fileBrowser_file* f){
 	GUI_clear();
 	GUI_centerText(true);
 #endif
-	sprintf(txt, "Loading ROM %s into MEM2. Please be patient...",ROMTooBig ? "partially" : "fully");
+	sprintf(txt, "Loading ROM %s into MEM2",ROMTooBig ? "partially" : "fully");
 	PRINT(txt);
 
 	ROMFile = f;

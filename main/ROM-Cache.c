@@ -211,7 +211,7 @@ int ROMCache_load(fileBrowser_file* file){
 	GUI_clear();
 	GUI_centerText(true);
 #endif
-	sprintf(txt, "Loading ROM %s into ARAM. Please be patient...", ROM_too_big ? "partially" : "fully");
+	sprintf(txt, "Loading ROM %s into ARAM", ROM_too_big ? "partially" : "fully");
 	PRINT(txt);
 	
 	ROM_file = file;
