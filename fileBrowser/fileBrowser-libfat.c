@@ -14,6 +14,10 @@ extern BOOL hasLoadedROM;
 extern int stop;
 
 #ifdef HW_RVL
+#define DEVICE_REMOVAL_THREAD
+#endif
+
+#ifdef HW_RVL
 #include <sdcard/wiisd_io.h>
 #include <ogc/usbstorage.h>
 const DISC_INTERFACE* frontsd = &__io_wiisd;
@@ -69,7 +73,7 @@ fileBrowser_file saveDir_libfat_USB =
 
 void continueRemovalThread()
 {
-#ifdef HW_RVL 
+#ifdef DEVICE_REMOVAL_THREAD 
   if(rThreadRun)
     return;
   rThreadRun = 1;
@@ -79,7 +83,7 @@ void continueRemovalThread()
 
 void pauseRemovalThread()
 {
-#ifdef HW_RVL  
+#ifdef DEVICE_REMOVAL_THREAD  
   if(!rThreadRun)
     return;
   rThreadRun = 0;
@@ -148,7 +152,7 @@ static void *removalCallback (void *arg)
 
 void InitRemovalThread()
 {
-#ifdef HW_RVL 
+#ifdef DEVICE_REMOVAL_THREAD 
   LWP_CreateThread (&removalThread, removalCallback, NULL, NULL, 0, 40);
   rThreadCreated = 1;
 #endif
