@@ -244,7 +244,7 @@ int ROMCache_load(fileBrowser_file* file){
 					SETLOADPROG((float)i/available + (float)offset/(available*BLOCK_SIZE));
 					DRAWGUI();
 #ifdef MENU_V2
-			LoadingBar_showBar((float)i/available + (float)offset/(available*BLOCK_SIZE), txt);
+					LoadingBar_showBar((float)i/available + (float)offset/(available*BLOCK_SIZE), txt);
 #endif
 					loads_til_update = 32;
 				}
@@ -273,7 +273,9 @@ int ROMCache_load(fileBrowser_file* file){
 			if(!loads_til_update--){
 				SETLOADPROG( (float)offset/ROM_size );
 				DRAWGUI();
+#ifdef MENU_V2
 				LoadingBar_showBar((float)offset/ROM_size, txt);
+#endif
 				loads_til_update = 32;
 			}
 			
