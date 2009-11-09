@@ -337,6 +337,8 @@ TEVCombiner *Compile_TEV_combine( Combiner *color, Combiner *alpha )
 		TEVcombiner->TEVstage[i].texmap = GX_TEXMAP_NULL;
 		TEVcombiner->TEVstage[i].texcoord = GX_TEXCOORDNULL;
 		TEVcombiner->TEVstage[i].color = GX_COLOR0A0;
+		TEVcombiner->TEVstage[i].colorClamp = GX_DISABLE;
+		TEVcombiner->TEVstage[i].alphaClamp = GX_DISABLE;
 	}
 
 /*	envCombiner->vertex.color = COMBINED;
@@ -462,6 +464,7 @@ TEVCombiner *Compile_TEV_combine( Combiner *color, Combiner *alpha )
 						AoutReg = ( ((j+2) == (alpha->stage[i].numOps - 1)) && (i < (alpha->numStages-1))) ? GX_TEVREG0 : GX_TEVPREV;
 						SetAlphaTEV(currStageA, TEVArgs[alpha->stage[i].op[j+2].param1].TEV_alphaIn, GX_CA_ZERO, GX_CA_ZERO, GX_CA_APREV, 
 							GX_TEV_ADD, TEVArgs[alpha->stage[i].op[j+2].param1].TEV_TexCoordMap, TEVArgs[alpha->stage[i].op[j+2].param1].TEV_inpType, AoutReg);
+						if (AoutReg == GX_TEVREG0) TEVcombiner->TEVstage[currStageA].alphaClamp = GX_ENABLE; //Clamp COMBINED!
 						currStageA++;
 						j+=2;
 					}
@@ -475,6 +478,7 @@ TEVCombiner *Compile_TEV_combine( Combiner *color, Combiner *alpha )
 						AoutReg = ( ((j+2) == (alpha->stage[i].numOps - 1)) && (i < (alpha->numStages-1))) ? GX_TEVREG0 : GX_TEVPREV;
 						SetAlphaTEV(currStageA, TEVArgs[alpha->stage[i].op[j+1].param1].TEV_alphaIn, GX_CA_ZERO, GX_CA_APREV, 
 							TEVArgs[alpha->stage[i].op[j+2].param1].TEV_alphaIn, GX_TEV_SUB, alphaTEX, alphaCONST, AoutReg);
+						if (AoutReg == GX_TEVREG0) TEVcombiner->TEVstage[currStageA].alphaClamp = GX_ENABLE; //Clamp COMBINED!
 						//SetAlphaTEV(tevstage, alphaA, alphaB, alphaC, alphaD, TEVop, alphaTEX, alphaCONST, AoutReg)
 						currStageA++;
 						j+=2;
@@ -494,16 +498,18 @@ TEVCombiner *Compile_TEV_combine( Combiner *color, Combiner *alpha )
 						TEVArgs[alpha->stage[i].op[j].param1].TEV_inpType, GX_TEVPREV);
 					//SetAlphaTEV(tevstage, alphaA, alphaB, alphaC, alphaD, TEVop, alphaTEX, alphaCONST, AoutReg)
 					currStageA++;
-					//TEVstage[currStageA++] -> ( c[PREV] ) * b(param2);
+					//TEVstage[currStageA++] -> *-*( c[PREV] ) * b(param2);
 					SetAlphaTEV(currStageA, GX_CA_ZERO, GX_CA_APREV,  TEVArgs[alpha->stage[i].op[j+1].param1].TEV_alphaIn, GX_CA_ZERO,
-						GX_TEV_ADD, TEVArgs[alpha->stage[i].op[j+1].param1].TEV_TexCoordMap, 
+						GX_TEV_SUB, TEVArgs[alpha->stage[i].op[j+1].param1].TEV_TexCoordMap, 
 						TEVArgs[alpha->stage[i].op[j+1].param1].TEV_inpType, GX_TEVPREV);
 					//SetAlphaTEVinputs(tevstage, alphaA, alphaB, alphaC, alphaD, alphaTEX, alphaCONST, AoutReg)
+					TEVcombiner->TEVstage[currStageA-1].alphaClamp = GX_ENABLE; //TEVPREV used in Mult!
 					currStageA++;
-					//TEVstage[currStageA++] -> d(param3) *-* PREV;
+					//TEVstage[currStageA++] -> d(param3) + PREV;
 					AoutReg = ( ((j+2) == (alpha->stage[i].numOps - 1)) && (i < (alpha->numStages-1))) ? GX_TEVREG0 : GX_TEVPREV;
-					SetAlphaTEV(currStageA, GX_CA_APREV, GX_CA_ZERO, GX_CA_ZERO, TEVArgs[alpha->stage[i].op[j+2].param1].TEV_alphaIn,
-						GX_TEV_SUB, TEVArgs[alpha->stage[i].op[j+2].param1].TEV_TexCoordMap, TEVArgs[alpha->stage[i].op[j+2].param1].TEV_inpType, AoutReg);
+					SetAlphaTEV(currStageA, TEVArgs[alpha->stage[i].op[j+2].param1].TEV_alphaIn, GX_CA_ZERO, GX_CA_ZERO, GX_CA_APREV,
+						GX_TEV_ADD, TEVArgs[alpha->stage[i].op[j+2].param1].TEV_TexCoordMap, TEVArgs[alpha->stage[i].op[j+2].param1].TEV_inpType, AoutReg);
+					if (AoutReg == GX_TEVREG0) TEVcombiner->TEVstage[currStageA].alphaClamp = GX_ENABLE; //Clamp COMBINED!
 					currStageA++;
 					j+=2;
 				}
@@ -549,6 +555,7 @@ TEVCombiner *Compile_TEV_combine( Combiner *color, Combiner *alpha )
 						SetAlphaTEV(currStageA, GX_CA_ZERO, GX_CA_ZERO, GX_CA_ZERO, TEVArgs[alpha->stage[i].op[j].param1].TEV_alphaIn, 
 							GX_TEV_ADD, TEVArgs[alpha->stage[i].op[j].param1].TEV_TexCoordMap, 
 							TEVArgs[alpha->stage[i].op[j].param1].TEV_inpType, AoutReg);
+						if (AoutReg == GX_TEVREG0) TEVcombiner->TEVstage[currStageA].alphaClamp = GX_ENABLE; //Clamp COMBINED!
 						//SetAlphaTEV(tevstage, alphaA, alphaB, alphaC, alphaD, TEVop, alphaTEX, alphaCONST, AoutReg)
 						currStageA++;
 						break;
@@ -589,6 +596,7 @@ TEVCombiner *Compile_TEV_combine( Combiner *color, Combiner *alpha )
 							SetAlphaTEV(currStageA, GX_CA_KONST, GX_CA_ZERO, TEVArgs[alpha->stage[i].op[j].param1].TEV_alphaIn, GX_CA_ZERO,
 //							SetAlphaTEV(currStageA, GX_CA_ONE, GX_CA_ZERO, TEVArgs[alpha->stage[i].op[j].param1].TEV_alphaIn, GX_CA_ZERO,
 								GX_TEV_ADD, TEVArgs[alpha->stage[i].op[j].param1].TEV_TexCoordMap, TEVArgs[alpha->stage[i].op[j].param1].TEV_inpType, AoutReg);
+							if (AoutReg == GX_TEVREG0) TEVcombiner->TEVstage[currStageA].alphaClamp = GX_ENABLE; //Clamp COMBINED!
 							currStageA++;
 						}
 						else
@@ -597,6 +605,7 @@ TEVCombiner *Compile_TEV_combine( Combiner *color, Combiner *alpha )
 							AoutReg = ( (j == (alpha->stage[i].numOps - 1)) && (i < (alpha->numStages-1))) ? GX_TEVREG0 : GX_TEVPREV;
 							SetAlphaTEV(currStageA, TEVArgs[alpha->stage[i].op[j].param1].TEV_alphaIn, GX_CA_ZERO, GX_CA_ZERO, GX_CA_APREV,
 								GX_TEV_SUB, TEVArgs[alpha->stage[i].op[j].param1].TEV_TexCoordMap, TEVArgs[alpha->stage[i].op[j].param1].TEV_inpType, AoutReg);
+							if (AoutReg == GX_TEVREG0) TEVcombiner->TEVstage[currStageA].alphaClamp = GX_ENABLE; //Clamp COMBINED!
 							currStageA++;
 						}
 
@@ -616,6 +625,8 @@ TEVCombiner *Compile_TEV_combine( Combiner *color, Combiner *alpha )
 						AoutReg = ( (j == (alpha->stage[i].numOps - 1)) && (i < (alpha->numStages-1))) ? GX_TEVREG0 : GX_TEVPREV;
 						SetAlphaTEV(currStageA, GX_CA_ZERO, GX_CA_APREV, TEVArgs[alpha->stage[i].op[j].param1].TEV_alphaIn, GX_CA_ZERO,
 							GX_TEV_ADD, TEVArgs[alpha->stage[i].op[j].param1].TEV_TexCoordMap, TEVArgs[alpha->stage[i].op[j].param1].TEV_inpType, AoutReg);
+						if (currStageA) TEVcombiner->TEVstage[currStageA-1].alphaClamp = GX_ENABLE; //TEVPREV used in Mult!
+						if (AoutReg == GX_TEVREG0) TEVcombiner->TEVstage[currStageA].alphaClamp = GX_ENABLE; //Clamp COMBINED!
 						currStageA++;
 						break;
 					case ADD:
@@ -641,6 +652,7 @@ TEVCombiner *Compile_TEV_combine( Combiner *color, Combiner *alpha )
 						AoutReg = ( (j == (alpha->stage[i].numOps - 1)) && (i < (alpha->numStages-1))) ? GX_TEVREG0 : GX_TEVPREV;
 						SetAlphaTEV(currStageA, TEVArgs[alpha->stage[i].op[j].param1].TEV_alphaIn, GX_CA_ZERO, GX_CA_ZERO, GX_CA_APREV,
 							GX_TEV_ADD, TEVArgs[alpha->stage[i].op[j].param1].TEV_TexCoordMap, TEVArgs[alpha->stage[i].op[j].param1].TEV_inpType, AoutReg);
+						if (AoutReg == GX_TEVREG0) TEVcombiner->TEVstage[currStageA].alphaClamp = GX_ENABLE; //Clamp COMBINED!
 						currStageA++;
 						break;
 					case INTER:
@@ -693,6 +705,7 @@ TEVCombiner *Compile_TEV_combine( Combiner *color, Combiner *alpha )
 							SetAlphaTEV(currStageA, TEVArgs[alpha->stage[i].op[j].param2].TEV_alphaIn, 
 								TEVArgs[alpha->stage[i].op[j].param1].TEV_alphaIn, TEVArgs[alpha->stage[i].op[j].param3].TEV_alphaIn, GX_CA_ZERO,
 								GX_TEV_ADD, alphaTEX, alphaCONST, AoutReg);
+							if (AoutReg == GX_TEVREG0) TEVcombiner->TEVstage[currStageA].alphaClamp = GX_ENABLE; //Clamp COMBINED!
 							currStageA++;
 						}
 						else
@@ -731,11 +744,13 @@ TEVCombiner *Compile_TEV_combine( Combiner *color, Combiner *alpha )
 							//TEVstage[currStageA++] -> b(PREV)*c(param3);
 							SetAlphaTEV(currStageA, GX_CA_ZERO, GX_CA_APREV, TEVArgs[alpha->stage[i].op[j].param3].TEV_alphaIn, GX_CA_ZERO,
 								GX_TEV_ADD, TEVArgs[alpha->stage[i].op[j].param3].TEV_TexCoordMap, TEVArgs[alpha->stage[i].op[j].param3].TEV_inpType, GX_TEVPREV);
+							if (currStageA) TEVcombiner->TEVstage[currStageA-1].alphaClamp = GX_ENABLE; //TEVPREV used in Mult!
 							currStageA++;
 							//TEVstage[currStageA++] -> d(PREV) + a(param2);
 							AoutReg = ( (j == (alpha->stage[i].numOps - 1)) && (i < (alpha->numStages-1))) ? GX_TEVREG0 : GX_TEVPREV;
 							SetAlphaTEV(currStageA, TEVArgs[alpha->stage[i].op[j].param2].TEV_alphaIn, GX_CA_ZERO, GX_CA_ZERO, GX_CA_APREV,
 								GX_TEV_ADD, TEVArgs[alpha->stage[i].op[j].param2].TEV_TexCoordMap, TEVArgs[alpha->stage[i].op[j].param2].TEV_inpType, AoutReg);
+							if (AoutReg == GX_TEVREG0) TEVcombiner->TEVstage[currStageA].alphaClamp = GX_ENABLE; //Clamp COMBINED!
 							currStageA++;
 						}
 						break;
@@ -787,7 +802,7 @@ TEVCombiner *Compile_TEV_combine( Combiner *color, Combiner *alpha )
 					TEVArgs[color->stage[i].op[j].param1].TEV_inpType, TEVArgs[color->stage[i].op[j].param1].KonstAAA, GX_TEVPREV);
 				//SetColorTEV(tevstage, colorA, colorB, colorC, colorD, TEVop, colorTEX, colorCONST, KonstisAAA, CoutReg)
 				currStageC++;
-				//TEVstage[currStageC++] -> ( a[PREV] ) * c(param2);
+				//TEVstage[currStageC++] -> *-*( a[PREV] ) * c(param2);
 				while((TEVArgs[color->stage[i].op[j+1].param1].TEV_inpType == TEV_TEX) &&
 					(TEVcombiner->TEVstage[currStageC].texmap != GX_TEXMAP_NULL) &&
 					(TEVcombiner->TEVstage[currStageC].texmap != TEVArgs[color->stage[i].op[j+1].param1].TEV_TexCoordMap))
@@ -796,11 +811,12 @@ TEVCombiner *Compile_TEV_combine( Combiner *color, Combiner *alpha )
 					currStageC++;
 				}
 				SetColorTEV(currStageC, GX_CC_ZERO, GX_CC_CPREV, TEVArgs[color->stage[i].op[j+1].param1].TEV_colorIn, GX_CC_ZERO,  
-					GX_TEV_ADD, TEVArgs[color->stage[i].op[j+1].param1].TEV_TexCoordMap, 
+					GX_TEV_SUB, TEVArgs[color->stage[i].op[j+1].param1].TEV_TexCoordMap, 
 					TEVArgs[color->stage[i].op[j+1].param1].TEV_inpType, TEVArgs[color->stage[i].op[j+1].param1].KonstAAA, GX_TEVPREV);
+				if (currStageC) TEVcombiner->TEVstage[currStageC-1].colorClamp = GX_ENABLE; //TEVPREV used in Mult!
 				//SetColorTEV(tevstage, colorA, colorB, colorC, colorD, TEVop, colorTEX, colorCONST, KonstisAAA, CoutReg)
 				currStageC++;
-				//TEVstage[currStageC++] -> d(param3) *-* a[PREV];
+				//TEVstage[currStageC++] -> d(param3) + a[PREV];
 				while((TEVArgs[color->stage[i].op[j+2].param1].TEV_inpType == TEV_TEX) &&
 					(TEVcombiner->TEVstage[currStageC].texmap != GX_TEXMAP_NULL) &&
 					(TEVcombiner->TEVstage[currStageC].texmap != TEVArgs[color->stage[i].op[j+2].param1].TEV_TexCoordMap))
@@ -809,9 +825,10 @@ TEVCombiner *Compile_TEV_combine( Combiner *color, Combiner *alpha )
 					currStageC++;
 				}
 				CoutReg = ( ((j+2) == (color->stage[i].numOps - 1)) && (i < (color->numStages-1))) ? GX_TEVREG0 : GX_TEVPREV;
-				SetColorTEV(currStageC, GX_CC_CPREV, GX_CC_ZERO, GX_CC_ZERO, TEVArgs[color->stage[i].op[j+2].param1].TEV_colorIn,  
-					GX_TEV_SUB, TEVArgs[color->stage[i].op[j+2].param1].TEV_TexCoordMap, 
+				SetColorTEV(currStageC, TEVArgs[color->stage[i].op[j+2].param1].TEV_colorIn, GX_CC_ZERO, GX_CC_ZERO, GX_CC_CPREV,  
+					GX_TEV_ADD, TEVArgs[color->stage[i].op[j+2].param1].TEV_TexCoordMap, 
 					TEVArgs[color->stage[i].op[j+2].param1].TEV_inpType, TEVArgs[color->stage[i].op[j+2].param1].KonstAAA, CoutReg);
+				if (CoutReg == GX_TEVREG0) TEVcombiner->TEVstage[currStageC].colorClamp = GX_ENABLE; //Clamp COMBINED!
 				//SetColorTEV(tevstage, colorA, colorB, colorC, colorD, TEVop, colorTEX, colorCONST, KonstisAAA, CoutReg)
 				currStageC++;
 				j+=2;
@@ -869,6 +886,7 @@ TEVCombiner *Compile_TEV_combine( Combiner *color, Combiner *alpha )
 							GX_TEV_ADD, TEVArgs[color->stage[i].op[j].param1].TEV_TexCoordMap, 
 							TEVArgs[color->stage[i].op[j].param1].TEV_inpType, TEVArgs[color->stage[i].op[j].param1].KonstAAA, CoutReg);
 						//SetColorTEV(tevstage, colorA, colorB, colorC, colorD, TEVop, colorTEX, colorCONST, KonstisAAA, CoutReg)
+						if (CoutReg == GX_TEVREG0) TEVcombiner->TEVstage[currStageC].colorClamp = GX_ENABLE; //Clamp COMBINED!
 						currStageC++;
 						break;
 					case SUB:
@@ -914,6 +932,7 @@ TEVCombiner *Compile_TEV_combine( Combiner *color, Combiner *alpha )
 							SetColorTEV(currStageC, GX_CC_ONE, GX_CC_ZERO, TEVArgs[color->stage[i].op[j].param1].TEV_colorIn, GX_CC_ZERO,
 								GX_TEV_ADD, TEVArgs[color->stage[i].op[j].param1].TEV_TexCoordMap, 
 								TEVArgs[color->stage[i].op[j].param1].TEV_inpType, TEVArgs[color->stage[i].op[j].param1].KonstAAA, CoutReg);
+							if (CoutReg == GX_TEVREG0) TEVcombiner->TEVstage[currStageC].colorClamp = GX_ENABLE; //Clamp COMBINED!
 							currStageC++;
 						}
 						else
@@ -930,6 +949,7 @@ TEVCombiner *Compile_TEV_combine( Combiner *color, Combiner *alpha )
 							SetColorTEV(currStageC, TEVArgs[color->stage[i].op[j].param1].TEV_colorIn, GX_CC_ZERO, GX_CC_ZERO, GX_CC_CPREV,
 								GX_TEV_SUB, TEVArgs[color->stage[i].op[j].param1].TEV_TexCoordMap, 
 								TEVArgs[color->stage[i].op[j].param1].TEV_inpType, TEVArgs[color->stage[i].op[j].param1].KonstAAA, CoutReg);
+							if (CoutReg == GX_TEVREG0) TEVcombiner->TEVstage[currStageC].colorClamp = GX_ENABLE; //Clamp COMBINED!
 							currStageC++;
 						}
 						break;
@@ -956,6 +976,8 @@ TEVCombiner *Compile_TEV_combine( Combiner *color, Combiner *alpha )
 						SetColorTEV(currStageC, GX_CC_ZERO, GX_CC_CPREV, TEVArgs[color->stage[i].op[j].param1].TEV_colorIn, GX_CC_ZERO,
 							GX_TEV_ADD, TEVArgs[color->stage[i].op[j].param1].TEV_TexCoordMap, 
 							TEVArgs[color->stage[i].op[j].param1].TEV_inpType, TEVArgs[color->stage[i].op[j].param1].KonstAAA, CoutReg);
+						if (currStageC) TEVcombiner->TEVstage[currStageC-1].colorClamp = GX_ENABLE; //TEVPREV used in Mult!
+						if (CoutReg == GX_TEVREG0) TEVcombiner->TEVstage[currStageC].colorClamp = GX_ENABLE; //Clamp COMBINED!
 						currStageC++;
 						break;
 					case ADD:
@@ -990,6 +1012,7 @@ TEVCombiner *Compile_TEV_combine( Combiner *color, Combiner *alpha )
 						SetColorTEV(currStageC, TEVArgs[color->stage[i].op[j].param1].TEV_colorIn, GX_CC_ZERO, GX_CC_ZERO, GX_CC_CPREV,
 							GX_TEV_ADD, TEVArgs[color->stage[i].op[j].param1].TEV_TexCoordMap, 
 							TEVArgs[color->stage[i].op[j].param1].TEV_inpType, TEVArgs[color->stage[i].op[j].param1].KonstAAA, CoutReg);
+						if (CoutReg == GX_TEVREG0) TEVcombiner->TEVstage[currStageC].colorClamp = GX_ENABLE; //Clamp COMBINED!
 						currStageC++;
 						break;
 					case INTER:
@@ -1082,6 +1105,7 @@ TEVCombiner *Compile_TEV_combine( Combiner *color, Combiner *alpha )
 							SetColorTEV(currStageC, TEVArgs[color->stage[i].op[j].param2].TEV_colorIn, 
 								TEVArgs[color->stage[i].op[j].param1].TEV_colorIn, TEVArgs[color->stage[i].op[j].param3].TEV_colorIn, GX_CC_ZERO,
 								GX_TEV_ADD, colorTEX, colorCONST, colorCONST_AAA, CoutReg);
+							if (CoutReg == GX_TEVREG0) TEVcombiner->TEVstage[currStageC].colorClamp = GX_ENABLE; //Clamp COMBINED!
 							currStageC++;
 						}
 						else
@@ -1149,6 +1173,7 @@ TEVCombiner *Compile_TEV_combine( Combiner *color, Combiner *alpha )
 							SetColorTEV(currStageC, GX_CC_ZERO, GX_CC_CPREV, TEVArgs[color->stage[i].op[j].param3].TEV_colorIn, GX_CC_ZERO,
 								GX_TEV_ADD, TEVArgs[color->stage[i].op[j].param3].TEV_TexCoordMap, 
 								TEVArgs[color->stage[i].op[j].param3].TEV_inpType, TEVArgs[color->stage[i].op[j].param3].KonstAAA, GX_TEVPREV);
+							if (currStageC) TEVcombiner->TEVstage[currStageC-1].colorClamp = GX_ENABLE; //TEVPREV used in Mult!
 							currStageC++;
 							//TEVstage[currStageA++] -> d(PREV) + a(param2);
 							while((TEVArgs[color->stage[i].op[j].param2].TEV_inpType == TEV_TEX) &&
@@ -1184,6 +1209,8 @@ TEVCombiner *Compile_TEV_combine( Combiner *color, Combiner *alpha )
 		SetColorTEVskip(currStageC);
 		currStageC++;
 	}
+	TEVcombiner->TEVstage[currStageC-1].colorClamp = GX_ENABLE; //Clamp the last TEV stage
+	TEVcombiner->TEVstage[currStageA-1].alphaClamp = GX_ENABLE; //Clamp the last TEV stage
 
 	// Store TEV Environment parameters
 	TEVcombiner->numTexGens = 0;		//input for GX_SetNumTexGens(u32 nr)
@@ -1254,10 +1281,10 @@ void Set_TEV_combine( TEVCombiner *TEVcombiner )	//Called from OGL_UpdateStates(
 	{
 		GX_SetTevOrder (tevstage, TEVcombiner->TEVstage[tevstage].texcoord, TEVcombiner->TEVstage[tevstage].texmap, TEVcombiner->TEVstage[tevstage].color);
 		GX_SetTevColorIn (tevstage, TEVcombiner->TEVstage[tevstage].colorA, TEVcombiner->TEVstage[tevstage].colorB, TEVcombiner->TEVstage[tevstage].colorC, TEVcombiner->TEVstage[tevstage].colorD);
-		GX_SetTevColorOp (tevstage, TEVcombiner->TEVstage[tevstage].colorTevop, GX_TB_ZERO, GX_CS_SCALE_1, GX_ENABLE, TEVcombiner->TEVstage[tevstage].colorTevRegOut);
+		GX_SetTevColorOp (tevstage, TEVcombiner->TEVstage[tevstage].colorTevop, GX_TB_ZERO, GX_CS_SCALE_1, TEVcombiner->TEVstage[tevstage].colorClamp, TEVcombiner->TEVstage[tevstage].colorTevRegOut);
 		GX_SetTevKColorSel(tevstage, TEVcombiner->TEVstage[tevstage].tevKColSel);
 		GX_SetTevAlphaIn (tevstage, TEVcombiner->TEVstage[tevstage].alphaA, TEVcombiner->TEVstage[tevstage].alphaB, TEVcombiner->TEVstage[tevstage].alphaC, TEVcombiner->TEVstage[tevstage].alphaD);
-		GX_SetTevAlphaOp (tevstage, TEVcombiner->TEVstage[tevstage].alphaTevop, GX_TB_ZERO, GX_CS_SCALE_1, GX_ENABLE, TEVcombiner->TEVstage[tevstage].alphaTevRegOut);
+		GX_SetTevAlphaOp (tevstage, TEVcombiner->TEVstage[tevstage].alphaTevop, GX_TB_ZERO, GX_CS_SCALE_1, TEVcombiner->TEVstage[tevstage].alphaClamp, TEVcombiner->TEVstage[tevstage].alphaTevRegOut);
 		GX_SetTevKAlphaSel(tevstage, TEVcombiner->TEVstage[tevstage].tevKAlphaSel);
 
 #ifdef DBGCOMBINE
@@ -1275,3 +1302,28 @@ void Set_TEV_combine( TEVCombiner *TEVcombiner )	//Called from OGL_UpdateStates(
 	GX_SetTevOp ((u8) TEVcombiner->numTevStages, GX_PASSCLR);
 	GX_SetTevOrder ((u8) TEVcombiner->numTevStages, GX_TEXMAP2, GX_TEXMAP2, GX_COLORNULL);
 }
+
+// ****************************
+// TEV Debugging Code
+/*	if (combiner.current->combine.muxs1 == 0x350ce37f || combiner.current->combine.muxs1 == 0x00272c60)
+	{
+		sprintf(txtbuffer,"Combiner: usesT1 = %d, OGL.ARB_multi = %d; GXtex1 = %x", combiner.usesT1, OGL.ARB_multitexture,(u32)cache.current[1]->GXtexture);
+		DEBUG_print(txtbuffer,15);
+		sprintf(txtbuffer,"Combiner: mux0 = %x, mux1 = %x", combiner.current->combine.muxs0, combiner.current->combine.muxs1);
+		DEBUG_print(txtbuffer,16);
+		TEVCombiner* TEVcombiner = (TEVCombiner*)combiner.current->compiled;
+		sprintf(txtbuffer,"TEV:%d stages, %d tex, %d chans, %d constCols", TEVcombiner->numTevStages, TEVcombiner->numTexGens, TEVcombiner->numColChans, TEVcombiner->numConst);
+		DEBUG_print(txtbuffer,17);
+		sprintf(txtbuffer,"const Cols: %d, %d, %d, %d, %d, %d, %d, %d", TEVcombiner->TEVconstant[0], TEVcombiner->TEVconstant[1], TEVcombiner->TEVconstant[2], TEVcombiner->TEVconstant[3], TEVcombiner->TEVconstant[4], TEVcombiner->TEVconstant[5], TEVcombiner->TEVconstant[6], TEVcombiner->TEVconstant[7]);
+		DEBUG_print(txtbuffer,18);
+
+		for (u8 tevstage = 0; tevstage < TEVcombiner->numTevStages; tevstage++)
+		{
+			sprintf(txtbuffer,"stage%d: tx %d, map %d, col %d; inCol %d, %d, %d, %d; ColorClamp %d, ColorOp %d, ColorOut %d", tevstage, TEVcombiner->TEVstage[tevstage].texcoord, TEVcombiner->TEVstage[tevstage].texmap, TEVcombiner->TEVstage[tevstage].color, TEVcombiner->TEVstage[tevstage].colorA, TEVcombiner->TEVstage[tevstage].colorB, TEVcombiner->TEVstage[tevstage].colorC, TEVcombiner->TEVstage[tevstage].colorD, TEVcombiner->TEVstage[tevstage].colorClamp, TEVcombiner->TEVstage[tevstage].colorTevop, TEVcombiner->TEVstage[tevstage].colorTevRegOut);
+			DEBUG_print(txtbuffer,19+2*tevstage);
+			sprintf(txtbuffer," Kcol %d, Kalp %d;  inAlpha %d, %d, %d, %d; AlphaClamp %d, AlphaOp %d, AlphaOut %d", TEVcombiner->TEVstage[tevstage].tevKColSel, TEVcombiner->TEVstage[tevstage].tevKAlphaSel, TEVcombiner->TEVstage[tevstage].alphaA, TEVcombiner->TEVstage[tevstage].alphaB, TEVcombiner->TEVstage[tevstage].alphaC, TEVcombiner->TEVstage[tevstage].alphaD, TEVcombiner->TEVstage[tevstage].alphaClamp, TEVcombiner->TEVstage[tevstage].alphaTevop, TEVcombiner->TEVstage[tevstage].alphaTevRegOut);
+			DEBUG_print(txtbuffer,20+2*tevstage);
+		}
+	}*/
+// ****************************
+
