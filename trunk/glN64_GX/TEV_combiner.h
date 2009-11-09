@@ -40,12 +40,12 @@ struct TEVCombinerStage
 //	TEVCombinerArg arg0, arg1, arg2;
 //	WORD outputTexture;
 
-	u8 texcoord, texmap, color;			//inputs for GX_SetTevOrder(u8 tevstage,u8 texcoord,u32 texmap,u8 color)
-	u8 colorA, colorB, colorC, colorD;	//inputs for GX_SetTevColorIn(u8 tevstage,u8 a,u8 b,u8 c,u8 d)
-	u8 colorTevop, colorTevRegOut;		//inputs for GX_SetTevColorOp(u8 tevstage,u8 tevop,u8 tevbias,u8 tevscale,u8 clamp,u8 tevregid)
-	u8 alphaA, alphaB, alphaC, alphaD;	//inputs for GX_SetTevAlphaIn(u8 tevstage,u8 a,u8 b,u8 c,u8 d)
-	u8 alphaTevop, alphaTevRegOut;		//inputs for GX_SetTevAlphaOp(u8 tevstage,u8 tevop,u8 tevbias,u8 tevscale,u8 clamp,u8 tevregid)
-	u8 tevKColSel, tevKAlphaSel;		//inputs for GX_SetTevKColorSel(u8 tevstage,u8 sel) & GX_SetTevKAlphaSel(u8 tevstage,u8 sel)
+	u8 texcoord, texmap, color;					//inputs for GX_SetTevOrder(u8 tevstage,u8 texcoord,u32 texmap,u8 color)
+	u8 colorA, colorB, colorC, colorD;			//inputs for GX_SetTevColorIn(u8 tevstage,u8 a,u8 b,u8 c,u8 d)
+	u8 colorTevop, colorClamp, colorTevRegOut;	//inputs for GX_SetTevColorOp(u8 tevstage,u8 tevop,u8 tevbias,u8 tevscale,u8 clamp,u8 tevregid)
+	u8 alphaA, alphaB, alphaC, alphaD;			//inputs for GX_SetTevAlphaIn(u8 tevstage,u8 a,u8 b,u8 c,u8 d)
+	u8 alphaTevop, alphaClamp, alphaTevRegOut;	//inputs for GX_SetTevAlphaOp(u8 tevstage,u8 tevop,u8 tevbias,u8 tevscale,u8 clamp,u8 tevregid)
+	u8 tevKColSel, tevKAlphaSel;				//inputs for GX_SetTevKColorSel(u8 tevstage,u8 sel) & GX_SetTevKAlphaSel(u8 tevstage,u8 sel)
 
 };
 

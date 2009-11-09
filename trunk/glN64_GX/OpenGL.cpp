@@ -47,7 +47,6 @@
 #include "Combiner.h"
 #include "VI.h"
 
-
 #ifndef GL_BGR
 #define GL_BGR GL_BGR_EXT
 #endif
@@ -176,11 +175,13 @@ void OGL_InitExtensions()
 #ifndef __GX__
 		glGetIntegerv( GL_MAX_TEXTURE_UNITS_ARB, &OGL.maxTextureUnits );
 		OGL.maxTextureUnits = min( 8, OGL.maxTextureUnits ); // The plugin only supports 8, and 4 is really enough
-#else // !__GX__
-		OGL.maxTextureUnits = 8;
-		OGL.ARB_multitexture = TRUE;
-#endif // __GX__
+#endif // !__GX__
 	}
+#ifdef __GX__
+	OGL.maxTextureUnits = 8;
+	OGL.ARB_multitexture = TRUE;
+#endif // __GX__
+
 
 	if ((OGL.EXT_fog_coord = isExtensionSupported( "GL_EXT_fog_coord" )))
 	{
@@ -2015,9 +2016,6 @@ void OGL_ReadScreen( void **dest, long *width, long *height )
 }
 
 #endif // __LINUX__
-
-#define BLACK			{0,0,0,0}
-#define WHITE			{255,255,255,255}
 
 #ifdef __GX__
 void OGL_GXinitDlist()
