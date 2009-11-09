@@ -69,20 +69,24 @@ fileBrowser_file saveDir_libfat_USB =
 
 void continueRemovalThread()
 {
+#ifdef HW_RVL 
   if(rThreadRun)
     return;
   rThreadRun = 1;
   LWP_ResumeThread(removalThread);
+#endif
 }
 
 void pauseRemovalThread()
 {
+#ifdef HW_RVL  
   if(!rThreadRun)
     return;
   rThreadRun = 0;
 
   // wait for thread to finish
   while(!LWP_ThreadIsSuspended(removalThread)) usleep(THREAD_SLEEP);
+#endif
 }
 
 static int devsleep = 1*1000*1000;
@@ -144,8 +148,10 @@ static void *removalCallback (void *arg)
 
 void InitRemovalThread()
 {
+#ifdef HW_RVL 
   LWP_CreateThread (&removalThread, removalCallback, NULL, NULL, 0, 40);
   rThreadCreated = 1;
+#endif
 }
 
 
