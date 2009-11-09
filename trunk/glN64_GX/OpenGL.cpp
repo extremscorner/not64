@@ -787,8 +787,11 @@ void OGL_UpdateStates()
 #else // !__GX__
 	if (gDP.changed & CHANGED_SCISSOR)
 	{
-		GX_SetScissor((u32) max(gDP.scissor.ulx * OGL.scaleX,0),(u32) max(gDP.scissor.uly * OGL.scaleY,0),
-			(u32) ((gDP.scissor.lrx - gDP.scissor.ulx) * OGL.scaleX),(u32) ((gDP.scissor.lry - gDP.scissor.uly) * OGL.scaleY));
+		float ulx = max(max(gDP.scissor.ulx,gSP.viewport.x) * OGL.scaleX,0);
+		float uly = max(max(gDP.scissor.uly,gSP.viewport.y) * OGL.scaleY,0);
+		float lrx = min(gDP.scissor.lrx,gSP.viewport.x + gSP.viewport.width) * OGL.scaleX;
+		float lry = min(gDP.scissor.lry,gSP.viewport.y + gSP.viewport.height) * OGL.scaleY;
+		GX_SetScissor((u32) ulx,(u32) uly,(u32) (lrx - ulx),(u32) (lry - uly));
 	}
 #endif // __GX__
 
@@ -1457,7 +1460,7 @@ void OGL_DrawRect( int ulx, int uly, int lrx, int lry, float *color )
 	OGL_UpdateViewport();
 	glEnable( GL_SCISSOR_TEST );
 #else // !__GX__
-	GX_SetScissor((u32) 0,(u32) 0,(u32) OGL.width,(u32) OGL.height);	//Set to the same size as the viewport.
+	GX_SetScissor((u32) 0,(u32) 0,(u32) OGL.width+1,(u32) OGL.height+1);	//Set to the same size as the viewport.
 	GX_SetCullMode (GX_CULL_NONE);
 	Mtx44 GXprojection;
 	guMtxIdentity(GXprojection);
