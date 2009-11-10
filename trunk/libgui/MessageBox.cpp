@@ -102,7 +102,7 @@ MessageBox::MessageBox()
 	setEnabled(true);
 
 	showFrame();
-	boxColor = (GXColor) {100, 100, 100, 200};
+	boxColor = (GXColor) {100, 100, 100, 210};
 	textColor = (GXColor) {255, 255, 255, 255};
 
 }
@@ -266,11 +266,12 @@ void MessageBox::drawMessageBox(Graphics& gfx)
 		ind++;
 	}
 	
+	int lineSpacing = 20 + 2*MIN((MAX_LINES - numLines),6);
 	char tempStr[256];
 	IplFont::getInstance().drawInit(tmpTextColor);
 	for (int i = 0; i < numLines; i++)
 	{
-		int heightOffset = -20*numLines/2+20*i;
+		int heightOffset = -lineSpacing*numLines/2+lineSpacing*i;
 		int numChar = lineEnd[i]-lineStart[i]; 
 		numChar = numChar <= 255 ? numChar : 255;
 		strncpy(tempStr,&messageBoxText[lineStart[i]],numChar);

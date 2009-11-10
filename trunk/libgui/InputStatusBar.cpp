@@ -98,7 +98,7 @@ void InputStatusBar::drawComponent(Graphics& gfx)
 	int text_y = 100;
 	if(!hasLoadedROM)
 	{
-		IplFont::getInstance().drawInit(inactiveColor);
+		IplFont::getInstance().drawInit(activeColor);
 		sprintf(buffer,"No ROM Loaded");
 		IplFont::getInstance().drawString((int) box_x + 15, (int) text_y, buffer, 0.8, false);
 	}

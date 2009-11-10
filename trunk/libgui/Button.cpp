@@ -74,7 +74,7 @@ Button::Button(int style, char** label, float x, float y, float width, float hei
 	if (buttonStyle != BUTTON_DEFAULT)
 	{
 		colors[0] = (GXColor) {255, 255, 255, 255};
-		colors[1] = (GXColor) {127, 127, 127, 255};
+		colors[1] = (GXColor) {200, 200, 200, 255};
 		colors[2] = (GXColor) {255, 255, 255, 255};
 	}
 
