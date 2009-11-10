@@ -1,19 +1,30 @@
-/* ARAM.c - This is the ARAM manager
-   by Mike Slegeir for Mupen64-GC
- */
+/**
+ * Wii64 - ARAM.c
+ * Copyright (C) 2007, 2008, 2009 Mike Slegeir
+ * 
+ * This is the ARAM manager
+ *
+ * Wii64 homepage: http://www.emulatemii.com
+ * email address: tehpola@gmail.com
+ *
+ *
+ * This program is free software; you can redistribute it and/
+ * or modify it under the terms of the GNU General Public Li-
+ * cence as published by the Free Software Foundation; either
+ * version 2 of the Licence, or any later version.
+ *
+ * This program is distributed in the hope that it will be use-
+ * ful, but WITHOUT ANY WARRANTY; without even the implied war-
+ * ranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public Licence for more details.
+ *
+**/
+
 
 #include <malloc.h>
 #include <stdio.h>
 #include <ogc/aram.h>
 #include "ARAM.h"
-
-// FIXME: This should actually use DEBUG for its prints
-#ifdef USE_GUI
-#include "../gui/GUI.h"
-#define PRINT GUI_print
-#else
-#define PRINT printf
-#endif
 
 typedef struct {
 	unsigned char*  addr;
@@ -45,14 +56,6 @@ void ARAM_manager_init(void){
 	
 	alloced_blocks = 0;
 	initialized = 1;
-	
-	/*char buffer[96];
-	sprintf(buffer, "Initialized ARAM with %d blocks:", max_blocks);
-	for(i=0; i<max_blocks; ++i){
-		if(i%4 == 0){ PRINT(buffer); buffer[0] = 0; }
-		sprintf(buffer, "%s %d: 0x%08x", buffer, i, ARAM_blocks[i].addr);
-	}
-	PRINT(buffer);*/
 }
 
 void ARAM_manager_deinit(void){
@@ -99,7 +102,6 @@ char* ARAM_block_alloc(unsigned char** ptr, unsigned char owner){
 }
 
 char* ARAM_block_alloc_contiguous(unsigned char** ptr, unsigned char owner, unsigned int num_blocks){
-	//PRINT("ARAM_block_alloc_contiguous:\n");
 	if(!initialized || alloced_blocks+num_blocks > max_blocks) return NULL;
 	
 	int count = 0, block = 0, i;
