@@ -24,3 +24,35 @@
    LoadingTexture_length:
    .long (LoadingTexture_length - LoadingTexture)
 
+   .globl ControlEmptyTexture
+   .balign 32
+   ControlEmptyTexture:
+   .incbin	"./menu/resources/cntrlEmpty.tx"
+   .globl ControlEmptyTexture_length
+   ControlEmptyTexture_length:
+   .long (ControlEmptyTexture_length - ControlEmptyTexture)
+
+   .globl ControlGamecubeTexture
+   .balign 32
+   ControlGamecubeTexture:
+   .incbin	"./menu/resources/cntrlGC.tx"
+   .globl ControlGamecubeTexture_length
+   ControlGamecubeTexture_length:
+   .long (ControlGamecubeTexture_length - ControlGamecubeTexture)
+
+   .globl ControlClassicTexture
+   .balign 32
+   ControlClassicTexture:
+   .incbin	"./menu/resources/cntrlClassic.tx"
+   .globl ControlClassicTexture_length
+   ControlClassicTexture_length:
+   .long (ControlClassicTexture_length - ControlClassicTexture)
+
+   .globl ControlWiimoteNunchuckTexture
+   .balign 32
+   ControlWiimoteNunchuckTexture:
+   .incbin	"./menu/resources/cntrlWNC.tx"
+   .globl ControlWiimoteNunchuckTexture_length
+   ControlWiimoteNunchuckTexture_length:
+   .long (ControlWiimoteNunchuckTexture_length - ControlWiimoteNunchuckTexture)
+

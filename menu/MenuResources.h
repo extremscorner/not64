@@ -24,5 +24,9 @@
 extern  u8 BackgroundTexture[];
 extern  u8 LogoTexture[];
 extern  u8 LoadingTexture[];
+extern  u8 ControlEmptyTexture[];
+extern  u8 ControlGamecubeTexture[];
+extern  u8 ControlClassicTexture[];
+extern  u8 ControlWiimoteNunchuckTexture[];
 
 #endif

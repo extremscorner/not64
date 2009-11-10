@@ -46,7 +46,11 @@ public:
 		IMAGE_STYLEA_BUTTONSELECTON,
 		IMAGE_STYLEA_BUTTONSELECTONFOCUS,
 		IMAGE_MENU_BACKGROUND,
-		IMAGE_LOGO
+		IMAGE_LOGO,
+		IMAGE_CONTROLLER_EMPTY,
+		IMAGE_CONTROLLER_GAMECUBE,
+		IMAGE_CONTROLLER_CLASSIC,
+		IMAGE_CONTROLLER_WIIMOTENUNCHUCK
 	};
 
 private:
@@ -58,6 +62,8 @@ private:
 	Image *styleAButtonSelectOnImage, *styleAButtonSelectOnFocusImage;
 	Image *menuBackgroundImage;
 	Image *logoImage;
+	Image *controllerEmptyImage, *controllerGamecubeImage;
+	Image *controllerClassicImage, *controllerWiimoteNunchuckImage;
 
 };
 
