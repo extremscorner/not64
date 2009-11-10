@@ -35,6 +35,7 @@ public:
 	void addFrame(Frame* frame);
 	void removeFrame(Frame* frame);
 	void draw();
+	void drawBackground();
 	static Gui& getInstance()
 	{
 		static Gui obj;

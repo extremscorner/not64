@@ -45,7 +45,8 @@ public:
 		IMAGE_STYLEA_BUTTONSELECTOFFFOCUS,
 		IMAGE_STYLEA_BUTTONSELECTON,
 		IMAGE_STYLEA_BUTTONSELECTONFOCUS,
-		IMAGE_MENU_BACKGROUND
+		IMAGE_MENU_BACKGROUND,
+		IMAGE_LOGO
 	};
 
 private:
@@ -56,6 +57,7 @@ private:
 	Image *styleAButtonSelectOffImage, *styleAButtonSelectOffFocusImage;
 	Image *styleAButtonSelectOnImage, *styleAButtonSelectOnFocusImage;
 	Image *menuBackgroundImage;
+	Image *logoImage;
 
 };
 

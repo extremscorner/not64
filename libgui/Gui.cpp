@@ -79,12 +79,7 @@ void Gui::draw()
 	//Update time??
 	//Get graphics framework and pass to Frame draw fns?
 	gfx->drawInit();
-	//Draw Menu Backdrop
-	Resources::getInstance().getImage(Resources::IMAGE_MENU_BACKGROUND)->activateImage(GX_TEXMAP0);
-	gfx->setTEV(GX_REPLACE);
-	gfx->enableBlending(false);
-	if(screenMode)	gfx->drawImage(0, 0, 0, 640, 480, 0, 1, 0, 1);
-	else			gfx->drawImage(0, 0, 0, 640, 480, (848.0-640.0)/2/848.0, 1.0 - (848.0-640.0)/2/848.0, 0, 1);
+	drawBackground();
 	FrameList::const_iterator iteration;
 	for (iteration = frameList.begin(); iteration != frameList.end(); iteration++)
 	{
@@ -132,6 +127,21 @@ void Gui::draw()
 	}
 
 	gfx->swapBuffers();
+}
+
+void Gui::drawBackground()
+{
+	//Draw Menu Backdrop
+	Resources::getInstance().getImage(Resources::IMAGE_MENU_BACKGROUND)->activateImage(GX_TEXMAP0);
+//	gfx->setTEV(GX_REPLACE);
+	GXColor muxCol = (GXColor){0,17,85,255};
+	GX_SetTevColor(GX_TEVREG0,muxCol);
+	GX_SetTevColorIn(GX_TEVSTAGE0,GX_CC_C0,GX_CC_ZERO,GX_CC_TEXC,GX_CC_TEXC);
+	GX_SetTevColorOp(GX_TEVSTAGE0,GX_TEV_ADD,GX_TB_ZERO,GX_CS_SCALE_1,GX_TRUE,GX_TEVPREV);
+	gfx->enableBlending(false);
+	if(screenMode)	gfx->drawImage(0, 0, 0, 640, 480, 0, 1, 0, 1);
+	else			gfx->drawImage(0, 0, 0, 640, 480, (848.0-640.0)/2/848.0, 1.0 - (848.0-640.0)/2/848.0, 0, 1);
+	gfx->setTEV(GX_PASSCLR);
 }
 
 } //namespace menu 

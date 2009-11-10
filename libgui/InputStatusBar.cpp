@@ -30,6 +30,7 @@
 
 extern "C" {
 #include "../gc_input/controller.h"
+#include "../main/rom.h"
 }
 
 namespace menu {
@@ -64,14 +65,51 @@ InputStatusBar::~InputStatusBar()
 {
 }
 
+extern "C" BOOL hasLoadedROM;
+extern "C" char autoSave;
+
 void InputStatusBar::drawComponent(Graphics& gfx)
 {
 #ifdef HW_RVL
 	WPADData* wpad;
 #endif
+	int box_x = 60;
+	int box_y = 0;
+	int width = 210;
+	int height = 340;
+	int labelScissor = 5;
 	GXColor activeColor = (GXColor) {255, 255, 255, 255};
-	GXColor inactiveColor = (GXColor) {128, 128, 128, 128};
+	GXColor inactiveColor = (GXColor) {192, 192, 192, 192};
 	char statusText[20];
+	//Draw Status Info Box
+	GXColor boxColor = (GXColor) {87, 90, 100,128};
+	gfx.setTEV(GX_PASSCLR);
+	gfx.enableBlending(true);
+	gfx.setColor(boxColor);
+	gfx.fillRect(box_x, box_y, width, height);
+	//Write ROM Status Info
+	gfx.enableScissor(box_x + labelScissor, box_y, width - 2*labelScissor, height);
+	char buffer [51];
+	if(!hasLoadedROM)
+	{
+		IplFont::getInstance().drawInit(inactiveColor);
+		sprintf(buffer,"No ROM Loaded");
+		IplFont::getInstance().drawString((int) 78, (int) 100, buffer, 0.8, false);
+	}
+	else
+	{
+		IplFont::getInstance().drawInit(activeColor);
+		sprintf(buffer,"%s",ROM_SETTINGS.goodname);
+		IplFont::getInstance().drawString((int) 78, (int) 100, buffer, 0.8, false);
+	    countrycodestring(ROM_HEADER->Country_code&0xFF, buffer);
+		IplFont::getInstance().drawString((int) 78, (int) 133, buffer, 0.7, false);
+		if (autoSave)
+			sprintf(buffer,"AutoSave Enabled");
+		else
+			sprintf(buffer,"AutoSave Disabled");
+		IplFont::getInstance().drawString((int) 78, (int) 158, buffer, 0.7, false);
+	}
+	gfx.disableScissor();
 	//update controller availability
 	//build text
 	//draw text with appropriate color
@@ -121,9 +159,16 @@ void InputStatusBar::drawComponent(Graphics& gfx)
 				sprintf (statusText, "Pad%d: None", i+1);
 			break;
 		}
-		IplFont::getInstance().drawString((int) 540, (int) 150+30*i, statusText, 1.0, true);
+//		IplFont::getInstance().drawString((int) 540, (int) 150+30*i, statusText, 1.0, true);
+		IplFont::getInstance().drawString((int) box_x+width/2, (int) 215+30*i, statusText, 1.0, true);
 	}
 
+	//draw logo
+	Resources::getInstance().getImage(Resources::IMAGE_LOGO)->activateImage(GX_TEXMAP0);
+	gfx.setTEV(GX_REPLACE);
+	gfx.enableBlending(true);
+	gfx.drawImage(0, 75, 380, 144, 52, 0, 1, 0, 1);
+	gfx.setTEV(GX_PASSCLR);
 
 /*
 //	printf("Button drawComponent\n");
