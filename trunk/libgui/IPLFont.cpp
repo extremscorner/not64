@@ -334,6 +334,85 @@ void IplFont::drawString(int x, int y, char *string, float scale, bool centered)
 
 }
 
+int IplFont::drawStringWrap(int x, int y, char *string, float scale, bool centered, int maxWidth, int lineSpacing)
+{
+	int numLines = 0;
+	int stringWidth = 0;
+	int tokenWidth = 0;
+	int numTokens = 0;
+	char* lineStart = string;
+	char* lineStop = string;
+	char* stringWork = string;
+	char* stringDraw = NULL;
+
+	while(1)
+	{
+		if(*stringWork == 0) //end of string
+		{
+			if((stringWidth + tokenWidth <= maxWidth) || (numTokens = 0))
+			{
+				if (stringWidth + tokenWidth > 0)
+				{
+					drawString( x, y+numLines*lineSpacing, lineStart, scale, centered);
+					numLines++;
+				}
+				break;
+			}
+			else
+			{
+				stringDraw = (char*)malloc(lineStop - lineStart + 1);
+				for (int i = 0; i < lineStop-lineStart; i++)
+					stringDraw[i] = lineStart[i];
+				stringDraw[lineStop-lineStart] = 0;
+				drawString( x, y+numLines*lineSpacing, stringDraw, scale, centered);
+				free(stringDraw);
+				numLines++;
+				lineStart = lineStop+1;
+				drawString( x, y+numLines*lineSpacing, lineStart, scale, centered);
+				numLines++;
+				break;
+			}
+		}
+
+		if((*stringWork == ' ')) //end of token
+		{
+			if(stringWidth + tokenWidth <= maxWidth)
+			{
+				stringWidth += tokenWidth;
+				numTokens++;
+				tokenWidth = 0;
+				lineStop = stringWork;
+			}
+			else
+			{
+				if (numTokens == 0)	//if the word is wider than maxWidth, just print it
+					lineStop = stringWork;
+
+				stringDraw = (char*)malloc(lineStop - lineStart + 1);
+				for (int i = 0; i < lineStop-lineStart; i++)
+					stringDraw[i] = lineStart[i];
+				stringDraw[lineStop-lineStart] = 0;
+				drawString( x, y+numLines*lineSpacing, stringDraw, scale, centered);
+				free(stringDraw);
+				numLines++;
+
+				lineStart = lineStop+1;
+				lineStop = lineStart;
+				stringWork = lineStart;
+				stringWidth = 0;
+				tokenWidth = 0;
+				numTokens = 0;
+				continue;
+			}
+		}
+		tokenWidth += (int) fontChars.font_size[(int)(*stringWork)] * scale;
+
+		stringWork++;
+	}
+
+	return numLines;
+}
+
 void IplFont::drawStringAtOrigin(char *string, float scale)
 {
 	int x0, y0, x = 0;

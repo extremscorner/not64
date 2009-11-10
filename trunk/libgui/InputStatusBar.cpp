@@ -67,6 +67,10 @@ InputStatusBar::~InputStatusBar()
 
 extern "C" BOOL hasLoadedROM;
 extern "C" char autoSave;
+extern "C" BOOL sramWritten;
+extern "C" BOOL eepromWritten;
+extern "C" BOOL mempakWritten;
+extern "C" BOOL flashramWritten;
 
 void InputStatusBar::drawComponent(Graphics& gfx)
 {
@@ -91,24 +95,30 @@ void InputStatusBar::drawComponent(Graphics& gfx)
 	//Write ROM Status Info
 	gfx.enableScissor(box_x + labelScissor, box_y, width - 2*labelScissor, height);
 	char buffer [51];
+	int text_y = 100;
 	if(!hasLoadedROM)
 	{
 		IplFont::getInstance().drawInit(inactiveColor);
 		sprintf(buffer,"No ROM Loaded");
-		IplFont::getInstance().drawString((int) box_x + 15, (int) 100, buffer, 0.8, false);
+		IplFont::getInstance().drawString((int) box_x + 15, (int) text_y, buffer, 0.8, false);
 	}
 	else
 	{
 		IplFont::getInstance().drawInit(activeColor);
 		sprintf(buffer,"%s",ROM_SETTINGS.goodname);
-		IplFont::getInstance().drawString((int) box_x + 15, (int) 100, buffer, 0.8, false);
+//		IplFont::getInstance().drawString((int) box_x + 15, (int) text_y, buffer, 0.8, false);
+		text_y += 20*IplFont::getInstance().drawStringWrap((int) box_x + 15, (int) text_y, buffer, 0.8, false, width - 2*15, 20);
 	    countrycodestring(ROM_HEADER->Country_code&0xFF, buffer);
-		IplFont::getInstance().drawString((int) box_x + 15, (int) 133, buffer, 0.7, false);
+		text_y += 13;
+		IplFont::getInstance().drawString((int) box_x + 15, (int) text_y, buffer, 0.7, false);
 		if (autoSave)
 			sprintf(buffer,"AutoSave Enabled");
+		else if (!flashramWritten && !sramWritten && !eepromWritten && !mempakWritten)
+			sprintf(buffer,"Nothing to Save");
 		else
-			sprintf(buffer,"AutoSave Disabled");
-		IplFont::getInstance().drawString((int) box_x + 15, (int) 158, buffer, 0.7, false);
+			sprintf(buffer,"Game Needs Saving");
+		text_y += 25;
+		IplFont::getInstance().drawString((int) box_x + 15, (int) text_y, buffer, 0.7, false);
 	}
 	gfx.disableScissor();
 	//Update controller availability
