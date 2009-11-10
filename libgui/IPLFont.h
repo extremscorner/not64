@@ -33,6 +33,7 @@ public:
 	void setColor(GXColor fontColor);
 	void setColor(GXColor* fontColorPtr);
 	void drawString(int x, int y, char *string, float scale, bool centered);
+	int drawStringWrap(int x, int y, char *string, float scale, bool centered, int maxWidth, int lineSpacing);
 	void drawStringAtOrigin(char *string, float scale);
 	int getStringWidth(char *string, float scale);
 	int getStringHeight(char *string, float scale);
