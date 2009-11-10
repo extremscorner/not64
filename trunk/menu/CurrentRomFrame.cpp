@@ -237,6 +237,7 @@ void Func_LoadSave()
 			else		menu::MessageBox::getInstance().setMessage("No saves found on memcard B");
 			break;
 	}
+	sramWritten = eepromWritten = mempakWritten = flashramWritten = false;
 }
 
 extern BOOL sramWritten;
@@ -282,7 +283,7 @@ void Func_SaveGame()
 	result += saveFlashram(saveFile_dir);
 	saveFile_deinit(saveFile_dir);
 
-	if (result==amountSaves)	
+	if (result==amountSaves) {	
 		switch (nativeSaveDevice)
 		{
 			case NATIVESAVEDEVICE_SD:
@@ -298,6 +299,8 @@ void Func_SaveGame()
 				menu::MessageBox::getInstance().setMessage("Saved game to memcard in Slot B");
 				break;
 		}
+		sramWritten = eepromWritten = mempakWritten = flashramWritten = false;
+	}
 	else		menu::MessageBox::getInstance().setMessage("Failed to Save");
 }
 
