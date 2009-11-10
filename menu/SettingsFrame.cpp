@@ -192,21 +192,21 @@ struct TextBoxInfo
 } FRAME_TEXTBOXES[NUM_FRAME_TEXTBOXES] =
 { //	textBox	textBoxString		x		y		scale	centered
 	//TextBoxes for General Tab (starts at textBox[0])
-	{	NULL,	FRAME_STRINGS[5],	155.0,	120.0,	 1.0,	true }, // Native Save Device: SD/USB/CardA/CardB
-	{	NULL,	FRAME_STRINGS[6],	155.0,	190.0,	 1.0,	true }, // Save State Device: SD/USB
-	{	NULL,	FRAME_STRINGS[7],	155.0,	260.0,	 1.0,	true }, // CPU Core: Pure Interp/Dynarec
-	{	NULL,	FRAME_STRINGS[8],	155.0,	330.0,	 1.0,	true }, // Save settings.cfg: SD/USB
+	{	NULL,	FRAME_STRINGS[5],	155.0,	128.0,	 1.0,	true }, // Native Save Device: SD/USB/CardA/CardB
+	{	NULL,	FRAME_STRINGS[6],	155.0,	198.0,	 1.0,	true }, // Save State Device: SD/USB
+	{	NULL,	FRAME_STRINGS[7],	155.0,	268.0,	 1.0,	true }, // CPU Core: Pure Interp/Dynarec
+	{	NULL,	FRAME_STRINGS[8],	155.0,	338.0,	 1.0,	true }, // Save settings.cfg: SD/USB
 	//TextBoxes for Video Tab (starts at textBox[4])
-	{	NULL,	FRAME_STRINGS[15],	190.0,	120.0,	 1.0,	true }, // Show FPS: On/Off
-	{	NULL,	FRAME_STRINGS[16],	190.0,	190.0,	 1.0,	true }, // CPU Framebuffer: On/Off
-	{	NULL,	FRAME_STRINGS[17],	190.0,	260.0,	 1.0,	true }, // ScreenMode: 4x3/16x9
-	{	NULL,	FRAME_STRINGS[18],	190.0,	330.0,	 1.0,	true }, // 2xSai: On/Off
-	{	NULL,	FRAME_STRINGS[19],	190.0,	400.0,	 1.0,	true }, // FBTex: On/Off
+	{	NULL,	FRAME_STRINGS[15],	190.0,	128.0,	 1.0,	true }, // Show FPS: On/Off
+	{	NULL,	FRAME_STRINGS[16],	190.0,	198.0,	 1.0,	true }, // CPU Framebuffer: On/Off
+	{	NULL,	FRAME_STRINGS[17],	190.0,	268.0,	 1.0,	true }, // ScreenMode: 4x3/16x9
+	{	NULL,	FRAME_STRINGS[18],	190.0,	338.0,	 1.0,	true }, // 2xSai: On/Off
+	{	NULL,	FRAME_STRINGS[19],	190.0,	408.0,	 1.0,	true }, // FBTex: On/Off
 	//TextBoxes for Input Tab (starts at textBox[])
 	//TextBoxes for Audio Tab (starts at textBox[9])
-	{	NULL,	FRAME_STRINGS[26],	210.0,	120.0,	 1.0,	true }, // Disable Audio: Yes/No
+	{	NULL,	FRAME_STRINGS[26],	210.0,	128.0,	 1.0,	true }, // Disable Audio: Yes/No
 	//TextBoxes for Saves Tab (starts at textBox[10])
-	{	NULL,	FRAME_STRINGS[29],	200.0,	120.0,	 1.0,	true }, // Auto Save Native Save: Yes/No
+	{	NULL,	FRAME_STRINGS[29],	200.0,	128.0,	 1.0,	true }, // Auto Save Native Save: Yes/No
 };
 
 SettingsFrame::SettingsFrame()

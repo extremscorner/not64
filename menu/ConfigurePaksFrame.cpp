@@ -99,14 +99,14 @@ struct TextBoxInfo
 	bool			centered;
 } FRAME_TEXTBOXES[NUM_FRAME_TEXTBOXES] =
 { //	textBox	textBoxString		x		y		scale	centered
-	{	NULL,	FRAME_STRINGS[2],	190.0,	120.0,	 1.0,	true }, // Controller 1
-	{	NULL,	FRAME_STRINGS[3],	190.0,	190.0,	 1.0,	true }, // Controller 2
-	{	NULL,	FRAME_STRINGS[4],	190.0,	260.0,	 1.0,	true }, // Controller 3
-	{	NULL,	FRAME_STRINGS[5],	190.0,	330.0,	 1.0,	true }, // Controller 4
-	{	NULL,	FRAME_STRINGS[6],	450.0,	120.0,	 1.0,	true }, // Unavailable
-	{	NULL,	FRAME_STRINGS[6],	450.0,	190.0,	 1.0,	true }, // Unavailable
-	{	NULL,	FRAME_STRINGS[6],	450.0,	260.0,	 1.0,	true }, // Unavailable
-	{	NULL,	FRAME_STRINGS[6],	450.0,	330.0,	 1.0,	true }, // Unavailable
+	{	NULL,	FRAME_STRINGS[2],	190.0,	128.0,	 1.0,	true }, // Controller 1
+	{	NULL,	FRAME_STRINGS[3],	190.0,	198.0,	 1.0,	true }, // Controller 2
+	{	NULL,	FRAME_STRINGS[4],	190.0,	268.0,	 1.0,	true }, // Controller 3
+	{	NULL,	FRAME_STRINGS[5],	190.0,	338.0,	 1.0,	true }, // Controller 4
+	{	NULL,	FRAME_STRINGS[6],	450.0,	128.0,	 1.0,	true }, // Unavailable
+	{	NULL,	FRAME_STRINGS[6],	450.0,	198.0,	 1.0,	true }, // Unavailable
+	{	NULL,	FRAME_STRINGS[6],	450.0,	268.0,	 1.0,	true }, // Unavailable
+	{	NULL,	FRAME_STRINGS[6],	450.0,	338.0,	 1.0,	true }, // Unavailable
 };
 
 ConfigurePaksFrame::ConfigurePaksFrame()

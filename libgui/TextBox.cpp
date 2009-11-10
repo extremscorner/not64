@@ -33,7 +33,8 @@ TextBox::TextBox(char** label, float x, float y, float scale, bool centered)
 {
 	setType(TYPE_TEXTBOX);
 					//Label color
-	GXColor color = {255, 255, 255, 255};
+//	GXColor color = {255, 255, 255, 255};
+	GXColor color = {56, 56, 56, 255};
 	setColor(&color);
 }
 
