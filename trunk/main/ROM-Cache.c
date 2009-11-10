@@ -1,6 +1,27 @@
-/* ROM-Cache.c - This is how the ROM should be accessed, this way the ROM doesn't waste RAM
-   by Mike Slegeir for Mupen64-GC
- */
+/**
+ * Wii64 - ROM-Cache.c (Gamecube ROM Cache)
+ * Copyright (C) 2007, 2008, 2009 Mike Slegeir
+ * Copyright (C) 2007, 2008, 2009 emu_kidid
+ * 
+ * This is how the ROM should be accessed, this way the ROM doesn't waste RAM
+ *
+ * Wii64 homepage: http://www.emulatemii.com
+ * email address: tehpola@gmail.com
+ *                emukidid@gmail.com
+ *
+ *
+ * This program is free software; you can redistribute it and/
+ * or modify it under the terms of the GNU General Public Li-
+ * cence as published by the Free Software Foundation; either
+ * version 2 of the Licence, or any later version.
+ *
+ * This program is distributed in the hope that it will be use-
+ * ful, but WITHOUT ANY WARRANTY; without even the implied war-
+ * ranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public Licence for more details.
+ *
+**/
+
 
 #include <ogc/arqueue.h>
 #include <gccore.h>

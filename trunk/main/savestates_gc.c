@@ -1,9 +1,11 @@
 /**
  * Mupen64 - savestates.c
  * Copyright (C) 2002 Hacktarux
+ * Copyright (C) 2008, 2009 emu_kidid
  *
  * Mupen64 homepage: http://mupen64.emulation64.com
  * email address: hacktarux@yahoo.fr
+ *                emukidid@gmail.com
  * 
  * If you want to contribute to the project please contact
  * me first (maybe someone is already making what you are
