@@ -46,9 +46,10 @@ LoadingBar::LoadingBar()
 
 	showFrame();
 
-	boxColor = (GXColor) {100, 100, 100, 200};
-	backColor = (GXColor) {0, 0, 0, 255};
-	barColor = (GXColor) {255, 100, 100, 255};
+	boxColor = (GXColor) {100, 100, 100, 210};
+	backColor = (GXColor) {0, 0, 0, 210};
+//	barColor = (GXColor) {255, 100, 100, 255};
+	barColor = (GXColor) {104, 125, 205, 210};
 	textColor = (GXColor) {255, 255, 255, 255};
 
 }
@@ -123,7 +124,7 @@ void LoadingBar::drawLoadingBar(Graphics& gfx)
 	//draw text 'box'
 	x = 120; y = 200; width = 400; height = 40;
 	IplFont::getInstance().drawInit(textColor);
-	IplFont::getInstance().drawString((int) (x+width/2), (int) (y+height/2), loadingBarText, 0.7, true);
+	IplFont::getInstance().drawString((int) (x+width/2), (int) (y+height/2), loadingBarText, 0.9, true);
 }
 
 extern "C" {
