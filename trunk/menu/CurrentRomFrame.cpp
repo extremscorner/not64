@@ -179,6 +179,11 @@ void Func_ResetROM()
 	}
 }
 
+extern BOOL sramWritten;
+extern BOOL eepromWritten;
+extern BOOL mempakWritten;
+extern BOOL flashramWritten;
+
 void Func_LoadSave()
 {
 	if(!hasLoadedROM)
@@ -239,11 +244,6 @@ void Func_LoadSave()
 	}
 	sramWritten = eepromWritten = mempakWritten = flashramWritten = false;
 }
-
-extern BOOL sramWritten;
-extern BOOL eepromWritten;
-extern BOOL mempakWritten;
-extern BOOL flashramWritten;
 
 void Func_SaveGame()
 {
