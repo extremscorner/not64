@@ -41,7 +41,9 @@ Resources::Resources()
 	styleAButtonSelectOffFocusImage = new Image(StyleAButtonSelectOffFocusTexture, 8, 56, GX_TF_RGBA8, GX_CLAMP, GX_CLAMP, GX_FALSE);
 	styleAButtonSelectOnImage = new Image(StyleAButtonSelectOnTexture, 8, 56, GX_TF_RGBA8, GX_CLAMP, GX_CLAMP, GX_FALSE);
 	styleAButtonSelectOnFocusImage = new Image(StyleAButtonSelectOnFocusTexture, 8, 56, GX_TF_RGBA8, GX_CLAMP, GX_CLAMP, GX_FALSE);
-	menuBackgroundImage = new Image(BackgroundTexture, 848, 480, GX_TF_I8, GX_CLAMP, GX_CLAMP, GX_FALSE);
+//	menuBackgroundImage = new Image(BackgroundTexture, 848, 480, GX_TF_I8, GX_CLAMP, GX_CLAMP, GX_FALSE);
+	menuBackgroundImage = new Image(BackgroundTexture, 424, 240, GX_TF_I8, GX_CLAMP, GX_CLAMP, GX_FALSE);
+	logoImage = new Image(LogoTexture, 144, 52, GX_TF_RGB5A3, GX_CLAMP, GX_CLAMP, GX_FALSE);
 
 }
 
@@ -56,6 +58,7 @@ Resources::~Resources()
 	delete styleAButtonSelectOnImage;
 	delete styleAButtonSelectOnFocusImage;
 	delete menuBackgroundImage;
+	delete logoImage;
 }
 
 Image* Resources::getImage(int image)
@@ -89,6 +92,9 @@ Image* Resources::getImage(int image)
 		break;
 	case IMAGE_MENU_BACKGROUND:
 		returnImage = menuBackgroundImage;
+		break;
+	case IMAGE_LOGO:
+		returnImage = logoImage;
 		break;
 	}
 	return returnImage;

@@ -64,7 +64,7 @@ char FRAME_STRINGS[7][20] =
 	  "Current ROM",
 	  "Settings",
 	  "Credits",
-	  "Exit to Loader",
+	  "Quit",
 	  "Play Game",
 	  "Resume Game"};
 
@@ -86,12 +86,12 @@ struct ButtonInfo
 	ButtonFunc		returnFunc;
 } FRAME_BUTTONS[NUM_MAIN_BUTTONS] =
 { //	button	buttonStyle	buttonString		x		y		width	height	Up	Dwn	Lft	Rt	clickFunc				returnFunc
-	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[0],	195.0,	 60.0,	250.0,	56.0,	 5,	 1,	-1,	-1,	Func_LoadROM,			NULL }, // Load ROM
-	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[1],	195.0,	120.0,	250.0,	56.0,	 0,	 2,	-1,	-1,	Func_CurrentROM,		NULL }, // Current ROM
-	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[2],	195.0,	180.0,	250.0,	56.0,	 1,	 3,	-1,	-1,	Func_Settings,			NULL }, // Settings
-	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[3],	195.0,	240.0,	250.0,	56.0,	 2,	 4,	-1,	-1,	Func_Credits,			NULL }, // Credits
-	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[4],	195.0,	300.0,	250.0,	56.0,	 3,	 5,	-1,	-1,	Func_ExitToLoader,		NULL }, // Exit to Loader
-	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[5],	195.0,	360.0,	250.0,	56.0,	 4,	 0,	-1,	-1,	Func_PlayGame,			NULL }, // Play/Resume Game
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[0],	315.0,	 60.0,	200.0,	56.0,	 5,	 1,	-1,	-1,	Func_LoadROM,			NULL }, // Load ROM
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[1],	315.0,	120.0,	200.0,	56.0,	 0,	 2,	-1,	-1,	Func_CurrentROM,		NULL }, // Current ROM
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[2],	315.0,	180.0,	200.0,	56.0,	 1,	 3,	-1,	-1,	Func_Settings,			NULL }, // Settings
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[3],	315.0,	240.0,	200.0,	56.0,	 2,	 4,	-1,	-1,	Func_Credits,			NULL }, // Credits
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[4],	315.0,	300.0,	200.0,	56.0,	 3,	 5,	-1,	-1,	Func_ExitToLoader,		NULL }, // Exit to Loader
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[5],	315.0,	360.0,	200.0,	56.0,	 4,	 0,	-1,	-1,	Func_PlayGame,			NULL }, // Play/Resume Game
 };
 
 MainFrame::MainFrame()
