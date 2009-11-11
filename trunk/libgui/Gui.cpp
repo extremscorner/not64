@@ -103,7 +103,8 @@ void Gui::draw()
 		gfx->loadOrthographic();
 
 		gfx->setColor((GXColor){0, 0, 0, fade});
-		gfx->fillRect(0, 0, 640, 480);
+		if(screenMode)	gfx->fillRect(-104, 0, 848, 480);
+		else			gfx->fillRect(0, 0, 640, 480);
 		
 		if(fade == 255)
 		{
