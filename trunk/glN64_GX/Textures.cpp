@@ -1143,10 +1143,10 @@ void TextureCache_Load( CachedTexture *texInfo )
 		texInfo->tMem = 0;
 
 #ifdef __GX__
+	texInfo->GXtexture = (u16*) dest;
+
 	if (!cache.enable2xSaI)
 	{
-		texInfo->GXtexture = (u16*) dest;
-
 		j = 0;
 		switch(GXsize)
 		{
@@ -1226,7 +1226,7 @@ void TextureCache_Load( CachedTexture *texInfo )
 			DEBUG_print((char*)"Textures: Converting Invalid Texture Format",DBG_TXINFO);
 		}
 	}
-	else //	!cache.enable2xSaI
+	else if (texInfo->textureBytes > 0) //	!cache.enable2xSaI
 	{
 		j = 0;
 		for (y = 0; y < texInfo->realHeight; y++)
@@ -1290,7 +1290,7 @@ void TextureCache_Load( CachedTexture *texInfo )
 		texInfo->GXtexture = (u16*) scaledDest;
 		__lwp_heap_free(GXtexCache, dest);
 
-	}	//	cache.enable2xSaI
+	} 	//	cache.enable2xSaI
 #else // __GX__
 	j = 0;
 	for (y = 0; y < texInfo->realHeight; y++)
