@@ -19,6 +19,7 @@
 **/
 
 #include "GraphicsGX.h"
+#include "../main/wii64config.h"
 
 #define DEFAULT_FIFO_SIZE		(256 * 1024)
 
@@ -234,7 +235,8 @@ void Graphics::loadModelView()
 
 void Graphics::loadOrthographic()
 {
-	guOrtho(currentProjectionMtx, 0, 479, 0, 639, 0, 700);
+	if(screenMode)	guOrtho(currentProjectionMtx, 0, 479, -104, 743, 0, 700);
+	else			guOrtho(currentProjectionMtx, 0, 479, 0, 639, 0, 700);
 	GX_LoadProjectionMtx(currentProjectionMtx, GX_ORTHOGRAPHIC);
 }
 
@@ -378,7 +380,14 @@ void Graphics::popDepth()
 
 void Graphics::enableScissor(int x, int y, int width, int height)
 {
-	GX_SetScissor((u32) x,(u32) y,(u32) width,(u32) height);
+	if(screenMode)
+	{
+		int x1 = (x+104)*640/848;
+		int x2 = (x+width+104)*640/848;
+		GX_SetScissor((u32) x1,(u32) y,(u32) x2-x1,(u32) height);
+	}
+	else
+		GX_SetScissor((u32) x,(u32) y,(u32) width,(u32) height);
 }
 
 void Graphics::disableScissor()
