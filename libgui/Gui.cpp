@@ -139,7 +139,7 @@ void Gui::drawBackground()
 	GX_SetTevColorIn(GX_TEVSTAGE0,GX_CC_C0,GX_CC_ZERO,GX_CC_TEXC,GX_CC_TEXC);
 	GX_SetTevColorOp(GX_TEVSTAGE0,GX_TEV_ADD,GX_TB_ZERO,GX_CS_SCALE_1,GX_TRUE,GX_TEVPREV);
 	gfx->enableBlending(false);
-	if(screenMode)	gfx->drawImage(0, 0, 0, 640, 480, 0, 1, 0, 1);
+	if(screenMode)	gfx->drawImage(0, -104, 0, 848, 480, 0, 1, 0, 1);
 	else			gfx->drawImage(0, 0, 0, 640, 480, (848.0-640.0)/2/848.0, 1.0 - (848.0-640.0)/2/848.0, 0, 1);
 	gfx->setTEV(GX_PASSCLR);
 }
