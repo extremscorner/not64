@@ -425,7 +425,7 @@ void VI_GX_cleanUp()
 	GX_SetFog(GX_FOG_NONE,0,1,0,1,(GXColor){0,0,0,255});
 	GX_SetViewport(0,0,rmode->fbWidth,rmode->efbHeight,0,1);
 	GX_SetCoPlanar(GX_DISABLE);
-	GX_SetClipMode(GX_CLIP_DISABLE);
+	GX_SetClipMode(GX_CLIP_ENABLE);
 	GX_SetScissor(0,0,rmode->fbWidth,rmode->efbHeight);
 	GX_SetAlphaCompare(GX_ALWAYS,0,GX_AOP_AND,GX_ALWAYS,0);
 	GX_SetZCompLoc(GX_TRUE);	// Do Z-compare before texturing.
