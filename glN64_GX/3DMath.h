@@ -1,3 +1,15 @@
+/**
+ * glN64_GX - 3DMath.h
+ * Copyright (C) 2003 Orkin
+ * Copyright (C) 2008, 2009 sepp256 (Port to Wii/Gamecube/PS3)
+ * Copyright (C) 2009 tehpola (paired single optimization for GEKKO)
+ *
+ * glN64 homepage: http://gln64.emulation64.com
+ * Wii64 homepage: http://www.emulatemii.com
+ * email address: sepp256@gmail.com
+ *
+**/
+
 #ifndef _3DMATH_H
 #define _3DMATH_H
 

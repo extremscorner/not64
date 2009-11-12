@@ -1,3 +1,13 @@
+/**
+ * glN64_GX - TEV_combiner.h
+ * Copyright (C) 2008, 2009 sepp256 (Port to Wii/Gamecube/PS3)
+ *
+ * glN64 homepage: http://gln64.emulation64.com
+ * Wii64 homepage: http://www.emulatemii.com
+ * email address: sepp256@gmail.com
+ *
+**/
+
 #ifndef TEV_COMBINER_H
 #define TEV_COMBINER_H
 

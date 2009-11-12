@@ -1,3 +1,12 @@
+/**
+ * glN64_GX - texture_env_combine.h
+ * Copyright (C) 2003 Orkin
+ *
+ * glN64 homepage: http://gln64.emulation64.com
+ * Wii64 homepage: http://www.emulatemii.com
+ *
+**/
+
 #ifndef TEXTURE_ENV_COMBINE_H
 #define TEXTURE_ENV_COMBINE_H
 

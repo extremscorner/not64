@@ -1,6 +1,11 @@
-/* SoftGFXPlugin.h - Mangles the plugin so it can be linked staticly
-   by Mike Slegeir for Mupen64-GC
- */
+/**
+ * glN64_GX - SoftGFXPlugin.h 
+ * Copyright (C) 2007 Mike Slegeir
+ * Mangles the plugin so it can be linked staticly
+ *
+ * Wii64 homepage: http://www.emulatemii.com
+ *
+**/
 
 #ifndef GFX_PLUGIN_H
 #define GFX_PLUGIN_H
