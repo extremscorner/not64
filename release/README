@@ -1,0 +1,144 @@
+﻿README : Wii64 / Cube64
+Beta 1
+
+LICENSE:
+    This software is licensed under the GNU General Public License v2
+      which is available at: http://www.gnu.org/licenses/gpl-2.0.txt
+    This requires any released modifications to be licensed similarly,
+      and to have the source available.
+    
+    Wii64/Cube64 and their respective logos are trademarks of Team Wii64
+      and should not be used in unofficial builds.
+
+QUICK USAGE:
+ * ROMs can be z64 (big-endian) or v64 (little endian), or .n64, of any size
+ * To install: Extract the contents of wii64-beta1.zip to the root of your SD card
+ * For SD/USB: Put ROMs in the directory named /wii64/roms,
+    All save types will automatically be placed in /wii64/saves
+ * For DVD: ROMs may be anywhere on the disc  
+ * Load the executable from the HBC or in the loader of your choice
+    Once loaded, select 'Load ROM' and choose the source and select the ROM to load
+      (Note: to go up a directory select '..', B will exit the file browser)
+ * Select 'Play Game' to play
+   The game can be exited any time by pressing X and Y together on a GC pad or Classic Controller,
+   1 and 2 together on a Wiimote, or the reset button
+     (Note: this must be done to save your game; it will not be done automatically)
+
+Controls:
+* Gamecube controllers are mapped 1:1 with N64 buttons
+* Classic controllers are mapped the same as on VC titles but Z is mapped to both
+   ZL and ZR for ease of use
+   * X+Y are used to exit to the menu on both classic controller and Gamecube controller
+* Wiimote+Nunchuck mappings are:
+   * Left-stick: Nunchuk-stick
+   * A: A
+   * B: + or -
+   * Z: Nunchuk Z
+   * L: Nunchuk C
+   * R: B
+   * Start: Home
+   * C-stick: D-pad
+   * D-pad: 2 + D-pad
+   * Return to menu: 1 + 2
+
+Settings:
+ * General
+   * Native Saves Device: Choose where to load and save native game saves
+   * Save States Device: Choose where to load and save save states
+   * Select CPU Core: Choose whether to play games with pure interpreter
+     (better compatibility) or dynarec (better speed)
+   * Save settings.cfg: Save all of these settings either SD or USB (to be loaded automatically next time)
+ * Video
+   * Show FPS: Display the framerate in the top-left corner of the screen
+   * Screen Mode: Select the aspect ratio to display in (doesn't affect
+     the aspect ratio games are rendered in)
+   * CPU Framebuffer: Enable for games which only draw directly to the
+     framebuffer (this will only need to be set for some homebrew demos)
+   * 2xSaI Tex: Scale and Interpolate in-game textures (unstable on GC)
+   * FB Textures: Enable framebuffer textures (necessary for some games to
+     render everything correctly (e.g. Zelda Subscreen), but can impact performance, unstable on GC)
+ * Input
+   * Configure Input: Select controllers to use in game
+   * Configure Paks: Select which controller paks to use in which controllers
+ * Audio
+   * Disable Audio: Select to mute the sound
+ * Saves
+   * Auto Save Native Saves: When enabled, the emulator will automatically load
+     saves from the selected device and save when returning to the menu or
+     turning off the console
+   * Copy Saves: Not yet implemented
+   * Delete Saves: Not yet implemented
+
+COMPATIBILITY LIST:
+ Please visit http://emulatemii.com/wii64/compatList/ to see what runs
+ Report any issues to http://code.google.com/p/mupen64gc/issues/list
+
+CREDITS:
+ * Core Coder: tehpola
+ * Graphics Coder: sepp256
+ * General Coder: emu_kidid
+ * Original mupen64: Hactarux
+ * Artwork: drmr
+ * Compiled using devKitPro r18 and libOGC
+     ( http://sourceforge.net/projects/devkitpro )
+ * Visit us on www.emulatemii.com and http://code.google.com/p/mupen64gc
+
+CHANGE LOG:
+Beta 1:
+   + Dynamic Recompiler
+   + Expansion Pak Support (Wii only)
+   + New menu system
+      + Classic Controller support
+      + Wiimote & nunchuck support
+      + Settings saving
+      + Auto load/save option for saves
+   + rsp_hle RSP Plugin Port
+   - rsp_hle-ppc RSP Plugin
+   + glN64 features & bugfixes
+      + 2xSaI
+      + glN64 frame buffer textures (e.g. Zelda sub screen)
+      + glN64 CPU Frame buffer (for homebrew demos)
+   + libDI Wii DVD ROM loading support
+   + Full TLB on Wii
+   * Many many bug fixes
+   * MEM2 ROM Cache for Wii improved (512MBiT ROM support)
+   * Memory LUTs compacted
+ r3xx:
+   + glN64 Port
+   + MEM2 ROM Cache for Wii (fits 32MB ROMs)
+   + Save/Load on Wii Filesystem
+   + Progressive video support
+   + Embedded font support for Qoob users
+   * Threaded audio
+   * Various GX_gfx fixes
+   * Reworked input plugin
+     + Modular controller input
+   + Developer Features submenu
+     * Toggle FPS/Debug display
+ r200:
+   * Replaced GUI
+     + Menu system
+     + Menu file browser
+   * Replaced file handling system
+     + Modular file read/writes
+   * Gameplay resumable after exiting to menu
+   + Game reset option
+   * Multiple ROMs may be loaded without crashing/freezing
+   + Fancy splash screen and credits
+   * Fixed software graphics support
+   + Working audio (choppy)
+   + Partial support for little-endian ROMs
+   + Rumble pak support
+ r46:
+   + DVD loading
+ r43:
+   + GX graphics
+   - Software graphics
+ r40:
+   * Any size ROM support from SD card
+   * Pure Interpreter support only for now
+   * Software GFX
+   * Controller/Mempak support
+   * Saving to SD card
+   * Text UI
+   * 4 MB RAM support (no expansion pack)
