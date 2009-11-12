@@ -1,3 +1,12 @@
+/**
+ * glN64_GX - L3DEX2.cpp
+ * Copyright (C) 2003 Orkin
+ *
+ * glN64 homepage: http://gln64.emulation64.com
+ * Wii64 homepage: http://www.emulatemii.com
+ *
+**/
+
 #ifdef __GX__
 #include <gccore.h>
 #endif // __GX__

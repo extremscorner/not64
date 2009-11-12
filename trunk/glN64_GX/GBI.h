@@ -1,3 +1,12 @@
+/**
+ * glN64_GX - GBI.h
+ * Copyright (C) 2003 Orkin
+ *
+ * glN64 homepage: http://gln64.emulation64.com
+ * Wii64 homepage: http://www.emulatemii.com
+ *
+**/
+
 #ifndef GBI_H
 #define GBI_H
 #include "Types.h"
