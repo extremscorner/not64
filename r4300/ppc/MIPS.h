@@ -1,7 +1,26 @@
-/* MIPS.h - defines and macros for decoding MIPS instructions
-   by Mike Slegeir for Mupen64-GC
- *************************************************************
-   Example usage:
+/**
+ * Wii64 - MIPS.h
+ * Copyright (C) 2007, 2008, 2009 Mike Slegeir
+ * 
+ * Defines and macros for decoding MIPS instructions
+ *
+ * Wii64 homepage: http://www.emulatemii.com
+ * email address: tehpola@gmail.com
+ *
+ *
+ * This program is free software; you can redistribute it and/
+ * or modify it under the terms of the GNU General Public Li-
+ * cence as published by the Free Software Foundation; either
+ * version 2 of the Licence, or any later version.
+ *
+ * This program is distributed in the hope that it will be use-
+ * ful, but WITHOUT ANY WARRANTY; without even the implied war-
+ * ranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public Licence for more details.
+ *
+**/
+
+/* Example usage:
 	MIPS_instr x = mips_code[i++];
 	if(MIPS_GET_OPCODE(x) == MIPS_OPCODE_R)
 		if(MIPS_GET_FUNC(x) == MIPS_FUNC_ADD)

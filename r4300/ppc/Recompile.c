@@ -1,7 +1,26 @@
-/* Recompile.c - Recompiles a block of MIPS code to PPC
-   by Mike Slegeir for Mupen64-GC
- **********************************************************
-   TODO: Try to conform more to the interface mupen64 uses.
+/**
+ * Wii64 - Recompile.c
+ * Copyright (C) 2007, 2008, 2009 Mike Slegeir
+ * 
+ * Recompiles a block of MIPS code to PPC
+ *
+ * Wii64 homepage: http://www.emulatemii.com
+ * email address: tehpola@gmail.com
+ *
+ *
+ * This program is free software; you can redistribute it and/
+ * or modify it under the terms of the GNU General Public Li-
+ * cence as published by the Free Software Foundation; either
+ * version 2 of the Licence, or any later version.
+ *
+ * This program is distributed in the hope that it will be use-
+ * ful, but WITHOUT ANY WARRANTY; without even the implied war-
+ * ranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public Licence for more details.
+ *
+**/
+
+/* TODO: Try to conform more to the interface mupen64 uses.
          If we have the entire RAM and recompiled code in memory,
            we'll run out of room, we should implement a recompiled
            code cache (e.g. free blocks which haven't been used lately)
@@ -200,7 +219,7 @@ PowerPC_func* recompile_block(PowerPC_block* ppc_block, unsigned int addr){
 	// Flush any remaining mapped registers
 	flushRegisters(); //start_new_mapping();
 	// In case we couldn't compile the whole function, use a pad
-  if(need_pad || isJmpDst[src_last-1-ppc_block->mips_code])
+	if(need_pad || isJmpDst[src_last-1-ppc_block->mips_code])
 		genJumpPad();
 
 	// Allocate the func buffers and copy the code
@@ -295,7 +314,7 @@ void init_block(MIPS_instr* mips_code, PowerPC_block* ppc_block){
 		if(start >= 0xa0000000 && end < 0xc0000000 &&
 		   invalid_code_get((start-0x20000000)>>12)){
 			invalid_code_set((start-0x20000000)>>12, 0);
-			if (!blocks[(start-0x20000000)>>12]){
+			if(!blocks[(start-0x20000000)>>12]){
 				blocks[(start-0x20000000)>>12] = malloc(sizeof(PowerPC_block));
 				//blocks[(start-0x20000000)>>12]->code_addr = ppc_block->code_addr;
 				blocks[(start-0x20000000)>>12]->funcs = NULL;
