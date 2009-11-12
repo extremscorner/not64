@@ -220,7 +220,7 @@ void write_font_init_GX(GXColor fontColor)
 
 	// Reset various parameters from gfx plugin
 	GX_SetCoPlanar(GX_DISABLE);
-	GX_SetClipMode(GX_CLIP_DISABLE);
+	GX_SetClipMode(GX_CLIP_ENABLE);
 	GX_SetScissor(0,0,rmode->fbWidth,rmode->efbHeight);
 	GX_SetAlphaCompare(GX_ALWAYS,0,GX_AOP_AND,GX_ALWAYS,0);
 

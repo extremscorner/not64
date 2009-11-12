@@ -26,6 +26,7 @@
 #include "resources.h"
 #include "IPLFont.h"
 #include "Frame.h"
+#include "../main/wii64config.h"
 
 namespace menu {
 
@@ -90,7 +91,8 @@ void Cursor::updateCursor()
 				}
 				clearInput = false;
 			}
-			cursorX = wiiPad[i].ir.x;
+			if(screenMode)	cursorX = wiiPad[i].ir.x*848/640 - 104;
+			else			cursorX = wiiPad[i].ir.x;
 			cursorY = wiiPad[i].ir.y; 
 			cursorRot = wiiPad[i].ir.angle;
 			buttonsPressed = (wiiPad[i].btns_h ^ previousButtonsPressed[i]) & wiiPad[i].btns_h;

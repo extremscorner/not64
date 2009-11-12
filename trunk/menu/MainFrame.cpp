@@ -210,6 +210,7 @@ void go(void);
 
 //void control_info_init();
 
+extern char menuActive;
 extern char autoSave;
 extern BOOL sramWritten;
 extern BOOL eepromWritten;
@@ -253,6 +254,7 @@ void Func_PlayGame()
 	pauseRemovalThread();
 	resumeAudio();
 	resumeInput();
+	menuActive = 0;
 #ifdef DEBUGON
 	_break();
 #endif
@@ -260,6 +262,7 @@ void Func_PlayGame()
 #ifdef DEBUGON
 	_break();
 #endif
+	menuActive = 1;
 	pauseInput();
 	pauseAudio();
   continueRemovalThread();

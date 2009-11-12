@@ -108,6 +108,7 @@ char glN64_use2xSaiTextures;
 char renderCpuFramebuffer;
 #endif //!GLN64_GX
 extern timers Timers;
+char menuActive;
        char saveEnabled;
        char creditsScrolling;
        char padNeedScan;
@@ -232,6 +233,7 @@ int main(int argc, char* argv[]){
 	glN64_use2xSaiTextures = 0;	// Disable 2xSai textures
 	renderCpuFramebuffer = 0; // Disable CPU Framebuffer Rendering
 #endif //GLN64_GX
+	menuActive = 1;
 
   //config stuff
   fileBrowser_file* configFile_file;
