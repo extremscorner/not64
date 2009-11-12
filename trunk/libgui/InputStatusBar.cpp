@@ -205,7 +205,11 @@ void InputStatusBar::drawComponent(Graphics& gfx)
 	Resources::getInstance().getImage(Resources::IMAGE_LOGO)->activateImage(GX_TEXMAP0);
 	gfx.setTEV(GX_REPLACE);
 	gfx.enableBlending(true);
+#ifdef HW_RVL
 	gfx.drawImage(0, 75, 380, 144, 52, 0, 1, 0, 1);
+#else
+	gfx.drawImage(0, 75, 380, 192, 52, 0, 1, 0, 1);
+#endif
 	gfx.setTEV(GX_PASSCLR);
 
 /*
