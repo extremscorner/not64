@@ -198,7 +198,11 @@ int main(int argc, char* argv[]){
 
 	// Default Settings
 	audioEnabled     = 1; // Audio
-	showFPSonScreen  = 1; // Show FPS on Screen
+#ifdef RELEASE
+	showFPSonScreen  = 0; // Show FPS on Screen
+#else
+  showFPSonScreen  = 1; // Show FPS on Screen
+#endif
 	printToScreen    = 1; // Show DEBUG text on screen
 	printToSD        = 0; // Disable SD logging
 	Timers.limitVIs  = 0; // Sync to Audio
