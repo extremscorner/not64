@@ -1,6 +1,24 @@
-/* Register-Cache.h - Handle mappings from MIPS to PPC registers
-   by Mike Slegeir for Mupen64-GC
- */
+/**
+ * Wii64 - Register-Cache.h
+ * Copyright (C) 2009 Mike Slegeir
+ * 
+ * Handle mappings from MIPS to PPC registers
+ *
+ * Wii64 homepage: http://www.emulatemii.com
+ * email address: tehpola@gmail.com
+ *
+ *
+ * This program is free software; you can redistribute it and/
+ * or modify it under the terms of the GNU General Public Li-
+ * cence as published by the Free Software Foundation; either
+ * version 2 of the Licence, or any later version.
+ *
+ * This program is distributed in the hope that it will be use-
+ * ful, but WITHOUT ANY WARRANTY; without even the implied war-
+ * ranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public Licence for more details.
+ *
+**/
 
 #ifndef REGISTER_CACHE_H
 #define REGISTER_CACHE_H

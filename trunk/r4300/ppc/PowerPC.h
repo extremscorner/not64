@@ -1,7 +1,26 @@
-/* PowerPC.h - defines and macros for encoding PPC instructions
-   by Mike Slegeir for Mupen64-GC
- **************************************************************
-   Example usage (creating add r1, r2, r3):
+/**
+ * Wii64 - PowerPC.h
+ * Copyright (C) 2007, 2008, 2009 Mike Slegeir
+ * 
+ * Defines and macros for encoding PPC instructions
+ *
+ * Wii64 homepage: http://www.emulatemii.com
+ * email address: tehpola@gmail.com
+ *
+ *
+ * This program is free software; you can redistribute it and/
+ * or modify it under the terms of the GNU General Public Li-
+ * cence as published by the Free Software Foundation; either
+ * version 2 of the Licence, or any later version.
+ *
+ * This program is distributed in the hope that it will be use-
+ * ful, but WITHOUT ANY WARRANTY; without even the implied war-
+ * ranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public Licence for more details.
+ *
+**/
+
+/* Example usage (creating add r1, r2, r3):
    	PowerPC_instr x = NEW_PPC_INSTR();
    	PPC_SET_OPCODE(x, PPC_OPCODE_X);
 	PPC_SET_FUNC  (x, PPC_FUNC_ADD);
