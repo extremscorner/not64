@@ -169,7 +169,7 @@ else
 	export LD	:=	$(CXX)
 endif
 
-all:	mupen64gc-glN64.elf
+all:	cube64-glN64.elf
 
 r4300/interupt.o:	r4300/interupt.c
 			$(CC) $(CFLAGS) -c -o $@ $<
@@ -273,10 +273,10 @@ glN64_GX/F3DDKR.o:			glN64_GX/F3DDKR.cpp
 glN64_GX/F3DWRUS.o:		glN64_GX/F3DWRUS.cpp
 				$(CXX) $(CFLAGS) -D__LINUX__ -D__GX__ -c -o $@ $<
 
-mupen64gc-glN64.elf:	$(OBJ) $(OBJ_INPUT) $(OBJ_GLN64_GX) $(OBJ_AUDIO) $(OBJ_RSPHLE) $(OBJ_PPC)
+cube64-glN64.elf:	$(OBJ) $(OBJ_INPUT) $(OBJ_GLN64_GX) $(OBJ_AUDIO) $(OBJ_RSPHLE) $(OBJ_PPC)
 		$(LD) $^ $(LDFLAGS) $(LIBPATHS) $(LIB) -Wl -o $@
-		DolTool -d mupen64gc-glN64.elf
-#		powerpc-gekko-objcopy -O binary $@ mupen64gc-glN64.dol
+		DolTool -d cube64-glN64.elf
+#		powerpc-gekko-objcopy -O binary $@ cube64-glN64.dol
 
 install:
 	cp mupen64 "$(PREFIX)bin"
