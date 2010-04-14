@@ -82,6 +82,7 @@ PKZIPHEADER pkzip;
 
 void ROMCache_init(fileBrowser_file* f){
   readBefore = 0; //de-init byteswapping
+  ROMFile = f;
 	ROMSize = f->size;
 	ROMTooBig = ROMSize > ROMCACHE_SIZE;
 
@@ -178,14 +179,13 @@ int ROMCache_load(fileBrowser_file* f){
 	sprintf(txt, "Loading ROM %s into MEM2",ROMTooBig ? "partially" : "fully");
 	PRINT(txt);
 
-	ROMFile = f;
-	romFile_seekFile(f, 0, FILE_BROWSER_SEEK_SET);
+	romFile_seekFile(ROMFile, 0, FILE_BROWSER_SEEK_SET);
 	
 	u32 offset = 0,loads_til_update = 0;
 	int bytes_read;
 	u32 sizeToLoad = MIN(ROMCACHE_SIZE, ROMSize);
 	while(offset < sizeToLoad){
-		bytes_read = romFile_readFile(f, ROMCACHE_LO + offset, LOAD_SIZE);
+		bytes_read = romFile_readFile(ROMFile, ROMCACHE_LO + offset, LOAD_SIZE);
 		
 		if(bytes_read < 0){		// Read fail!
 
@@ -195,7 +195,10 @@ int ROMCache_load(fileBrowser_file* f){
 		//initialize byteswapping if it isn't already
 		if(!readBefore)
 		{
- 			init_byte_swap(*(unsigned int*)ROMCACHE_LO);
+ 			if(init_byte_swap(*(unsigned int*)ROMCACHE_LO) == BYTE_SWAP_BAD) {
+ 			  romFile_deinit(ROMFile);
+ 			  return -2;
+		  }
  			readBefore = 1;
 		}
 		//byteswap

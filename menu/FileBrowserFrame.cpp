@@ -34,6 +34,7 @@ extern "C" {
 #include "../fileBrowser/fileBrowser-DVD.h"
 #include "../fileBrowser/fileBrowser-CARD.h"
 #include "../main/rom.h"
+#include "../main/ROM-Cache.h"
 #include "../main/wii64config.h"
 }
 
@@ -360,7 +361,17 @@ void fileBrowserFrame_LoadFile(int i)
 		}
 		else		// If not.
 		{
-			strcpy(feedback_string,"A read error occured");
+  		switch(ret) {
+    		case ROM_CACHE_ERROR_READ:
+			    strcpy(feedback_string,"A read error occured");
+			    break;
+			  case ROM_CACHE_INVALID_ROM:
+			   strcpy(feedback_string,"Invalid ROM type");
+			    break;
+			  default:
+			    strcpy(feedback_string,"An error has occured");
+			    break;
+		  }
 
 			menu::MessageBox::getInstance().setMessage(feedback_string);
 		}

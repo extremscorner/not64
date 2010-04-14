@@ -306,7 +306,7 @@ BOOL hasLoadedROM = FALSE;
 char autoSaveLoaded = NATIVESAVEDEVICE_NONE;
 
 int loadROM(fileBrowser_file* rom){
-
+  int ret = 0;
   savestates_job = 0; //clear all pending save states
 	// First, if there's already a loaded ROM
 	if(hasLoadedROM){
@@ -342,9 +342,10 @@ int loadROM(fileBrowser_file* rom){
 	tlb_mem2_init();
 #endif
 	//romFile_init(rom);
-	if(rom_read(rom)){	// Something failed while trying to read the ROM.
+	ret = rom_read(rom);
+	if(ret){	// Something failed while trying to read the ROM.
 		hasLoadedROM = FALSE;
-		return -1;
+		return ret;
 	}
 
 	// Init everything for this ROM

@@ -167,7 +167,10 @@ int rom_read(fileBrowser_file* file){
 
    ROMCache_init(rom_file);
    int ret = ROMCache_load(rom_file);
-
+   if(ret) {
+     ROMCache_deinit(rom_file);
+     return ret;
+   }
    if(!ROM_HEADER) ROM_HEADER = malloc(sizeof(rom_header));
    ROMCache_read((u32*)ROM_HEADER, 0, sizeof(rom_header));
 
