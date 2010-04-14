@@ -19,6 +19,7 @@
 **/
 
 #include <math.h>
+#include <cstdlib>
 #include "MenuContext.h"
 #include "FileBrowserFrame.h"
 #include "../libgui/Button.h"
@@ -204,6 +205,18 @@ static char* filenameFromAbsPath(char* absPath)
 
 int loadROM(fileBrowser_file*);
 
+static int dir_comparator(const void* _x, const void* _y){
+	const fileBrowser_file* x = (const fileBrowser_file*)_x;
+	const fileBrowser_file* y = (const fileBrowser_file*)_y;
+	int xIsDir = x->attr & FILE_BROWSER_ATTR_DIR;
+	int yIsDir = y->attr & FILE_BROWSER_ATTR_DIR;
+	// Directories go on top, otherwise alphabetical
+	if(xIsDir != yIsDir)
+		return yIsDir - xIsDir;
+	else
+		return stricmp(x->name, y->name);
+}
+
 void fileBrowserFrame_OpenDirectory(fileBrowser_file* dir)
 {
 	// Free the old menu stuff
@@ -218,6 +231,9 @@ void fileBrowserFrame_OpenDirectory(fileBrowser_file* dir)
 		fileBrowserFrame_Error(); 
 		return;
 	}
+	
+	// Sort the listing
+	qsort(dir_entries, num_entries, sizeof(fileBrowser_file), dir_comparator);
 
 	current_page = 0;
 	max_page = (int)ceil((float)num_entries/NUM_FILE_SLOTS);
