@@ -252,7 +252,11 @@ int ROMCache_load(fileBrowser_file* file){
 				//initialize byteswapping
 			  if(!readBefore)
 			  {
-  			  init_byte_swap(*(unsigned int*)buffer);
+  			  if(init_byte_swap(*(unsigned int*)buffer) == BYTE_SWAP_BAD) {
+    			  romFile_deinit(ROM_file);
+    			  free(buffer);
+    			  return -2;
+  			  }
   			  readBefore = 1;
 			  }
 				byte_swap((char*)buffer, bytes_read);
@@ -282,7 +286,11 @@ int ROMCache_load(fileBrowser_file* file){
 			//initialize byteswapping
 			if(!readBefore)
 			{
-  			init_byte_swap(*(unsigned int*)buffer);
+  			if(init_byte_swap(*(unsigned int*)buffer) == BYTE_SWAP_BAD) {
+    		  romFile_deinit(ROM_file);
+    			free(buffer);
+    			return -2;
+  			}
   			readBefore = 1;
 			}
 			byte_swap((char*)buffer, bytes_read);

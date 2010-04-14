@@ -44,7 +44,8 @@ void byte_swap(char* buffer, unsigned int length);
 #define BYTE_SWAP_HALF 1
 #define BYTE_SWAP_BYTE 2
 
-
+#define ROM_CACHE_ERROR_READ  -1
+#define ROM_CACHE_INVALID_ROM -2
 
 #endif
 
