@@ -54,7 +54,7 @@ void LoadingBar_showBar(float percent, const char* string);
 
 #define BLOCK_MASK  (BLOCK_SIZE-1)
 #define OFFSET_MASK (0xFFFFFFFF-BLOCK_MASK)
-#define BLOCK_SHIFT (20)	//only change ME and BLOCK_SIZE in gc_memory/aram.h
+#define BLOCK_SHIFT (18)	//only change ME and BLOCK_SIZE in gc_memory/aram.h
 #define MAX_ROMSIZE (64*1024*1024)
 #define NUM_BLOCKS  (MAX_ROMSIZE/BLOCK_SIZE)
 
