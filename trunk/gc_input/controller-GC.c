@@ -38,32 +38,33 @@ static int _GetKeys(int Control, BUTTONS * Keys )
 	controller_GC.available[Control] = (gc_connected & (1<<Control)) ? 1 : 0;
 	if (!controller_GC.available[Control]) return 0;
 
-	int b = PAD_ButtonsHeld(Control);
-	c->R_DPAD       = (b & PAD_BUTTON_RIGHT) ? 1 : 0;
-	c->L_DPAD       = (b & PAD_BUTTON_LEFT)  ? 1 : 0;
-	c->D_DPAD       = (b & PAD_BUTTON_DOWN)  ? 1 : 0;
-	c->U_DPAD       = (b & PAD_BUTTON_UP)    ? 1 : 0;
-	c->START_BUTTON = (b & PAD_BUTTON_START) ? 1 : 0;
-	c->B_BUTTON     = (b & PAD_BUTTON_B)     ? 1 : 0;
-	c->A_BUTTON     = (b & PAD_BUTTON_A)     ? 1 : 0;
+	unsigned short b = PAD_ButtonsHeld(Control);
+	int isHeld(unsigned short button){ return (b & button) == button; }
+	
+	c->R_DPAD       = isHeld(PAD_BUTTON_RIGHT);
+	c->L_DPAD       = isHeld(PAD_BUTTON_LEFT);
+	c->D_DPAD       = isHeld(PAD_BUTTON_DOWN);
+	c->U_DPAD       = isHeld(PAD_BUTTON_UP);
+	c->START_BUTTON = isHeld(PAD_BUTTON_START);
+	c->B_BUTTON     = isHeld(PAD_BUTTON_B);
+	c->A_BUTTON     = isHeld(PAD_BUTTON_A);
 
-	c->Z_TRIG       = (b & PAD_TRIGGER_Z)    ? 1 : 0;
-	c->R_TRIG       = (b & PAD_TRIGGER_R)    ? 1 : 0;
-	c->L_TRIG       = (b & PAD_TRIGGER_L)    ? 1 : 0;
+	c->Z_TRIG       = isHeld(PAD_TRIGGER_Z);
+	c->R_TRIG       = isHeld(PAD_TRIGGER_R);
+	c->L_TRIG       = isHeld(PAD_TRIGGER_L);
 
-	// FIXME: Proper values for analog and C-Stick
 	s8 substickX = PAD_SubStickX(Control);
-	c->R_CBUTTON    = (substickX >  64)      ? 1 : 0;
-	c->L_CBUTTON    = (substickX < -64)      ? 1 : 0;
+	c->R_CBUTTON    = (substickX >  48) ? 1 : 0;
+	c->L_CBUTTON    = (substickX < -48) ? 1 : 0;
 	s8 substickY = PAD_SubStickY(Control);
-	c->D_CBUTTON    = (substickY < -64)      ? 1 : 0;
-	c->U_CBUTTON    = (substickY >  64)      ? 1 : 0;
+	c->D_CBUTTON    = (substickY < -48) ? 1 : 0;
+	c->U_CBUTTON    = (substickY >  48) ? 1 : 0;
 
 	c->X_AXIS       = PAD_StickX(Control);
 	c->Y_AXIS       = PAD_StickY(Control);
 
 	// X+Y quits to menu
-	return (b & PAD_BUTTON_X) && (b & PAD_BUTTON_Y);
+	return isHeld(PAD_BUTTON_X | PAD_BUTTON_Y);
 }
 
 static void pause(int Control){
