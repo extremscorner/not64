@@ -98,7 +98,9 @@ static void pause(int Control){ }
 
 static void resume(int Control){ }
 
-static void rumble(int Control, int rumble){ }
+static void rumble(int Control, int rumble){
+	WPAD_Rumble(Control, rumble ? 1 : 0);
+}
 
 static void configure(int Control){
 	// Don't know how this should be integrated

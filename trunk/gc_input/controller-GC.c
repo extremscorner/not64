@@ -74,8 +74,7 @@ static void pause(int Control){
 static void resume(int Control){ }
 
 static void rumble(int Control, int rumble){
-	if(rumble) PAD_ControlMotor(Control, PAD_MOTOR_RUMBLE);
-	else PAD_ControlMotor(Control, PAD_MOTOR_STOP);
+	PAD_ControlMotor(Control, rumble ? PAD_MOTOR_RUMBLE : PAD_MOTOR_STOP);
 }
 
 static void configure(int Control){
