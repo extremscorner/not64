@@ -12,13 +12,13 @@ extern "C" {
 }
 
 static void SPNOOP () {
-	char buff[0x100];
+	/*char buff[0x100];
 	sprintf (buff, "Unknown/Unimplemented Audio Command %i in ABI 3", (int)(inst1 >> 24));
 #ifdef __WIN32__
 	MessageBox (NULL, buff, "Audio HLE Error", MB_OK);
 #else
 	printf( "Audio HLE Error: %s\n", buff );
-#endif
+#endif*/
 }
 
 extern u16 ResampleLUT [0x200];
@@ -242,12 +242,12 @@ static void ENVMIXER3o () {
 	u32 addy = (inst2 & 0xFFFFFF);// + SEGMENTS[(inst2>>24)&0xf];
 	//static FILE *dfile = fopen ("d:\\envmix.txt", "wt");
 // ********* Make sure these conditions are met... ***********
-	if ((AudioInBuffer | AudioOutBuffer | AudioAuxA | AudioAuxC | AudioAuxE | AudioCount) & 0x3) {
+	if ((AudioInBuffer | AudioOutBuffer | AudioAuxA | AudioAuxC | AudioAuxE | AudioCount) & 0x3) {/*
 #ifdef __WIN32__
 		MessageBox (NULL, "Unaligned EnvMixer... please report this to Azimer with the following information: RomTitle, Place in the rom it occurred, and any save state just before the error", "AudioHLE Error", MB_OK);
 #else
 		printf( "Unaligned EnvMixer... please report this to Azimer with the following information: RomTitle, Place in the rom it occurred, and any save state just before the error" );
-#endif
+#endif*/
 	}
 // ------------------------------------------------------------
  	short *inp=(short *)(BufferSpace+0x4F0);

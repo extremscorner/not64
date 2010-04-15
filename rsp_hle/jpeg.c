@@ -80,14 +80,14 @@ void jpg_uncompress(OSTask_t *task)
 	     len2 = 511;
 	  }
      }
-   else
+/*   else
      {
 #ifdef __WIN32__
 	MessageBox(NULL, "!flags", "!flags", MB_OK);
 #else
 	printf("!flags\n");
 #endif
-     }
+     }*/
    pic = (short*)(rsp.RDRAM + jpg_data.pic);
 
    temp1 = (short*)malloc((jpg_data.h+4)*64*2);
@@ -287,7 +287,7 @@ void jpg_uncompress(OSTask_t *task)
 	       }
 	  }
 
-	if (jpg_data.h == 0)
+	/*if (jpg_data.h == 0)
 	  {
 #ifdef __WIN32
 	     MessageBox(NULL, "h==0", "h==0", MB_OK);
@@ -295,7 +295,7 @@ void jpg_uncompress(OSTask_t *task)
 	     printf("h==0\n");
 #endif
 	  }
-	else
+	else*/
 	  {
 	     for (i=0; i<8; i++)
 	       m[9 *8+i] = m[10*8+i] = m[11*8+i] = m[12*8+i] = 0;

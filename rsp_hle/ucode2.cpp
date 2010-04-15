@@ -14,13 +14,13 @@ extern "C" {
 extern u8 BufferSpace[0x10000];
 
 static void SPNOOP () {
-	char buff[0x100];
+	/*char buff[0x100];
 	sprintf (buff, "Unknown/Unimplemented Audio Command %i in ABI 2", (int)(inst1 >> 24));
 #ifdef __WIN32__
 	MessageBox (NULL, buff, "Audio HLE Error", MB_OK);
 #else
 	printf( "Audio HLE Error: %s\n", buff );
-#endif
+#endif*/
 }
 extern u16 AudioInBuffer;		// 0x0000(T8)
 extern u16 AudioOutBuffer;		// 0x0002(T8)
