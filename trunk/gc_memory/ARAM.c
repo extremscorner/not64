@@ -43,9 +43,9 @@ void ARAM_manager_init(void){
 	
 	AR_Init(NULL, 0);
 	
-	max_blocks = (AR_GetSize() - AR_GetBaseAddress())/BLOCK_SIZE;
+	max_blocks = (AR_GetSize() - (256*1024)/*AR_GetBaseAddress()*/)/BLOCK_SIZE;
 	ARAM_blocks = malloc(max_blocks * sizeof(ARAM_block));
-	int i, addr = AR_GetBaseAddress();
+	int i, addr = 256*1024; //AR_GetBaseAddress();
 	for(i=0; i<max_blocks; ++i){
 		ARAM_blocks[i].valid = FALSE;
 		ARAM_blocks[i].addr  = addr;
