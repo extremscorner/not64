@@ -65,30 +65,31 @@ static int _GetKeys(int Control, BUTTONS * Keys )
 		return 0;
 	}
 
-	int b  = wpad->btns_h;
-	int d2 = b & WPAD_BUTTON_2;
-	c->R_DPAD       = (b & WPAD_BUTTON_RIGHT && d2)  ? 1 : 0;
-	c->L_DPAD       = (b & WPAD_BUTTON_LEFT  && d2)  ? 1 : 0;
-	c->D_DPAD       = (b & WPAD_BUTTON_DOWN  && d2)  ? 1 : 0;
-	c->U_DPAD       = (b & WPAD_BUTTON_UP    && d2)  ? 1 : 0;
-	c->START_BUTTON = (b & WPAD_BUTTON_HOME)         ? 1 : 0;
-	c->B_BUTTON     = (b & (WPAD_BUTTON_MINUS | WPAD_BUTTON_PLUS)) ? 1 : 0;
-	c->A_BUTTON     = (b & WPAD_BUTTON_A)            ? 1 : 0;
+	unsigned int b  = wpad->btns_h;
+	int isHeld(unsigned int button){ return (b & button) == button; }
+	
+	c->R_DPAD       = isHeld(WPAD_BUTTON_RIGHT | WPAD_BUTTON_2);
+	c->L_DPAD       = isHeld(WPAD_BUTTON_LEFT  | WPAD_BUTTON_2);
+	c->D_DPAD       = isHeld(WPAD_BUTTON_DOWN  | WPAD_BUTTON_2);
+	c->U_DPAD       = isHeld(WPAD_BUTTON_UP    | WPAD_BUTTON_2);
+	c->START_BUTTON = isHeld(WPAD_BUTTON_HOME);
+	c->B_BUTTON     = isHeld(WPAD_BUTTON_MINUS | WPAD_BUTTON_PLUS);
+	c->A_BUTTON     = isHeld(WPAD_BUTTON_A);
 
-	c->Z_TRIG       = (b & WPAD_NUNCHUK_BUTTON_Z)    ? 1 : 0;
-	c->R_TRIG       = (b & WPAD_BUTTON_B)            ? 1 : 0;
-	c->L_TRIG       = (b & WPAD_NUNCHUK_BUTTON_C)    ? 1 : 0;
+	c->Z_TRIG       = isHeld(WPAD_NUNCHUK_BUTTON_Z);
+	c->R_TRIG       = isHeld(WPAD_BUTTON_B);
+	c->L_TRIG       = isHeld(WPAD_NUNCHUK_BUTTON_C);
 
-	c->R_CBUTTON    = (b & WPAD_BUTTON_RIGHT)        ? 1 : 0;
-	c->L_CBUTTON    = (b & WPAD_BUTTON_LEFT)         ? 1 : 0;
-	c->D_CBUTTON    = (b & WPAD_BUTTON_DOWN)         ? 1 : 0;
-	c->U_CBUTTON    = (b & WPAD_BUTTON_UP)           ? 1 : 0;
+	c->R_CBUTTON    = isHeld(WPAD_BUTTON_RIGHT);
+	c->L_CBUTTON    = isHeld(WPAD_BUTTON_LEFT);
+	c->D_CBUTTON    = isHeld(WPAD_BUTTON_DOWN);
+	c->U_CBUTTON    = isHeld(WPAD_BUTTON_UP);
 
 	c->X_AXIS       = getStickValue(&wpad->exp.nunchuk.js, STICK_X, 127);
 	c->Y_AXIS       = getStickValue(&wpad->exp.nunchuk.js, STICK_Y, 127);
 
 	// 1+2 quits to menu
-	return (b & WPAD_BUTTON_1) && (b & WPAD_BUTTON_2);
+	return isHeld(WPAD_BUTTON_1 | WPAD_BUTTON_2);
 }
 
 static void pause(int Control){ }
