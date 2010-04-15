@@ -332,6 +332,7 @@ int loadROM(fileBrowser_file* rom){
 #endif
 	}
 	format_mempacks();
+	init_eeprom();
 	hasLoadedROM = TRUE;
 #ifndef HW_RVL
 	ARAM_manager_init();
