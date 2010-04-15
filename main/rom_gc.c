@@ -50,13 +50,13 @@ rom_settings ROM_SETTINGS;
 int init_byte_swap(u32 magicWord){
 
 	switch(magicWord >> 24){
-	case 0x37:					//37804012 aka byteswapped
+	case 0x37804012:					//37804012 aka byteswapped
 		ROM_byte_swap = BYTE_SWAP_BYTE;
 		break;
-	case 0x40:					//40123780 aka little endian, aka halfswapped
+	case 0x40123780:					//40123780 aka little endian, aka halfswapped
 		ROM_byte_swap = BYTE_SWAP_HALF;
 		break;
-	case 0x80:
+	case 0x80371240:
 		ROM_byte_swap = BYTE_SWAP_NONE;
 		break;
 	default:
