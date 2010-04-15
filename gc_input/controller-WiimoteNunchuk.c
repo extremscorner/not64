@@ -73,7 +73,7 @@ static int _GetKeys(int Control, BUTTONS * Keys )
 	c->D_DPAD       = isHeld(WPAD_BUTTON_DOWN  | WPAD_BUTTON_2);
 	c->U_DPAD       = isHeld(WPAD_BUTTON_UP    | WPAD_BUTTON_2);
 	c->START_BUTTON = isHeld(WPAD_BUTTON_HOME);
-	c->B_BUTTON     = isHeld(WPAD_BUTTON_MINUS | WPAD_BUTTON_PLUS);
+	c->B_BUTTON     = isHeld(WPAD_BUTTON_MINUS) | isHeld(WPAD_BUTTON_PLUS);
 	c->A_BUTTON     = isHeld(WPAD_BUTTON_A);
 
 	c->Z_TRIG       = isHeld(WPAD_NUNCHUK_BUTTON_Z);
@@ -96,7 +96,9 @@ static void pause(int Control){ }
 
 static void resume(int Control){ }
 
-static void rumble(int Control, int rumble){ }
+static void rumble(int Control, int rumble){
+	WPAD_Rumble(Control, rumble ? 1 : 0);
+}
 
 static void configure(int Control){
 	// Don't know how this should be integrated
