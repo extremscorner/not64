@@ -145,7 +145,7 @@ static int				max_page;
 static char				feedback_string[36];
 
 void fileBrowserFrame_OpenDirectory(fileBrowser_file* dir);
-void fileBrowserFrame_Error();
+void fileBrowserFrame_Error(fileBrowser_file* dir);
 void fileBrowserFrame_FillPage();
 void fileBrowserFrame_LoadFile(int i);
 
@@ -229,7 +229,7 @@ void fileBrowserFrame_OpenDirectory(fileBrowser_file* dir)
 	if(num_entries <= 0)
 	{ 
 		if(dir_entries) free(dir_entries); 
-		fileBrowserFrame_Error(); 
+		fileBrowserFrame_Error(dir); 
 		return;
 	}
 	
@@ -241,7 +241,7 @@ void fileBrowserFrame_OpenDirectory(fileBrowser_file* dir)
 	fileBrowserFrame_FillPage();
 }
 
-void fileBrowserFrame_Error()
+void fileBrowserFrame_Error(fileBrowser_file* dir)
 {
 	//disable all buttons
 	for (int i = 0; i < NUM_FRAME_BUTTONS; i++)
@@ -249,7 +249,10 @@ void fileBrowserFrame_Error()
 	for (int i = 1; i<NUM_FILE_SLOTS; i++)
 		FRAME_BUTTONS[i+2].buttonString = FRAME_STRINGS[2];
 	//set first entry to read 'error' and return to main menu
-	strcpy(feedback_string,"An error occured");
+	if(dir->name)
+	  sprintf(feedback_string,"Error opening directory \"%s\"",&dir->name[0]);
+	else
+	  strcpy(feedback_string,"An error occured");
 /*	FRAME_BUTTONS[2].buttonString = feedback_string;
 	FRAME_BUTTONS[2].button->setClicked(Func_ReturnFromFileBrowserFrame);
 	FRAME_BUTTONS[2].button->setActive(true);

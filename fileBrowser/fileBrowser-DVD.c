@@ -89,7 +89,7 @@ int fileBrowser_DVD_readDir(fileBrowser_file* ffile, fileBrowser_file** dir){
 	
   if(!dvdInitialized)
     init_dvd();
-  if(!dvdInitialized) return -1;  //fails if No disc
+  if(!dvdInitialized) return FILE_BROWSER_ERROR;  //fails if No disc
 	
   int num_entries = 0;
 	
@@ -113,7 +113,7 @@ int fileBrowser_DVD_readDir(fileBrowser_file* ffile, fileBrowser_file** dir){
 	num_entries = dvd_read_directoryentries(ffile->discoffset,ffile->size);
 	
 	// If it was not successful, just return the error
-	if(num_entries <= 0) return num_entries;
+	if(num_entries <= 0) return FILE_BROWSER_ERROR;
 	
 	// Convert the DVD "file" data to fileBrowser_files
 	*dir = malloc( num_entries * sizeof(fileBrowser_file) );
