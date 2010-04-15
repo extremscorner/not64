@@ -111,6 +111,11 @@ int saveEeprom(fileBrowser_file* savepath){
 
 }
 
+void init_eeprom() {
+  int i;
+  for (i=0; i<0x800; i++) eeprom[i] = 0;
+}
+
 //#define DEBUG_PIF
 #ifdef DEBUG_PIF
 void print_pif()
