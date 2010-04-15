@@ -86,7 +86,10 @@ void init_dvd()
  
 	 
 int fileBrowser_DVD_readDir(fileBrowser_file* ffile, fileBrowser_file** dir){	
-	
+#ifdef HW_DOL
+  if(dvd_get_error())
+    dvdInitialized = 0;
+#endif
   if(!dvdInitialized)
     init_dvd();
   if(!dvdInitialized) return FILE_BROWSER_ERROR;  //fails if No disc
