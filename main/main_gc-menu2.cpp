@@ -123,7 +123,7 @@ char menuActive;
 	   char padAssign[4];
 	   char pakMode[4];
 
-struct {
+static struct {
 	char* key;
 	char* value; // Not a string, but a char pointer
 	char  min, max;
@@ -210,7 +210,7 @@ int main(int argc, char* argv[]){
 	saveEnabled      = 0; // Don't save game
 	nativeSaveDevice = 0; // SD
 	saveStateDevice	 = 0; // SD
-	autoSave         = 0; // Don't Auto Save Game
+	autoSave         = 1; // Auto Save Game
 	creditsScrolling = 0; // Normal menu for now
 	dynacore         = 1; // Dynarec
 	screenMode		 = 0; // Stretch FB horizontally
@@ -242,19 +242,19 @@ int main(int argc, char* argv[]){
   if(argv[0][0] == 'u') {  //assume USB
     configFile_file = &saveDir_libfat_USB;
     if(configFile_init(configFile_file)) {                //only if device initialized ok
-      FILE* f = fopen( "usb:/wii64/settings.cfg", "rb" );  //attempt to open file
+      FILE* f = fopen( "usb:/wii64/settings.cfg", "r" );  //attempt to open file
       if(f) {        //open ok, read it
         readConfig(f);
         fclose(f);
       }
     }
   }
-  else /*if((argv[0][0]=='s') || (argv[0][0]=='/'))*/ 
-#endif  
+  else /*if((argv[0][0]=='s') || (argv[0][0]=='/'))*/
+#endif
   { //assume SD
     configFile_file = &saveDir_libfat_Default;
     if(configFile_init(configFile_file)) {                //only if device initialized ok
-      FILE* f = fopen( "sd:/wii64/settings.cfg", "rb" );  //attempt to open file
+      FILE* f = fopen( "sd:/wii64/settings.cfg", "r" );  //attempt to open file
       if(f) {        //open ok, read it
         readConfig(f);
         fclose(f);
