@@ -311,7 +311,7 @@ int fileBrowser_libfat_init(fileBrowser_file* f){
   return res;
 #else
   if(!sdMounted) {           //GC has only SD
-    pauseRemovalThread();
+
     if(sdNeedsUnmount) fatUnmount("sd");
     switch(sdNeedsUnmount){  //unmount previous devices
       case CARD_A:
@@ -331,10 +331,10 @@ int fileBrowser_libfat_init(fileBrowser_file* f){
      	if(res)
        sdMounted = CARD_B;
    	}
-   	continueRemovalThread();
+
   	return res;
   }
-  return res;
+  return 1; //we're always ok
 #endif
 }
 
