@@ -45,7 +45,11 @@ static int getStickValue(joystick_t* j, int axis, int maxAbsValue){
 	return (int)(value * maxAbsValue);
 }
 
-static int _GetKeys(int Control, BUTTONS * Keys )
+enum {
+	NUNCHUK_AS_ANALOG = 1,
+};
+
+static int _GetKeys(int Control, BUTTONS * Keys, controller_config_t* config)
 {
 	if(wpadNeedScan){ WPAD_ScanPads(); wpadNeedScan = 0; }
 	WPADData* wpad = WPAD_Data(Control);
@@ -68,28 +72,31 @@ static int _GetKeys(int Control, BUTTONS * Keys )
 	unsigned int b  = wpad->btns_h;
 	int isHeld(unsigned int button){ return (b & button) == button; }
 	
-	c->R_DPAD       = isHeld(WPAD_BUTTON_RIGHT | WPAD_BUTTON_2);
-	c->L_DPAD       = isHeld(WPAD_BUTTON_LEFT  | WPAD_BUTTON_2);
-	c->D_DPAD       = isHeld(WPAD_BUTTON_DOWN  | WPAD_BUTTON_2);
-	c->U_DPAD       = isHeld(WPAD_BUTTON_UP    | WPAD_BUTTON_2);
-	c->START_BUTTON = isHeld(WPAD_BUTTON_HOME);
-	c->B_BUTTON     = isHeld(WPAD_BUTTON_MINUS) | isHeld(WPAD_BUTTON_PLUS);
-	c->A_BUTTON     = isHeld(WPAD_BUTTON_A);
+	c->R_DPAD       = isHeld(config->DR);
+	c->L_DPAD       = isHeld(config->DL);
+	c->D_DPAD       = isHeld(config->DD);
+	c->U_DPAD       = isHeld(config->DU);
+	
+	c->START_BUTTON = isHeld(config->START);
+	c->B_BUTTON     = isHeld(config->B);
+	c->A_BUTTON     = isHeld(config->A);
 
-	c->Z_TRIG       = isHeld(WPAD_NUNCHUK_BUTTON_Z);
-	c->R_TRIG       = isHeld(WPAD_BUTTON_B);
-	c->L_TRIG       = isHeld(WPAD_NUNCHUK_BUTTON_C);
+	c->Z_TRIG       = isHeld(config->Z);
+	c->R_TRIG       = isHeld(config->R);
+	c->L_TRIG       = isHeld(config->L);
 
-	c->R_CBUTTON    = isHeld(WPAD_BUTTON_RIGHT);
-	c->L_CBUTTON    = isHeld(WPAD_BUTTON_LEFT);
-	c->D_CBUTTON    = isHeld(WPAD_BUTTON_DOWN);
-	c->U_CBUTTON    = isHeld(WPAD_BUTTON_UP);
+	c->R_CBUTTON    = isHeld(config->CR);
+	c->L_CBUTTON    = isHeld(config->CL);
+	c->D_CBUTTON    = isHeld(config->CD);
+	c->U_CBUTTON    = isHeld(config->CU);
 
-	c->X_AXIS       = getStickValue(&wpad->exp.nunchuk.js, STICK_X, 127);
-	c->Y_AXIS       = getStickValue(&wpad->exp.nunchuk.js, STICK_Y, 127);
+	if(config->flags & NUNCHUK_AS_ANALOG){
+		c->X_AXIS = getStickValue(&wpad->exp.nunchuk.js, STICK_X, 127);
+		c->Y_AXIS = getStickValue(&wpad->exp.nunchuk.js, STICK_Y, 127);
+	}
 
 	// 1+2 quits to menu
-	return isHeld(WPAD_BUTTON_1 | WPAD_BUTTON_2);
+	return isHeld(config->exit);
 }
 
 static void pause(int Control){ }
@@ -110,6 +117,24 @@ static void assign(int p, int v){
 
 static void init(void);
 
+static controller_config_t configs[] = {
+	{
+		.DL = WPAD_BUTTON_LEFT | WPAD_BUTTON_2,
+		.DR = WPAD_BUTTON_RIGHT | WPAD_BUTTON_2,
+		.DU = WPAD_BUTTON_UP | WPAD_BUTTON_2,
+		.DD = WPAD_BUTTON_DOWN | WPAD_BUTTON_2,
+		.A = WPAD_BUTTON_A, .B = WPAD_BUTTON_PLUS,
+		.START = WPAD_BUTTON_HOME,
+		.L = WPAD_NUNCHUK_BUTTON_C, .R = WPAD_BUTTON_B,
+		.Z = WPAD_NUNCHUK_BUTTON_Z,
+		.CL = WPAD_BUTTON_LEFT, .CR = WPAD_BUTTON_RIGHT,
+		.CU = WPAD_BUTTON_UP, .CD = WPAD_BUTTON_DOWN,
+		.flags = NUNCHUK_AS_ANALOG,
+		.exit = WPAD_BUTTON_1 | WPAD_BUTTON_2,
+		.description = "Default settings"
+	},
+};
+
 controller_t controller_WiimoteNunchuk =
 	{ _GetKeys,
 	  configure,
@@ -118,7 +143,9 @@ controller_t controller_WiimoteNunchuk =
 	  pause,
 	  resume,
 	  rumble,
-	  {0, 0, 0, 0}
+	  {0, 0, 0, 0},
+	  sizeof(configs)/sizeof(configs[0]),
+	  configs
 	 };
 
 static void init(void){

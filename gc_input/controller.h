@@ -33,11 +33,20 @@ extern u32 gc_connected;
 void control_info_init(void);
 
 typedef struct {
+	unsigned int DL, DR, DU, DD;
+	unsigned int A, B, START;
+	unsigned int L, R, Z;
+	unsigned int CL, CR, CU, CD;
+	unsigned int flags, exit;
+	char* description;
+} controller_config_t;
+
+typedef struct {
 	// Call GetKeys to read in BUTTONS for a controller of this type
 	// You should pass in controller num for this type
 	//   Not for the player number assigned
 	//   (eg use GC Controller 1, not player 1)
-	int (*GetKeys)(int, BUTTONS*);
+	int (*GetKeys)(int, BUTTONS*, controller_config_t*);
 	// Interactively configure the button mapping
 	void (*configure)(int);
 	// Initialize the controllers, filling out available
@@ -51,12 +60,17 @@ typedef struct {
 	void (*rumble)(int, int);
 	// Controllers plugged in/available of this type
 	char available[4];
+	// Number of configurations available for this controller type
+	int num_configs;
+	// Pointer to controller configurations for this controller type
+	controller_config_t* configs;
 } controller_t;
 
 typedef struct _virtualControllers_t {
 	BOOL          inUse;   // This virtual controller is being controlled
 	controller_t* control; // The type of controller being used
 	int           number;  // The physical controller number
+	controller_config_t* config; // The controller mapping to use
 } virtualControllers_t;
 
 extern virtualControllers_t virtualControllers[4];
