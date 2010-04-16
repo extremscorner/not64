@@ -199,7 +199,8 @@ EXPORT void CALL GetKeys(int Control, BUTTONS * Keys )
 			assign_controller(Control, &controller_Classic, virtualControllers[Control].number);
 	}
 #endif
-	if( DO_CONTROL(Control, GetKeys, Keys) ) stop = 1;
+	if(DO_CONTROL(Control, GetKeys, Keys, virtualControllers[Control].config))
+		stop = 1;
 }
 
 /******************************************************************
@@ -373,6 +374,7 @@ void assign_controller(int wv, controller_t* type, int wp){
 	virtualControllers[wv].control = type;
 	virtualControllers[wv].inUse   = 1;
 	virtualControllers[wv].number  = wp;
+	virtualControllers[wv].config  = type->configs;
 
 	type->assign(wp,wv);
 

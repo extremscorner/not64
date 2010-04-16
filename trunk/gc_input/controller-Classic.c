@@ -45,7 +45,12 @@ static int getStickValue(joystick_t* j, int axis, int maxAbsValue){
 	return (int)(value * maxAbsValue);
 }
 
-static int _GetKeys(int Control, BUTTONS * Keys )
+enum {
+	L_STICK_AS_ANALOG = 1, R_STICK_AS_C = 2,
+	L_STICK_AS_C = 4, R_STICK_AS_ANALOG = 8,
+};
+
+static int _GetKeys(int Control, BUTTONS * Keys, controller_config_t* config)
 {
 	if(wpadNeedScan){ WPAD_ScanPads(); wpadNeedScan = 0; }
 	WPADData* wpad = WPAD_Data(Control);
@@ -68,30 +73,50 @@ static int _GetKeys(int Control, BUTTONS * Keys )
 	short b = wpad->exp.classic.btns;
 	int isHeld(short button){ return (b & button) == button; }
 	
-	c->R_DPAD       = isHeld(CLASSIC_CTRL_BUTTON_RIGHT);
-	c->L_DPAD       = isHeld(CLASSIC_CTRL_BUTTON_LEFT);
-	c->D_DPAD       = isHeld(CLASSIC_CTRL_BUTTON_DOWN);
-	c->U_DPAD       = isHeld(CLASSIC_CTRL_BUTTON_UP);
-	c->START_BUTTON = isHeld(CLASSIC_CTRL_BUTTON_PLUS);
-	c->B_BUTTON     = isHeld(CLASSIC_CTRL_BUTTON_B);
-	c->A_BUTTON     = isHeld(CLASSIC_CTRL_BUTTON_A);
+	c->R_DPAD       = isHeld(config->DR);
+	c->L_DPAD       = isHeld(config->DL);
+	c->D_DPAD       = isHeld(config->DD);
+	c->U_DPAD       = isHeld(config->DU);
+	
+	c->START_BUTTON = isHeld(config->START);
+	c->B_BUTTON     = isHeld(config->B);
+	c->A_BUTTON     = isHeld(config->A);
 
-	c->Z_TRIG       = isHeld(CLASSIC_CTRL_BUTTON_ZR);
-	c->R_TRIG       = isHeld(CLASSIC_CTRL_BUTTON_FULL_R);
-	c->L_TRIG       = isHeld(CLASSIC_CTRL_BUTTON_FULL_L);
+	c->Z_TRIG       = isHeld(config->Z);
+	c->R_TRIG       = isHeld(config->R);
+	c->L_TRIG       = isHeld(config->L);
 
-	s8 substickX = getStickValue(&wpad->exp.classic.rjs, STICK_X, 7);
-	c->R_CBUTTON    = (substickX >  3)       ? 1 : 0;
-	c->L_CBUTTON    = (substickX < -3)       ? 1 : 0;
-	s8 substickY = getStickValue(&wpad->exp.classic.rjs, STICK_Y, 7);
-	c->D_CBUTTON    = (substickY < -3)       ? 1 : 0;
-	c->U_CBUTTON    = (substickY >  3)       ? 1 : 0;
+	if(config->flags & R_STICK_AS_C){
+		s8 substickX = getStickValue(&wpad->exp.classic.rjs, STICK_X, 7);
+		c->R_CBUTTON = substickX >  3;
+		c->L_CBUTTON = substickX < -3;
+		s8 substickY = getStickValue(&wpad->exp.classic.rjs, STICK_Y, 7);
+		c->D_CBUTTON = substickY < -3;
+		c->U_CBUTTON = substickY >  3;
+	} else if(config->flags & L_STICK_AS_C){
+		s8 stickX = getStickValue(&wpad->exp.classic.ljs, STICK_X, 7);
+		c->R_CBUTTON = stickX >  3;
+		c->L_CBUTTON = stickX < -3;
+		s8 stickY = getStickValue(&wpad->exp.classic.ljs, STICK_Y, 7);
+		c->D_CBUTTON = stickY < -3;
+		c->U_CBUTTON = stickY >  3;
+	} else {
+		c->R_CBUTTON = isHeld(config->CR);
+		c->L_CBUTTON = isHeld(config->CL);
+		c->D_CBUTTON = isHeld(config->CD);
+		c->U_CBUTTON = isHeld(config->CU);
+	}
 
-	c->X_AXIS       = getStickValue(&wpad->exp.classic.ljs, STICK_X, 127);
-	c->Y_AXIS       = getStickValue(&wpad->exp.classic.ljs, STICK_Y, 127);
+	if(config->flags & L_STICK_AS_ANALOG){
+		c->X_AXIS = getStickValue(&wpad->exp.classic.ljs, STICK_X, 127);
+		c->Y_AXIS = getStickValue(&wpad->exp.classic.ljs, STICK_Y, 127);
+	} else if(config->flags & R_STICK_AS_ANALOG){
+		c->X_AXIS = getStickValue(&wpad->exp.classic.rjs, STICK_X, 127);
+		c->Y_AXIS = getStickValue(&wpad->exp.classic.rjs, STICK_Y, 127);
+	}
 
 	// X+Y quits to menu
-	return isHeld(CLASSIC_CTRL_BUTTON_X | CLASSIC_CTRL_BUTTON_Y);
+	return isHeld(config->exit);
 }
 
 static void pause(int Control){ }
@@ -112,6 +137,21 @@ static void assign(int p, int v){
 
 static void init(void);
 
+static controller_config_t configs[] = {
+	{
+		.DL = CLASSIC_CTRL_BUTTON_LEFT, .DR = CLASSIC_CTRL_BUTTON_RIGHT,
+		.DU = CLASSIC_CTRL_BUTTON_UP, .DD = CLASSIC_CTRL_BUTTON_DOWN,
+		.A = CLASSIC_CTRL_BUTTON_A, .B = CLASSIC_CTRL_BUTTON_B,
+		.START = CLASSIC_CTRL_BUTTON_PLUS,
+		.L = CLASSIC_CTRL_BUTTON_FULL_L, .R = CLASSIC_CTRL_BUTTON_FULL_R,
+		.Z = CLASSIC_CTRL_BUTTON_ZR,
+		.CL = -1, .CR = -1, .CU = -1, .CD = -1,
+		.flags = L_STICK_AS_ANALOG | R_STICK_AS_C,
+		.exit = CLASSIC_CTRL_BUTTON_X | CLASSIC_CTRL_BUTTON_Y,
+		.description = "Default settings"
+	},
+};
+
 controller_t controller_Classic =
 	{ _GetKeys,
 	  configure,
@@ -120,7 +160,9 @@ controller_t controller_Classic =
 	  pause,
 	  resume,
 	  rumble,
-	  {0, 0, 0, 0}
+	  {0, 0, 0, 0},
+	  sizeof(configs)/sizeof(configs[0]),
+	  configs
 	 };
 
 static void init(void){
