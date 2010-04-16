@@ -28,6 +28,8 @@
 #include "../main/wii64config.h"
 
 extern "C" {
+#include <string.h>
+#include <stdio.h>
 #include "../gc_memory/memory.h"
 #include "../gc_memory/Saves.h"
 #include "../main/rom.h"
