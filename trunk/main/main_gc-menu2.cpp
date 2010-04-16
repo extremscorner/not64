@@ -179,7 +179,6 @@ u16 readWPAD(void);
 int main(int argc, char* argv[]){
 	/* INITIALIZE */
 #ifdef HW_RVL
-  DI_Close();
   DI_Init();    // first
 #endif
 

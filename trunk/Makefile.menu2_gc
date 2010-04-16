@@ -1,8 +1,8 @@
 #Makefile MUPEN64 for glN64 + MenuV2 + GC 
 
-CC		=powerpc-gekko-gcc
-CXX		=powerpc-gekko-g++
-AS		=powerpc-gekko-as
+CC		=powerpc-eabi-gcc
+CXX		=powerpc-eabi-g++
+AS		=powerpc-eabi-as
 
 CFLAGS  = -g -O3 -Wall $(MACHDEP) $(INCLUDE) \
 	  -DCPU_SHUTDOWN -DSPC700_SHUTDOWN -DVAR_CYCLES -DSOUND \
