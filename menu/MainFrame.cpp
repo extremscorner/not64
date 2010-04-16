@@ -37,6 +37,7 @@ extern "C" {
 #ifdef WII
 #include <di/di.h>
 #endif 
+#include <string.h>
 #include "../gc_memory/memory.h"
 #include "../gc_memory/Saves.h"
 #include "../main/plugin.h"

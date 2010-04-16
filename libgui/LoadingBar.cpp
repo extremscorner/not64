@@ -18,6 +18,10 @@
  *
 **/
 
+extern "C" {
+#include <string.h>
+#include <stdio.h>
+}
 #include "LoadingBar.h"
 #include "GraphicsGX.h"
 #include "GuiResources.h"

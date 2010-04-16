@@ -18,6 +18,10 @@
  *
 **/
 
+extern "C" {
+#include <string.h>
+#include <stdio.h>
+}
 #include "GraphicsGX.h"
 #include "../main/wii64config.h"
 
