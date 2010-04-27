@@ -111,6 +111,9 @@ static int _GetKeys(int Control, BUTTONS * Keys, controller_config_t* config)
 			c->X_AXIS = 0;
 			c->Y_AXIS = 0;
 		}
+	} else if(config->flags & TILT_AS_ANALOG){
+		c->X_AXIS = wpad->orient.roll * 0.71;
+		c->Y_AXIS = wpad->orient.pitch * 0.71;
 	}
 
 	// 1+2 quits to menu
@@ -163,6 +166,18 @@ static controller_config_t configs[] = {
 		.flags = NUNCHUK_AS_C | IR_AS_ANALOG,
 		.exit = WPAD_BUTTON_1 | WPAD_BUTTON_2,
 		.description = "Shooter"
+	},
+	{
+		.DL = WPAD_BUTTON_LEFT, .DR = WPAD_BUTTON_RIGHT,
+		.DU = WPAD_BUTTON_UP, .DD = WPAD_BUTTON_DOWN,
+		.A = WPAD_BUTTON_A, .B = WPAD_BUTTON_PLUS,
+		.START = WPAD_BUTTON_HOME,
+		.L = WPAD_NUNCHUK_BUTTON_C, .R = WPAD_NUNCHUK_BUTTON_Z,
+		.Z = WPAD_BUTTON_B,
+		.CL = -1, .CR = -1, .CU = -1, .CD = -1,
+		.flags = NUNCHUK_AS_C | TILT_AS_ANALOG,
+		.exit = WPAD_BUTTON_1 | WPAD_BUTTON_2,
+		.description = "Tilt Shooter"
 	},
 };
 
