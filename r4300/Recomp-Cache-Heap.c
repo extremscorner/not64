@@ -27,6 +27,7 @@
 #include "ppc/Recompile.h"
 #include "Invalid_Code.h"
 #include "Recomp-Cache.h"
+#include "ARAM-blocks.h"
 
 typedef struct _meta_node {
 	unsigned int  addr;
@@ -115,7 +116,7 @@ static void free_func(PowerPC_func* func, unsigned int addr){
 	}
 
 	// Remove any pointers to this code
-	PowerPC_block* block = blocks[addr>>12];
+	PowerPC_block* block = blocks_get(addr>>12);
 	remove_func(&block->funcs, func);
 	free(func);
 }

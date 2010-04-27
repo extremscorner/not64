@@ -39,6 +39,7 @@
 #include "recomph.h"
 #include "Invalid_Code.h"
 #include "Recomp-Cache.h"
+#include "ARAM-blocks.h"
 #include <malloc.h>
 
 #ifdef DBG
@@ -73,7 +74,9 @@ precomp_instr *PC;
 #include "../gc_memory/MEM2.h"
 PowerPC_block **blocks = (PowerPC_block*)(BLOCKS_LO);
 #else
+#ifndef ARAM_BLOCKCACHE
 PowerPC_block *blocks[0x100000];
+#endif
 #endif
 PowerPC_block *actual;
 #else
@@ -1528,7 +1531,7 @@ void init_blocks()
    for (i=0; i<0x100000; i++)
      {
 	invalid_code_set(i, 1);
-	blocks[i] = NULL;
+	blocks_set(i, NULL);
      }
 #ifndef PPC_DYNAREC
    blocks[0xa4000000>>12] = malloc(sizeof(precomp_block));
@@ -1538,15 +1541,16 @@ void init_blocks()
    blocks[0xa4000000>>12]->start = 0xa4000000;
    blocks[0xa4000000>>12]->end = 0xa4001000;
 #else
-   blocks[0xa4000000>>12] = malloc(sizeof(PowerPC_block));
+   PowerPC_block* temp_block = malloc(sizeof(PowerPC_block));
+   blocks_set(0xa4000000>>12, temp_block);
    //blocks[0xa4000000>>12]->code_addr = NULL;
-   blocks[0xa4000000>>12]->funcs = NULL;
-   blocks[0xa4000000>>12]->start_address = 0xa4000000;
-   blocks[0xa4000000>>12]->end_address = 0xa4001000;
+   temp_block->funcs = NULL;
+   temp_block->start_address = 0xa4000000;
+   temp_block->end_address = 0xa4001000;
 #endif
    invalid_code_set(0xa4000000>>12, 1);
-   actual=blocks[0xa4000000>>12];
-   init_block(SP_DMEM, blocks[0xa4000000>>12]);
+   actual=temp_block;
+   init_block(SP_DMEM, temp_block);
 #ifdef PPC_DYNAREC
 	PC = malloc(sizeof(precomp_instr));
 #else
@@ -1896,29 +1900,30 @@ void cpu_deinit(void){
 	// No need to check these if we were in the pure interp
 	if(dynacore != 2 && !cpu_inited){
 		for (i=0; i<0x100000; i++) {
-		if (blocks[i]) {
+  		PowerPC_block* temp_block = blocks_get(i);
+		if (temp_block) {
 #ifdef PPC_DYNAREC
-			deinit_block(blocks[i]);
+			deinit_block(temp_block);
 #else
-			if (blocks[i]->block) {
+			if (temp_block->block) {
 #ifdef USE_RECOMP_CACHE
-				invalidate_block(blocks[i]);
+				invalidate_block(temp_block);
 #else
-				free(blocks[i]->block);
+				free(temp_block->block);
 #endif
-				blocks[i]->block = NULL;
+				temp_block->block = NULL;
 			}
-			if (blocks[i]->code) {
-				free(blocks[i]->code);
-				blocks[i]->code = NULL;
+			if (temp_block->code) {
+				free(temp_block->code);
+				temp_block->code = NULL;
 			}
-			if (blocks[i]->jumps_table) {
-				free(blocks[i]->jumps_table);
-				blocks[i]->jumps_table = NULL;
+			if (temp_block->jumps_table) {
+				free(temp_block->jumps_table);
+				temp_block->jumps_table = NULL;
 			}
 #endif
-			free(blocks[i]);
-			blocks[i] = NULL;
+			free(temp_block);
+			blocks_set(i, NULL);
 		}
 		}
 	}
