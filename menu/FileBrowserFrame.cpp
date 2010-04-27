@@ -29,8 +29,6 @@
 #include "../libgui/CursorManager.h"
 
 extern "C" {
-#include <string.h>
-#include <stdio.h>
 #include "../fileBrowser/fileBrowser.h"
 #include "../fileBrowser/fileBrowser-libfat.h"
 #include "../fileBrowser/fileBrowser-DVD.h"

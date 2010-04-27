@@ -18,7 +18,6 @@
  *
 **/
 
-#include <algorithm>
 #include "Gui.h"
 #include "IPLFont.h"
 #include "InputManager.h"

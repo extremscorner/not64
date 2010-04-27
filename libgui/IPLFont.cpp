@@ -18,10 +18,6 @@
  *
 **/
 
-extern "C" {
-#include <string.h>
-#include <stdio.h>
-}
 #include "IPLFont.h"
 #include "../main/wii64config.h"
 

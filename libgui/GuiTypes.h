@@ -29,6 +29,12 @@
 #include <stack>
 #include <string>
 #include <malloc.h>
+#include <algorithm>
+
+extern "C" {
+#include <string.h>
+#include <stdio.h>
+}
 
 namespace menu {
 

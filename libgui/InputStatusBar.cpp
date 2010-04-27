@@ -29,8 +29,6 @@
 #include "../main/wii64config.h"
 
 extern "C" {
-#include <string.h>
-#include <stdio.h>
 #include "../gc_input/controller.h"
 #include "../main/rom.h"
 }

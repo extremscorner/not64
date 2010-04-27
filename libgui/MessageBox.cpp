@@ -18,10 +18,6 @@
  *
 **/
 
-extern "C" {
-#include <string.h>
-#include <stdio.h>
-}
 #include "MessageBox.h"
 #include "GraphicsGX.h"
 #include "GuiResources.h"
