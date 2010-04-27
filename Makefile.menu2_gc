@@ -41,7 +41,7 @@ OBJ		=main/rom_gc.o \
 		menu/SaveGameFrame.o \
 		menu/SettingsFrame.o\
 		menu/SelectCPUFrame.o\
-		menu/MenuResourcesGC.o \
+		menu/MenuResources.o \
 		libgui/Button.o \
 		libgui/Component.o \
 		libgui/CursorManager.o \
@@ -170,6 +170,9 @@ else
 endif
 
 all:	cube64-glN64.elf
+
+menu/MenuResources.o:	menu/MenuResources.s
+				$(CC) -x assembler-with-cpp $(CFLAGS) -c -o $@ $<
 
 r4300/interupt.o:	r4300/interupt.c
 			$(CC) $(CFLAGS) -c -o $@ $<
