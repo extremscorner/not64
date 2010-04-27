@@ -46,7 +46,8 @@ static int getStickValue(joystick_t* j, int axis, int maxAbsValue){
 }
 
 enum {
-	NUNCHUK_AS_ANALOG = 1,
+	NUNCHUK_AS_ANALOG = 1, NUNCHUK_AS_C = 2,
+	IR_AS_ANALOG = 4, TILT_AS_ANALOG = 8,
 };
 
 static int _GetKeys(int Control, BUTTONS * Keys, controller_config_t* config)
@@ -85,14 +86,31 @@ static int _GetKeys(int Control, BUTTONS * Keys, controller_config_t* config)
 	c->R_TRIG       = isHeld(config->R);
 	c->L_TRIG       = isHeld(config->L);
 
-	c->R_CBUTTON    = isHeld(config->CR);
-	c->L_CBUTTON    = isHeld(config->CL);
-	c->D_CBUTTON    = isHeld(config->CD);
-	c->U_CBUTTON    = isHeld(config->CU);
+	if(config->flags & NUNCHUK_AS_C){
+		s8 stickX = getStickValue(&wpad->exp.nunchuk.js, STICK_X, 7);
+		c->R_CBUTTON = stickX >  3;
+		c->L_CBUTTON = stickX < -3;
+		s8 stickY = getStickValue(&wpad->exp.nunchuk.js, STICK_Y, 7);
+		c->D_CBUTTON = stickY < -3;
+		c->U_CBUTTON = stickY >  3;
+	} else {
+		c->R_CBUTTON = isHeld(config->CR);
+		c->L_CBUTTON = isHeld(config->CL);
+		c->D_CBUTTON = isHeld(config->CD);
+		c->U_CBUTTON = isHeld(config->CU);
+	}
 
 	if(config->flags & NUNCHUK_AS_ANALOG){
 		c->X_AXIS = getStickValue(&wpad->exp.nunchuk.js, STICK_X, 127);
 		c->Y_AXIS = getStickValue(&wpad->exp.nunchuk.js, STICK_Y, 127);
+	} else if(config->flags & IR_AS_ANALOG){
+		if(wpad->ir.smooth_valid){
+			c->X_AXIS = ((short)(wpad->ir.sx - 512)) >> 2;
+			c->Y_AXIS = (signed char)((wpad->ir.sy - 384) / 3);
+		} else {
+			c->X_AXIS = 0;
+			c->Y_AXIS = 0;
+		}
 	}
 
 	// 1+2 quits to menu
@@ -109,6 +127,7 @@ static void rumble(int Control, int rumble){
 
 static void configure(int Control){
 	// Don't know how this should be integrated
+	// TODO: Set IR here if config specifies
 }
 
 static void assign(int p, int v){
@@ -132,6 +151,18 @@ static controller_config_t configs[] = {
 		.flags = NUNCHUK_AS_ANALOG,
 		.exit = WPAD_BUTTON_1 | WPAD_BUTTON_2,
 		.description = "Default settings"
+	},
+	{
+		.DL = WPAD_BUTTON_LEFT, .DR = WPAD_BUTTON_RIGHT,
+		.DU = WPAD_BUTTON_UP, .DD = WPAD_BUTTON_DOWN,
+		.A = WPAD_BUTTON_A, .B = WPAD_BUTTON_PLUS,
+		.START = WPAD_BUTTON_HOME,
+		.L = WPAD_NUNCHUK_BUTTON_C, .R = WPAD_NUNCHUK_BUTTON_Z,
+		.Z = WPAD_BUTTON_B,
+		.CL = -1, .CR = -1, .CU = -1, .CD = -1,
+		.flags = NUNCHUK_AS_C | IR_AS_ANALOG,
+		.exit = WPAD_BUTTON_1 | WPAD_BUTTON_2,
+		.description = "Shooter"
 	},
 };
 
@@ -157,7 +188,7 @@ static void init(void){
 		if(wpad->err == WPAD_ERR_NONE &&
 		   wpad->exp.type == WPAD_EXP_NUNCHUK){
 			controller_WiimoteNunchuk.available[i] = 1;
-			WPAD_SetDataFormat(i, WPAD_DATA_EXPANSION);
+			WPAD_SetDataFormat(i, WPAD_DATA_IR); // FIXME: Only set expansion here
 		} else
 			controller_WiimoteNunchuk.available[i] = 0;
 	}
