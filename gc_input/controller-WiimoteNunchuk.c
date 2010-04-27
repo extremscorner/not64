@@ -120,7 +120,9 @@ static int _GetKeys(int Control, BUTTONS * Keys, controller_config_t* config)
 	return isHeld(config->exit);
 }
 
-static void pause(int Control){ }
+static void pause(int Control){
+	WPAD_Rumble(Control, 0);
+}
 
 static void resume(int Control){ }
 
