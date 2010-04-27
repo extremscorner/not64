@@ -95,7 +95,9 @@ void deinit_block(PowerPC_block* ppc_block);
 #include "../../gc_memory/MEM2.h"
 extern PowerPC_block **blocks;
 #else
+#ifndef ARAM_BLOCKCACHE
 extern PowerPC_block *blocks[0x100000];
+#endif
 #endif
 
 #endif

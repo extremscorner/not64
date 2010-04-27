@@ -23,6 +23,7 @@
 #include <stdlib.h>
 #include "../../gui/DEBUG.h"
 #include "../Invalid_Code.h"
+#include "../ARAM-blocks.h"
 #include "../../gc_memory/memory.h"
 #include "../interupt.h"
 #include "../r4300.h"
@@ -95,7 +96,7 @@ inline unsigned int dyna_run(unsigned int (*code)(void)){
 void dynarec(unsigned int address){
 	while(!stop){
 		start_section(TRAMP_SECTION);
-		PowerPC_block* dst_block = blocks[address>>12];
+		PowerPC_block* dst_block = blocks_get(address>>12);
 		unsigned long paddr = update_invalid_addr(address);
 		/*
 		sprintf(txtbuffer, "trampolining to 0x%08x\n", address);
@@ -106,7 +107,8 @@ void dynarec(unsigned int address){
 		if(!dst_block){
 			/*sprintf(txtbuffer, "block at %08x doesn't exist\n", address&~0xFFF);
 			DEBUG_print(txtbuffer, DBG_USBGECKO);*/
-			dst_block = blocks[address>>12] = malloc(sizeof(PowerPC_block));
+			dst_block = malloc(sizeof(PowerPC_block));
+			blocks_set(address>>12, dst_block);
 			//dst_block->code_addr     = NULL;
 			dst_block->funcs         = NULL;
 			dst_block->start_address = address & ~0xFFF;
@@ -188,7 +190,7 @@ unsigned int dyna_check_cop1_unusable(unsigned int pc, int isDelaySlot){
 }
 
 static void invalidate_func(unsigned int addr){
-	PowerPC_block* block = blocks[addr>>12];
+	PowerPC_block* block = blocks_get(addr>>12);
 	PowerPC_func* func = find_func(&block->funcs, addr&0xffff);
 	if(func)
 		RecompCache_Free(block->start_address | func->start_addr);

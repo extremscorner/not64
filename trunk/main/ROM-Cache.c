@@ -65,17 +65,17 @@ static fileBrowser_file* ROM_file;
 static char readBefore = 0;
 
 #ifdef USE_ROM_CACHE_L1
-#define L1_BLOCK_SIZE  (4*1024)
-#define L1_BLOCK_MASK  (0xFFF)
+#define L1_BLOCK_SIZE  (4*1024) //63 * 4kb = ~256kb
+#define L1_BLOCK_MASK  (L1_BLOCK_SIZE-1)
 #define L1_BLOCK_SHIFT (12)
-#define L1_NUM_BLOCKS  (8)
+#define L1_NUM_BLOCKS  (63) //16368kb / 256kb = 63
 static u8  L1[L1_NUM_BLOCKS][L1_BLOCK_SIZE];
 static int L1tag[L1_NUM_BLOCKS];
 static u32 L1LRU[L1_NUM_BLOCKS];
 static u32 nextL1LRUValue;
 #endif
 
-static ARQRequest ARQ_request;
+ARQRequest ARQ_request;
 extern void showLoadProgress(float progress);
 extern void pauseAudio(void);
 extern void resumeAudio(void);
@@ -162,9 +162,6 @@ void ARAM_ReadFromBlock(char *block,int startOffset, int bytes, char *dest)
 }
 
 void ROMCache_read(u32* ram_dest, u32 rom_offset, u32 length){
-#ifdef PROFILE	
-  start_section(ROM_SECTION);
-#endif
 
 	if(ROM_too_big){ // The whole ROM isn't in ARAM, we might have to move blocks in/out
 		u32 length2 = length;
@@ -220,9 +217,7 @@ void ROMCache_read(u32* ram_dest, u32 rom_offset, u32 length){
   		ARAM_ReadFromBlock(ROM,rom_offset,length,(char*)ram_dest);
 		}
 	}
-#ifdef PROFILE	
-	end_section(ROM_SECTION);
-#endif
+
 }
 
 int ROMCache_load(fileBrowser_file* file){

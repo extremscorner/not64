@@ -38,14 +38,23 @@ static int alloced_blocks;
 static int max_blocks;
 static int initialized=0;
 
+/* Our ARAM Layout is:
+  AR_GetSize() == 16,777,216 bytes
+      bytes       type
+  1. 16,384     DSP reserved
+  2. 245,760    empty
+  3. 12,320,768 ROM cache (47*256kb blocks)
+  4. 4,194,304  blocks (dynarec)
+*/
+
 void ARAM_manager_init(void){
 	if(initialized) return;
 	
 	AR_Init(NULL, 0);
-	
-	max_blocks = (AR_GetSize() - (256*1024)/*AR_GetBaseAddress()*/)/BLOCK_SIZE;
+
+	max_blocks = (AR_GetSize() - (256*1024) - (4*1024*1024))/BLOCK_SIZE;
 	ARAM_blocks = malloc(max_blocks * sizeof(ARAM_block));
-	int i, addr = 256*1024; //AR_GetBaseAddress();
+	int i, addr = 256*1024;
 	for(i=0; i<max_blocks; ++i){
 		ARAM_blocks[i].valid = FALSE;
 		ARAM_blocks[i].addr  = addr;
