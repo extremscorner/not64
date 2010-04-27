@@ -18,7 +18,6 @@
  *
 **/
 
-#include <algorithm>
 #include "FocusManager.h"
 #include "InputManager.h"
 #include "Frame.h"

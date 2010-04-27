@@ -18,7 +18,6 @@
  *
 **/
 
-#include <algorithm>
 #include "Logo.h"
 #include "GraphicsGX.h"
 #include <math.h>
