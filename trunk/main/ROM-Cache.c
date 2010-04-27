@@ -54,7 +54,7 @@ void LoadingBar_showBar(float percent, const char* string);
 
 #define BLOCK_MASK  (BLOCK_SIZE-1)
 #define OFFSET_MASK (0xFFFFFFFF-BLOCK_MASK)
-#define BLOCK_SHIFT (18)	//only change ME and BLOCK_SIZE in gc_memory/aram.h
+#define BLOCK_SHIFT (16)	//only change ME and BLOCK_SIZE in gc_memory/aram.h
 #define MAX_ROMSIZE (64*1024*1024)
 #define NUM_BLOCKS  (MAX_ROMSIZE/BLOCK_SIZE)
 
@@ -68,14 +68,14 @@ static char readBefore = 0;
 #define L1_BLOCK_SIZE  (4*1024) //63 * 4kb = ~256kb
 #define L1_BLOCK_MASK  (L1_BLOCK_SIZE-1)
 #define L1_BLOCK_SHIFT (12)
-#define L1_NUM_BLOCKS  (63) //16368kb / 256kb = 63
+#define L1_NUM_BLOCKS  (8) //16368kb / 256kb = 63
 static u8  L1[L1_NUM_BLOCKS][L1_BLOCK_SIZE];
 static int L1tag[L1_NUM_BLOCKS];
 static u32 L1LRU[L1_NUM_BLOCKS];
 static u32 nextL1LRUValue;
 #endif
 
-ARQRequest ARQ_request;
+static ARQRequest ARQ_request_ROM;
 extern void showLoadProgress(float progress);
 extern void pauseAudio(void);
 extern void resumeAudio(void);
@@ -83,8 +83,6 @@ extern BOOL hasLoadedROM;
 
 void ROMCache_init(fileBrowser_file* file){
   readBefore = 0; //de-init byteswapping
-	ARQ_Reset();
-	ARQ_Init();
 	ROM_too_big = (file->size) > (ARAM_block_available_contiguous() * BLOCK_SIZE);
 	ROM_size = (file->size);
 #ifdef USE_ROM_CACHE_L1
@@ -119,7 +117,7 @@ static void inline ROMCache_load_block(char* block, int rom_offset){
 		bytes_read = romFile_readFile(ROM_file, buffer, bytes_to_read);
 		byte_swap(buffer, bytes_read);
 		DCFlushRange(buffer, bytes_read);
-		ARQ_PostRequest(&ARQ_request, 0x10AD, ARQ_MRAMTOARAM, ARQ_PRIO_HI,
+		ARQ_PostRequest(&ARQ_request_ROM, 0x10AD, ARQ_MRAMTOARAM, ARQ_PRIO_HI,
 		                block + offset, buffer, bytes_read);
 		offset += bytes_read;
 		
@@ -153,7 +151,7 @@ void ARAM_ReadFromBlock(char *block,int startOffset, int bytes, char *dest)
     
   char* buffer = memalign(32,bytes);
   
-  ARQ_PostRequest(&ARQ_request, 0x2EAD, AR_ARAMTOMRAM, ARQ_PRIO_LO,
+  ARQ_PostRequest(&ARQ_request_ROM, 0x2EAD, AR_ARAMTOMRAM, ARQ_PRIO_LO,
 			                block + startOffset, buffer, bytes);
 	DCInvalidateRange(buffer, bytes);
 	memcpy(dest, buffer+(originalStartOffset%32), originalBytes);
@@ -256,7 +254,7 @@ int ROMCache_load(fileBrowser_file* file){
 			  }
 				byte_swap((char*)buffer, bytes_read);
 				DCFlushRange(buffer, bytes_read);
-				ARQ_PostRequest(&ARQ_request, 0x10AD, AR_MRAMTOARAM, ARQ_PRIO_HI,
+				ARQ_PostRequest(&ARQ_request_ROM, 0x10AD, AR_MRAMTOARAM, ARQ_PRIO_HI,
 				                block + offset, buffer, bytes_read);
 				offset += bytes_read;
 				
@@ -290,7 +288,7 @@ int ROMCache_load(fileBrowser_file* file){
 			}
 			byte_swap((char*)buffer, bytes_read);
 			DCFlushRange(buffer, bytes_read);
-			ARQ_PostRequest(&ARQ_request, 0x10AD, AR_MRAMTOARAM, ARQ_PRIO_HI,
+			ARQ_PostRequest(&ARQ_request_ROM, 0x10AD, AR_MRAMTOARAM, ARQ_PRIO_HI,
 			                ROM + offset, buffer, bytes_read);
 			offset += bytes_read;
 			

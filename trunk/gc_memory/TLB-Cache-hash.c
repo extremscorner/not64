@@ -1,5 +1,5 @@
 /**
- * Wii64 - TLB-Cache-hash.c
+ * Wii64 - TLB-Cache-hash.c (Deprecated)
  * Copyright (C) 2007, 2008, 2009 Mike Slegeir
  * Copyright (C) 2007, 2008, 2009 emu_kidid
  * 
