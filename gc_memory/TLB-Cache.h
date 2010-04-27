@@ -54,6 +54,9 @@ void inline TLBCache_set_w(unsigned int page, unsigned int val);
 void TLBCache_dump_r(gzFile *f);
 void TLBCache_dump_w(gzFile *f);
 
+void ARAM_ReadTLBBlock(unsigned int addr, int type);
+void ARAM_WriteTLBBlock(unsigned int addr, int type);
+
 #endif
 
 #endif

@@ -31,12 +31,12 @@
 #include "ARAM-blocks.h"
 #include "../gui/DEBUG.h"
 
-extern ARQRequest ARQ_request;
+static ARQRequest ARQ_request_blocks;
 
 #define BLOCKS_CACHE_ADDR   0xC00000
 #define CACHED_BLOCK_ENTRIES    1024
 #define CACHED_BLOCK_SIZE       CACHED_BLOCK_ENTRIES * 4
-PowerPC_block*  cached_block[CACHED_BLOCK_SIZE/sizeof(PowerPC_block*)] __attribute__((aligned(32))); //last 4kb chunk of ptrs pulled
+PowerPC_block*  cached_block[CACHED_BLOCK_ENTRIES] __attribute__((aligned(32))); //last 4kb chunk of ptrs pulled
 static u32      cached_dirty     = 0;
 static u32      cached_last_addr = 0;
 
@@ -69,7 +69,7 @@ void blocks_set(u32 addr, PowerPC_block* ptr){
 //addr == addr of 4kb block of PowerPC_block ptrs to pull out from ARAM
 void ARAM_ReadBlock(u32 addr)
 {
-  ARQ_PostRequest(&ARQ_request, 0x2EAD, AR_ARAMTOMRAM, ARQ_PRIO_LO,
+  ARQ_PostRequest(&ARQ_request_blocks, 0x2EAD, AR_ARAMTOMRAM, ARQ_PRIO_LO,
 			                (int)(BLOCKS_CACHE_ADDR + addr), (int)&cached_block[0], CACHED_BLOCK_SIZE);
 	DCInvalidateRange((void*)&cached_block, CACHED_BLOCK_SIZE);
 }
@@ -78,7 +78,7 @@ void ARAM_ReadBlock(u32 addr)
 void ARAM_WriteBlock(u32 addr)
 {
   DCFlushRange((void*)&cached_block, CACHED_BLOCK_SIZE);
-	ARQ_PostRequest(&ARQ_request, 0x10AD, AR_MRAMTOARAM, ARQ_PRIO_HI,
+	ARQ_PostRequest(&ARQ_request_blocks, 0x10AD, AR_MRAMTOARAM, ARQ_PRIO_HI,
 			                (int)(BLOCKS_CACHE_ADDR + addr), (int)&cached_block[0], CACHED_BLOCK_SIZE);
 }
 

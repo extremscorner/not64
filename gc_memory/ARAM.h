@@ -24,7 +24,7 @@
 #ifndef ARAM_H
 #define ARAM_H
 
-#define BLOCK_SIZE (256*1024)
+#define BLOCK_SIZE (64*1024)
 
 void ARAM_manager_init(void);
 void ARAM_manager_deinit(void);
