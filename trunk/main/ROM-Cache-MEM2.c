@@ -73,6 +73,8 @@ void DUMMY_print(char* string) { }
 void DUMMY_setLoadProg(float percent) { }
 void DUMMY_draw() { }
 
+static void ensure_block(u32 block);
+
 PKZIPHEADER pkzip;
 
 void ROMCache_init(fileBrowser_file* f){
@@ -88,7 +90,20 @@ void ROMCache_deinit(){
 	//we don't de-init the romFile here because it takes too much time to fopen/fseek/fread/fclose
 }
 
-void ROMCache_load_block(char* dst, u32 rom_offset){
+void* ROMCache_pointer(u32 rom_offset){
+	if(ROMTooBig){
+		u32 block = rom_offset >> BLOCK_SHIFT;
+		u32 block_offset = rom_offset & BLOCK_MASK;
+		
+		ensure_block(block);
+		
+		return ROMBlocks[block] + block_offset;
+	} else {
+		return ROMCACHE_LO + rom_offset;
+	}
+}
+
+static void ROMCache_load_block(char* dst, u32 rom_offset){
   if((hasLoadedROM) && (!stop))
     pauseAudio();
 	showLoadProgress( 1.0f );
@@ -109,6 +124,20 @@ void ROMCache_load_block(char* dst, u32 rom_offset){
 	  resumeAudio();
 }
 
+static void ensure_block(u32 block){
+	if(!ROMBlocks[block]){
+		// The block we're trying to read isn't in the cache
+		// Find the Least Recently Used Block
+		int i, max_i = 0, max_lru = 0;
+		for(i=0; i<NUM_BLOCKS; ++i)
+			if(ROMBlocks[i] && ROMBlocksLRU[i] > max_lru)
+				max_i = i, max_lru = ROMBlocksLRU[i];
+		ROMBlocks[block] = ROMBlocks[max_i]; // Take its place
+		ROMCache_load_block(ROMBlocks[block], block << BLOCK_SHIFT);
+		ROMBlocks[max_i] = 0; // Evict the LRU block
+	}
+}
+
 void ROMCache_read(u32* dest, u32 offset, u32 length){
   if(ROMTooBig){
 		u32 block = offset>>BLOCK_SHIFT;
@@ -116,17 +145,7 @@ void ROMCache_read(u32* dest, u32 offset, u32 length){
 		u32 offset2 = offset&BLOCK_MASK;
 		
 		while(length2){
-			if(!ROMBlocks[block]){
-  		  // The block we're trying to read isn't in the cache
-				// Find the Least Recently Used Block
-				int i, max_i = 0, max_lru = 0;
-				for(i=0; i<NUM_BLOCKS; ++i)
-					if(ROMBlocks[i] && ROMBlocksLRU[i] > max_lru)
-						max_i = i, max_lru = ROMBlocksLRU[i];
-				ROMBlocks[block] = ROMBlocks[max_i]; // Take its place
-				ROMCache_load_block(ROMBlocks[block], offset&OFFSET_MASK);
-				ROMBlocks[max_i] = 0; // Evict the LRU block
-			}
+			ensure_block(block);
 			
 			// Set length to the length for this block
 			if(length2 > BLOCK_SIZE - offset2)
