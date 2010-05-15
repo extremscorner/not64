@@ -69,11 +69,6 @@ extern void pauseAudio(void);
 extern void resumeAudio(void);
 extern BOOL hasLoadedROM;
 
-#ifdef USE_ROM_CACHE_L1
-static u8  L1[256*1024];
-static u32 L1tag;
-#endif
-
 void DUMMY_print(char* string) { }
 void DUMMY_setLoadProg(float percent) { }
 void DUMMY_draw() { }
@@ -87,9 +82,6 @@ void ROMCache_init(fileBrowser_file* f){
 	ROMTooBig = ROMSize > ROMCACHE_SIZE;
 
 	romFile_seekFile(f, 0, FILE_BROWSER_SEEK_SET);	// Lets be nice and keep the file at 0.
-#ifdef USE_ROM_CACHE_L1
-	L1tag = -1;
-#endif	
 }
 
 void ROMCache_deinit(){
@@ -132,7 +124,7 @@ void ROMCache_read(u32* dest, u32 offset, u32 length){
 					if(ROMBlocks[i] && ROMBlocksLRU[i] > max_lru)
 						max_i = i, max_lru = ROMBlocksLRU[i];
 				ROMBlocks[block] = ROMBlocks[max_i]; // Take its place
-        ROMCache_load_block(ROMBlocks[block], offset&OFFSET_MASK);
+				ROMCache_load_block(ROMBlocks[block], offset&OFFSET_MASK);
 				ROMBlocks[max_i] = 0; // Evict the LRU block
 			}
 			
@@ -153,20 +145,7 @@ void ROMCache_read(u32* dest, u32 offset, u32 length){
 			++block; length2 -= length; offset2 = 0; dest += length/4; offset += length;
 		}
 	} else {
-#ifdef USE_ROM_CACHE_L1
-		if(offset >> 18 == (offset+length-1) >> 18){
-			// Only worry about using L1 cache if the read falls
-			//   within only one block for the L1 for now
-			if(offset >> 18 != L1tag){
-				memcpy(L1, ROMCACHE_LO + (offset&(~0x3FFFF)), 256*1024);
-				L1tag = offset >> 18;
-			}
-			memcpy(dest, L1 + (offset&0x3FFFF), length);
-		} else
-#endif
-		{
-			memcpy(dest, ROMCACHE_LO + offset, length);
-		}
+		memcpy(dest, ROMCACHE_LO + offset, length);
 	}
 }
 
