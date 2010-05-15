@@ -103,7 +103,11 @@ void dynarec(unsigned int address){
 		DEBUG_print(txtbuffer, DBG_USBGECKO);
 		*/
 		if(!paddr){ stop=1; return; }
-
+    
+		
+		unsigned long paddr_rom = 0;
+    unsigned int new_address = address;
+		
 		if(!dst_block){
 			/*sprintf(txtbuffer, "block at %08x doesn't exist\n", address&~0xFFF);
 			DEBUG_print(txtbuffer, DBG_USBGECKO);*/
@@ -113,18 +117,33 @@ void dynarec(unsigned int address){
 			dst_block->funcs         = NULL;
 			dst_block->start_address = address & ~0xFFF;
 			dst_block->end_address   = (address & ~0xFFF) + 0x1000;
-			init_block(rdram+(((paddr-(address-dst_block->start_address)) & 0x1FFFFFFF)>>2),
+			
+			new_address = rdram+(((paddr-(address-dst_block->start_address)) & 0x1FFFFFFF)>>2);
+			
+			//start of goldeneye crazy hacks
+			if (address >= 0x80000000 && address < 0xc0000000) 
+    	  paddr_rom = address;
+    	else 
+    	  paddr_rom = virtual_to_physical_address(address, 2);
+    	if (paddr_rom) {
+  	    if ((paddr_rom & 0x1FFFFFFF) >= 0x10000000) { //paddr_rom: B0035700 addr: 7F000BD0 naddr: 900B4B30
+    	    //not compiled ROM section
+    	    new_address = (unsigned long*)ROMCACHE_LO+((((paddr_rom-(address-dst_block->start_address)) & 0x1FFFFFFF) - 0x10000000)>>2);
+      	}
+    	}
+			
+			init_block(new_address,
 				   dst_block);
 		} else if(invalid_code_get(address>>12)){
 			invalidate_block(dst_block);
 		}
-
-		PowerPC_func* func = find_func(&dst_block->funcs, address&0xFFFF);
-
+		
+    PowerPC_func* func = find_func(&dst_block->funcs, address&0xFFFF);
+    
 		if(!func || !func->code_addr[((address&0xFFFF)-func->start_addr)>>2]){
 			/*sprintf(txtbuffer, "code at %08x is not compiled\n", address);
 			DEBUG_print(txtbuffer, DBG_USBGECKO);*/
-			start_section(COMPILER_SECTION);
+			start_section(COMPILER_SECTION);	
 			func = recompile_block(dst_block, address);
 			end_section(COMPILER_SECTION);
 		} else {
