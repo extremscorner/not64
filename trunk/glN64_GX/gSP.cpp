@@ -1715,7 +1715,7 @@ void gSPFogFactor( s16 fm, s16 fo )
 #ifdef __GX__
 	//Adjust the range from 0.0 to 1.0
 	OGL.GXfogStartZ = -(0.5f * (float)gSP.fog.offset / (float)gSP.fog.multiplier) + 0.5f;
-	OGL.GXfogEndZ = (0.5f * (255.0f - (float)gSP.fog.offset) / (float)gSP.fog.multiplier) + 0.5f;
+	OGL.GXfogEndZ = (0.5f * (256.0f - (float)gSP.fog.offset) / (float)gSP.fog.multiplier) + 0.5f;
 #endif // __GX__
 
 	gSP.changed |= CHANGED_FOGPOSITION;
