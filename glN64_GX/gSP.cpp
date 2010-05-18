@@ -334,9 +334,9 @@ void gSPMatrix( u32 matrix, u8 param )
 	OGL.GXupdateMtx = true;
 	if (param & G_MTX_PROJECTION)
 	{
-//		if(1)
-		if(!((gSP.matrix.projection[2][3] == -1) && (gSP.matrix.projection[3][3] == 0) ||
-			 (gSP.matrix.projection[2][3] == 0) && (gSP.matrix.projection[3][3] == 1)))
+		if(1)
+//		if(!((gSP.matrix.projection[2][3] == -1) && (gSP.matrix.projection[3][3] == 0) ||
+//			 (gSP.matrix.projection[2][3] == 0) && (gSP.matrix.projection[3][3] == 1)))
 		{
 			OGL.GXuseProj = false;
 			if(gSP.matrix.projection[2][3] != 0)
@@ -1613,7 +1613,7 @@ void gSPInsertMatrix( u32 where, u32 num )
 #ifdef __GX__
 #ifdef SHOW_DEBUG
 	sprintf(txtbuffer,"gSP: gSPInsertMatrix");
-	DEBUG_print(txtbuffer,8);
+	DEBUG_print(txtbuffer,6);
 #endif
 	if(OGL.GXuseProj)
 	{
