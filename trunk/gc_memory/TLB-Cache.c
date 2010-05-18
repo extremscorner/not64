@@ -1,5 +1,5 @@
 /**
- * Wii64 - TLB-Cache.c (Deprecated)
+ * Wii64 - TLB-Cache.c
  * Copyright (C) 2007, 2008, 2009 emu_kidid
  * Copyright (C) 2007, 2008, 2009 Mike Slegeir
  * 
@@ -43,15 +43,9 @@ static ARQRequest ARQ_request_TLB;
 #define CACHED_TLB_ENTRIES                     1024
 #define CACHED_TLB_SIZE      CACHED_TLB_ENTRIES * 4
 
-//TLB LUT W
-unsigned long   tlb_w_block[CACHED_TLB_ENTRIES] __attribute__((aligned(32))); //last 4kb chunk of ptrs pulled
-static u32      tlb_w_dirty     = 0;
-static u32      tlb_w_last_addr = 0;
-
-//TLB LUT R
-unsigned long   tlb_r_block[CACHED_TLB_ENTRIES] __attribute__((aligned(32))); //last 4kb chunk of ptrs pulled
-static u32      tlb_r_dirty     = 0;
-static u32      tlb_r_last_addr = 0;
+unsigned long tlb_block[2][CACHED_TLB_ENTRIES] __attribute__((aligned(32)));
+static u32    tlb_dirty[2]     = { 0, 0 };
+static u32    tlb_last_addr[2] = { 0, 0 };
 
 
 void TLBCache_init(void){
@@ -66,56 +60,52 @@ void TLBCache_deinit(void){
 	TLBCache_init();
 }
 
-unsigned int TLBCache_get_r(unsigned int page){
-  int block_byte_address = ((page - (page % CACHED_TLB_ENTRIES)) * 4);
-  
-  if(block_byte_address != tlb_r_last_addr) {       //if addr isn't in the last block
-    if(tlb_r_dirty) {                               //current chunk needs to be written back to ARAM
-      ARAM_WriteTLBBlock(tlb_r_last_addr, TLB_R_TYPE);
-      tlb_r_dirty=0;
-    }
-    ARAM_ReadTLBBlock(block_byte_address, TLB_R_TYPE); //read the block the addr we want lies in (aligned to 4kb)
-    tlb_r_last_addr = block_byte_address;           //the start of this block
+static inline int calc_block_addr(unsigned int page){
+  return ((page - (page % CACHED_TLB_ENTRIES)) * 4);
+}
+
+static inline int calc_index(unsigned int page){
+  return page % CACHED_TLB_ENTRIES;
+}
+
+static inline void ensure_fetched(int type, int block_addr){
+  if(block_addr != tlb_last_addr[type]){
+    if(tlb_dirty[type])
+      ARAM_WriteTLBBLock(tlb_last_addr[type], type);
+
+    ARAM_ReadTLBBlock(block_addr, type);
+    tlb_last_addr[type] = block_addr;
+    tlb_dirty[type] = 0;
   }
-  return tlb_r_block[(page % CACHED_TLB_ENTRIES)];
+}
+
+static unsigned int TLBCache_get(int type, unsigned int page){
+  ensure_fetched(calc_block_addr(page));
+  
+  return tlb_block[type][calc_index(page)];
+}
+
+unsigned int TLBCache_get_r(unsigned int page){
+  return TLBCache_get(TLB_R_TYPE, page);
 }
 
 unsigned int TLBCache_get_w(unsigned int page){
-  int block_byte_address = ((page - (page % CACHED_TLB_ENTRIES)) * 4);
+  return TLBCache_get(TLB_W_TYPE, page);
+}
+
+static inline void TLBCache_set(int type, unsigned int page, unsigned int val){
+  ensure_fetched(calc_block_addr(page));
   
-  if(block_byte_address != tlb_w_last_addr) {       //if addr isn't in the last block
-    if(tlb_w_dirty) {                               //current chunk needs to be written back to ARAM
-      ARAM_WriteTLBBlock(tlb_w_last_addr, TLB_W_TYPE);
-      tlb_w_dirty=0;
-    }
-    ARAM_ReadTLBBlock(block_byte_address, TLB_W_TYPE); //read the block the addr we want lies in (aligned to 4kb)
-    tlb_w_last_addr = block_byte_address;           //the start of this block
-  }
-  return tlb_w_block[(page % CACHED_TLB_ENTRIES)];
+  tlb_block[type][calc_index(page)] = val;
+  tlb_dirty[type] = 1;
 }
 
 void TLBCache_set_r(unsigned int page, unsigned int val){
-  int block_byte_address = ((page - (page % CACHED_TLB_ENTRIES)) * 4);
-  
-  if(block_byte_address != tlb_r_last_addr) {       //the block we want to write to is not cached
-    ARAM_WriteTLBBlock(tlb_r_last_addr, TLB_R_TYPE);   //we need to put the current chunk back into ARAM and pull out another
-    ARAM_ReadTLBBlock(block_byte_address, TLB_R_TYPE); //read the block the addr we want lies in (aligned to 4kb)
-    tlb_r_last_addr = block_byte_address;           //the start of this block
-  }
-  tlb_r_block[(page % CACHED_TLB_ENTRIES)] = val;   //set the value
-  tlb_r_dirty=1;                                    // this block, although new, is dirty from now
+  TLBCache_set(TLB_R_TYPE, page, val);
 }
 
 void TLBCache_set_w(unsigned int page, unsigned int val){
-  int block_byte_address = ((page - (page % CACHED_TLB_ENTRIES)) * 4);
-  
-  if(block_byte_address != tlb_w_last_addr) {       //the block we want to write to is not cached
-    ARAM_WriteTLBBlock(tlb_w_last_addr, TLB_W_TYPE);   //we need to put the current chunk back into ARAM and pull out another
-    ARAM_ReadTLBBlock(block_byte_address, TLB_W_TYPE); //read the block the addr we want lies in (aligned to 4kb)
-    tlb_w_last_addr = block_byte_address;           //the start of this block
-  }
-  tlb_w_block[(page % CACHED_TLB_ENTRIES)] = val;   //set the value
-  tlb_w_dirty=1;                                    // this block, although new, is dirty from now
+  TLBCache_set(TLB_W_TYPE, page, val);
 }
 
 void TLBCache_dump_w(gzFile *f) {
