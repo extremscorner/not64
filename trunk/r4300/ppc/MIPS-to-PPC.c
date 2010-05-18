@@ -1397,19 +1397,67 @@ static int LWC1(MIPS_instr mips){
 
 	flushRegisters();
 	reset_code_addr();
-
+	
 	genCheckFP();
 
 	int rd = mapRegisterTemp(); // r3 = rd
 	int base = mapRegister( MIPS_GET_RS(mips) ); // r4 = addr
+	int addr = mapRegisterTemp(); // r5 = fpr_addr
 
 	invalidateRegisters();
 
-	// load into rt
+#ifdef FASTMEM
+	// If base in physical memory
+#ifdef USE_EXPANSION
+	GEN_LIS(ppc, 0, 0x8080);
+#else
+	GEN_LIS(ppc, 0, 0x8040);
+#endif
+	set_next_dst(ppc);
+	GEN_CMP(ppc, base, 0, 1);
+	set_next_dst(ppc);
+	GEN_BGE(ppc, 1, 7, 0, 0);
+	set_next_dst(ppc);
+
+	// Use rdram
+#ifdef USE_EXPANSION
+	// Mask sp with 0x007FFFFF
+	GEN_RLWINM(ppc, base, base, 0, 9, 31);
+	set_next_dst(ppc);
+#else
+	// Mask sp with 0x003FFFFF
+	GEN_RLWINM(ppc, base, base, 0, 10, 31);
+	set_next_dst(ppc);
+#endif
+	// Add rdram pointer
+	GEN_ADD(ppc, base, DYNAREG_RDRAM, base);
+	set_next_dst(ppc);
+	// Perform the actual load
+	GEN_LWZ(ppc, 3, MIPS_GET_IMMED(mips), base);
+	set_next_dst(ppc);
+	// addr = reg_cop1_simple[frt]
+	GEN_LWZ(ppc, addr, MIPS_GET_RT(mips)*4, DYNAREG_FPR_32);
+	set_next_dst(ppc);
+	// *addr = frs
+	GEN_STW(ppc, 3, 0, addr);
+	set_next_dst(ppc);
+	// Skip over else
+	int not_fastmem_id = add_jump_special(1);
+	GEN_B(ppc, not_fastmem_id, 0, 0);
+	set_next_dst(ppc);
+	PowerPC_instr* preCall = get_curr_dst();
+#endif // FASTMEM
+
+	// load into frt
 	GEN_LI(ppc, 3, 0, MIPS_GET_RT(mips));
 	set_next_dst(ppc);
 
 	genCallDynaMem(MEM_LWC1, base, MIPS_GET_IMMED(mips));
+
+#ifdef FASTMEM
+	int callSize = get_curr_dst() - preCall;
+	set_jump_special(not_fastmem_id, callSize+1);
+#endif
 
 	return CONVERT_SUCCESS;
 #endif
@@ -1424,19 +1472,71 @@ static int LDC1(MIPS_instr mips){
 
 	flushRegisters();
 	reset_code_addr();
-
+	
 	genCheckFP();
 
 	int rd = mapRegisterTemp(); // r3 = rd
 	int base = mapRegister( MIPS_GET_RS(mips) ); // r4 = addr
+	int addr = mapRegisterTemp(); // r5 = fpr_addr
 
 	invalidateRegisters();
 
-	// load into rt
+#ifdef FASTMEM
+	// If base in physical memory
+#ifdef USE_EXPANSION
+	GEN_LIS(ppc, 0, 0x8080);
+#else
+	GEN_LIS(ppc, 0, 0x8040);
+#endif
+	set_next_dst(ppc);
+	GEN_CMP(ppc, base, 0, 1);
+	set_next_dst(ppc);
+	GEN_BGE(ppc, 1, 9, 0, 0);
+	set_next_dst(ppc);
+
+	// Use rdram
+#ifdef USE_EXPANSION
+	// Mask sp with 0x007FFFFF
+	GEN_RLWINM(ppc, base, base, 0, 9, 31);
+	set_next_dst(ppc);
+#else
+	// Mask sp with 0x003FFFFF
+	GEN_RLWINM(ppc, base, base, 0, 10, 31);
+	set_next_dst(ppc);
+#endif
+	// Add rdram pointer
+	GEN_ADD(ppc, base, DYNAREG_RDRAM, base);
+	set_next_dst(ppc);
+	// Perform the actual load
+	GEN_LWZ(ppc, 3, MIPS_GET_IMMED(mips), base);
+	set_next_dst(ppc);
+	GEN_LWZ(ppc, 6, MIPS_GET_IMMED(mips)+4, base);
+	set_next_dst(ppc);
+	// addr = reg_cop1_double[frt]
+	GEN_LWZ(ppc, addr, MIPS_GET_RT(mips)*4, DYNAREG_FPR_64);
+	set_next_dst(ppc);
+	// *addr = frs
+	GEN_STW(ppc, 3, 0, addr);
+	set_next_dst(ppc);
+	GEN_STW(ppc, 6, 4, addr);
+	set_next_dst(ppc);
+	// Skip over else
+	int not_fastmem_id = add_jump_special(1);
+	GEN_B(ppc, not_fastmem_id, 0, 0);
+	set_next_dst(ppc);
+	PowerPC_instr* preCall = get_curr_dst();
+#endif // FASTMEM
+
+	// load into frt
 	GEN_LI(ppc, 3, 0, MIPS_GET_RT(mips));
 	set_next_dst(ppc);
 
 	genCallDynaMem(MEM_LDC1, base, MIPS_GET_IMMED(mips));
+
+#ifdef FASTMEM
+	int callSize = get_curr_dst() - preCall;
+	set_jump_special(not_fastmem_id, callSize+1);
+#endif
 
 	return CONVERT_SUCCESS;
 #endif
