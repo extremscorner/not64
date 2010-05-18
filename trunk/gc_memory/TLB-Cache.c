@@ -71,7 +71,7 @@ static inline int calc_index(unsigned int page){
 static inline void ensure_fetched(int type, int block_addr){
   if(block_addr != tlb_last_addr[type]){
     if(tlb_dirty[type])
-      ARAM_WriteTLBBLock(tlb_last_addr[type], type);
+      ARAM_WriteTLBBlock(tlb_last_addr[type], type);
 
     ARAM_ReadTLBBlock(block_addr, type);
     tlb_last_addr[type] = block_addr;
@@ -80,7 +80,7 @@ static inline void ensure_fetched(int type, int block_addr){
 }
 
 static unsigned int TLBCache_get(int type, unsigned int page){
-  ensure_fetched(calc_block_addr(page));
+  ensure_fetched(type, calc_block_addr(page));
   
   return tlb_block[type][calc_index(page)];
 }
@@ -94,7 +94,7 @@ unsigned int TLBCache_get_w(unsigned int page){
 }
 
 static inline void TLBCache_set(int type, unsigned int page, unsigned int val){
-  ensure_fetched(calc_block_addr(page));
+  ensure_fetched(type, calc_block_addr(page));
   
   tlb_block[type][calc_index(page)] = val;
   tlb_dirty[type] = 1;
@@ -128,7 +128,7 @@ void TLBCache_dump_r(gzFile *f) {
 void ARAM_ReadTLBBlock(u32 addr, int type)
 {
   int base_addr = (type == TLB_W_TYPE) ? TLB_W_CACHE_ADDR : TLB_R_CACHE_ADDR;
-  int dest_addr = (type == TLB_W_TYPE) ? (int)&tlb_w_block[0] : (int)&tlb_r_block[0];
+  int dest_addr = (type == TLB_W_TYPE) ? (int)&tlb_block[TLB_W_TYPE] : (int)&tlb_block[TLB_R_TYPE];
   ARQ_PostRequest(&ARQ_request_TLB, 0x2EAD, AR_ARAMTOMRAM, ARQ_PRIO_LO,
 			                (int)(base_addr + addr), dest_addr, CACHED_TLB_SIZE);
 	DCInvalidateRange((void*)dest_addr, CACHED_TLB_SIZE);
@@ -138,7 +138,7 @@ void ARAM_ReadTLBBlock(u32 addr, int type)
 void ARAM_WriteTLBBlock(u32 addr, int type)
 {
   int base_addr = (type == TLB_W_TYPE) ? TLB_W_CACHE_ADDR : TLB_R_CACHE_ADDR;
-  int dest_addr = (type == TLB_W_TYPE) ? (int)&tlb_w_block[0] : (int)&tlb_r_block[0];
+  int dest_addr = (type == TLB_W_TYPE) ? (int)&tlb_block[TLB_W_TYPE] : (int)&tlb_block[TLB_R_TYPE];
   DCFlushRange((void*)dest_addr, CACHED_TLB_SIZE);
 	ARQ_PostRequest(&ARQ_request_TLB, 0x10AD, AR_MRAMTOARAM, ARQ_PRIO_HI,
 			                (int)(base_addr + addr), dest_addr, CACHED_TLB_SIZE);
