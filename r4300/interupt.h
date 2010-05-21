@@ -59,3 +59,10 @@ void load_eventqueue_infos(char *buf);
 #define AI_INT      0x040
 #define SP_INT      0x080
 #define DP_INT      0x100
+
+typedef struct _interupt_queue
+{
+   int type;
+   unsigned long count;
+   struct _interupt_queue *next;
+} interupt_queue;
