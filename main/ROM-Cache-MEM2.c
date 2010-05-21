@@ -138,7 +138,7 @@ static void ensure_block(u32 block){
 	}
 }
 
-void ROMCache_read(u32* dest, u32 offset, u32 length){
+void ROMCache_read(u8* dest, u32 offset, u32 length){
   if(ROMTooBig){
 		u32 block = offset>>BLOCK_SHIFT;
 		u32 length2 = length;
@@ -161,7 +161,7 @@ void ROMCache_read(u32* dest, u32 offset, u32 length){
 			memcpy(dest, ROMBlocks[block] + offset2, length);
 			
 			// In case the read spans multiple blocks, increment state
-			++block; length2 -= length; offset2 = 0; dest += length/4; offset += length;
+			++block; length2 -= length; offset2 = 0; dest += length; offset += length;
 		}
 	} else {
 		memcpy(dest, ROMCACHE_LO + offset, length);
