@@ -54,10 +54,12 @@ Graphics::Graphics(GXRModeObj *rmode)
 		vmode->viXOrigin = (VI_MAX_WIDTH_PAL - 678) / 2;
 	}
 #endif
-	vmode->efbHeight = viewportHeight;
+	if (memcmp( &vmode_phys, &TVPal528IntDf, sizeof(GXRModeObj)) == 0)
+		memcpy( &vmode_phys, &TVPal574IntDfScale, sizeof(GXRModeObj));
+
+	//vmode->efbHeight = viewportHeight; // Note: all possible modes have efbHeight of 480
 
 	VIDEO_Configure(vmode);
-	
 
 	xfb[0] = MEM_K0_TO_K1(SYS_AllocateFramebuffer(vmode));
 	xfb[1] = MEM_K0_TO_K1(SYS_AllocateFramebuffer(vmode));
