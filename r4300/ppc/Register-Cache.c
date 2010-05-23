@@ -32,8 +32,6 @@ static struct {
 	RegMapping map;
 	int dirty; // Nonzero means the register must be flushed to memory
 	int lru;   // LRU value for flushing; higher is newer
-	int constant; // Nonzero means there is a constant value mapped
-	unsigned int value; // Value if this mapping holds a constant
 } regMap[34];
 
 static unsigned int nextLRUVal;
@@ -92,8 +90,6 @@ static RegMapping flushLRURegister(void){
 	if(regMap[lru_i].dirty) _flushRegister(lru_i);
 	// Mark unmapped
 	regMap[lru_i].map.hi = regMap[lru_i].map.lo = -1;
-	// Clear constant bit
-	regMap[lru_i].constant = 0;
 	return map;
 }
 
@@ -101,7 +97,6 @@ int mapRegisterNew(int reg){
 	if(!reg) return 0; // Discard any writes to r0
 	regMap[reg].lru = nextLRUVal++;
 	regMap[reg].dirty = 1; // Since we're writing to this reg, its dirty
-	regMap[reg].constant = 0; // This is a dynamic or unknowable value
 	
 	// If its already been mapped, just return that value
 	if(regMap[reg].map.lo >= 0){
@@ -127,7 +122,6 @@ RegMapping mapRegister64New(int reg){
 	if(!reg) return (RegMapping){ 0, 0 };
 	regMap[reg].lru = nextLRUVal++;
 	regMap[reg].dirty = 1; // Since we're writing to this reg, its dirty
-	regMap[reg].constant = 0; // This is a dynamic or unknowable value
 	// If its already been mapped, just return that value
 	if(regMap[reg].map.lo >= 0){
 		// If the hi value is not mapped, find a mapping
@@ -180,7 +174,6 @@ int mapRegister(int reg){
 		return regMap[reg].map.lo;
 	}
 	regMap[reg].dirty = 0; // If it hasn't previously been mapped, its clean
-	regMap[reg].constant = 0; // Its also can't be a constant
 	// Iterate over the HW registers and find one that's available
 	int available = getAvailableHWReg();
 	if(available >= 0){
@@ -224,7 +217,6 @@ RegMapping mapRegister64(int reg){
 		return regMap[reg].map;
 	}
 	regMap[reg].dirty = 0; // If it hasn't previously been mapped, its clean
-	regMap[reg].constant = 0; // It also can't be a constant
 	
 	// Try to find any already available registers
 	regMap[reg].map.lo = getAvailableHWReg();
@@ -267,26 +259,6 @@ void flushRegister(int reg){
 		availableRegs[ regMap[reg].map.lo ] = 1;
 	}
 	regMap[reg].map.hi = regMap[reg].map.lo = -1;
-}
-
-int mapConstantNew(int reg, int isConstant){
-	int mapping = mapRegisterNew(reg); // Get the normal mapping
-	regMap[reg].constant = isConstant; // Set the constant field
-	return mapping;
-}
-
-int isRegisterConstant(int reg){
-	// Always constant for r0
-	return reg ? regMap[reg].constant : 1;
-}
-
-unsigned int getRegisterConstant(int reg){
-	// Always return 0 for r0 
-	return reg ? regMap[reg].value : 0;
-}
-
-void setRegisterConstant(int reg, unsigned int constant){
-	regMap[reg].value = constant;
 }
 
 

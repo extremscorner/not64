@@ -106,34 +106,6 @@ inline unsigned int dyna_run(PowerPC_func* func, unsigned int (*code)(void)){
 	return naddr;
 }
 
-unsigned int (*lookup_func(void))(unsigned int address){
-	// TODO: Use in recompiled code like so:
-	/*
-	 * load desination address in r3
-	 * bl    lookup_func
-	 * mtctr r3
-	 * cmpi  cr0, r3, 0
-	 * bnectr
-	 * lwz   r0, lr(r1)
-	 * mtlr  r0
-	 * load destination address in r3
-	 * blr
-	 */
-
-	PowerPC_block* dst_block = blocks_get(address>>12);
-	unsigned long paddr = update_invalid_addr(address);
-
-	if(!paddr){ stop=1; return 0; }
-
-	if(!dst_block || invalid_code_get(address>>12))
-		return 0;
-
-	PowerPC_func* func = find_func(&dst_block->funcs, address);
-	if(!func) return 0;
-
-	return func->code_addr[(address-func->start_addr)>>2];
-}
-
 void dynarec(unsigned int address){
 	while(!stop){
 		refresh_stat();
