@@ -1,6 +1,6 @@
 /**
  * Wii64 - ARAM-blocks.c
- * Copyright (C) 2007, 2008, 2009 emu_kidid
+ * Copyright (C) 2007, 2008, 2009, 2010 emu_kidid
  * 
  * ARAM cache version of blocks array for gamecube
  *
@@ -23,10 +23,12 @@
 
 #include <ogc/arqueue.h>
 #include <gctypes.h>
+#include <gccore.h>
 #include <stdlib.h>
 #include <malloc.h>
 #include <string.h>
 #include <stdio.h>
+#include "ogc/lwp_watchdog.h"
 #include "ppc/Recompile.h"
 #include "ARAM-blocks.h"
 #include "../gui/DEBUG.h"
@@ -34,52 +36,79 @@
 static ARQRequest ARQ_request_blocks;
 
 #define BLOCKS_CACHE_ADDR   0xC00000
+#define NUM_CACHE_BLOCKS           8
 #define CACHED_BLOCK_ENTRIES    1024
 #define CACHED_BLOCK_SIZE       CACHED_BLOCK_ENTRIES * 4
-PowerPC_block*  cached_block[CACHED_BLOCK_ENTRIES] __attribute__((aligned(32))); //last 4kb chunk of ptrs pulled
-static u32      cached_dirty     = 0;
-static u32      cached_last_addr = 0;
+PowerPC_block*  cached_block[NUM_CACHE_BLOCKS][CACHED_BLOCK_ENTRIES] __attribute__((aligned(32))); //last 4kb chunk of ptrs pulled
+static u32      cached_dirty[NUM_CACHE_BLOCKS]     = {0,0,0,0};
+static u32      cached_last_addr[NUM_CACHE_BLOCKS] = {0,0,0,0};
+static u32      cached_block_lru[NUM_CACHE_BLOCKS] = {0,0,0,0};
+
+void ARAM_ReadBlock(u32 addr, int block_num);
+void ARAM_WriteBlock(u32 addr, int block_num);
 
 PowerPC_block* blocks_get(u32 addr){
-  int block_byte_address = ((addr - (addr % CACHED_BLOCK_ENTRIES)) * 4);
+  int max_lru = cached_block_lru[0], max_lru_block = 0, i = 0, block_byte_address = ((addr - (addr % CACHED_BLOCK_ENTRIES)) * 4);
   
-  if(block_byte_address != cached_last_addr) {  //if addr isn't in the last block
-    if(cached_dirty) {                          //current chunk needs to be written back to ARAM
-      ARAM_WriteBlock(cached_last_addr);
-      cached_dirty=0;
+  for(i = 0; i < NUM_CACHE_BLOCKS; i++) {
+    if(max_lru > cached_block_lru[i]) {
+      max_lru = cached_block_lru[i];
+      max_lru_block = i;
     }
-    ARAM_ReadBlock(block_byte_address);         //read the block the addr we want lies in (aligned to 4kb)
-    cached_last_addr = block_byte_address;      //the start of this block
+    if(block_byte_address == cached_last_addr[i]) {  //if addr is in this block
+      cached_block_lru[i] = gettick();
+      return cached_block[i][(addr % CACHED_BLOCK_ENTRIES)];
+    }
   }
-  return cached_block[(addr % CACHED_BLOCK_ENTRIES)];
+  //we didn't find it, put it in the least recently used block
+  if(cached_dirty[max_lru_block]) { //this chunk needs to be written back to ARAM
+      ARAM_WriteBlock(cached_last_addr[max_lru_block], max_lru_block);
+      cached_dirty[max_lru_block]=0;
+    }
+  ARAM_ReadBlock(block_byte_address, max_lru_block);         //read the block the addr we want lies in (aligned to 4kb)
+  cached_last_addr[max_lru_block] = block_byte_address;      //the start of this block
+  
+  return cached_block[max_lru_block][(addr % CACHED_BLOCK_ENTRIES)];
 }
 
 void blocks_set(u32 addr, PowerPC_block* ptr){
-  int block_byte_address = ((addr - (addr % CACHED_BLOCK_ENTRIES)) * 4);
+  int max_lru = cached_block_lru[0], max_lru_block = 0, i = 0, block_byte_address = ((addr - (addr % CACHED_BLOCK_ENTRIES)) * 4);
   
-  if(block_byte_address != cached_last_addr) {  //the block we want to write to is not cached
-    ARAM_WriteBlock(cached_last_addr);          //we need to put the current chunk back into ARAM and pull out another
-    ARAM_ReadBlock(block_byte_address);         //read the block the addr we want lies in (aligned to 4kb)
-    cached_last_addr = block_byte_address;      //the start of this block
+  for(i = 0; i < NUM_CACHE_BLOCKS; i++) {
+    if(max_lru > cached_block_lru[i]) {
+      max_lru = cached_block_lru[i];
+      max_lru_block = i;
+    }
+    if(block_byte_address == cached_last_addr[i]) {  //the block we want to write to is cached
+      cached_block[i][(addr % CACHED_BLOCK_ENTRIES)] = ptr;   //set the value
+      cached_dirty[i]=1;                               // this block, is dirty now
+      cached_block_lru[i] = gettick();
+      return;
+    }
   }
-  cached_block[(addr % CACHED_BLOCK_ENTRIES)] = ptr;   //set the value
-  cached_dirty=1;                               // this block, although new, is dirty from now
+  //we don't have it, we need to grab it from ARAM
+  ARAM_WriteBlock(cached_last_addr[max_lru_block], max_lru_block);          //we need to put the current chunk back into ARAM and pull out another
+  ARAM_ReadBlock(block_byte_address, max_lru_block);         //read the block the addr we want lies in (aligned to 4kb)
+  cached_last_addr[max_lru_block] = block_byte_address;      //the start of this block
+  cached_block[max_lru_block][(addr % CACHED_BLOCK_ENTRIES)] = ptr;   //set the value
+  cached_dirty[max_lru_block]=1;                               // this block, although new, is dirty from now 
+  cached_block_lru[max_lru_block] = 0;
 }
 
 //addr == addr of 4kb block of PowerPC_block ptrs to pull out from ARAM
-void ARAM_ReadBlock(u32 addr)
+void ARAM_ReadBlock(u32 addr, int block_num)
 {
   ARQ_PostRequest(&ARQ_request_blocks, 0x2EAD, AR_ARAMTOMRAM, ARQ_PRIO_LO,
-			                (int)(BLOCKS_CACHE_ADDR + addr), (int)&cached_block[0], CACHED_BLOCK_SIZE);
-	DCInvalidateRange((void*)&cached_block, CACHED_BLOCK_SIZE);
+			                (int)(BLOCKS_CACHE_ADDR + addr), (int)&cached_block[block_num][0], CACHED_BLOCK_SIZE);
+	DCInvalidateRange((void*)&cached_block[block_num][0], CACHED_BLOCK_SIZE);
 }
 
 //addr == addr of 4kb block of PowerPC_block ptrs to pull out from ARAM
-void ARAM_WriteBlock(u32 addr)
+void ARAM_WriteBlock(u32 addr, int block_num)
 {
-  DCFlushRange((void*)&cached_block, CACHED_BLOCK_SIZE);
+  DCFlushRange((void*)&cached_block[block_num][0], CACHED_BLOCK_SIZE);
 	ARQ_PostRequest(&ARQ_request_blocks, 0x10AD, AR_MRAMTOARAM, ARQ_PRIO_HI,
-			                (int)(BLOCKS_CACHE_ADDR + addr), (int)&cached_block[0], CACHED_BLOCK_SIZE);
+			                (int)(BLOCKS_CACHE_ADDR + addr), (int)&cached_block[block_num][0], CACHED_BLOCK_SIZE);
 }
 
 #else //inlined wrapper for Wii
