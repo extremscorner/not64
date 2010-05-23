@@ -120,7 +120,7 @@ unsigned int (*lookup_func(void))(unsigned int address){
 	 * blr
 	 */
 
-	PowerPC_block* dst_block = blocks[address>>12];
+	PowerPC_block* dst_block = blocks_get(address>>12);
 	unsigned long paddr = update_invalid_addr(address);
 
 	if(!paddr){ stop=1; return 0; }
@@ -259,7 +259,7 @@ unsigned int dyna_check_cop1_unusable(unsigned int pc, int isDelaySlot){
 }
 
 static void invalidate_func(unsigned int addr){
-	PowerPC_block* block = blocks[addr>>12];
+	PowerPC_block* block = blocks_get(addr>>12);
 	PowerPC_func* func = find_func(&block->funcs, addr);
 	if(func)
 		RecompCache_Free(func->start_addr);
