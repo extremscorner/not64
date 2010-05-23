@@ -1,6 +1,6 @@
 /**
  * Wii64 - MenuContext.cpp
- * Copyright (C) 2009 sepp256
+ * Copyright (C) 2009, 2010 sepp256
  *
  * Wii64 homepage: http://www.emulatemii.com
  * email address: sepp256@gmail.com
@@ -35,7 +35,8 @@ MenuContext::MenuContext(GXRModeObj *vmode)
 		  settingsFrame(0),
 		  selectCPUFrame(0),
 		  configureInputFrame(0),
-		  configurePaksFrame(0)
+		  configurePaksFrame(0),
+		  configureButtonsFrame(0)
 {
 	pMenuContext = this;
 
@@ -51,6 +52,7 @@ MenuContext::MenuContext(GXRModeObj *vmode)
 	selectCPUFrame = new SelectCPUFrame();
 	configureInputFrame = new ConfigureInputFrame();
 	configurePaksFrame = new ConfigurePaksFrame();
+	configureButtonsFrame = new ConfigureButtonsFrame();
 
 	menu::Gui::getInstance().addFrame(mainFrame);
 	menu::Gui::getInstance().addFrame(loadRomFrame);
@@ -62,6 +64,7 @@ MenuContext::MenuContext(GXRModeObj *vmode)
 	menu::Gui::getInstance().addFrame(selectCPUFrame);
 	menu::Gui::getInstance().addFrame(configureInputFrame);
 	menu::Gui::getInstance().addFrame(configurePaksFrame);
+	menu::Gui::getInstance().addFrame(configureButtonsFrame);
 
 	menu::Focus::getInstance().setFocusActive(true);
 	setActiveFrame(FRAME_MAIN);
@@ -69,6 +72,7 @@ MenuContext::MenuContext(GXRModeObj *vmode)
 
 MenuContext::~MenuContext()
 {
+	delete configureButtonsFrame;
 	delete configurePaksFrame;
 	delete configureInputFrame;
 	delete selectCPUFrame;
@@ -131,6 +135,9 @@ void MenuContext::setActiveFrame(int frameIndex)
 	case FRAME_CONFIGUREPAKS:
 		currentActiveFrame = configurePaksFrame;
 		break;
+	case FRAME_CONFIGUREBUTTONS:
+		currentActiveFrame = configureButtonsFrame;
+		break;
 	}
 
 	if(currentActiveFrame)
@@ -177,6 +184,9 @@ menu::Frame* MenuContext::getFrame(int frameIndex)
 		break;
 	case FRAME_CONFIGUREINPUT:
 		pFrame = configureInputFrame;
+		break;
+	case FRAME_CONFIGUREBUTTONS:
+		pFrame = configureButtonsFrame;
 		break;
 	}
 

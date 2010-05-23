@@ -42,83 +42,6 @@ enum {
 	C_STICK_D = 0x80 << 16,
 };
 
-u32 gc_connected;
-
-static int _GetKeys(int Control, BUTTONS * Keys, controller_config_t* config)
-{
-	if(padNeedScan){ gc_connected = PAD_ScanPads(); padNeedScan = 0; }
-	BUTTONS* c = Keys;
-	memset(c, 0, sizeof(BUTTONS));
-
-	controller_GC.available[Control] = (gc_connected & (1<<Control)) ? 1 : 0;
-	if (!controller_GC.available[Control]) return 0;
-
-	unsigned int b = PAD_ButtonsHeld(Control);
-	s8 stickX      = PAD_StickX(Control);
-	s8 stickY      = PAD_StickY(Control);
-	s8 substickX   = PAD_SubStickX(Control);
-	s8 substickY   = PAD_SubStickY(Control);
-	if(stickX    < -48) b |= ANALOG_L;
-	if(stickX    >  48) b |= ANALOG_R;
-	if(stickY    >  48) b |= ANALOG_U;
-	if(stickY    < -48) b |= ANALOG_D;
-	if(substickX < -48) b |= C_STICK_L;
-	if(substickY >  48) b |= C_STICK_R;
-	if(substickY >  48) b |= C_STICK_U;
-	if(substickY < -48) b |= C_STICK_D;
-	int isHeld(button_tp button){ return (b & button->mask) == button->mask; }
-	
-	c->R_DPAD       = isHeld(config->DR);
-	c->L_DPAD       = isHeld(config->DL);
-	c->D_DPAD       = isHeld(config->DD);
-	c->U_DPAD       = isHeld(config->DU);
-	
-	c->START_BUTTON = isHeld(config->START);
-	c->B_BUTTON     = isHeld(config->B);
-	c->A_BUTTON     = isHeld(config->A);
-
-	c->Z_TRIG       = isHeld(config->Z);
-	c->R_TRIG       = isHeld(config->R);
-	c->L_TRIG       = isHeld(config->L);
-
-	c->R_CBUTTON    = isHeld(config->CR);
-	c->L_CBUTTON    = isHeld(config->CL);
-	c->D_CBUTTON    = isHeld(config->CD);
-	c->U_CBUTTON    = isHeld(config->CU);
-
-	if(config->analog->mask & ANALOG_AS_ANALOG){
-		c->X_AXIS = stickX;
-		c->Y_AXIS = stickY;
-	} else if(config->analog->mask & C_STICK_AS_ANALOG){
-		c->X_AXIS = substickX;
-		c->Y_AXIS = substickY;
-	}
-	if(config->invertedY) c->Y_AXIS = -c->Y_AXIS;
-
-	// X+Y quits to menu
-	return isHeld(config->exit);
-}
-
-static void pause(int Control){
-	PAD_ControlMotor(Control, PAD_MOTOR_STOP);
-}
-
-static void resume(int Control){ }
-
-static void rumble(int Control, int rumble){
-	PAD_ControlMotor(Control, rumble ? PAD_MOTOR_RUMBLE : PAD_MOTOR_STOP);
-}
-
-static void configure(int Control){
-	// Don't know how this should be integrated
-}
-
-static void assign(int p, int v){
-	// Nothing to do here
-}
-
-static void init(void);
-
 static button_t buttons[] = {
 	{ PAD_BUTTON_LEFT,  "D-Pad Left" },
 	{ PAD_BUTTON_RIGHT, "D-Pad Right" },
@@ -147,6 +70,87 @@ static button_t analog_sources[] = {
 	{ C_STICK_AS_ANALOG, "C-Stick" },
 };
 
+static button_t menu_combos[] = {
+	{ PAD_BUTTON_X|PAD_BUTTON_Y, "X+Y" },
+};
+
+u32 gc_connected;
+
+static int _GetKeys(int Control, BUTTONS * Keys, controller_config_t* config)
+{
+	if(padNeedScan){ gc_connected = PAD_ScanPads(); padNeedScan = 0; }
+	BUTTONS* c = Keys;
+	memset(c, 0, sizeof(BUTTONS));
+
+	controller_GC.available[Control] = (gc_connected & (1<<Control)) ? 1 : 0;
+	if (!controller_GC.available[Control]) return 0;
+
+	unsigned int b = PAD_ButtonsHeld(Control);
+	s8 stickX      = PAD_StickX(Control);
+	s8 stickY      = PAD_StickY(Control);
+	s8 substickX   = PAD_SubStickX(Control);
+	s8 substickY   = PAD_SubStickY(Control);
+	if(stickX    < -48) b |= ANALOG_L;
+	if(stickX    >  48) b |= ANALOG_R;
+	if(stickY    >  48) b |= ANALOG_U;
+	if(stickY    < -48) b |= ANALOG_D;
+	if(substickX < -48) b |= C_STICK_L;
+	if(substickY >  48) b |= C_STICK_R;
+	if(substickY >  48) b |= C_STICK_U;
+	if(substickY < -48) b |= C_STICK_D;
+	int isHeld(button_tp button){ return (b & button->mask) == button->mask; }
+	
+	c->R_DPAD       = isHeld(&buttons[controller_GC.config[Control].DR]);
+	c->L_DPAD       = isHeld(&buttons[controller_GC.config[Control].DL]);
+	c->D_DPAD       = isHeld(&buttons[controller_GC.config[Control].DD]);
+	c->U_DPAD       = isHeld(&buttons[controller_GC.config[Control].DU]);
+	
+	c->START_BUTTON = isHeld(&buttons[controller_GC.config[Control].START]);
+	c->B_BUTTON     = isHeld(&buttons[controller_GC.config[Control].B]);
+	c->A_BUTTON     = isHeld(&buttons[controller_GC.config[Control].A]);
+
+	c->Z_TRIG       = isHeld(&buttons[controller_GC.config[Control].Z]);
+	c->R_TRIG       = isHeld(&buttons[controller_GC.config[Control].R]);
+	c->L_TRIG       = isHeld(&buttons[controller_GC.config[Control].L]);
+
+	c->R_CBUTTON    = isHeld(&buttons[controller_GC.config[Control].CR]);
+	c->L_CBUTTON    = isHeld(&buttons[controller_GC.config[Control].CL]);
+	c->D_CBUTTON    = isHeld(&buttons[controller_GC.config[Control].CD]);
+	c->U_CBUTTON    = isHeld(&buttons[controller_GC.config[Control].CU]);
+
+	if(analog_sources[controller_GC.config[Control].analog].mask & ANALOG_AS_ANALOG){
+		c->X_AXIS = stickX;
+		c->Y_AXIS = stickY;
+	} else if(analog_sources[controller_GC.config[Control].analog].mask & C_STICK_AS_ANALOG){
+		c->X_AXIS = substickX;
+		c->Y_AXIS = substickY;
+	}
+	if(controller_GC.config[Control].invertedY) c->Y_AXIS = -c->Y_AXIS;
+
+	// X+Y quits to menu
+	return isHeld(&menu_combos[controller_GC.config[Control].exit]);
+}
+
+static void pause(int Control){
+	PAD_ControlMotor(Control, PAD_MOTOR_STOP);
+}
+
+static void resume(int Control){ }
+
+static void rumble(int Control, int rumble){
+	PAD_ControlMotor(Control, rumble ? PAD_MOTOR_RUMBLE : PAD_MOTOR_STOP);
+}
+
+static void configure(int Control){
+	// Don't know how this should be integrated
+}
+
+static void assign(int p, int v){
+	// Nothing to do here
+}
+
+static void init(void);
+
 controller_t controller_GC =
 	{ _GetKeys,
 	  configure,
@@ -159,7 +163,9 @@ controller_t controller_GC =
 	  sizeof(buttons)/sizeof(buttons[0]),
 	  buttons,
 	  sizeof(analog_sources)/sizeof(analog_sources[0]),
-	  analog_sources
+	  analog_sources,
+	  sizeof(menu_combos)/sizeof(menu_combos[0]),
+	  menu_combos
 	 };
 
 static void init(void){
@@ -169,4 +175,31 @@ static void init(void){
 	int i;
 	for(i=0; i<4; ++i)
 		controller_GC.available[i] = (gc_connected & (1<<i));
+
+	controller_GC.config_default = (controller_config_t) {0, 1, 3, 2, 7, 8, 11, 6, 5, 4, 12, 13, 14, 15, 0, 0, 0};
+
+/*	controller_GC.config_default->DL = 0;
+	controller_GC.config_default->DR = 1;
+	controller_GC.config_default->DU = 3;
+	controller_GC.config_default->DD = &buttons[2];
+	controller_GC.config_default->A = &buttons[7];
+	controller_GC.config_default->B = &buttons[8];
+	controller_GC.config_default->START = &buttons[11];
+	controller_GC.config_default->L = &buttons[6];
+	controller_GC.config_default->R = &buttons[5];
+	controller_GC.config_default->Z = &buttons[4];
+	controller_GC.config_default->CL = &buttons[12];
+	controller_GC.config_default->CR = &buttons[13];
+	controller_GC.config_default->CU = &buttons[14];
+	controller_GC.config_default->CD = &buttons[15];
+	controller_GC.config_default->analog = &analog_sources[0];
+	controller_GC.config_default->exit = &menu_combos[0];
+	controller_GC.config_default->invertedY = 0;*/
+
+	for(i=0; i<4; ++i)
+	{
+		memcpy(&controller_GC.config[i], &controller_GC.config_default, sizeof(controller_config_t));
+		memcpy(&controller_GC.config_slot[i], &controller_GC.config_default, sizeof(controller_config_t));
+	}
+
 }
