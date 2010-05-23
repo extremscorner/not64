@@ -44,6 +44,7 @@
 #include "../r4300/r4300.h"
 #include "../r4300/interupt.h"
 #include "../r4300/macros.h"
+#include "../r4300/ARAM-blocks.h"
 #include "../r4300/Invalid_Code.h"
 #include "../r4300/ops.h"
 #include "../fileBrowser/fileBrowser.h"
@@ -206,20 +207,27 @@ void dma_pi_write()
 
 #if 0
 	     if(!invalid_code_get(rdram_address1>>12))
-	       //if(blocks[rdram_address1>>12]->block[(rdram_address1&0xFFF)/4].ops != NOTCOMPILED)
-		 invalid_code_set(rdram_address1>>12, 1);
+    		 invalid_code_set(rdram_address1>>12, 1);
 
 	     if(!invalid_code_get(rdram_address2>>12))
-	       //if(blocks[rdram_address2>>12]->block[(rdram_address2&0xFFF)/4].ops != NOTCOMPILED)
-		 invalid_code_set(rdram_address2>>12, 1);
+    		 invalid_code_set(rdram_address2>>12, 1);
 #else
-             if(!invalid_code_get(rdram_address1>>12))
+	     PowerPC_func* func;
+	     PowerPC_block* temp_block = blocks_get(rdram_address1>>12);
+	     if(temp_block){
+	     func = find_func(&temp_block->funcs, rdram_address1);
+         if(!invalid_code_get(rdram_address1>>12))
 	       //if(blocks[rdram_address1>>12]->code_addr[(rdram_address1&0xFFF)/4])
-		 invalid_code_set(rdram_address1>>12, 1);
+        	 if(func) RecompCache_Free(func->start_addr);//invalid_code_set(rdram_address1>>12, 1);
+	     }
 
+	     temp_block = blocks_get(rdram_address2>>12);
+	     if(temp_block){
+         func = find_func(&temp_block->funcs, rdram_address2);
 	     if(!invalid_code_get(rdram_address2>>12))
 	       //if(blocks[rdram_address2>>12]->code_addr[(rdram_address2&0xFFF)/4])
-		 invalid_code_set(rdram_address2>>12, 1);
+	    	 if(func) RecompCache_Free(func->start_addr);//invalid_code_set(rdram_address2>>12, 1);
+	     }
 #endif
 	  }
      }

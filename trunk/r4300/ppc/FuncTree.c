@@ -24,12 +24,11 @@
 #include "../r4300.h"
 #include "Recompile.h"
 
-static inline PowerPC_func_node** _find(PowerPC_func_node** node, unsigned short addr){
+static inline PowerPC_func_node** _find(PowerPC_func_node** node, unsigned int addr){
 	while(*node){
 		if(addr < (*node)->function->start_addr)
 			node = &(*node)->left;
-		else if(addr >= (*node)->function->end_addr &&
-				(*node)->function->end_addr != 0)
+		else if(addr >= (*node)->function->end_addr)
 			node = &(*node)->right;
 		else
 			break;
@@ -37,15 +36,17 @@ static inline PowerPC_func_node** _find(PowerPC_func_node** node, unsigned short
 	return node;
 }
 
-PowerPC_func* find_func(PowerPC_func_node** root, unsigned short addr){
-	//start_section(FUNCS_SECTION);
+PowerPC_func* find_func(PowerPC_func_node** root, unsigned int addr){
+	start_section(FUNCS_SECTION);
 	PowerPC_func_node* node = *_find(root, addr);
-	//end_section(FUNCS_SECTION);
+	end_section(FUNCS_SECTION);
 	return node ? node->function : NULL;
 }
 
 void insert_func(PowerPC_func_node** root, PowerPC_func* func){
 	PowerPC_func_node** node = _find(root, func->start_addr);
+	if(*node) return; // Avoid a memory leak if this function exists
+
 	*node = malloc(sizeof(PowerPC_func_node));
 	(*node)->function = func;
 	(*node)->left = (*node)->right = NULL;
@@ -53,6 +54,8 @@ void insert_func(PowerPC_func_node** root, PowerPC_func* func){
 
 void remove_func(PowerPC_func_node** root, PowerPC_func* func){
 	PowerPC_func_node** node = _find(root, func->start_addr);
+	if(!*node) return; // Avoid a memory error if the function doesn't exist
+
 	PowerPC_func_node* old = *node;
 	if(!(*node)->left)
 		*node = (*node)->right;
