@@ -45,6 +45,7 @@ typedef struct {
 	button_tp L, R, Z;
 	button_tp CL, CR, CU, CD;
 	button_tp analog, exit;
+	int invertedY;
 } controller_config_t;
 
 typedef struct {
