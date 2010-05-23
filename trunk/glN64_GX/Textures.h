@@ -89,7 +89,7 @@ extern TextureCache cache;
 # ifdef HW_RVL
 # define GX_TEXTURE_CACHE_SIZE TEXCACHE_SIZE //8MB for Wii
 # else //HW_RVL
-# define GX_TEXTURE_CACHE_SIZE (1.5*1024*1024)
+# define GX_TEXTURE_CACHE_SIZE (2*1024*1024)
 # endif //!HW_RVL
 #endif //__GX__
 

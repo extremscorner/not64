@@ -123,14 +123,17 @@ int read_safe(void* dst, uint64_t offset, int len)
 {
 	int ol = len;
 	int ret = 0;	
-  unsigned char* sector_buffer = (unsigned char*)memalign(32,2048);
+  unsigned char* sector_buffer = (unsigned char*)memalign(32,32*1024);
 	while (len)
 	{
-		uint32_t sector = offset / 2048;
-		ret |= read_sector(sector_buffer, sector);
-		uint32_t off = offset & 2047;
+#ifdef HW_RVL
+    ret |= DI_ReadDVD(sector_buffer, 2048*16, offset/2048);
+#else  	
+		ret |= dvd_read(sector_buffer, 32768, offset);
+#endif
+		uint32_t off = offset & 32767;
 
-		int rl = 2048 - off;
+		int rl = 32768 - off;
 		if (rl > len)
 			rl = len;
 		memcpy(dst, sector_buffer + off, rl);	
