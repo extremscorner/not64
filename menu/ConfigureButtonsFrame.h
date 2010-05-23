@@ -1,6 +1,6 @@
 /**
- * Wii64 - ConfigureInputFrame.h
- * Copyright (C) 2009, 2010 sepp256
+ * Wii64 - ConfigureButtonsFrame.h
+ * Copyright (C) 2010 sepp256
  *
  * Wii64 homepage: http://www.emulatemii.com
  * email address: sepp256@gmail.com
@@ -18,23 +18,26 @@
  *
 **/
 
-#ifndef CONFIGUREINPUTFRAME_H
-#define CONFIGUREINPUTFRAME_H
+#ifndef CONFIGUREBUTTONSFRAME_H
+#define CONFIGUREBUTTONSFRAME_H
 
 #include "../libgui/Frame.h"
 #include "MenuTypes.h"
 
-class ConfigureInputFrame : public menu::Frame
+class ConfigureButtonsFrame : public menu::Frame
 {
 public:
-	ConfigureInputFrame();
-	~ConfigureInputFrame();
+	ConfigureButtonsFrame();
+	~ConfigureButtonsFrame();
 	void activateSubmenu(int submenu);
 
-	enum ConfigureInputSubmenus
+	enum ConfigureButtonsSubmenus
 	{
-		SUBMENU_NONE=0,
-		SUBMENU_REINIT
+		SUBMENU_N64_PAD0=0,
+		SUBMENU_N64_PAD1,
+		SUBMENU_N64_PAD2,
+		SUBMENU_N64_PAD3,
+		SUBMENU_N64_PADNONE,
 	};
 
 private:

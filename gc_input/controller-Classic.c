@@ -69,7 +69,7 @@ static int _GetKeys(int Control, BUTTONS * Keys, controller_config_t* config)
 		}
 		return 0;
 	}
-
+/*
 	short b = wpad->exp.classic.btns;
 	int isHeld(short button){ return (b & button) == button; }
 	
@@ -116,7 +116,7 @@ static int _GetKeys(int Control, BUTTONS * Keys, controller_config_t* config)
 	}
 
 	// X+Y quits to menu
-	return isHeld(config->exit);
+	return isHeld(config->exit);*/
 }
 
 static void pause(int Control){
@@ -148,9 +148,9 @@ static controller_config_t configs[] = {
 		.L = CLASSIC_CTRL_BUTTON_FULL_L, .R = CLASSIC_CTRL_BUTTON_FULL_R,
 		.Z = CLASSIC_CTRL_BUTTON_ZR,
 		.CL = -1, .CR = -1, .CU = -1, .CD = -1,
-		.flags = L_STICK_AS_ANALOG | R_STICK_AS_C,
+//		.flags = L_STICK_AS_ANALOG | R_STICK_AS_C,
 		.exit = CLASSIC_CTRL_BUTTON_X | CLASSIC_CTRL_BUTTON_Y,
-		.description = "Default settings"
+//		.description = "Default settings"
 	},
 };
 

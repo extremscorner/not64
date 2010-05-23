@@ -69,7 +69,7 @@ static int _GetKeys(int Control, BUTTONS * Keys, controller_config_t* config)
 		}
 		return 0;
 	}
-
+/*
 	unsigned int b  = wpad->btns_h;
 	int isHeld(unsigned int button){ return (b & button) == button; }
 	
@@ -117,7 +117,7 @@ static int _GetKeys(int Control, BUTTONS * Keys, controller_config_t* config)
 	}
 
 	// 1+2 quits to menu
-	return isHeld(config->exit);
+	return isHeld(config->exit);*/
 }
 
 static void pause(int Control){
@@ -153,9 +153,9 @@ static controller_config_t configs[] = {
 		.Z = WPAD_NUNCHUK_BUTTON_Z,
 		.CL = WPAD_BUTTON_LEFT, .CR = WPAD_BUTTON_RIGHT,
 		.CU = WPAD_BUTTON_UP, .CD = WPAD_BUTTON_DOWN,
-		.flags = NUNCHUK_AS_ANALOG,
+//		.flags = NUNCHUK_AS_ANALOG,
 		.exit = WPAD_BUTTON_1 | WPAD_BUTTON_2,
-		.description = "Default settings"
+//		.description = "Default settings"
 	},
 	{
 		.DL = WPAD_BUTTON_LEFT, .DR = WPAD_BUTTON_RIGHT,
@@ -165,9 +165,9 @@ static controller_config_t configs[] = {
 		.L = WPAD_NUNCHUK_BUTTON_C, .R = WPAD_NUNCHUK_BUTTON_Z,
 		.Z = WPAD_BUTTON_B,
 		.CL = -1, .CR = -1, .CU = -1, .CD = -1,
-		.flags = NUNCHUK_AS_C | IR_AS_ANALOG,
+//		.flags = NUNCHUK_AS_C | IR_AS_ANALOG,
 		.exit = WPAD_BUTTON_1 | WPAD_BUTTON_2,
-		.description = "Shooter"
+//		.description = "Shooter"
 	},
 	{
 		.DL = WPAD_BUTTON_LEFT, .DR = WPAD_BUTTON_RIGHT,
@@ -177,9 +177,9 @@ static controller_config_t configs[] = {
 		.L = WPAD_NUNCHUK_BUTTON_C, .R = WPAD_NUNCHUK_BUTTON_Z,
 		.Z = WPAD_BUTTON_B,
 		.CL = -1, .CR = -1, .CU = -1, .CD = -1,
-		.flags = NUNCHUK_AS_C | TILT_AS_ANALOG,
+//		.flags = NUNCHUK_AS_C | TILT_AS_ANALOG,
 		.exit = WPAD_BUTTON_1 | WPAD_BUTTON_2,
-		.description = "Tilt Shooter"
+//		.description = "Tilt Shooter"
 	},
 };
 

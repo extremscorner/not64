@@ -34,6 +34,7 @@ OBJ		=main/rom_gc.o \
 		menu/MainFrame.o \
 		menu/LoadRomFrame.o \
 		menu/FileBrowserFrame.o \
+		menu/ConfigureButtonsFrame.o\
 		menu/ConfigureInputFrame.o\
 		menu/ConfigurePaksFrame.o\
 		menu/CurrentRomFrame.o \

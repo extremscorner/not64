@@ -1,6 +1,6 @@
 /**
  * Wii64 - MenuContext.h
- * Copyright (C) 2009 sepp256
+ * Copyright (C) 2009, 2010 sepp256
  *
  * Wii64 homepage: http://www.emulatemii.com
  * email address: sepp256@gmail.com
@@ -34,6 +34,7 @@
 #include "SelectCPUFrame.h"
 #include "ConfigureInputFrame.h"
 #include "ConfigurePaksFrame.h"
+#include "ConfigureButtonsFrame.h"
 
 #include "MenuTypes.h"
 
@@ -57,7 +58,8 @@ public:
 		FRAME_SETTINGS,
 		FRAME_SELECTCPU,
 		FRAME_CONFIGUREINPUT,
-		FRAME_CONFIGUREPAKS
+		FRAME_CONFIGUREPAKS,
+		FRAME_CONFIGUREBUTTONS
 		
 	};
 
@@ -74,6 +76,7 @@ private:
 	SelectCPUFrame *selectCPUFrame;
 	ConfigureInputFrame *configureInputFrame;
 	ConfigurePaksFrame *configurePaksFrame;
+	ConfigureButtonsFrame *configureButtonsFrame;
 
 };
 

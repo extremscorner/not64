@@ -40,11 +40,11 @@ typedef struct {
 typedef button_t* button_tp;
 
 typedef struct {
-	button_tp DL, DR, DU, DD;
-	button_tp A, B, START;
-	button_tp L, R, Z;
-	button_tp CL, CR, CU, CD;
-	button_tp analog, exit;
+	int DL, DR, DU, DD;
+	int A, B, START;
+	int L, R, Z;
+	int CL, CR, CU, CD;
+	int analog, exit;
 	int invertedY;
 } controller_config_t;
 
@@ -75,13 +75,23 @@ typedef struct {
 	int num_analog_sources;
 	// Pointer to analog sources for this controller type
 	button_t* analog_sources;
+	// Number of menu combos available for this controller type
+	int num_menu_combos;
+	// Pointer to analog sources for this controller type
+	button_t* menu_combos;
+	// Default controller mapping
+	controller_config_t config_default; 
+	// Current controller mapping
+	controller_config_t config[4]; 
+	// Saved controller mappings
+	controller_config_t config_slot[4]; 
 } controller_t;
 
 typedef struct _virtualControllers_t {
 	BOOL          inUse;   // This virtual controller is being controlled
 	controller_t* control; // The type of controller being used
 	int           number;  // The physical controller number
-	controller_config_t config; // The controller mapping to use
+	controller_config_t* config; // This is no longer needed...
 } virtualControllers_t;
 
 extern virtualControllers_t virtualControllers[4];
