@@ -93,6 +93,7 @@ static int _GetKeys(int Control, BUTTONS * Keys, controller_config_t* config)
 		c->X_AXIS = substickX;
 		c->Y_AXIS = substickY;
 	}
+	if(config->invertedY) c->Y_AXIS = -c->Y_AXIS;
 
 	// X+Y quits to menu
 	return isHeld(config->exit);
