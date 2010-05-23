@@ -33,12 +33,18 @@ extern u32 gc_connected;
 void control_info_init(void);
 
 typedef struct {
-	unsigned int DL, DR, DU, DD;
-	unsigned int A, B, START;
-	unsigned int L, R, Z;
-	unsigned int CL, CR, CU, CD;
-	unsigned int flags, exit;
-	char* description;
+	unsigned int mask;
+	char* name;
+} button_t;
+
+typedef button_t* button_tp;
+
+typedef struct {
+	button_tp DL, DR, DU, DD;
+	button_tp A, B, START;
+	button_tp L, R, Z;
+	button_tp CL, CR, CU, CD;
+	button_tp analog, exit;
 } controller_config_t;
 
 typedef struct {
@@ -60,17 +66,21 @@ typedef struct {
 	void (*rumble)(int, int);
 	// Controllers plugged in/available of this type
 	char available[4];
-	// Number of configurations available for this controller type
-	int num_configs;
-	// Pointer to controller configurations for this controller type
-	controller_config_t* configs;
+	// Number of buttons available for this controller type
+	int num_buttons;
+	// Pointer to buttons for this controller type
+	button_t* buttons;
+	// Number of analog sources available for this controller type
+	int num_analog_sources;
+	// Pointer to analog sources for this controller type
+	button_t* analog_sources;
 } controller_t;
 
 typedef struct _virtualControllers_t {
 	BOOL          inUse;   // This virtual controller is being controlled
 	controller_t* control; // The type of controller being used
 	int           number;  // The physical controller number
-	controller_config_t* config; // The controller mapping to use
+	controller_config_t config; // The controller mapping to use
 } virtualControllers_t;
 
 extern virtualControllers_t virtualControllers[4];
