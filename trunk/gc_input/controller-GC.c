@@ -28,8 +28,18 @@
 #include "controller.h"
 
 enum {
-	C_STICK_AS_C = 1, ANALOG_AS_ANALOG = 2,
-	C_STICK_AS_ANALOG = 4, ANALOG_AS_C = 8,
+	ANALOG_AS_ANALOG = 1, C_STICK_AS_ANALOG = 2,
+};
+
+enum {
+	ANALOG_L  = 0x01 << 16,
+	ANALOG_R  = 0x02 << 16,
+	ANALOG_U  = 0x04 << 16,
+	ANALOG_D  = 0x08 << 16,
+	C_STICK_L = 0x10 << 16,
+	C_STICK_R = 0x20 << 16,
+	C_STICK_U = 0x40 << 16,
+	C_STICK_D = 0x80 << 16,
 };
 
 u32 gc_connected;
@@ -43,8 +53,20 @@ static int _GetKeys(int Control, BUTTONS * Keys, controller_config_t* config)
 	controller_GC.available[Control] = (gc_connected & (1<<Control)) ? 1 : 0;
 	if (!controller_GC.available[Control]) return 0;
 
-	unsigned short b = PAD_ButtonsHeld(Control);
-	int isHeld(unsigned short button){ return (b & button) == button; }
+	unsigned int b = PAD_ButtonsHeld(Control);
+	s8 stickX      = PAD_StickX(Control);
+	s8 stickY      = PAD_StickY(Control);
+	s8 substickX   = PAD_SubStickX(Control);
+	s8 substickY   = PAD_SubStickY(Control);
+	if(stickX    < -48) b |= ANALOG_L;
+	if(stickX    >  48) b |= ANALOG_R;
+	if(stickY    >  48) b |= ANALOG_U;
+	if(stickY    < -48) b |= ANALOG_D;
+	if(substickX < -48) b |= C_STICK_L;
+	if(substickY >  48) b |= C_STICK_R;
+	if(substickY >  48) b |= C_STICK_U;
+	if(substickY < -48) b |= C_STICK_D;
+	int isHeld(button_tp button){ return (b & button->mask) == button->mask; }
 	
 	c->R_DPAD       = isHeld(config->DR);
 	c->L_DPAD       = isHeld(config->DL);
@@ -59,33 +81,17 @@ static int _GetKeys(int Control, BUTTONS * Keys, controller_config_t* config)
 	c->R_TRIG       = isHeld(config->R);
 	c->L_TRIG       = isHeld(config->L);
 
-	if(config->flags & C_STICK_AS_C){
-		s8 substickX = PAD_SubStickX(Control);
-		c->R_CBUTTON = (substickX >  48) ? 1 : 0;
-		c->L_CBUTTON = (substickX < -48) ? 1 : 0;
-		s8 substickY = PAD_SubStickY(Control);
-		c->D_CBUTTON = (substickY < -48) ? 1 : 0;
-		c->U_CBUTTON = (substickY >  48) ? 1 : 0;
-	} else if(config->flags & ANALOG_AS_C){
-		s8 stickX = PAD_StickX(Control);
-		c->R_CBUTTON = (stickX >  48) ? 1 : 0;
-		c->L_CBUTTON = (stickX < -48) ? 1 : 0;
-		s8 stickY = PAD_StickY(Control);
-		c->D_CBUTTON = (stickY < -48) ? 1 : 0;
-		c->U_CBUTTON = (stickY >  48) ? 1 : 0;
-	} else {
-		c->R_CBUTTON = isHeld(config->CR);
-		c->L_CBUTTON = isHeld(config->CL);
-		c->D_CBUTTON = isHeld(config->CD);
-		c->U_CBUTTON = isHeld(config->CU);
-	}
+	c->R_CBUTTON    = isHeld(config->CR);
+	c->L_CBUTTON    = isHeld(config->CL);
+	c->D_CBUTTON    = isHeld(config->CD);
+	c->U_CBUTTON    = isHeld(config->CU);
 
-	if(config->flags & ANALOG_AS_ANALOG){
-		c->X_AXIS = PAD_StickX(Control);
-		c->Y_AXIS = PAD_StickY(Control);
-	} else if(config->flags & C_STICK_AS_ANALOG){
-		c->X_AXIS = PAD_SubStickX(Control);
-		c->Y_AXIS = PAD_SubStickY(Control);
+	if(config->analog->mask & ANALOG_AS_ANALOG){
+		c->X_AXIS = stickX;
+		c->Y_AXIS = stickY;
+	} else if(config->analog->mask & C_STICK_AS_ANALOG){
+		c->X_AXIS = substickX;
+		c->Y_AXIS = substickY;
 	}
 
 	// X+Y quits to menu
@@ -112,19 +118,32 @@ static void assign(int p, int v){
 
 static void init(void);
 
-static controller_config_t configs[] = {
-	{
-		.DL = PAD_BUTTON_LEFT, .DR = PAD_BUTTON_RIGHT,
-		.DU = PAD_BUTTON_UP, .DD = PAD_BUTTON_DOWN,
-		.A = PAD_BUTTON_A, .B = PAD_BUTTON_B,
-		.START = PAD_BUTTON_START,
-		.L = PAD_TRIGGER_L, .R = PAD_TRIGGER_R,
-		.Z = PAD_TRIGGER_Z,
-		.CL = -1, .CR = -1, .CU = -1, .CD = -1,
-		.flags = C_STICK_AS_C | ANALOG_AS_ANALOG,
-		.exit = PAD_BUTTON_X | PAD_BUTTON_Y,
-		.description = "Default settings"
-	},
+static button_t buttons[] = {
+	{ PAD_BUTTON_LEFT,  "D-Pad Left" },
+	{ PAD_BUTTON_RIGHT, "D-Pad Right" },
+	{ PAD_BUTTON_DOWN,  "D-Pad Down" },
+	{ PAD_BUTTON_UP,    "D-Pad Up" },
+	{ PAD_TRIGGER_Z,    "Z" },
+	{ PAD_TRIGGER_R,    "R" },
+	{ PAD_TRIGGER_L,    "L" },
+	{ PAD_BUTTON_A,     "A" },
+	{ PAD_BUTTON_B,     "B" },
+	{ PAD_BUTTON_X,     "X" },
+	{ PAD_BUTTON_Y,     "Y" },
+	{ PAD_BUTTON_START, "Start" },
+	{ C_STICK_L,        "C-Stick Left" },
+	{ C_STICK_R,        "C-Stick Right" },
+	{ C_STICK_U,        "C-Stick Up" },
+	{ C_STICK_D,        "C-Stick Down" },
+	{ ANALOG_L,         "Analog Left" },
+	{ ANALOG_R,         "Analog Right" },
+	{ ANALOG_U,         "Analog Up" },
+	{ ANALOG_D,         "Analog Down" },
+};
+
+static button_t analog_sources[] = {
+	{ ANALOG_AS_ANALOG,  "Analog Stick" },
+	{ C_STICK_AS_ANALOG, "C-Stick" },
 };
 
 controller_t controller_GC =
@@ -136,8 +155,10 @@ controller_t controller_GC =
 	  resume,
 	  rumble,
 	  {0, 0, 0, 0},
-	  sizeof(configs)/sizeof(configs[0]),
-	  configs
+	  sizeof(buttons)/sizeof(buttons[0]),
+	  buttons,
+	  sizeof(analog_sources)/sizeof(analog_sources[0]),
+	  analog_sources
 	 };
 
 static void init(void){
