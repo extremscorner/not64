@@ -33,7 +33,8 @@
 #define DYNAREG_RDRAM  19
 #define DYNAREG_LADDR  20
 #define DYNAREG_NINTR  21
-#define DYNAREG_ZERO   22
+#define DYNAREG_FUNC   22
+#define DYNAREG_ZERO   23
 
 #define DYNAOFF_LR     20
 
@@ -50,7 +51,11 @@ typedef enum { MEM_LW,   MEM_LH,   MEM_LB,   MEM_LD,
                MEM_SWC1, MEM_SDC1                    } memType;
 
 unsigned int decodeNInterpret(MIPS_instr, unsigned int, int);
+#ifdef COMPARE_CORE
+int dyna_update_count(unsigned int pc, int isDelaySlot);
+#else
 int dyna_update_count(unsigned int pc);
+#endif
 unsigned int dyna_check_cop1_unusable(unsigned int pc, int isDelaySlot);
 unsigned int dyna_mem(unsigned int value, unsigned int addr,
                       memType type, unsigned int pc, int isDelaySlot);

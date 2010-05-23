@@ -40,6 +40,9 @@ unsigned int dyna_mem(unsigned int, unsigned int, memType, unsigned int, int);
 
 int noCheckInterrupt = 0;
 
+static PowerPC_instr* link_branch = NULL;
+static PowerPC_func* last_func;
+
 /* Recompiled code stack frame:
  *  $sp+12  |
  *  $sp+8   | old cr
@@ -47,8 +50,9 @@ int noCheckInterrupt = 0;
  *  $sp	    | old sp
  */
 
-inline unsigned int dyna_run(unsigned int (*code)(void)){
+inline unsigned int dyna_run(PowerPC_func* func, unsigned int (*code)(void)){
 	unsigned int naddr;
+	PowerPC_instr* return_addr;
 
 	__asm__ volatile(
 		// Create the stack frame for code
@@ -64,12 +68,14 @@ inline unsigned int dyna_run(unsigned int (*code)(void)){
 		"mr	19, %5    \n"
 		"mr	20, %6    \n"
 		"mr	21, %7    \n"
-		"addi	22, 0, 0  \n"
+		"mr	22, %8    \n"
+		"addi	23, 0, 0  \n"
 		:: "r" (reg), "r" (reg_cop0),
 		   "r" (reg_cop1_simple), "r" (reg_cop1_double),
 		   "r" (&FCR31), "r" (rdram),
-		   "r" (&last_addr), "r" (&next_interupt)
-		: "14", "15", "16", "17", "18", "19", "20", "21", "22");
+		   "r" (&last_addr), "r" (&next_interupt),
+		   "r" (func)
+		: "14", "15", "16", "17", "18", "19", "20", "21", "22", "23");
 
 	end_section(TRAMP_SECTION);
 
@@ -77,24 +83,61 @@ inline unsigned int dyna_run(unsigned int (*code)(void)){
 	__asm__ volatile(
 		// Save the lr so the recompiled code won't have to
 		"bl	4         \n"
-		"mtctr	%1        \n"
+		"mtctr	%4        \n"
 		"mflr	4         \n"
 		"addi	4, 4, 20  \n"
 		"stw	4, 20(1)  \n"
 		// Execute the code
 		"bctrl           \n"
 		"mr	%0, 3     \n"
+		// Get return_addr, link_branch, and last_func
+		"lwz	%2, 20(1) \n"
+		"mflr	%1        \n"
+		"mr	%3, 22    \n"
 		// Pop the stack
 		"lwz	1, 0(1)   \n"
-		: "=r" (naddr)
+		: "=r" (naddr), "=r" (link_branch), "=r" (return_addr),
+		  "=r" (last_func)
 		: "r" (code)
-		: "3", "4", "5", "6", "7", "8", "9", "10", "11", "12");
+		: "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "22");
 
+	link_branch = link_branch == return_addr ? NULL : link_branch - 1;
+	
 	return naddr;
+}
+
+unsigned int (*lookup_func(void))(unsigned int address){
+	// TODO: Use in recompiled code like so:
+	/*
+	 * load desination address in r3
+	 * bl    lookup_func
+	 * mtctr r3
+	 * cmpi  cr0, r3, 0
+	 * bnectr
+	 * lwz   r0, lr(r1)
+	 * mtlr  r0
+	 * load destination address in r3
+	 * blr
+	 */
+
+	PowerPC_block* dst_block = blocks[address>>12];
+	unsigned long paddr = update_invalid_addr(address);
+
+	if(!paddr){ stop=1; return 0; }
+
+	if(!dst_block || invalid_code_get(address>>12))
+		return 0;
+
+	PowerPC_func* func = find_func(&dst_block->funcs, address);
+	if(!func) return 0;
+
+	return func->code_addr[(address-func->start_addr)>>2];
 }
 
 void dynarec(unsigned int address){
 	while(!stop){
+		refresh_stat();
+		
 		start_section(TRAMP_SECTION);
 		PowerPC_block* dst_block = blocks_get(address>>12);
 		unsigned long paddr = update_invalid_addr(address);
@@ -113,7 +156,6 @@ void dynarec(unsigned int address){
 			dst_block->funcs         = NULL;
 			dst_block->start_address = address & ~0xFFF;
 			dst_block->end_address   = (address & ~0xFFF) + 0x1000;
-			
 			if((paddr >= 0xb0000000 && paddr < 0xc0000000) ||
 			   (paddr >= 0x90000000 && paddr < 0xa0000000)){
 				init_block(NULL, dst_block);
@@ -124,17 +166,17 @@ void dynarec(unsigned int address){
 		} else if(invalid_code_get(address>>12)){
 			invalidate_block(dst_block);
 		}
-		
-    PowerPC_func* func = find_func(&dst_block->funcs, address&0xFFFF);
-    
-		if(!func || !func->code_addr[((address&0xFFFF)-func->start_addr)>>2]){
+
+		PowerPC_func* func = find_func(&dst_block->funcs, address);
+
+		if(!func || !func->code_addr[(address-func->start_addr)>>2]){
 			/*sprintf(txtbuffer, "code at %08x is not compiled\n", address);
 			DEBUG_print(txtbuffer, DBG_USBGECKO);*/
 			if((paddr >= 0xb0000000 && paddr < 0xc0000000) ||
 			   (paddr >= 0x90000000 && paddr < 0xa0000000))
 				dst_block->mips_code =
 					ROMCache_pointer((paddr-(address-dst_block->start_address))&0x0FFFFFFF);
-			start_section(COMPILER_SECTION);	
+			start_section(COMPILER_SECTION);
 			func = recompile_block(dst_block, address);
 			end_section(COMPILER_SECTION);
 		} else {
@@ -143,12 +185,18 @@ void dynarec(unsigned int address){
 #endif
 		}
 
-		int index = ((address&0xFFFF) - func->start_addr)>>2;
+		int index = (address - func->start_addr)>>2;
 
 		// Recompute the block offset
 		unsigned int (*code)(void);
 		code = (unsigned int (*)(void))func->code_addr[index];
-		address = dyna_run(code);
+		
+		// Create a link if possible
+		if(link_branch && !func_was_freed(last_func))
+			RecompCache_Link(last_func, link_branch, func, code);
+		clear_freed_funcs();
+		
+		address = dyna_run(func, code);
 
 		if(!noCheckInterrupt){
 			last_addr = interp_addr = address;
@@ -178,9 +226,20 @@ unsigned int decodeNInterpret(MIPS_instr mips, unsigned int pc,
 	return interp_addr != pc + 4 ? interp_addr : 0;
 }
 
+#ifdef COMPARE_CORE
+int dyna_update_count(unsigned int pc, int isDelaySlot){
+#else
 int dyna_update_count(unsigned int pc){
+#endif
 	Count += (pc - last_addr)/2;
 	last_addr = pc;
+
+#ifdef COMPARE_CORE
+	if(isDelaySlot){
+		interp_addr = pc;
+		compare_core();
+	}
+#endif
 
 	return next_interupt - Count;
 }
@@ -200,10 +259,10 @@ unsigned int dyna_check_cop1_unusable(unsigned int pc, int isDelaySlot){
 }
 
 static void invalidate_func(unsigned int addr){
-	PowerPC_block* block = blocks_get(addr>>12);
-	PowerPC_func* func = find_func(&block->funcs, addr&0xffff);
+	PowerPC_block* block = blocks[addr>>12];
+	PowerPC_func* func = find_func(&block->funcs, addr);
 	if(func)
-		RecompCache_Free(block->start_address | func->start_addr);
+		RecompCache_Free(func->start_addr);
 }
 
 #define check_memory() \

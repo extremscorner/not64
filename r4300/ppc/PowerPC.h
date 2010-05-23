@@ -990,12 +990,12 @@ PowerPC_instr Instruction(int opcode, ...);
 	  PPC_SET_CRF   (ppc, (field)); \
 	  PPC_SET_RB    (ppc, ((immed)<<1)); }
 
-#define GEN_MTFSF(ppc,fields,rs) \
+#define GEN_MTFSF(ppc,fields,fs) \
 	{ ppc = NEW_PPC_INSTR(); \
 	  PPC_SET_OPCODE(ppc, PPC_OPCODE_FPD); \
 	  PPC_SET_FUNC  (ppc, PPC_FUNC_MTFSF); \
 	  PPC_SET_FM    (ppc, (fields)); \
-	  PPC_SET_RB    (ppc, (rs)); }
+	  PPC_SET_RB    (ppc, (fs)); }
 
 #define GEN_FCMPU(ppc,fa,fb,cr) \
 	{ ppc = NEW_PPC_INSTR(); \

@@ -32,22 +32,32 @@ typedef struct hole_node {
 	struct hole_node* next;
 } PowerPC_func_hole_node;
 
-typedef struct {
-	unsigned short start_addr;
-	unsigned short end_addr;
-	PowerPC_instr* code;
-	unsigned int   lru;
-	PowerPC_func_hole_node* holes;
-	PowerPC_instr** code_addr;
-} PowerPC_func;
+struct func;
 
 typedef struct func_node {
-	PowerPC_func* function;
+	struct func* function;
 	struct func_node* left;
 	struct func_node* right;
 } PowerPC_func_node;
 
-PowerPC_func* find_func(PowerPC_func_node** root, unsigned short addr);
+typedef struct link_node {
+	PowerPC_instr*    branch;
+	struct func*      func;
+	struct link_node* next;
+} PowerPC_func_link_node;
+
+typedef struct func {
+	unsigned int start_addr;
+	unsigned int end_addr;
+	PowerPC_instr* code;
+	unsigned int   lru;
+	PowerPC_func_hole_node* holes;
+	PowerPC_func_link_node* links_in;
+	PowerPC_func_node*      links_out;
+	PowerPC_instr** code_addr;
+} PowerPC_func;
+
+PowerPC_func* find_func(PowerPC_func_node** root, unsigned int addr);
 void insert_func(PowerPC_func_node** root, PowerPC_func* func);
 void remove_func(PowerPC_func_node** root, PowerPC_func* func);
 
@@ -82,6 +92,9 @@ int        is_j_out(int branch, int is_aa);
 // Use these for jumps that won't be known until later in compile time
 int        add_jump_special(int is_j);
 void       set_jump_special(int which, int new_jump);
+
+int  func_was_freed(PowerPC_func*);
+void clear_freed_funcs(void);
 
 /* These functions are used to initialize, recompile, and deinit a block
    init assumes that all pointers in the block fed it it are NULL or allocated
