@@ -43,35 +43,36 @@ enum {
 };
 
 static button_t buttons[] = {
-	{ PAD_BUTTON_LEFT,  "D-Pad Left" },
-	{ PAD_BUTTON_RIGHT, "D-Pad Right" },
-	{ PAD_BUTTON_DOWN,  "D-Pad Down" },
-	{ PAD_BUTTON_UP,    "D-Pad Up" },
-	{ PAD_TRIGGER_Z,    "Z" },
-	{ PAD_TRIGGER_R,    "R" },
-	{ PAD_TRIGGER_L,    "L" },
-	{ PAD_BUTTON_A,     "A" },
-	{ PAD_BUTTON_B,     "B" },
-	{ PAD_BUTTON_X,     "X" },
-	{ PAD_BUTTON_Y,     "Y" },
-	{ PAD_BUTTON_START, "Start" },
-	{ C_STICK_L,        "C-Stick Left" },
-	{ C_STICK_R,        "C-Stick Right" },
-	{ C_STICK_U,        "C-Stick Up" },
-	{ C_STICK_D,        "C-Stick Down" },
-	{ ANALOG_L,         "Analog Left" },
-	{ ANALOG_R,         "Analog Right" },
-	{ ANALOG_U,         "Analog Up" },
-	{ ANALOG_D,         "Analog Down" },
+	{  0, 0,                "None" },
+	{  1, PAD_BUTTON_UP,    "D-Pad Up" },
+	{  2, PAD_BUTTON_LEFT,  "D-Pad Left" },
+	{  3, PAD_BUTTON_RIGHT, "D-Pad Right" },
+	{  4, PAD_BUTTON_DOWN,  "D-Pad Down" },
+	{  5, PAD_TRIGGER_Z,    "Z" },
+	{  6, PAD_TRIGGER_L,    "L" },
+	{  7, PAD_TRIGGER_R,    "R" },
+	{  8, PAD_BUTTON_A,     "A" },
+	{  9, PAD_BUTTON_B,     "B" },
+	{ 10, PAD_BUTTON_X,     "X" },
+	{ 11, PAD_BUTTON_Y,     "Y" },
+	{ 12, PAD_BUTTON_START, "Start" },
+	{ 13, C_STICK_U,        "C-Stick Up" },
+	{ 14, C_STICK_L,        "C-Stick Left" },
+	{ 15, C_STICK_R,        "C-Stick Right" },
+	{ 16, C_STICK_D,        "C-Stick Down" },
+	{ 17, ANALOG_U,         "Analog Up" },
+	{ 18, ANALOG_L,         "Analog Left" },
+	{ 19, ANALOG_R,         "Analog Right" },
+	{ 20, ANALOG_D,         "Analog Down" },
 };
 
 static button_t analog_sources[] = {
-	{ ANALOG_AS_ANALOG,  "Analog Stick" },
-	{ C_STICK_AS_ANALOG, "C-Stick" },
+	{ 0, ANALOG_AS_ANALOG,  "Analog Stick" },
+	{ 1, C_STICK_AS_ANALOG, "C-Stick" },
 };
 
 static button_t menu_combos[] = {
-	{ PAD_BUTTON_X|PAD_BUTTON_Y, "X+Y" },
+	{ 0, PAD_BUTTON_X|PAD_BUTTON_Y, "X+Y" },
 };
 
 u32 gc_connected;
@@ -100,35 +101,35 @@ static int _GetKeys(int Control, BUTTONS * Keys, controller_config_t* config)
 	if(substickY < -48) b |= C_STICK_D;
 	int isHeld(button_tp button){ return (b & button->mask) == button->mask; }
 	
-	c->R_DPAD       = isHeld(&buttons[controller_GC.config[Control].DR]);
-	c->L_DPAD       = isHeld(&buttons[controller_GC.config[Control].DL]);
-	c->D_DPAD       = isHeld(&buttons[controller_GC.config[Control].DD]);
-	c->U_DPAD       = isHeld(&buttons[controller_GC.config[Control].DU]);
+	c->R_DPAD       = isHeld(config->DR);
+	c->L_DPAD       = isHeld(config->DL);
+	c->D_DPAD       = isHeld(config->DD);
+	c->U_DPAD       = isHeld(config->DU);
 	
-	c->START_BUTTON = isHeld(&buttons[controller_GC.config[Control].START]);
-	c->B_BUTTON     = isHeld(&buttons[controller_GC.config[Control].B]);
-	c->A_BUTTON     = isHeld(&buttons[controller_GC.config[Control].A]);
+	c->START_BUTTON = isHeld(config->START);
+	c->B_BUTTON     = isHeld(config->B);
+	c->A_BUTTON     = isHeld(config->A);
 
-	c->Z_TRIG       = isHeld(&buttons[controller_GC.config[Control].Z]);
-	c->R_TRIG       = isHeld(&buttons[controller_GC.config[Control].R]);
-	c->L_TRIG       = isHeld(&buttons[controller_GC.config[Control].L]);
+	c->Z_TRIG       = isHeld(config->Z);
+	c->R_TRIG       = isHeld(config->R);
+	c->L_TRIG       = isHeld(config->L);
 
-	c->R_CBUTTON    = isHeld(&buttons[controller_GC.config[Control].CR]);
-	c->L_CBUTTON    = isHeld(&buttons[controller_GC.config[Control].CL]);
-	c->D_CBUTTON    = isHeld(&buttons[controller_GC.config[Control].CD]);
-	c->U_CBUTTON    = isHeld(&buttons[controller_GC.config[Control].CU]);
+	c->R_CBUTTON    = isHeld(config->CR);
+	c->L_CBUTTON    = isHeld(config->CL);
+	c->D_CBUTTON    = isHeld(config->CD);
+	c->U_CBUTTON    = isHeld(config->CU);
 
-	if(analog_sources[controller_GC.config[Control].analog].mask & ANALOG_AS_ANALOG){
+	if(config->analog->mask & ANALOG_AS_ANALOG){
 		c->X_AXIS = stickX;
 		c->Y_AXIS = stickY;
-	} else if(analog_sources[controller_GC.config[Control].analog].mask & C_STICK_AS_ANALOG){
+	} else if(config->analog->mask & C_STICK_AS_ANALOG){
 		c->X_AXIS = substickX;
 		c->Y_AXIS = substickY;
 	}
-	if(controller_GC.config[Control].invertedY) c->Y_AXIS = -c->Y_AXIS;
+	if(config->invertedY) c->Y_AXIS = -c->Y_AXIS;
 
 	// X+Y quits to menu
-	return isHeld(&menu_combos[controller_GC.config[Control].exit]);
+	return isHeld(config->exit);
 }
 
 static void pause(int Control){
@@ -176,25 +177,23 @@ static void init(void){
 	for(i=0; i<4; ++i)
 		controller_GC.available[i] = (gc_connected & (1<<i));
 
-	controller_GC.config_default = (controller_config_t) {0, 1, 3, 2, 7, 8, 11, 6, 5, 4, 12, 13, 14, 15, 0, 0, 0};
-
-/*	controller_GC.config_default->DL = 0;
-	controller_GC.config_default->DR = 1;
-	controller_GC.config_default->DU = 3;
-	controller_GC.config_default->DD = &buttons[2];
-	controller_GC.config_default->A = &buttons[7];
-	controller_GC.config_default->B = &buttons[8];
-	controller_GC.config_default->START = &buttons[11];
-	controller_GC.config_default->L = &buttons[6];
-	controller_GC.config_default->R = &buttons[5];
-	controller_GC.config_default->Z = &buttons[4];
-	controller_GC.config_default->CL = &buttons[12];
-	controller_GC.config_default->CR = &buttons[13];
-	controller_GC.config_default->CU = &buttons[14];
-	controller_GC.config_default->CD = &buttons[15];
-	controller_GC.config_default->analog = &analog_sources[0];
-	controller_GC.config_default->exit = &menu_combos[0];
-	controller_GC.config_default->invertedY = 0;*/
+	controller_GC.config_default.DU        = &buttons[1];
+	controller_GC.config_default.DL        = &buttons[2];
+	controller_GC.config_default.DR        = &buttons[3];
+	controller_GC.config_default.DD        = &buttons[4];
+	controller_GC.config_default.Z         = &buttons[5];
+	controller_GC.config_default.L         = &buttons[6];
+	controller_GC.config_default.R         = &buttons[7];
+	controller_GC.config_default.A         = &buttons[8];
+	controller_GC.config_default.B         = &buttons[9];
+	controller_GC.config_default.START     = &buttons[12];
+	controller_GC.config_default.CU        = &buttons[13];
+	controller_GC.config_default.CL        = &buttons[14];
+	controller_GC.config_default.CR        = &buttons[15];
+	controller_GC.config_default.CD        = &buttons[16];
+	controller_GC.config_default.analog    = &analog_sources[0];
+	controller_GC.config_default.exit      = &menu_combos[0];
+	controller_GC.config_default.invertedY = 0;
 
 	for(i=0; i<4; ++i)
 	{

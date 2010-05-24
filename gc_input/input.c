@@ -374,7 +374,7 @@ void assign_controller(int wv, controller_t* type, int wp){
 	virtualControllers[wv].control = type;
 	virtualControllers[wv].inUse   = 1;
 	virtualControllers[wv].number  = wp;
-//	virtualControllers[wv].config  = type->configs;
+	virtualControllers[wv].config  = &type->config[wv];
 
 	type->assign(wp,wv);
 

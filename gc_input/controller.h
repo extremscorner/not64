@@ -33,6 +33,7 @@ extern u32 gc_connected;
 void control_info_init(void);
 
 typedef struct {
+	int index;
 	unsigned int mask;
 	char* name;
 } button_t;
@@ -40,11 +41,11 @@ typedef struct {
 typedef button_t* button_tp;
 
 typedef struct {
-	int DL, DR, DU, DD;
-	int A, B, START;
-	int L, R, Z;
-	int CL, CR, CU, CD;
-	int analog, exit;
+	button_tp DL, DR, DU, DD;
+	button_tp A, B, START;
+	button_tp L, R, Z;
+	button_tp CL, CR, CU, CD;
+	button_tp analog, exit;
 	int invertedY;
 } controller_config_t;
 
