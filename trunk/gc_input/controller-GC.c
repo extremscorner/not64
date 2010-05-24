@@ -165,7 +165,8 @@ static void init(void);
 static void refreshAvailable(void);
 
 controller_t controller_GC =
-	{ _GetKeys,
+	{ 'G',
+	  _GetKeys,
 	  configure,
 	  init,
 	  assign,

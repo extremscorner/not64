@@ -394,3 +394,74 @@ void auto_assign_controllers(void){
 		padType[i] = PADTYPE_NONE;
 	}
 }
+
+int load_configurations(FILE* f, controller_t* controller){
+	int i, index;
+	char magic[4] = { 
+		'W', 64, controller->identifier, CONTROLLER_CONFIG_VERSION
+	};
+	char actual[4];
+	fread(actual, 1, 4, f);
+	if(!memcmp(magic, actual, 4))
+		return 0;
+	
+	for(i=0; i<4; ++i){
+		fread(&index, 4, 1, f);
+		controller->config_slot[i].DL = &controller->buttons[index];
+		fread(&index, 4, 1, f);
+		controller->config_slot[i].DR = &controller->buttons[index];
+		fread(&index, 4, 1, f);
+		controller->config_slot[i].DU = &controller->buttons[index];
+		fread(&index, 4, 1, f);
+		controller->config_slot[i].DD = &controller->buttons[index];
+		
+		fread(&index, 4, 1, f);
+		controller->config_slot[i].A = &controller->buttons[index];
+		fread(&index, 4, 1, f);
+		controller->config_slot[i].B = &controller->buttons[index];
+		fread(&index, 4, 1, f);
+		controller->config_slot[i].START = &controller->buttons[index];
+		
+		fread(&index, 4, 1, f);
+		controller->config_slot[i].L = &controller->buttons[index];
+		fread(&index, 4, 1, f);
+		controller->config_slot[i].R = &controller->buttons[index];
+		fread(&index, 4, 1, f);
+		controller->config_slot[i].Z = &controller->buttons[index];
+		
+		fread(&index, 4, 1, f);
+		controller->config_slot[i].analog = &controller->analog_sources[index];
+		fread(&index, 4, 1, f);
+		controller->config_slot[i].exit = &controller->menu_combos[index];
+		fread(&controller->config_slot[i].invertedY, 4, 1, f);
+	}
+	
+	return 1;
+}
+
+void save_configurations(FILE* f, controller_t* controller){
+	int i;
+	char magic[4] = { 
+		'W', 64, controller->identifier, CONTROLLER_CONFIG_VERSION
+	};
+	fwrite(magic, 1, 4, f);
+	
+	for(i=0; i<4; ++i){
+		fwrite(&controller->config_slot[i].DL.index, 4, 1, f);
+		fwrite(&controller->config_slot[i].DR.index, 4, 1, f);
+		fwrite(&controller->config_slot[i].DU.index, 4, 1, f);
+		fwrite(&controller->config_slot[i].DD.index, 4, 1, f);
+		
+		fwrite(&controller->config_slot[i].A.index, 4, 1, f);
+		fwrite(&controller->config_slot[i].B.index, 4, 1, f);
+		fwrite(&controller->config_slot[i].START.index, 4, 1, f);
+		
+		fwrite(&controller->config_slot[i].L.index, 4, 1, f);
+		fwrite(&controller->config_slot[i].R.index, 4, 1, f);
+		fwrite(&controller->config_slot[i].Z.index, 4, 1, f);
+		
+		fwrite(&controller->config_slot[i].analog.index, 4, 1, f);
+		fwrite(&controller->config_slot[i].exit.index, 4, 1, f);
+		fwrite(&controller->config_slot[i].invertedY, 4, 1, f);
+	}
+}

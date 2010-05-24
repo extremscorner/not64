@@ -205,7 +205,8 @@ static void init(void);
 static void refreshAvailable(void);
 
 controller_t controller_WiimoteNunchuk =
-	{ _GetKeys,
+	{ 'N',
+	  _GetKeys,
 	  configure,
 	  init,
 	  assign,

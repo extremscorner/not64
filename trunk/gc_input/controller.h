@@ -42,6 +42,7 @@ typedef struct {
 
 typedef button_t* button_tp;
 
+#define CONTROLLER_CONFIG_VERSION 1
 typedef struct {
 	button_tp DL, DR, DU, DD;
 	button_tp A, B, START;
@@ -52,6 +53,8 @@ typedef struct {
 } controller_config_t;
 
 typedef struct {
+	// Identifier used in configuration file names
+	char identifier;
 	// Call GetKeys to read in BUTTONS for a controller of this type
 	// You should pass in controller num for this type
 	//   Not for the player number assigned
@@ -122,5 +125,8 @@ extern controller_t* controller_ts[num_controller_t];
 void init_controller_ts(void);
 void assign_controller(int whichVirtual, controller_t*, int whichPhysical);
 void unassign_controller(int whichVirtual);
+
+int load_configurations(FILE*, controller_t*);
+void save_configurations(FILE*, controller_t*);
 
 #endif
