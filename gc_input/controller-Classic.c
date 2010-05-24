@@ -62,10 +62,10 @@ enum {
 
 static button_t buttons[] = {
 	{  0, ~0,                         "None" },
-	{  1, CLASSIC_CTRL_BUTTON_UP,     "D-Pad Up" },
-	{  2, CLASSIC_CTRL_BUTTON_LEFT,   "D-Pad Left" },
-	{  3, CLASSIC_CTRL_BUTTON_RIGHT,  "D-Pad Right" },
-	{  4, CLASSIC_CTRL_BUTTON_DOWN,   "D-Pad Down" },
+	{  1, CLASSIC_CTRL_BUTTON_UP,     "D-Up" },
+	{  2, CLASSIC_CTRL_BUTTON_LEFT,   "D-Left" },
+	{  3, CLASSIC_CTRL_BUTTON_RIGHT,  "D-Right" },
+	{  4, CLASSIC_CTRL_BUTTON_DOWN,   "D-Down" },
 	{  5, CLASSIC_CTRL_BUTTON_FULL_L, "L" },
 	{  6, CLASSIC_CTRL_BUTTON_FULL_R, "R" },
 	{  7, CLASSIC_CTRL_BUTTON_ZL,     "Left Z" },
@@ -77,14 +77,14 @@ static button_t buttons[] = {
 	{ 13, CLASSIC_CTRL_BUTTON_PLUS,   "+" },
 	{ 14, CLASSIC_CTRL_BUTTON_MINUS,  "-" },
 	{ 15, CLASSIC_CTRL_BUTTON_HOME,   "Home" },
-	{ 16, R_STICK_U,                  "Right Stick Up" },
-	{ 17, R_STICK_L,                  "Right Stick Left" },
-	{ 18, R_STICK_R,                  "Right Stick Right" },
-	{ 19, R_STICK_D,                  "Right Stick Down" },
-	{ 20, L_STICK_U,                  "Left Stick Up" },
-	{ 21, L_STICK_L,                  "Left Stick Left" },
-	{ 22, L_STICK_R,                  "Left Stick Right" },
-	{ 23, L_STICK_D,                  "Left Stick Down" },
+	{ 16, R_STICK_U,                  "RS-Up" },
+	{ 17, R_STICK_L,                  "RS-Left" },
+	{ 18, R_STICK_R,                  "RS-Right" },
+	{ 19, R_STICK_D,                  "RS-Down" },
+	{ 20, L_STICK_U,                  "LS-Up" },
+	{ 21, L_STICK_L,                  "LS-Left" },
+	{ 22, L_STICK_R,                  "LS-Right" },
+	{ 23, L_STICK_D,                  "LS-Down" },
 };
 
 static button_t analog_sources[] = {
@@ -198,6 +198,7 @@ static void assign(int p, int v){
 }
 
 static void init(void);
+static void refreshAvailable(void);
 
 controller_t controller_Classic =
 	{ _GetKeys,
@@ -207,6 +208,7 @@ controller_t controller_Classic =
 	  pause,
 	  resume,
 	  rumble,
+	  refreshAvailable,
 	  {0, 0, 0, 0},
 	  sizeof(buttons)/sizeof(buttons[0]),
 	  buttons,
@@ -217,18 +219,10 @@ controller_t controller_Classic =
 	 };
 
 static void init(void){
+
 	int i;
-	WPAD_ScanPads();
-	for(i=0; i<4; ++i){
-		WPADData* wpad = WPAD_Data(i);
-		// Only use a connected classic controller
-		if(wpad->err == WPAD_ERR_NONE &&
-		   wpad->exp.type == WPAD_EXP_CLASSIC){
-			controller_Classic.available[i] = 1;
-			WPAD_SetDataFormat(i, WPAD_DATA_EXPANSION);
-		} else
-			controller_Classic.available[i] = 0;
-	}
+
+	refreshAvailable();
 	
 	controller_Classic.config_default.DU        = &buttons[1];  // D-Pad Up
 	controller_Classic.config_default.DL        = &buttons[2];  // D-Pad Left
@@ -252,5 +246,21 @@ static void init(void){
 	{
 		memcpy(&controller_Classic.config[i], &controller_Classic.config_default, sizeof(controller_config_t));
 		memcpy(&controller_Classic.config_slot[i], &controller_Classic.config_default, sizeof(controller_config_t));
+	}
+}
+
+static void refreshAvailable(void){
+
+	int i;
+	WPAD_ScanPads();
+	for(i=0; i<4; ++i){
+		WPADData* wpad = WPAD_Data(i);
+		// Only use a connected classic controller
+		if(wpad->err == WPAD_ERR_NONE &&
+		   wpad->exp.type == WPAD_EXP_CLASSIC){
+			controller_Classic.available[i] = 1;
+			WPAD_SetDataFormat(i, WPAD_DATA_EXPANSION);
+		} else
+			controller_Classic.available[i] = 0;
 	}
 }

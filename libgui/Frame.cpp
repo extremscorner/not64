@@ -48,10 +48,15 @@ void Frame::hideFrame()
 
 void Frame::updateTime(float deltaTime)
 {
-	ComponentList::const_iterator iteration;
-	for (iteration = componentList.begin(); iteration != componentList.end(); iteration++)
+	if(isVisible())
 	{
-		(*iteration)->updateTime(deltaTime);
+		updateFrame(deltaTime);
+
+		ComponentList::const_iterator iteration;
+		for (iteration = componentList.begin(); iteration != componentList.end(); iteration++)
+		{
+			(*iteration)->updateTime(deltaTime);
+		}
 	}
 }
 

@@ -396,6 +396,9 @@ void Logo::drawComponent(Graphics& gfx)
 	rotateX += stickX/32;
 	rotateY += stickY/32;
 
+	if (!isVisible())
+		return;
+
 	// move the logo out in front of us and rotate it
 	guMtxIdentity (m);
 	if(logoMode == LOGO_W)	

@@ -1,6 +1,6 @@
 /**
  * Wii64 - SettingsFrame.cpp
- * Copyright (C) 2009 sepp256
+ * Copyright (C) 2009, 2010 sepp256
  *
  * Wii64 homepage: http://www.emulatemii.com
  * email address: sepp256@gmail.com
@@ -21,6 +21,7 @@
 #include "MenuContext.h"
 #include "SettingsFrame.h"
 #include "ConfigurePaksFrame.h"
+#include "ConfigureButtonsFrame.h"
 #include "../libgui/Button.h"
 #include "../libgui/TextBox.h"
 #include "../libgui/resources.h"
@@ -66,6 +67,7 @@ void Func_FbTexturesOff();
 
 void Func_ConfigureInput();
 void Func_ConfigurePaks();
+void Func_ConfigureButtons();
 
 void Func_DisableAudioYes();
 void Func_DisableAudioNo();
@@ -77,14 +79,14 @@ void Func_DeleteSaves();
 void Func_ReturnFromSettingsFrame();
 
 
-#define NUM_FRAME_BUTTONS 33
+#define NUM_FRAME_BUTTONS 34
 #define NUM_TAB_BUTTONS 5
 #define FRAME_BUTTONS settingsFrameButtons
 #define FRAME_STRINGS settingsFrameStrings
 #define NUM_FRAME_TEXTBOXES 11
 #define FRAME_TEXTBOXES settingsFrameTextBoxes
 
-static char FRAME_STRINGS[32][23] =
+static char FRAME_STRINGS[33][23] =
 	{ "General",
 	  "Video",
 	  "Input",
@@ -114,6 +116,7 @@ static char FRAME_STRINGS[32][23] =
 	//Strings for Input tab
 	  "Configure Input",
 	  "Configure Paks",
+	  "Configure Buttons", //[26]
 	//Strings for Audio tab
 	  "Disable Audio",
 	  "Yes",
@@ -170,15 +173,16 @@ struct ButtonInfo
 	{	NULL,	BTN_A_SEL,	FRAME_STRINGS[21],	420.0,	380.0,	 75.0,	56.0,	22,	 1,	23,	23,	Func_FbTexturesOff,		Func_ReturnFromSettingsFrame }, // FbTex: Off
 	//Buttons for Input Tab (starts at button[25])
 	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[24],	180.0,	100.0,	280.0,	56.0,	 2,	26,	-1,	-1,	Func_ConfigureInput,	Func_ReturnFromSettingsFrame }, // Configure Mappings
-	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[25],	180.0,	170.0,	280.0,	56.0,	25,	 2,	-1,	-1,	Func_ConfigurePaks,		Func_ReturnFromSettingsFrame }, // Configure Paks
-	//Buttons for Audio Tab (starts at button[27])
-	{	NULL,	BTN_A_SEL,	FRAME_STRINGS[27],	345.0,	100.0,	 75.0,	56.0,	 3,	 3,	28,	28,	Func_DisableAudioYes,	Func_ReturnFromSettingsFrame }, // Disable Audio: Yes
-	{	NULL,	BTN_A_SEL,	FRAME_STRINGS[28],	440.0,	100.0,	 75.0,	56.0,	 3,	 3,	27,	27,	Func_DisableAudioNo,	Func_ReturnFromSettingsFrame }, // Disable Audio: No
-	//Buttons for Saves Tab (starts at button[29])
-	{	NULL,	BTN_A_SEL,	FRAME_STRINGS[27],	375.0,	100.0,	 75.0,	56.0,	 4,	31,	30,	30,	Func_AutoSaveNativeYes,	Func_ReturnFromSettingsFrame }, // Auto Save Native: Yes
-	{	NULL,	BTN_A_SEL,	FRAME_STRINGS[28],	470.0,	100.0,	 75.0,	56.0,	 4,	31,	29,	29,	Func_AutoSaveNativeNo,	Func_ReturnFromSettingsFrame }, // Auto Save Native: No
-	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[30],	365.0,	170.0,	190.0,	56.0,	29,	32,	-1,	-1,	Func_CopySaves,			Func_ReturnFromSettingsFrame }, // Copy Saves
-	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[31],	365.0,	240.0,	190.0,	56.0,	31,	 4,	-1,	-1,	Func_DeleteSaves,		Func_ReturnFromSettingsFrame }, // Delete Saves
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[25],	180.0,	170.0,	280.0,	56.0,	25,	27,	-1,	-1,	Func_ConfigurePaks,		Func_ReturnFromSettingsFrame }, // Configure Paks
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[26],	180.0,	240.0,	280.0,	56.0,	26,	 2,	-1,	-1,	Func_ConfigureButtons,	Func_ReturnFromSettingsFrame }, // Configure Buttons
+	//Buttons for Audio Tab (starts at button[28])
+	{	NULL,	BTN_A_SEL,	FRAME_STRINGS[28],	345.0,	100.0,	 75.0,	56.0,	 3,	 3,	29,	29,	Func_DisableAudioYes,	Func_ReturnFromSettingsFrame }, // Disable Audio: Yes
+	{	NULL,	BTN_A_SEL,	FRAME_STRINGS[29],	440.0,	100.0,	 75.0,	56.0,	 3,	 3,	28,	28,	Func_DisableAudioNo,	Func_ReturnFromSettingsFrame }, // Disable Audio: No
+	//Buttons for Saves Tab (starts at button[30])
+	{	NULL,	BTN_A_SEL,	FRAME_STRINGS[28],	375.0,	100.0,	 75.0,	56.0,	 4,	32,	31,	31,	Func_AutoSaveNativeYes,	Func_ReturnFromSettingsFrame }, // Auto Save Native: Yes
+	{	NULL,	BTN_A_SEL,	FRAME_STRINGS[29],	470.0,	100.0,	 75.0,	56.0,	 4,	32,	30,	30,	Func_AutoSaveNativeNo,	Func_ReturnFromSettingsFrame }, // Auto Save Native: No
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[31],	365.0,	170.0,	190.0,	56.0,	30,	33,	-1,	-1,	Func_CopySaves,			Func_ReturnFromSettingsFrame }, // Copy Saves
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[32],	365.0,	240.0,	190.0,	56.0,	32,	 4,	-1,	-1,	Func_DeleteSaves,		Func_ReturnFromSettingsFrame }, // Delete Saves
 };
 
 struct TextBoxInfo
@@ -204,9 +208,9 @@ struct TextBoxInfo
 	{	NULL,	FRAME_STRINGS[19],	190.0,	408.0,	 1.0,	true }, // FBTex: On/Off
 	//TextBoxes for Input Tab (starts at textBox[])
 	//TextBoxes for Audio Tab (starts at textBox[9])
-	{	NULL,	FRAME_STRINGS[26],	210.0,	128.0,	 1.0,	true }, // Disable Audio: Yes/No
+	{	NULL,	FRAME_STRINGS[27],	210.0,	128.0,	 1.0,	true }, // Disable Audio: Yes/No
 	//TextBoxes for Saves Tab (starts at textBox[10])
-	{	NULL,	FRAME_STRINGS[29],	200.0,	128.0,	 1.0,	true }, // Auto Save Native Save: Yes/No
+	{	NULL,	FRAME_STRINGS[30],	200.0,	128.0,	 1.0,	true }, // Auto Save Native Save: Yes/No
 };
 
 SettingsFrame::SettingsFrame()
@@ -332,11 +336,11 @@ void SettingsFrame::activateSubmenu(int submenu)
 			{
 				FRAME_BUTTONS[i].button->setVisible(true);
 				FRAME_BUTTONS[i].button->setNextFocus(menu::Focus::DIRECTION_DOWN, FRAME_BUTTONS[25].button);
-				FRAME_BUTTONS[i].button->setNextFocus(menu::Focus::DIRECTION_UP, FRAME_BUTTONS[26].button);
+				FRAME_BUTTONS[i].button->setNextFocus(menu::Focus::DIRECTION_UP, FRAME_BUTTONS[27].button);
 				FRAME_BUTTONS[i].button->setActive(true);
 			}
 			FRAME_BUTTONS[2].button->setSelected(true);
-			for (int i = 25; i < 27; i++)
+			for (int i = 25; i < 28; i++)
 			{
 				FRAME_BUTTONS[i].button->setVisible(true);
 				FRAME_BUTTONS[i].button->setActive(true);
@@ -347,16 +351,16 @@ void SettingsFrame::activateSubmenu(int submenu)
 			for (int i = 0; i < NUM_TAB_BUTTONS; i++)
 			{
 				FRAME_BUTTONS[i].button->setVisible(true);
-				FRAME_BUTTONS[i].button->setNextFocus(menu::Focus::DIRECTION_DOWN, FRAME_BUTTONS[27].button);
-				FRAME_BUTTONS[i].button->setNextFocus(menu::Focus::DIRECTION_UP, FRAME_BUTTONS[27].button);
+				FRAME_BUTTONS[i].button->setNextFocus(menu::Focus::DIRECTION_DOWN, FRAME_BUTTONS[28].button);
+				FRAME_BUTTONS[i].button->setNextFocus(menu::Focus::DIRECTION_UP, FRAME_BUTTONS[28].button);
 				FRAME_BUTTONS[i].button->setActive(true);
 			}
 			for (int i = 9; i < 10; i++)
 				FRAME_TEXTBOXES[i].textBox->setVisible(true);
 			FRAME_BUTTONS[3].button->setSelected(true);
-			if (audioEnabled == AUDIO_DISABLE)	FRAME_BUTTONS[27].button->setSelected(true);
-			else								FRAME_BUTTONS[28].button->setSelected(true);
-			for (int i = 27; i < 29; i++)
+			if (audioEnabled == AUDIO_DISABLE)	FRAME_BUTTONS[28].button->setSelected(true);
+			else								FRAME_BUTTONS[29].button->setSelected(true);
+			for (int i = 28; i < 30; i++)
 			{
 				FRAME_BUTTONS[i].button->setVisible(true);
 				FRAME_BUTTONS[i].button->setActive(true);
@@ -367,16 +371,16 @@ void SettingsFrame::activateSubmenu(int submenu)
 			for (int i = 0; i < NUM_TAB_BUTTONS; i++)
 			{
 				FRAME_BUTTONS[i].button->setVisible(true);
-				FRAME_BUTTONS[i].button->setNextFocus(menu::Focus::DIRECTION_DOWN, FRAME_BUTTONS[29].button);
-				FRAME_BUTTONS[i].button->setNextFocus(menu::Focus::DIRECTION_UP, FRAME_BUTTONS[32].button);
+				FRAME_BUTTONS[i].button->setNextFocus(menu::Focus::DIRECTION_DOWN, FRAME_BUTTONS[30].button);
+				FRAME_BUTTONS[i].button->setNextFocus(menu::Focus::DIRECTION_UP, FRAME_BUTTONS[33].button);
 				FRAME_BUTTONS[i].button->setActive(true);
 			}
 			for (int i = 10; i < 11; i++)
 				FRAME_TEXTBOXES[i].textBox->setVisible(true);
 			FRAME_BUTTONS[4].button->setSelected(true);
-			if (autoSave == AUTOSAVE_ENABLE)	FRAME_BUTTONS[29].button->setSelected(true);
-			else								FRAME_BUTTONS[30].button->setSelected(true);
-			for (int i = 29; i < NUM_FRAME_BUTTONS; i++)
+			if (autoSave == AUTOSAVE_ENABLE)	FRAME_BUTTONS[30].button->setSelected(true);
+			else								FRAME_BUTTONS[31].button->setSelected(true);
+			for (int i = 30; i < NUM_FRAME_BUTTONS; i++)
 			{
 				FRAME_BUTTONS[i].button->setVisible(true);
 				FRAME_BUTTONS[i].button->setActive(true);
@@ -634,35 +638,41 @@ void Func_ConfigurePaks()
 	pMenuContext->setActiveFrame(MenuContext::FRAME_CONFIGUREPAKS,ConfigurePaksFrame::SUBMENU_REINIT);
 }
 
+void Func_ConfigureButtons()
+{
+//	menu::MessageBox::getInstance().setMessage("Controller Buttons not implemented");
+	pMenuContext->setActiveFrame(MenuContext::FRAME_CONFIGUREBUTTONS,ConfigureButtonsFrame::SUBMENU_N64_PADNONE);
+}
+
 void Func_DisableAudioYes()
 {
-	for (int i = 27; i <= 28; i++)
+	for (int i = 28; i <= 29; i++)
 		FRAME_BUTTONS[i].button->setSelected(false);
-	FRAME_BUTTONS[27].button->setSelected(true);
+	FRAME_BUTTONS[28].button->setSelected(true);
 	audioEnabled = AUDIO_DISABLE;
 }
 
 void Func_DisableAudioNo()
 {
-	for (int i = 27; i <= 28; i++)
+	for (int i = 28; i <= 29; i++)
 		FRAME_BUTTONS[i].button->setSelected(false);
-	FRAME_BUTTONS[28].button->setSelected(true);
+	FRAME_BUTTONS[29].button->setSelected(true);
 	audioEnabled = AUDIO_ENABLE;
 }
 
 void Func_AutoSaveNativeYes()
 {
-	for (int i = 29; i <= 30; i++)
+	for (int i = 30; i <= 31; i++)
 		FRAME_BUTTONS[i].button->setSelected(false);
-	FRAME_BUTTONS[29].button->setSelected(true);
+	FRAME_BUTTONS[30].button->setSelected(true);
 	autoSave = AUTOSAVE_ENABLE;
 }
 
 void Func_AutoSaveNativeNo()
 {
-	for (int i = 29; i <= 30; i++)
+	for (int i = 30; i <= 31; i++)
 		FRAME_BUTTONS[i].button->setSelected(false);
-	FRAME_BUTTONS[30].button->setSelected(true);
+	FRAME_BUTTONS[31].button->setSelected(true);
 	autoSave = AUTOSAVE_DISABLE;
 }
 

@@ -1,6 +1,6 @@
 /**
  * Wii64 - ConfigurePaksFrame.cpp
- * Copyright (C) 2009 sepp256
+ * Copyright (C) 2009, 2010 sepp256
  *
  * Wii64 homepage: http://www.emulatemii.com
  * email address: sepp256@gmail.com
@@ -157,15 +157,9 @@ ConfigurePaksFrame::~ConfigurePaksFrame()
 
 }
 
-//void control_info_init();
-//extern "C" unsigned int usleep(unsigned int us);
-
 void ConfigurePaksFrame::activateSubmenu(int submenu)
 {
 	Component* defaultFocus = this;
-
-//	usleep(1000);			//This sleep prevents the PAD_Init() from failing
-//	control_info_init();	//TODO: This controller poll might need rethinking when we implement Input Configuration
 
 	//All buttons: hide; unselect
 	for (int i = 0; i < NUM_FRAME_BUTTONS; i++)
