@@ -45,6 +45,7 @@ public:
 	void setClicked(ButtonFunc clickedFn);
 	void doClicked();
 	void setText(char** strPtr);
+	void setFontSize(float size);
 	void setLabelMode(int mode);
 	void setLabelScissor(int scissor);
 	void setNormalImage(Image *image);
@@ -80,7 +81,7 @@ private:
 	char** buttonText;
 	int buttonStyle, labelMode, labelScissor;
 	unsigned long StartTime;
-	float x, y, width, height;
+	float x, y, width, height, fontSize;
 	GXColor	focusColor, inactiveColor, activeColor, selectedColor, labelColor;
 	ButtonFunc clickedFunc, returnFunc;
 

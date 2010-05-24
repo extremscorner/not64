@@ -132,9 +132,9 @@ struct ButtonInfo
 	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[15],	200.0,	345.0,	 80.0,	40.0,	10,	18,	10,	16,	Func_ToggleButtonStart,	Func_ReturnFromConfigureButtonsFrame }, // Toggle Button Start
 	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[16],	350.0,	345.0,	 80.0,	40.0,	14,	17,	15,	14,	Func_ToggleButtonB,		Func_ReturnFromConfigureButtonsFrame }, // Toggle Button B
 	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[17],	385.0,	395.0,	 80.0,	40.0,	16,	 2,	18,	20,	Func_ToggleButtonA,		Func_ReturnFromConfigureButtonsFrame }, // Toggle Button A
-	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[18],	160.0,	395.0,	160.0,	40.0,	15,	 1,	19,	17,	Func_ToggleAnalogStick,	Func_ReturnFromConfigureButtonsFrame }, // Toggle Analog Stick
-	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[19],	 50.0,	395.0,	160.0,	40.0,	15,	 0,	20,	18,	Func_ToggleInvertY,		Func_ReturnFromConfigureButtonsFrame }, // Toggle Analog Invert Y
-	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[20],	500.0,	395.0,	160.0,	40.0,	16,	 3,	17,	19,	Func_ToggleButtonExit,	Func_ReturnFromConfigureButtonsFrame }, // Toggle Button Exit
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[18],	190.0,	395.0,	160.0,	40.0,	15,	 1,	19,	17,	Func_ToggleAnalogStick,	Func_ReturnFromConfigureButtonsFrame }, // Toggle Analog Stick
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[19],	 50.0,	395.0,	130.0,	40.0,	15,	 0,	20,	18,	Func_ToggleInvertY,		Func_ReturnFromConfigureButtonsFrame }, // Toggle Analog Invert Y
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[20],	500.0,	395.0,	120.0,	40.0,	16,	 3,	17,	19,	Func_ToggleButtonExit,	Func_ReturnFromConfigureButtonsFrame }, // Toggle Button Exit
 };
 
 struct TextBoxInfo
@@ -171,6 +171,7 @@ ConfigureButtonsFrame::ConfigureButtonsFrame()
 		menu::Cursor::getInstance().addComponent(this, FRAME_BUTTONS[i].button, FRAME_BUTTONS[i].x, 
 												FRAME_BUTTONS[i].x+FRAME_BUTTONS[i].width, FRAME_BUTTONS[i].y, 
 												FRAME_BUTTONS[i].y+FRAME_BUTTONS[i].height);
+		FRAME_BUTTONS[i].button->setFontSize(0.8);
 	}
 
 	for (int i = 0; i < NUM_FRAME_TEXTBOXES; i++)
@@ -237,7 +238,7 @@ void ConfigureButtonsFrame::activateSubmenu(int submenu)
 	else
 		activePadType = ACTIVEPADTYPE_NONE;
 
-	sprintf(TITLE_STRING, "%s Pad %d to N64 Pad %d Mapping", controllerTypeStrings[activePadType], virtualControllers[activePad].number, activePad );
+	sprintf(TITLE_STRING, "%s Pad %d to N64 Pad %d Mapping", controllerTypeStrings[activePadType], virtualControllers[activePad].number+1, activePad+1 );
 	
 	currentConfig = virtualControllers[activePad].config;
 
