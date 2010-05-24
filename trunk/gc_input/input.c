@@ -396,7 +396,7 @@ void auto_assign_controllers(void){
 }
 
 int load_configurations(FILE* f, controller_t* controller){
-	int i, index;
+	int i;
 	char magic[4] = { 
 		'W', 64, controller->identifier, CONTROLLER_CONFIG_VERSION
 	};
@@ -405,34 +405,38 @@ int load_configurations(FILE* f, controller_t* controller){
 	if(!memcmp(magic, actual, 4))
 		return 0;
 	
+	inline button_t* getPointer(button_t* list, int size){
+		int index;
+		fread(&index, 4, 1, f);
+		return list + (index % size);
+	}
+	inline button_t* getButton(void){
+		return getPointer(controller->buttons, controller->num_buttons);
+	}
+	
 	for(i=0; i<4; ++i){
-		fread(&index, 4, 1, f);
-		controller->config_slot[i].DL = &controller->buttons[index];
-		fread(&index, 4, 1, f);
-		controller->config_slot[i].DR = &controller->buttons[index];
-		fread(&index, 4, 1, f);
-		controller->config_slot[i].DU = &controller->buttons[index];
-		fread(&index, 4, 1, f);
-		controller->config_slot[i].DD = &controller->buttons[index];
+		controller->config_slot[i].DL = getButton();
+		controller->config_slot[i].DR = getButton();
+		controller->config_slot[i].DU = getButton();
+		controller->config_slot[i].DD = getButton();
 		
-		fread(&index, 4, 1, f);
-		controller->config_slot[i].A = &controller->buttons[index];
-		fread(&index, 4, 1, f);
-		controller->config_slot[i].B = &controller->buttons[index];
-		fread(&index, 4, 1, f);
-		controller->config_slot[i].START = &controller->buttons[index];
+		controller->config_slot[i].A     = getButton();
+		controller->config_slot[i].B     = getButton();
+		controller->config_slot[i].START = getButton();
 		
-		fread(&index, 4, 1, f);
-		controller->config_slot[i].L = &controller->buttons[index];
-		fread(&index, 4, 1, f);
-		controller->config_slot[i].R = &controller->buttons[index];
-		fread(&index, 4, 1, f);
-		controller->config_slot[i].Z = &controller->buttons[index];
+		controller->config_slot[i].L = getButton();
+		controller->config_slot[i].R = getButton();
+		controller->config_slot[i].Z = getButton();
 		
-		fread(&index, 4, 1, f);
-		controller->config_slot[i].analog = &controller->analog_sources[index];
-		fread(&index, 4, 1, f);
-		controller->config_slot[i].exit = &controller->menu_combos[index];
+		controller->config_slot[i].CL = getButton();
+		controller->config_slot[i].CR = getButton();
+		controller->config_slot[i].CU = getButton();
+		controller->config_slot[i].CD = getButton();
+		
+		controller->config_slot[i].analog = 
+			getPointer(controller->analog_sources, controller->num_analog_sources);
+		controller->config_slot[i].exit =
+			getPointer(controller->menu_combos, controller->num_menu_combos);
 		fread(&controller->config_slot[i].invertedY, 4, 1, f);
 	}
 	
@@ -459,6 +463,11 @@ void save_configurations(FILE* f, controller_t* controller){
 		fwrite(&controller->config_slot[i].L.index, 4, 1, f);
 		fwrite(&controller->config_slot[i].R.index, 4, 1, f);
 		fwrite(&controller->config_slot[i].Z.index, 4, 1, f);
+		
+		fwrite(&controller->config_slot[i].CL.index, 4, 1, f);
+		fwrite(&controller->config_slot[i].CR.index, 4, 1, f);
+		fwrite(&controller->config_slot[i].CU.index, 4, 1, f);
+		fwrite(&controller->config_slot[i].CD.index, 4, 1, f);
 		
 		fwrite(&controller->config_slot[i].analog.index, 4, 1, f);
 		fwrite(&controller->config_slot[i].exit.index, 4, 1, f);
