@@ -49,6 +49,10 @@ void LoadingBar_showBar(float percent, const char* string);
 static char GC_ROM_CACHE[ROMCACHE_SIZE] __attribute__((aligned(32)));
 static char *ROMCACHE_LO = &GC_ROM_CACHE[0];
 
+static u8 L1_ROM_BLOCK[4096] __attribute__((aligned(32)));
+static u8 *l1TempBlock = &L1_ROM_BLOCK[0];
+
+
 #define BLOCK_SIZE  (64*1024)
 #define BLOCK_MASK  (BLOCK_SIZE-1)
 #define OFFSET_MASK (0xFFFFFFFF-BLOCK_MASK)
@@ -87,14 +91,18 @@ void ROMCache_deinit(){
 	//we don't de-init the romFile here because it takes too much time to fopen/fseek/fread/fclose
 }
 
+
 void* ROMCache_pointer(u32 rom_offset){
 	if(ROMTooBig){
 		u32 block = rom_offset >> BLOCK_SHIFT;
-		u32 block_offset = rom_offset & BLOCK_MASK;
-		
+
 		ensure_block(block);
-		
-		return ROMBlocks[block] + block_offset;
+		if(((rom_offset+4096) >> BLOCK_SHIFT)!=block) {
+  			ensure_block(block+1);
+		}
+  		
+		ROMCache_read(l1TempBlock, rom_offset, 4096);
+		return &l1TempBlock[0];
 	} else {
 		return ROMCACHE_LO + rom_offset;
 	}
