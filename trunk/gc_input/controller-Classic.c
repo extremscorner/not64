@@ -189,7 +189,7 @@ static void rumble(int Control, int rumble){
 	WPAD_Rumble(Control, rumble ? 1 : 0);
 }
 
-static void configure(int Control){
+static void configure(int Control, controller_config_t* config){
 	// Don't know how this should be integrated
 }
 

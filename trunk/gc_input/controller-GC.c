@@ -153,7 +153,7 @@ static void rumble(int Control, int rumble){
 	PAD_ControlMotor(Control, rumble ? PAD_MOTOR_RUMBLE : PAD_MOTOR_STOP);
 }
 
-static void configure(int Control){
+static void configure(int Control, controller_config_t*){
 	// Don't know how this should be integrated
 }
 
