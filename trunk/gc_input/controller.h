@@ -25,6 +25,7 @@
 #ifndef CONTROLLER_H
 #define CONTROLLER_H
 
+#include <stdio.h>
 #include "../main/winlnxdefs.h"
 #include "Controller_#1.1.h"
 
@@ -63,8 +64,6 @@ typedef struct {
 	// Set the configuration for a controller of this type
 	// You should pass in physical controller num as above
 	void (*configure)(int, controller_config_t*);
-	// Initialize the controllers, filling out available
-	void (*init)(void);
 	// Assign actual controller to virtual controller
 	void (*assign)(int,int);
 	// Pause/Resume a controller
@@ -108,10 +107,11 @@ extern virtualControllers_t virtualControllers[4];
 // List of all the defined controller_t's
 #if defined(WII) && !defined(NO_BT)
 
-#define num_controller_t 3
+#define num_controller_t 4
 extern controller_t controller_GC;
 extern controller_t controller_Classic;
 extern controller_t controller_WiimoteNunchuk;
+extern controller_t controller_Wiimote;
 extern controller_t* controller_ts[num_controller_t];
 
 #else // WII && !NO_BT

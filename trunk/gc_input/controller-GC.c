@@ -168,7 +168,6 @@ controller_t controller_GC =
 	{ 'G',
 	  _GetKeys,
 	  configure,
-	  init,
 	  assign,
 	  pause,
 	  resume,
@@ -180,40 +179,26 @@ controller_t controller_GC =
 	  sizeof(analog_sources)/sizeof(analog_sources[0]),
 	  analog_sources,
 	  sizeof(menu_combos)/sizeof(menu_combos[0]),
-	  menu_combos
+	  menu_combos,
+	  { .DU        = &buttons[1],  // D-Pad Up
+	    .DL        = &buttons[2],  // D-Pad Left
+	    .DR        = &buttons[3],  // D-Pad Right
+	    .DD        = &buttons[4],  // D-Pad Down
+	    .Z         = &buttons[5],  // Z
+	    .L         = &buttons[6],  // Left Trigger
+	    .R         = &buttons[7],  // Right Trigger
+	    .A         = &buttons[8],  // A
+	    .B         = &buttons[9],  // B
+	    .START     = &buttons[12], // Start
+	    .CU        = &buttons[13], // C-Stick Up
+	    .CL        = &buttons[14], // C-Stick Left
+	    .CR        = &buttons[15], // C-Stick Right
+	    .CD        = &buttons[16], // C-Stick Down
+	    .analog    = &analog_sources[0],
+	    .exit      = &menu_combos[0],
+	    .invertedY = 0,
+	  }
 	 };
-
-static void init(void){
-
-	int i;
-
-	refreshAvailable();
-
-	controller_GC.config_default.DU        = &buttons[1];  // D-Pad Up
-	controller_GC.config_default.DL        = &buttons[2];  // D-Pad Left
-	controller_GC.config_default.DR        = &buttons[3];  // D-Pad Right
-	controller_GC.config_default.DD        = &buttons[4];  // D-Pad Down
-	controller_GC.config_default.Z         = &buttons[5];  // Z
-	controller_GC.config_default.L         = &buttons[6];  // Left Trigger
-	controller_GC.config_default.R         = &buttons[7];  // Right Trigger
-	controller_GC.config_default.A         = &buttons[8];  // A
-	controller_GC.config_default.B         = &buttons[9];  // B
-	controller_GC.config_default.START     = &buttons[12]; // Start
-	controller_GC.config_default.CU        = &buttons[13]; // C-Stick Up
-	controller_GC.config_default.CL        = &buttons[14]; // C-Stick Left
-	controller_GC.config_default.CR        = &buttons[15]; // C-Stick Right
-	controller_GC.config_default.CD        = &buttons[16]; // C-Stick Down
-	controller_GC.config_default.analog    = &analog_sources[0];
-	controller_GC.config_default.exit      = &menu_combos[0];
-	controller_GC.config_default.invertedY = 0;
-
-	for(i=0; i<4; ++i)
-	{
-		memcpy(&controller_GC.config[i], &controller_GC.config_default, sizeof(controller_config_t));
-		memcpy(&controller_GC.config_slot[i], &controller_GC.config_default, sizeof(controller_config_t));
-	}
-
-}
 
 static void refreshAvailable(void){
 

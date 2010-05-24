@@ -204,7 +204,6 @@ controller_t controller_Classic =
 	{ 'C',
 	  _GetKeys,
 	  configure,
-	  init,
 	  assign,
 	  pause,
 	  resume,
@@ -216,39 +215,26 @@ controller_t controller_Classic =
 	  sizeof(analog_sources)/sizeof(analog_sources[0]),
 	  analog_sources,
 	  sizeof(menu_combos)/sizeof(menu_combos[0]),
-	  menu_combos
+	  menu_combos,
+	  { .DU        = &buttons[1],  // D-Pad Up
+	    .DL        = &buttons[2],  // D-Pad Left
+	    .DR        = &buttons[3],  // D-Pad Right
+	    .DD        = &buttons[4],  // D-Pad Down
+	    .Z         = &buttons[7],  // Left Z
+	    .L         = &buttons[5],  // Left Trigger
+	    .R         = &buttons[6],  // Right Trigger
+	    .A         = &buttons[9],  // A
+	    .B         = &buttons[10], // B
+	    .START     = &buttons[13], // +
+	    .CU        = &buttons[16], // Right Stick Up
+	    .CL        = &buttons[17], // Right Stick Left
+	    .CR        = &buttons[18], // Right Stick Right
+	    .CD        = &buttons[19], // Right Stick Down
+	    .analog    = &analog_sources[0],
+	    .exit      = &menu_combos[0],
+	    .invertedY = 0,
+	  }
 	 };
-
-static void init(void){
-
-	int i;
-
-	refreshAvailable();
-	
-	controller_Classic.config_default.DU        = &buttons[1];  // D-Pad Up
-	controller_Classic.config_default.DL        = &buttons[2];  // D-Pad Left
-	controller_Classic.config_default.DR        = &buttons[3];  // D-Pad Right
-	controller_Classic.config_default.DD        = &buttons[4];  // D-Pad Down
-	controller_Classic.config_default.Z         = &buttons[7];  // Left Z
-	controller_Classic.config_default.L         = &buttons[5];  // Left Trigger
-	controller_Classic.config_default.R         = &buttons[6];  // Right Trigger
-	controller_Classic.config_default.A         = &buttons[9];  // A
-	controller_Classic.config_default.B         = &buttons[10]; // B
-	controller_Classic.config_default.START     = &buttons[13]; // +
-	controller_Classic.config_default.CU        = &buttons[16]; // Right Stick Up
-	controller_Classic.config_default.CL        = &buttons[17]; // Right Stick Left
-	controller_Classic.config_default.CR        = &buttons[18]; // Right Stick Right
-	controller_Classic.config_default.CD        = &buttons[19]; // Right Stick Down
-	controller_Classic.config_default.analog    = &analog_sources[0];
-	controller_Classic.config_default.exit      = &menu_combos[0];
-	controller_Classic.config_default.invertedY = 0;
-
-	for(i=0; i<4; ++i)
-	{
-		memcpy(&controller_Classic.config[i], &controller_Classic.config_default, sizeof(controller_config_t));
-		memcpy(&controller_Classic.config_slot[i], &controller_Classic.config_default, sizeof(controller_config_t));
-	}
-}
 
 static void refreshAvailable(void){
 
