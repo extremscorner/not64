@@ -44,6 +44,7 @@ controller_t* controller_ts[num_controller_t] =
 #if defined(WII) && !defined(NO_BT)
 	{ &controller_GC, &controller_Classic,
 	  &controller_WiimoteNunchuk,
+	  &controller_Wiimote,
 	 };
 #else
 	{ &controller_GC,
@@ -330,9 +331,19 @@ void resumeInput(void){
 }
 
 void init_controller_ts(void){
-	int i;
-	for(i=0; i<num_controller_t; ++i)
-		controller_ts[i]->init();
+	int i, j;
+	for(i=0; i<num_controller_t; ++i){
+		controller_ts[i]->refreshAvailable();
+
+		for(j=0; j<4; ++j){
+			memcpy(&controller_ts[i]->config[j],
+			       &controller_ts[i]->config_default,
+			       sizeof(controller_config_t));
+			memcpy(&controller_ts[i]->config_slot[j],
+			       &controller_ts[i]->config_default,
+			       sizeof(controller_config_t));
+		}
+	}
 }
 
 void assign_controller(int wv, controller_t* type, int wp){
@@ -451,26 +462,26 @@ void save_configurations(FILE* f, controller_t* controller){
 	fwrite(magic, 1, 4, f);
 	
 	for(i=0; i<4; ++i){
-		fwrite(&controller->config_slot[i].DL.index, 4, 1, f);
-		fwrite(&controller->config_slot[i].DR.index, 4, 1, f);
-		fwrite(&controller->config_slot[i].DU.index, 4, 1, f);
-		fwrite(&controller->config_slot[i].DD.index, 4, 1, f);
+		fwrite(&controller->config_slot[i].DL->index, 4, 1, f);
+		fwrite(&controller->config_slot[i].DR->index, 4, 1, f);
+		fwrite(&controller->config_slot[i].DU->index, 4, 1, f);
+		fwrite(&controller->config_slot[i].DD->index, 4, 1, f);
 		
-		fwrite(&controller->config_slot[i].A.index, 4, 1, f);
-		fwrite(&controller->config_slot[i].B.index, 4, 1, f);
-		fwrite(&controller->config_slot[i].START.index, 4, 1, f);
+		fwrite(&controller->config_slot[i].A->index, 4, 1, f);
+		fwrite(&controller->config_slot[i].B->index, 4, 1, f);
+		fwrite(&controller->config_slot[i].START->index, 4, 1, f);
 		
-		fwrite(&controller->config_slot[i].L.index, 4, 1, f);
-		fwrite(&controller->config_slot[i].R.index, 4, 1, f);
-		fwrite(&controller->config_slot[i].Z.index, 4, 1, f);
+		fwrite(&controller->config_slot[i].L->index, 4, 1, f);
+		fwrite(&controller->config_slot[i].R->index, 4, 1, f);
+		fwrite(&controller->config_slot[i].Z->index, 4, 1, f);
 		
-		fwrite(&controller->config_slot[i].CL.index, 4, 1, f);
-		fwrite(&controller->config_slot[i].CR.index, 4, 1, f);
-		fwrite(&controller->config_slot[i].CU.index, 4, 1, f);
-		fwrite(&controller->config_slot[i].CD.index, 4, 1, f);
+		fwrite(&controller->config_slot[i].CL->index, 4, 1, f);
+		fwrite(&controller->config_slot[i].CR->index, 4, 1, f);
+		fwrite(&controller->config_slot[i].CU->index, 4, 1, f);
+		fwrite(&controller->config_slot[i].CD->index, 4, 1, f);
 		
-		fwrite(&controller->config_slot[i].analog.index, 4, 1, f);
-		fwrite(&controller->config_slot[i].exit.index, 4, 1, f);
+		fwrite(&controller->config_slot[i].analog->index, 4, 1, f);
+		fwrite(&controller->config_slot[i].exit->index, 4, 1, f);
 		fwrite(&controller->config_slot[i].invertedY, 4, 1, f);
 	}
 }
