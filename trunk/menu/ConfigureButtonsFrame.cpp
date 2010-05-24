@@ -34,6 +34,7 @@ extern "C" {
 #include "../gc_input/controller.h"
 }
 
+void Func_NextPad();
 void Func_DefaultConfig();
 void Func_ToggleConfigSlot();
 void Func_LoadConfig();
@@ -60,18 +61,19 @@ void Func_ToggleButtonExit();
 void Func_ReturnFromConfigureButtonsFrame();
 
 
-#define NUM_FRAME_BUTTONS 21
+#define NUM_FRAME_BUTTONS 22
 #define FRAME_BUTTONS configureButtonsFrameButtons
 #define FRAME_STRINGS configureButtonsFrameStrings
 #define NUM_FRAME_TEXTBOXES 2
 #define FRAME_TEXTBOXES configureButtonsFrameTextBoxes
 #define TITLE_STRING configureButtonsTitleString
 
-static char FRAME_STRINGS[22][20] =
-	{ "Default Config",
+static char FRAME_STRINGS[23][20] =
+	{ "Next Pad",
+	  "Load Default",
 	  "Slot 1",
-	  "Load Config",
-	  "Save Config",
+	  "Load",
+	  "Save",
 	  "Btn L",
 	  "Btn R",
 	  "Btn Z",
@@ -110,31 +112,32 @@ struct ButtonInfo
 	ButtonFunc		returnFunc;
 } FRAME_BUTTONS[NUM_FRAME_BUTTONS] =
 { //	button	buttonStyle buttonString		x		y		width	height	Up	Dwn	Lft	Rt	clickFunc				returnFunc
-	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[0],	 40.0,	 90.0,	160.0,	40.0,	19,	 4,	 3,	 1,	Func_DefaultConfig,		Func_ReturnFromConfigureButtonsFrame }, // Restore Default Config
-	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[1],	220.0,	 90.0,	 80.0,	40.0,	18,	 6,	 0,	 2,	Func_ToggleConfigSlot,	Func_ReturnFromConfigureButtonsFrame }, // Cycle Through Config Slots
-	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[2],	320.0,	 90.0,	130.0,	40.0,	17,	 6,	 1,	 3,	Func_LoadConfig,		Func_ReturnFromConfigureButtonsFrame }, // Load Config
-	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[3],	470.0,	 90.0,	130.0,	40.0,	20,	 5,	 2,	 0,	Func_SaveConfig,		Func_ReturnFromConfigureButtonsFrame }, // Save Config
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[0],	 40.0,	 90.0,	115.0,	40.0,	20,	 5,	 4,	 1,	Func_NextPad,			Func_ReturnFromConfigureButtonsFrame }, // Next Pad
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[1],	175.0,	 90.0,	145.0,	40.0,	20,	 5,	 0,	 2,	Func_DefaultConfig,		Func_ReturnFromConfigureButtonsFrame }, // Restore Default Config
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[2],	340.0,	 90.0,	 80.0,	40.0,	19,	 7,	 1,	 3,	Func_ToggleConfigSlot,	Func_ReturnFromConfigureButtonsFrame }, // Cycle Through Config Slots
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[3],	440.0,	 90.0,	 70.0,	40.0,	18,	 7,	 2,	 4,	Func_LoadConfig,		Func_ReturnFromConfigureButtonsFrame }, // Load Config
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[4],	530.0,	 90.0,	 70.0,	40.0,	21,	 6,	 3,	 0,	Func_SaveConfig,		Func_ReturnFromConfigureButtonsFrame }, // Save Config
 
-	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[4],	140.0,	150.0,	 80.0,	40.0,	 0,	 7,	 5,	 6,	Func_ToggleButtonL,		Func_ReturnFromConfigureButtonsFrame }, // Toggle Button L
-	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[5],	420.0,	150.0,	 80.0,	40.0,	 3,	11,	 6,	 4,	Func_ToggleButtonR,		Func_ReturnFromConfigureButtonsFrame }, // Toggle Button R
-	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[6],	280.0,	150.0,	 80.0,	40.0,	 1,	15,	 4,	 5,	Func_ToggleButtonZ,		Func_ReturnFromConfigureButtonsFrame }, // Toggle Button Z
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[5],	140.0,	150.0,	 80.0,	40.0,	 0,	 8,	 6,	 7,	Func_ToggleButtonL,		Func_ReturnFromConfigureButtonsFrame }, // Toggle Button L
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[6],	420.0,	150.0,	 80.0,	40.0,	 4,	12,	 7,	 5,	Func_ToggleButtonR,		Func_ReturnFromConfigureButtonsFrame }, // Toggle Button R
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[7],	280.0,	150.0,	 80.0,	40.0,	 2,	16,	 5,	 6,	Func_ToggleButtonZ,		Func_ReturnFromConfigureButtonsFrame }, // Toggle Button Z
 
-	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[7],	 85.0,	200.0,	 80.0,	40.0,	 4,	 8,	11,	11,	Func_ToggleButtonDup,	Func_ReturnFromConfigureButtonsFrame }, // Toggle Button D-up
-	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[8],	 40.0,	250.0,	 80.0,	40.0,	 7,	10,	13,	 9,	Func_ToggleButtonDleft,	Func_ReturnFromConfigureButtonsFrame }, // Toggle Button D-left
-	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[9],	130.0,	250.0,	 80.0,	40.0,	 7,	10,	 8,	12,	Func_ToggleButtonDright,Func_ReturnFromConfigureButtonsFrame }, // Toggle Button D-right
-	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[10],	 85.0,	300.0,	 80.0,	40.0,	 8,	15,	14,	15,	Func_ToggleButtonDdown,	Func_ReturnFromConfigureButtonsFrame }, // Toggle Button D-down
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[8],	 85.0,	200.0,	 80.0,	40.0,	 5,	 9,	12,	12,	Func_ToggleButtonDup,	Func_ReturnFromConfigureButtonsFrame }, // Toggle Button D-up
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[9],	 40.0,	250.0,	 80.0,	40.0,	 8,	11,	14,	10,	Func_ToggleButtonDleft,	Func_ReturnFromConfigureButtonsFrame }, // Toggle Button D-left
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[10],	130.0,	250.0,	 80.0,	40.0,	 8,	11,	 9,	13,	Func_ToggleButtonDright,Func_ReturnFromConfigureButtonsFrame }, // Toggle Button D-right
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[11],	 85.0,	300.0,	 80.0,	40.0,	 9,	16,	15,	16,	Func_ToggleButtonDdown,	Func_ReturnFromConfigureButtonsFrame }, // Toggle Button D-down
 
-	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[11],	475.0,	200.0,	 80.0,	40.0,	 5,	12,	 7,	 7,	Func_ToggleButtonCup,	Func_ReturnFromConfigureButtonsFrame }, // Toggle Button C-up
-	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[12],	430.0,	250.0,	 80.0,	40.0,	11,	14,	 9,	13,	Func_ToggleButtonCleft,	Func_ReturnFromConfigureButtonsFrame }, // Toggle Button C-left
-	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[13],	520.0,	250.0,	 80.0,	40.0,	11,	14,	12,	 8,	Func_ToggleButtonCright,Func_ReturnFromConfigureButtonsFrame }, // Toggle Button C-right
-	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[14],	475.0,	300.0,	 80.0,	40.0,	12,	16,	16,	10,	Func_ToggleButtonCdown,	Func_ReturnFromConfigureButtonsFrame }, // Toggle Button C-down
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[12],	475.0,	200.0,	 80.0,	40.0,	 6,	13,	 8,	 8,	Func_ToggleButtonCup,	Func_ReturnFromConfigureButtonsFrame }, // Toggle Button C-up
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[13],	430.0,	250.0,	 80.0,	40.0,	12,	15,	10,	14,	Func_ToggleButtonCleft,	Func_ReturnFromConfigureButtonsFrame }, // Toggle Button C-left
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[14],	520.0,	250.0,	 80.0,	40.0,	12,	15,	13,	 9,	Func_ToggleButtonCright,Func_ReturnFromConfigureButtonsFrame }, // Toggle Button C-right
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[15],	475.0,	300.0,	 80.0,	40.0,	13,	17,	17,	11,	Func_ToggleButtonCdown,	Func_ReturnFromConfigureButtonsFrame }, // Toggle Button C-down
 
-	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[15],	200.0,	345.0,	 80.0,	40.0,	10,	18,	10,	16,	Func_ToggleButtonStart,	Func_ReturnFromConfigureButtonsFrame }, // Toggle Button Start
-	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[16],	350.0,	345.0,	 80.0,	40.0,	14,	17,	15,	14,	Func_ToggleButtonB,		Func_ReturnFromConfigureButtonsFrame }, // Toggle Button B
-	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[17],	385.0,	395.0,	 80.0,	40.0,	16,	 2,	18,	20,	Func_ToggleButtonA,		Func_ReturnFromConfigureButtonsFrame }, // Toggle Button A
-	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[18],	190.0,	395.0,	160.0,	40.0,	15,	 1,	19,	17,	Func_ToggleAnalogStick,	Func_ReturnFromConfigureButtonsFrame }, // Toggle Analog Stick
-	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[19],	 50.0,	395.0,	130.0,	40.0,	15,	 0,	20,	18,	Func_ToggleInvertY,		Func_ReturnFromConfigureButtonsFrame }, // Toggle Analog Invert Y
-	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[20],	500.0,	395.0,	120.0,	40.0,	16,	 3,	17,	19,	Func_ToggleButtonExit,	Func_ReturnFromConfigureButtonsFrame }, // Toggle Button Exit
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[16],	200.0,	345.0,	 80.0,	40.0,	11,	19,	11,	17,	Func_ToggleButtonStart,	Func_ReturnFromConfigureButtonsFrame }, // Toggle Button Start
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[17],	350.0,	345.0,	 80.0,	40.0,	15,	18,	16,	15,	Func_ToggleButtonB,		Func_ReturnFromConfigureButtonsFrame }, // Toggle Button B
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[18],	385.0,	395.0,	 80.0,	40.0,	17,	 3,	19,	21,	Func_ToggleButtonA,		Func_ReturnFromConfigureButtonsFrame }, // Toggle Button A
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[19],	190.0,	395.0,	160.0,	40.0,	16,	 2,	20,	18,	Func_ToggleAnalogStick,	Func_ReturnFromConfigureButtonsFrame }, // Toggle Analog Stick
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[20],	 50.0,	395.0,	130.0,	40.0,	16,	 0,	21,	19,	Func_ToggleInvertY,		Func_ReturnFromConfigureButtonsFrame }, // Toggle Analog Invert Y
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[21],	495.0,	395.0,	100.0,	40.0,	17,	 4,	18,	20,	Func_ToggleButtonExit,	Func_ReturnFromConfigureButtonsFrame }, // Toggle Button Exit
 };
 
 struct TextBoxInfo
@@ -148,7 +151,7 @@ struct TextBoxInfo
 } FRAME_TEXTBOXES[NUM_FRAME_TEXTBOXES] =
 { //	textBox	textBoxString		x		y		scale	centered
 	{	NULL,	TITLE_STRING,		320.0,	 60.0,	 1.0,	true }, // ______ Pad X to N64 Pad Y Mapping
-	{	NULL,	FRAME_STRINGS[21],	540.0,	365.0,	 1.0,	true }, // Menu Combo
+	{	NULL,	FRAME_STRINGS[22],	545.0,	380.0,	 0.8,	true }, // Menu Combo
 };
 
 ConfigureButtonsFrame::ConfigureButtonsFrame()
@@ -171,8 +174,11 @@ ConfigureButtonsFrame::ConfigureButtonsFrame()
 		menu::Cursor::getInstance().addComponent(this, FRAME_BUTTONS[i].button, FRAME_BUTTONS[i].x, 
 												FRAME_BUTTONS[i].x+FRAME_BUTTONS[i].width, FRAME_BUTTONS[i].y, 
 												FRAME_BUTTONS[i].y+FRAME_BUTTONS[i].height);
-		FRAME_BUTTONS[i].button->setFontSize(0.8);
 	}
+	for (int i = 0; i < 5; i++)
+		FRAME_BUTTONS[i].button->setFontSize(0.8);
+	for (int i = 5; i < NUM_FRAME_BUTTONS; i++)
+		FRAME_BUTTONS[i].button->setFontSize(0.7);
 
 	for (int i = 0; i < NUM_FRAME_TEXTBOXES; i++)
 	{
@@ -214,17 +220,25 @@ enum ActivePadType
 	ACTIVEPADTYPE_NONE,
 };
 
-int activePad;
-int activePadType;
+enum ActivePadAssigned
+{
+	ACTIVEPADASSIGNED_FALSE=0,
+	ACTIVEPADASSIGNED_TRUE,
+};
+
+int activePad=ConfigureButtonsFrame::SUBMENU_N64_PAD0;
+int activePadType=ACTIVEPADTYPE_NONE;
+int activePadAssigned=ACTIVEPADASSIGNED_TRUE;
 
 void ConfigureButtonsFrame::activateSubmenu(int submenu)
 {
 	controller_config_t* currentConfig;
 
-	activePad = submenu;
-
-	if (activePad == SUBMENU_N64_PADNONE)
-		return;
+	if (submenu != SUBMENU_N64_PADNONE)
+	{
+		activePad = submenu;
+		menu::Gui::getInstance().menuLogo->setVisible(false);
+	}
 
 	//Fill out title text
 	if (virtualControllers[activePad].control == &controller_GC)
@@ -238,35 +252,81 @@ void ConfigureButtonsFrame::activateSubmenu(int submenu)
 	else
 		activePadType = ACTIVEPADTYPE_NONE;
 
-	sprintf(TITLE_STRING, "%s Pad %d to N64 Pad %d Mapping", controllerTypeStrings[activePadType], virtualControllers[activePad].number+1, activePad+1 );
-	
-	currentConfig = virtualControllers[activePad].config;
+	if (activePadType == ACTIVEPADTYPE_NONE)
+	{
+		sprintf(TITLE_STRING, "N64 Pad %d: No Physical Controller Assigned", activePad+1 );
 
-	//Assign text to each button
-	strcpy(FRAME_STRINGS[4], currentConfig->L->name);
-	strcpy(FRAME_STRINGS[5], currentConfig->R->name);
-	strcpy(FRAME_STRINGS[6], currentConfig->Z->name);
-	strcpy(FRAME_STRINGS[7], currentConfig->DU->name);
-	strcpy(FRAME_STRINGS[8], currentConfig->DL->name);
-	strcpy(FRAME_STRINGS[9], currentConfig->DR->name);
-	strcpy(FRAME_STRINGS[10], currentConfig->DD->name);
-	strcpy(FRAME_STRINGS[11], currentConfig->CU->name);
-	strcpy(FRAME_STRINGS[12], currentConfig->CL->name);
-	strcpy(FRAME_STRINGS[13], currentConfig->CR->name);
-	strcpy(FRAME_STRINGS[14], currentConfig->CD->name);
-	strcpy(FRAME_STRINGS[15], currentConfig->START->name);
-	strcpy(FRAME_STRINGS[16], currentConfig->B->name);
-	strcpy(FRAME_STRINGS[17], currentConfig->A->name);
-	strcpy(FRAME_STRINGS[18], currentConfig->analog->name);
-	if (currentConfig->invertedY)
-		strcpy(FRAME_STRINGS[19], "Inverted Y");
+		if (activePadAssigned == ACTIVEPADASSIGNED_TRUE) //Reset to "Next Pad" button
+		{
+			activePadAssigned = ACTIVEPADASSIGNED_FALSE;
+			menu::Focus::getInstance().clearPrimaryFocus();
+		}
+		for (int i = 5; i < 22; i++)
+			strcpy(FRAME_STRINGS[i], "");
+		FRAME_BUTTONS[0].button->setNextFocus(menu::Focus::DIRECTION_UP, NULL);
+		FRAME_BUTTONS[0].button->setNextFocus(menu::Focus::DIRECTION_DOWN, NULL);
+		FRAME_BUTTONS[0].button->setNextFocus(menu::Focus::DIRECTION_LEFT, NULL);
+		FRAME_BUTTONS[0].button->setNextFocus(menu::Focus::DIRECTION_RIGHT, NULL);
+		for (int i = 1; i < NUM_FRAME_BUTTONS; i++)
+			FRAME_BUTTONS[i].button->setActive(false);
+	}
 	else
-		strcpy(FRAME_STRINGS[19], "Normal Y");
+	{
+//		sprintf(TITLE_STRING, "%s Pad %d to N64 Pad %d Mapping", controllerTypeStrings[activePadType], virtualControllers[activePad].number+1, activePad+1 );
+		sprintf(TITLE_STRING, "N64 Pad %d: %s Pad %d Mapping", activePad+1, controllerTypeStrings[activePadType], virtualControllers[activePad].number+1 );
+	
+		currentConfig = virtualControllers[activePad].config;
 
-	strcpy(FRAME_STRINGS[20], currentConfig->exit->name);
+		if (activePadAssigned == ACTIVEPADASSIGNED_FALSE) //Reset to "Next Pad" button
+		{
+			activePadAssigned = ACTIVEPADASSIGNED_TRUE;
+		}
+
+		FRAME_BUTTONS[0].button->setNextFocus(menu::Focus::DIRECTION_UP, FRAME_BUTTONS[FRAME_BUTTONS[0].focusUp].button);
+		FRAME_BUTTONS[0].button->setNextFocus(menu::Focus::DIRECTION_DOWN, FRAME_BUTTONS[FRAME_BUTTONS[0].focusDown].button);
+		FRAME_BUTTONS[0].button->setNextFocus(menu::Focus::DIRECTION_LEFT, FRAME_BUTTONS[FRAME_BUTTONS[0].focusLeft].button);
+		FRAME_BUTTONS[0].button->setNextFocus(menu::Focus::DIRECTION_RIGHT, FRAME_BUTTONS[FRAME_BUTTONS[0].focusRight].button);
+		for (int i = 1; i < NUM_FRAME_BUTTONS; i++)
+			FRAME_BUTTONS[i].button->setActive(true);
+
+		//Assign text to each button
+		strcpy(FRAME_STRINGS[5], currentConfig->L->name);
+		strcpy(FRAME_STRINGS[6], currentConfig->R->name);
+		strcpy(FRAME_STRINGS[7], currentConfig->Z->name);
+		strcpy(FRAME_STRINGS[8], currentConfig->DU->name);
+		strcpy(FRAME_STRINGS[9], currentConfig->DL->name);
+		strcpy(FRAME_STRINGS[10], currentConfig->DR->name);
+		strcpy(FRAME_STRINGS[11], currentConfig->DD->name);
+		strcpy(FRAME_STRINGS[12], currentConfig->CU->name);
+		strcpy(FRAME_STRINGS[13], currentConfig->CL->name);
+		strcpy(FRAME_STRINGS[14], currentConfig->CR->name);
+		strcpy(FRAME_STRINGS[15], currentConfig->CD->name);
+		strcpy(FRAME_STRINGS[16], currentConfig->START->name);
+		strcpy(FRAME_STRINGS[17], currentConfig->B->name);
+		strcpy(FRAME_STRINGS[18], currentConfig->A->name);
+		strcpy(FRAME_STRINGS[19], currentConfig->analog->name);
+		if (currentConfig->invertedY)
+			strcpy(FRAME_STRINGS[20], "Inverted Y");
+		else
+			strcpy(FRAME_STRINGS[20], "Normal Y");
+
+		strcpy(FRAME_STRINGS[21], currentConfig->exit->name);
+	}
+}
+
+void ConfigureButtonsFrame::updateFrame(float deltaTime)
+{
+	activateSubmenu(activePad);
 }
 
 extern MenuContext *pMenuContext;
+
+void Func_NextPad()
+{
+	activePad = (activePad+1) %4;
+
+	pMenuContext->getFrame(MenuContext::FRAME_CONFIGUREBUTTONS)->activateSubmenu(activePad);
+}
 
 void Func_DefaultConfig()
 {
@@ -281,7 +341,7 @@ static unsigned int which_slot = 0;
 void Func_ToggleConfigSlot()
 {
 	which_slot = (which_slot+1) %4;
-	FRAME_STRINGS[1][5] = which_slot + '1';
+	FRAME_STRINGS[2][5] = which_slot + '1';
 }
 
 void Func_LoadConfig()
@@ -311,7 +371,7 @@ void Func_ToggleButtonL()
 	int currentButton = currentConfig->L->index;
 	currentButton = (currentButton+1) %virtualControllers[activePad].control->num_buttons;
 	currentConfig->L = &virtualControllers[activePad].control->buttons[currentButton];
-	strcpy(FRAME_STRINGS[4], currentConfig->L->name);
+	strcpy(FRAME_STRINGS[5], currentConfig->L->name);
 }
 
 void Func_ToggleButtonR()
@@ -320,7 +380,7 @@ void Func_ToggleButtonR()
 	int currentButton = currentConfig->R->index;
 	currentButton = (currentButton+1) %virtualControllers[activePad].control->num_buttons;
 	currentConfig->R = &virtualControllers[activePad].control->buttons[currentButton];
-	strcpy(FRAME_STRINGS[5], currentConfig->R->name);
+	strcpy(FRAME_STRINGS[6], currentConfig->R->name);
 }
 
 void Func_ToggleButtonZ()
@@ -329,7 +389,7 @@ void Func_ToggleButtonZ()
 	int currentButton = currentConfig->Z->index;
 	currentButton = (currentButton+1) %virtualControllers[activePad].control->num_buttons;
 	currentConfig->Z = &virtualControllers[activePad].control->buttons[currentButton];
-	strcpy(FRAME_STRINGS[6], currentConfig->Z->name);
+	strcpy(FRAME_STRINGS[7], currentConfig->Z->name);
 }
 
 void Func_ToggleButtonDup()
@@ -338,7 +398,7 @@ void Func_ToggleButtonDup()
 	int currentButton = currentConfig->DU->index;
 	currentButton = (currentButton+1) %virtualControllers[activePad].control->num_buttons;
 	currentConfig->DU = &virtualControllers[activePad].control->buttons[currentButton];
-	strcpy(FRAME_STRINGS[7], currentConfig->DU->name);
+	strcpy(FRAME_STRINGS[8], currentConfig->DU->name);
 }
 
 void Func_ToggleButtonDleft()
@@ -347,7 +407,7 @@ void Func_ToggleButtonDleft()
 	int currentButton = currentConfig->DL->index;
 	currentButton = (currentButton+1) %virtualControllers[activePad].control->num_buttons;
 	currentConfig->DL = &virtualControllers[activePad].control->buttons[currentButton];
-	strcpy(FRAME_STRINGS[8], currentConfig->DL->name);
+	strcpy(FRAME_STRINGS[9], currentConfig->DL->name);
 }
 
 void Func_ToggleButtonDright()
@@ -356,7 +416,7 @@ void Func_ToggleButtonDright()
 	int currentButton = currentConfig->DR->index;
 	currentButton = (currentButton+1) %virtualControllers[activePad].control->num_buttons;
 	currentConfig->DR = &virtualControllers[activePad].control->buttons[currentButton];
-	strcpy(FRAME_STRINGS[9], currentConfig->DR->name);
+	strcpy(FRAME_STRINGS[10], currentConfig->DR->name);
 }
 
 void Func_ToggleButtonDdown()
@@ -365,7 +425,7 @@ void Func_ToggleButtonDdown()
 	int currentButton = currentConfig->DD->index;
 	currentButton = (currentButton+1) %virtualControllers[activePad].control->num_buttons;
 	currentConfig->DD = &virtualControllers[activePad].control->buttons[currentButton];
-	strcpy(FRAME_STRINGS[10], currentConfig->DD->name);
+	strcpy(FRAME_STRINGS[11], currentConfig->DD->name);
 }
 
 void Func_ToggleButtonCup()
@@ -374,7 +434,7 @@ void Func_ToggleButtonCup()
 	int currentButton = currentConfig->CU->index;
 	currentButton = (currentButton+1) %virtualControllers[activePad].control->num_buttons;
 	currentConfig->CU = &virtualControllers[activePad].control->buttons[currentButton];
-	strcpy(FRAME_STRINGS[11], currentConfig->CU->name);
+	strcpy(FRAME_STRINGS[12], currentConfig->CU->name);
 }
 
 void Func_ToggleButtonCleft()
@@ -383,7 +443,7 @@ void Func_ToggleButtonCleft()
 	int currentButton = currentConfig->CL->index;
 	currentButton = (currentButton+1) %virtualControllers[activePad].control->num_buttons;
 	currentConfig->CL = &virtualControllers[activePad].control->buttons[currentButton];
-	strcpy(FRAME_STRINGS[12], currentConfig->CL->name);
+	strcpy(FRAME_STRINGS[13], currentConfig->CL->name);
 }
 
 void Func_ToggleButtonCright()
@@ -392,7 +452,7 @@ void Func_ToggleButtonCright()
 	int currentButton = currentConfig->CR->index;
 	currentButton = (currentButton+1) %virtualControllers[activePad].control->num_buttons;
 	currentConfig->CR = &virtualControllers[activePad].control->buttons[currentButton];
-	strcpy(FRAME_STRINGS[13], currentConfig->CR->name);
+	strcpy(FRAME_STRINGS[14], currentConfig->CR->name);
 }
 
 void Func_ToggleButtonCdown()
@@ -401,7 +461,7 @@ void Func_ToggleButtonCdown()
 	int currentButton = currentConfig->CD->index;
 	currentButton = (currentButton+1) %virtualControllers[activePad].control->num_buttons;
 	currentConfig->CD = &virtualControllers[activePad].control->buttons[currentButton];
-	strcpy(FRAME_STRINGS[14], currentConfig->CD->name);
+	strcpy(FRAME_STRINGS[15], currentConfig->CD->name);
 }
 
 void Func_ToggleButtonStart()
@@ -410,7 +470,7 @@ void Func_ToggleButtonStart()
 	int currentButton = currentConfig->START->index;
 	currentButton = (currentButton+1) %virtualControllers[activePad].control->num_buttons;
 	currentConfig->START = &virtualControllers[activePad].control->buttons[currentButton];
-	strcpy(FRAME_STRINGS[15], currentConfig->START->name);
+	strcpy(FRAME_STRINGS[16], currentConfig->START->name);
 }
 
 void Func_ToggleButtonB()
@@ -419,7 +479,7 @@ void Func_ToggleButtonB()
 	int currentButton = currentConfig->B->index;
 	currentButton = (currentButton+1) %virtualControllers[activePad].control->num_buttons;
 	currentConfig->B = &virtualControllers[activePad].control->buttons[currentButton];
-	strcpy(FRAME_STRINGS[16], currentConfig->B->name);
+	strcpy(FRAME_STRINGS[17], currentConfig->B->name);
 }
 
 void Func_ToggleButtonA()
@@ -428,7 +488,7 @@ void Func_ToggleButtonA()
 	int currentButton = currentConfig->A->index;
 	currentButton = (currentButton+1) %virtualControllers[activePad].control->num_buttons;
 	currentConfig->A = &virtualControllers[activePad].control->buttons[currentButton];
-	strcpy(FRAME_STRINGS[17], currentConfig->A->name);
+	strcpy(FRAME_STRINGS[18], currentConfig->A->name);
 }
 
 void Func_ToggleAnalogStick()
@@ -437,7 +497,7 @@ void Func_ToggleAnalogStick()
 	int currentButton = currentConfig->analog->index;
 	currentButton = (currentButton+1) %virtualControllers[activePad].control->num_analog_sources;
 	currentConfig->analog = &virtualControllers[activePad].control->analog_sources[currentButton];
-	strcpy(FRAME_STRINGS[18], currentConfig->analog->name);
+	strcpy(FRAME_STRINGS[19], currentConfig->analog->name);
 }
 
 void Func_ToggleInvertY()
@@ -446,12 +506,12 @@ void Func_ToggleInvertY()
 	if (invertedY)
 	{
 		virtualControllers[activePad].config->invertedY = 0;
-		strcpy(FRAME_STRINGS[19], "Normal Y");
+		strcpy(FRAME_STRINGS[20], "Normal Y");
 	}
 	else
 	{
 		virtualControllers[activePad].config->invertedY = 1;
-		strcpy(FRAME_STRINGS[19], "Inverted Y");
+		strcpy(FRAME_STRINGS[20], "Inverted Y");
 	}
 }
 
@@ -461,10 +521,11 @@ void Func_ToggleButtonExit()
 	int currentButton = currentConfig->exit->index;
 	currentButton = (currentButton+1) %virtualControllers[activePad].control->num_menu_combos;
 	currentConfig->exit = &virtualControllers[activePad].control->menu_combos[currentButton];
-	strcpy(FRAME_STRINGS[20], currentConfig->exit->name);
+	strcpy(FRAME_STRINGS[21], currentConfig->exit->name);
 }
 
 void Func_ReturnFromConfigureButtonsFrame()
 {
-	pMenuContext->setActiveFrame(MenuContext::FRAME_CONFIGUREINPUT,ConfigureInputFrame::SUBMENU_REINIT);
+	menu::Gui::getInstance().menuLogo->setVisible(true);
+	pMenuContext->setActiveFrame(MenuContext::FRAME_SETTINGS,SettingsFrame::SUBMENU_INPUT);
 }

@@ -1,6 +1,7 @@
 /**
  * Wii64 - input.c
- * Copyright (C) 2007, 2008, 2009 Mike Slegeir
+ * Copyright (C) 2007, 2008, 2009, 2010 Mike Slegeir
+ * Copyright (C) 2007, 2008, 2009, 2010 sepp256
  * 
  * Input plugin for GC/Wii
  *
@@ -214,47 +215,11 @@ EXPORT void CALL GetKeys(int Control, BUTTONS * Keys )
 *******************************************************************/
 EXPORT void CALL InitiateControllers (CONTROL_INFO ControlInfo)
 {
-	int i,t,w;
 	control_info = ControlInfo;
 
 	init_controller_ts();
 
-	// 'Initialize' the unmapped virtual controllers
-//	for(i=0; i<4; ++i){
-//		unassign_controller(i);
-//	}
-
-	int num_assigned[num_controller_t];
-	memset(num_assigned, 0, sizeof(num_assigned));
-
-	// Map controllers in the priority given
-	// Outer loop: virtual controllers
-	for(i=0; i<4; ++i){
-		// Middle loop: controller type
-		for(t=0; t<num_controller_t; ++t){
-			controller_t* type = controller_ts[t];
-			// Inner loop: which controller
-			for(w=num_assigned[t]; w<4 && !type->available[w]; ++w, ++num_assigned[t]);
-			// If we've exhausted this type, move on
-			if(w == 4) continue;
-
-			assign_controller(i, type, w);
-			padType[i] = type == &controller_GC ? PADTYPE_GAMECUBE : PADTYPE_WII;
-			padAssign[i] = w;
-
-			// Don't assign the next type over this one or the same controller
-			++num_assigned[t];
-			break;
-		}
-		if(t == num_controller_t)
-			break;
-	}
-
-	// 'Initialize' the unmapped virtual controllers
-	for(; i<4; ++i){
-		unassign_controller(i);
-		padType[i] = PADTYPE_NONE;
-	}
+	auto_assign_controllers();
 }
 
 /******************************************************************
@@ -392,3 +357,40 @@ void unassign_controller(int wv){
 	control_info.Controls[wv].Plugin  = PLUGIN_NONE;
 }
 
+void auto_assign_controllers(void){
+	int i,t,w;
+	int num_assigned[num_controller_t];
+
+	memset(num_assigned, 0, sizeof(num_assigned));
+
+	// Map controllers in the priority given
+	// Outer loop: virtual controllers
+	for(i=0; i<4; ++i){
+		// Middle loop: controller type
+		for(t=0; t<num_controller_t; ++t){
+			controller_t* type = controller_ts[t];
+			type->refreshAvailable();
+
+			// Inner loop: which controller
+			for(w=num_assigned[t]; w<4 && !type->available[w]; ++w, ++num_assigned[t]);
+			// If we've exhausted this type, move on
+			if(w == 4) continue;
+
+			assign_controller(i, type, w);
+			padType[i] = type == &controller_GC ? PADTYPE_GAMECUBE : PADTYPE_WII;
+			padAssign[i] = w;
+
+			// Don't assign the next type over this one or the same controller
+			++num_assigned[t];
+			break;
+		}
+		if(t == num_controller_t)
+			break;
+	}
+
+	// 'Initialize' the unmapped virtual controllers
+	for(; i<4; ++i){
+		unassign_controller(i);
+		padType[i] = PADTYPE_NONE;
+	}
+}

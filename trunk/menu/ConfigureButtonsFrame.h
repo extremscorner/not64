@@ -30,6 +30,7 @@ public:
 	ConfigureButtonsFrame();
 	~ConfigureButtonsFrame();
 	void activateSubmenu(int submenu);
+	void updateFrame(float deltaTime);
 
 	enum ConfigureButtonsSubmenus
 	{

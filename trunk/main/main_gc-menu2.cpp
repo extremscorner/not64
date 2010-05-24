@@ -182,6 +182,12 @@ int main(int argc, char* argv[]){
   DI_Init();    // first
 #endif
 
+#ifdef DEBUGON
+	//DEBUG_Init(GDBSTUB_DEVICE_TCP,GDBSTUB_DEF_TCPPORT); //Default port is 2828
+	DEBUG_Init(GDBSTUB_DEVICE_USB, 1);
+	_break();
+#endif
+
 	Initialise(); // Stock OGC initialization
 //	vmode = VIDEO_GetPreferredMode(NULL);
 	MenuContext *menu = new MenuContext(vmode);
@@ -192,8 +198,8 @@ int main(int argc, char* argv[]){
 //	menuInit();
 #ifdef DEBUGON
 	//DEBUG_Init(GDBSTUB_DEVICE_TCP,GDBSTUB_DEF_TCPPORT); //Default port is 2828
-	DEBUG_Init(GDBSTUB_DEVICE_USB, 1);
-	_break();
+//	DEBUG_Init(GDBSTUB_DEVICE_USB, 1);
+//	_break();
 #endif
 
 	// Default Settings
@@ -528,6 +534,9 @@ void ShutdownWii() {
 #endif
 
 static void Initialise (void){
+
+	//Initialize controls once before menu runs
+	control_info_init();
 
 /*  VIDEO_Init();
   PAD_Init();

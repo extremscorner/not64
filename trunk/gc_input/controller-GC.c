@@ -153,7 +153,7 @@ static void rumble(int Control, int rumble){
 	PAD_ControlMotor(Control, rumble ? PAD_MOTOR_RUMBLE : PAD_MOTOR_STOP);
 }
 
-static void configure(int Control, controller_config_t*){
+static void configure(int Control, controller_config_t* config){
 	// Don't know how this should be integrated
 }
 
@@ -162,6 +162,7 @@ static void assign(int p, int v){
 }
 
 static void init(void);
+static void refreshAvailable(void);
 
 controller_t controller_GC =
 	{ _GetKeys,
@@ -171,6 +172,7 @@ controller_t controller_GC =
 	  pause,
 	  resume,
 	  rumble,
+	  refreshAvailable,
 	  {0, 0, 0, 0},
 	  sizeof(buttons)/sizeof(buttons[0]),
 	  buttons,
@@ -182,11 +184,9 @@ controller_t controller_GC =
 
 static void init(void){
 
-	if(padNeedScan){ gc_connected = PAD_ScanPads(); padNeedScan = 0; }
-
 	int i;
-	for(i=0; i<4; ++i)
-		controller_GC.available[i] = (gc_connected & (1<<i));
+
+	refreshAvailable();
 
 	controller_GC.config_default.DU        = &buttons[1];  // D-Pad Up
 	controller_GC.config_default.DL        = &buttons[2];  // D-Pad Left
@@ -212,4 +212,13 @@ static void init(void){
 		memcpy(&controller_GC.config_slot[i], &controller_GC.config_default, sizeof(controller_config_t));
 	}
 
+}
+
+static void refreshAvailable(void){
+
+	if(padNeedScan){ gc_connected = PAD_ScanPads(); padNeedScan = 0; }
+
+	int i;
+	for(i=0; i<4; ++i)
+		controller_GC.available[i] = (gc_connected & (1<<i));
 }

@@ -1,6 +1,6 @@
 /**
  * Wii64 - MainFrame.cpp
- * Copyright (C) 2009 sepp256
+ * Copyright (C) 2009, 2010 sepp256
  *
  * Wii64 homepage: http://www.emulatemii.com
  * email address: sepp256@gmail.com
@@ -208,8 +208,6 @@ void resumeAudio(void); void resumeInput(void);
 void go(void); 
 }
 
-//void control_info_init();
-
 extern char menuActive;
 extern char autoSave;
 extern BOOL sramWritten;
@@ -247,9 +245,6 @@ void Func_PlayGame()
 	menu::Focus::getInstance().setFreezeAction(false);
 
 	menu::Gui::getInstance().gfx->clearEFB((GXColor){0, 0, 0, 0xFF}, 0x000000);
-
-//	usleep(1000);			//This sleep prevents the PAD_Init() from failing
-//	control_info_init();	//TODO: This controller re-poll might need rethinking when we implement reconfigurable input
 
 	pauseRemovalThread();
 	resumeAudio();

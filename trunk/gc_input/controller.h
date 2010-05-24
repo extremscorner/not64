@@ -1,6 +1,7 @@
 /**
  * Wii64 - controller.h
- * Copyright (C) 2007, 2008, 2009 Mike Slegeir
+ * Copyright (C) 2007, 2008, 2009, 2010 Mike Slegeir
+ * Copyright (C) 2007, 2008, 2009, 2010 sepp256
  * 
  * Standard prototypes for accessing different controllers
  *
@@ -31,6 +32,7 @@ extern char padNeedScan, wpadNeedScan;
 extern u32 gc_connected;
 
 void control_info_init(void);
+void auto_assign_controllers(void);
 
 typedef struct {
 	int index;
@@ -67,6 +69,8 @@ typedef struct {
 	void (*resume)(int);
 	// Rumble controller (0 stops rumble)
 	void (*rumble)(int, int);
+	// Fill in available[] for this type
+	void (*refreshAvailable)(void);
 	// Controllers plugged in/available of this type
 	char available[4];
 	// Number of buttons available for this controller type

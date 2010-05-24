@@ -47,6 +47,7 @@ public:
 	void setSelectFunc(FrameFunc selectFn);
 	Component* updateFocus(int direction, int buttonsPressed);
 	virtual void activateSubmenu(int submenu) {};
+	virtual void updateFrame(float deltaTime) {};
 
 private:
 	Component* defaultFocus;

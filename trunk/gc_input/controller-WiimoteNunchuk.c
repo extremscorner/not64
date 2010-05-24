@@ -59,10 +59,10 @@ enum {
 
 static button_t buttons[] = {
 	{  0, ~0,                    "None" },
-	{  1, WPAD_BUTTON_UP,        "D-Pad Up" },
-	{  2, WPAD_BUTTON_LEFT,      "D-Pad Left" },
-	{  3, WPAD_BUTTON_RIGHT,     "D-Pad Right" },
-	{  4, WPAD_BUTTON_DOWN,      "D-Pad Down" },
+	{  1, WPAD_BUTTON_UP,        "D-Up" },
+	{  2, WPAD_BUTTON_LEFT,      "D-Left" },
+	{  3, WPAD_BUTTON_RIGHT,     "D-Right" },
+	{  4, WPAD_BUTTON_DOWN,      "D-Down" },
 	{  5, WPAD_BUTTON_A,         "A" },
 	{  6, WPAD_BUTTON_B,         "B" },
 	{  7, WPAD_BUTTON_PLUS,      "+" },
@@ -72,10 +72,10 @@ static button_t buttons[] = {
 	{ 11, WPAD_BUTTON_2,         "2" },
 	{ 12, WPAD_NUNCHUK_BUTTON_C, "C" },
 	{ 13, WPAD_NUNCHUK_BUTTON_Z, "Z" },
-	{ 14, NUNCHUK_U,             "Nunchuk Up" },
-	{ 15, NUNCHUK_L,             "Nunchuk Left" },
-	{ 16, NUNCHUK_R,             "Nunchuk Right" },
-	{ 17, NUNCHUK_D,             "Nunchuk Down" },
+	{ 14, NUNCHUK_U,             "NC-Up" },
+	{ 15, NUNCHUK_L,             "NC-Left" },
+	{ 16, NUNCHUK_R,             "NC-Right" },
+	{ 17, NUNCHUK_D,             "NCDown" },
 };
 
 static button_t analog_sources[] = {
@@ -202,6 +202,7 @@ static void assign(int p, int v){
 }
 
 static void init(void);
+static void refreshAvailable(void);
 
 controller_t controller_WiimoteNunchuk =
 	{ _GetKeys,
@@ -211,6 +212,7 @@ controller_t controller_WiimoteNunchuk =
 	  pause,
 	  resume,
 	  rumble,
+	  refreshAvailable,
 	  {0, 0, 0, 0},
 	  sizeof(buttons)/sizeof(buttons[0]),
 	  buttons,
@@ -221,19 +223,11 @@ controller_t controller_WiimoteNunchuk =
 	 };
 
 static void init(void){
+
 	int i;
-	WPAD_ScanPads();
-	for(i=0; i<4; ++i){
-		WPADData* wpad = WPAD_Data(i);
-		// Only use a connected nunchuk
-		if(wpad->err == WPAD_ERR_NONE &&
-		   wpad->exp.type == WPAD_EXP_NUNCHUK){
-			controller_WiimoteNunchuk.available[i] = 1;
-			WPAD_SetDataFormat(i, WPAD_DATA_EXPANSION);
-		} else
-			controller_WiimoteNunchuk.available[i] = 0;
-	}
 	
+	refreshAvailable();
+
 	controller_WiimoteNunchuk.config_default.DU        = &buttons[0];  // None
 	controller_WiimoteNunchuk.config_default.DL        = &buttons[0];  // None
 	controller_WiimoteNunchuk.config_default.DR        = &buttons[0];  // None
@@ -256,5 +250,21 @@ static void init(void){
 	{
 		memcpy(&controller_WiimoteNunchuk.config[i], &controller_WiimoteNunchuk.config_default, sizeof(controller_config_t));
 		memcpy(&controller_WiimoteNunchuk.config_slot[i], &controller_WiimoteNunchuk.config_default, sizeof(controller_config_t));
+	}
+}
+
+static void refreshAvailable(void){
+
+	int i;
+	WPAD_ScanPads();
+	for(i=0; i<4; ++i){
+		WPADData* wpad = WPAD_Data(i);
+		// Only use a connected nunchuk
+		if(wpad->err == WPAD_ERR_NONE &&
+		   wpad->exp.type == WPAD_EXP_NUNCHUK){
+			controller_WiimoteNunchuk.available[i] = 1;
+			WPAD_SetDataFormat(i, WPAD_DATA_IR); // FIXME: Only set expansion here
+		} else
+			controller_WiimoteNunchuk.available[i] = 0;
 	}
 }
