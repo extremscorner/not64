@@ -46,8 +46,8 @@ static int getStickValue(joystick_t* j, int axis, int maxAbsValue){
 }
 
 enum {
-	NUNCHUK_AS_ANALOG = 1, IR_AS_ANALOG = 2,
-	TILT_AS_ANALOG = 4, WHEEL_AS_ANALOG = 8
+	NUNCHUK_AS_ANALOG, IR_AS_ANALOG,
+	TILT_AS_ANALOG, WHEEL_AS_ANALOG
 };
 
 enum {
@@ -187,9 +187,14 @@ static void rumble(int Control, int rumble){
 	WPAD_Rumble(Control, rumble ? 1 : 0);
 }
 
-static void configure(int Control){
-	// Don't know how this should be integrated
-	// TODO: Set IR here if config specifies
+static void configure(int Control, controller_config_t* config){
+	static s32 analog_fmts[] = {
+		WPAD_DATA_EXPANSION, // Nunchuk
+		WPAD_DATA_IR,        // IR
+		WPAD_DATA_EXPANSION, // Tilt (could still use nunchuk)
+		WPAD_DATA_EXPANSION, // Wheel (could still use nunchuk?)
+	};
+	WPAD_SetDataFormat(Control, analog_fmts[config->analog->mask]);
 }
 
 static void assign(int p, int v){
@@ -224,7 +229,7 @@ static void init(void){
 		if(wpad->err == WPAD_ERR_NONE &&
 		   wpad->exp.type == WPAD_EXP_NUNCHUK){
 			controller_WiimoteNunchuk.available[i] = 1;
-			WPAD_SetDataFormat(i, WPAD_DATA_IR); // FIXME: Only set expansion here
+			WPAD_SetDataFormat(i, WPAD_DATA_EXPANSION);
 		} else
 			controller_WiimoteNunchuk.available[i] = 0;
 	}

@@ -55,8 +55,9 @@ typedef struct {
 	//   Not for the player number assigned
 	//   (eg use GC Controller 1, not player 1)
 	int (*GetKeys)(int, BUTTONS*, controller_config_t*);
-	// Interactively configure the button mapping
-	void (*configure)(int);
+	// Set the configuration for a controller of this type
+	// You should pass in physical controller num as above
+	void (*configure)(int, controller_config_t*);
 	// Initialize the controllers, filling out available
 	void (*init)(void);
 	// Assign actual controller to virtual controller
