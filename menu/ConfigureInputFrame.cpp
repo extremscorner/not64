@@ -62,10 +62,10 @@ void Func_ReturnFromConfigureInputFrame();
 
 static char FRAME_STRINGS[17][15] =
 	{ "Pad Assignment",
-	  "N64 Pad 1",
-	  "N64 Pad 2",
-	  "N64 Pad 3",
-	  "N64 Pad 4",
+	  "Pad 1",
+	  "Pad 2",
+	  "Pad 3",
+	  "Pad 4",
 
 	  "Automatic",
 	  "Manual",
@@ -78,7 +78,7 @@ static char FRAME_STRINGS[17][15] =
 	  "2",
 	  "3",
 	  "4",
-	  "Button Map"};
+	  "Mapping"};
 
 struct ButtonInfo
 {
@@ -97,23 +97,23 @@ struct ButtonInfo
 	ButtonFunc		returnFunc;
 } FRAME_BUTTONS[NUM_FRAME_BUTTONS] =
 { //	button	buttonStyle buttonString		x		y		width	height	Up	Dwn	Lft	Rt	clickFunc				returnFunc
-	{	NULL,	BTN_A_SEL,	FRAME_STRINGS[5],	240.0,	 80.0,	135.0,	56.0,	 5,	 2,	 1,	 1,	Func_AutoSelectInput,	Func_ReturnFromConfigureInputFrame }, // Automatic Pad Assignment
-	{	NULL,	BTN_A_SEL,	FRAME_STRINGS[6],	395.0,	 80.0,	120.0,	56.0,	 9,	 6,	 0,	 0,	Func_ManualSelectInput,	Func_ReturnFromConfigureInputFrame }, // Manual Pad Assignment
+	{	NULL,	BTN_A_SEL,	FRAME_STRINGS[5],	240.0,	 80.0,	145.0,	56.0,	 5,	 2,	 1,	 1,	Func_AutoSelectInput,	Func_ReturnFromConfigureInputFrame }, // Automatic Pad Assignment
+	{	NULL,	BTN_A_SEL,	FRAME_STRINGS[6],	405.0,	 80.0,	120.0,	56.0,	 9,	10,	 0,	 0,	Func_ManualSelectInput,	Func_ReturnFromConfigureInputFrame }, // Manual Pad Assignment
 
-	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[10],	240.0,	150.0,	200.0,	56.0,	 0,	 3,	10,	 6,	Func_TogglePad0Type,	Func_ReturnFromConfigureInputFrame }, // Toggle Pad 0 Type
-	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[10],	240.0,	220.0,	200.0,	56.0,	 2,	 4,	11,	 7,	Func_TogglePad1Type,	Func_ReturnFromConfigureInputFrame }, // Toggle Pad 1 Type
-	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[10],	240.0,	290.0,	200.0,	56.0,	 3,	 5,	12,	 8,	Func_TogglePad2Type,	Func_ReturnFromConfigureInputFrame }, // Toggle Pad 2 Type
-	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[10],	240.0,	360.0,	200.0,	56.0,	 4,	 0,	13,	 9,	Func_TogglePad3Type,	Func_ReturnFromConfigureInputFrame }, // Toggle Pad 3 Type
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[10],	150.0,	150.0,	200.0,	56.0,	 0,	 3,	10,	 6,	Func_TogglePad0Type,	Func_ReturnFromConfigureInputFrame }, // Toggle Pad 0 Type
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[10],	150.0,	220.0,	200.0,	56.0,	 2,	 4,	11,	 7,	Func_TogglePad1Type,	Func_ReturnFromConfigureInputFrame }, // Toggle Pad 1 Type
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[10],	150.0,	290.0,	200.0,	56.0,	 3,	 5,	12,	 8,	Func_TogglePad2Type,	Func_ReturnFromConfigureInputFrame }, // Toggle Pad 2 Type
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[10],	150.0,	360.0,	200.0,	56.0,	 4,	 0,	13,	 9,	Func_TogglePad3Type,	Func_ReturnFromConfigureInputFrame }, // Toggle Pad 3 Type
 
-	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[11],	460.0,	150.0,	 55.0,	56.0,	 1,	 7,	 2,	10,	Func_TogglePad0Assign,	Func_ReturnFromConfigureInputFrame }, // Toggle Pad 0 Assignment
-	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[11],	460.0,	220.0,	 55.0,	56.0,	 6,	 8,	 3,	11,	Func_TogglePad1Assign,	Func_ReturnFromConfigureInputFrame }, // Toggle Pad 1 Assignment
-	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[11],	460.0,	290.0,	 55.0,	56.0,	 7,	 9,	 4,	12,	Func_TogglePad2Assign,	Func_ReturnFromConfigureInputFrame }, // Toggle Pad 2 Assignment
-	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[11],	460.0,	360.0,	 55.0,	56.0,	 8,	 1,	 5,	13,	Func_TogglePad3Assign,	Func_ReturnFromConfigureInputFrame }, // Toggle Pad 3 Assignment
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[11],	370.0,	150.0,	 55.0,	56.0,	 1,	 7,	 2,	10,	Func_TogglePad0Assign,	Func_ReturnFromConfigureInputFrame }, // Toggle Pad 0 Assignment
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[11],	370.0,	220.0,	 55.0,	56.0,	 6,	 8,	 3,	11,	Func_TogglePad1Assign,	Func_ReturnFromConfigureInputFrame }, // Toggle Pad 1 Assignment
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[11],	370.0,	290.0,	 55.0,	56.0,	 7,	 9,	 4,	12,	Func_TogglePad2Assign,	Func_ReturnFromConfigureInputFrame }, // Toggle Pad 2 Assignment
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[11],	370.0,	360.0,	 55.0,	56.0,	 8,	 1,	 5,	13,	Func_TogglePad3Assign,	Func_ReturnFromConfigureInputFrame }, // Toggle Pad 3 Assignment
 
-	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[16],	535.0,	150.0,	150.0,	56.0,	 1,	11,	 6,	 2,	Func_ConfigPad0Buttons,	Func_ReturnFromConfigureInputFrame }, // Configure Pad 0 Buttons
-	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[16],	535.0,	220.0,	150.0,	56.0,	10,	12,	 7,	 3,	Func_ConfigPad1Buttons,	Func_ReturnFromConfigureInputFrame }, // Configure Pad 0 Buttons
-	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[16],	535.0,	290.0,	150.0,	56.0,	11,	13,	 8,	 4,	Func_ConfigPad2Buttons,	Func_ReturnFromConfigureInputFrame }, // Configure Pad 0 Buttons
-	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[16],	535.0,	360.0,	150.0,	56.0,	12,	 1,	 9,	 5,	Func_ConfigPad3Buttons,	Func_ReturnFromConfigureInputFrame }, // Configure Pad 0 Buttons
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[16],	445.0,	150.0,	130.0,	56.0,	 1,	11,	 6,	 2,	Func_ConfigPad0Buttons,	Func_ReturnFromConfigureInputFrame }, // Configure Pad 0 Buttons
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[16],	445.0,	220.0,	130.0,	56.0,	10,	12,	 7,	 3,	Func_ConfigPad1Buttons,	Func_ReturnFromConfigureInputFrame }, // Configure Pad 0 Buttons
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[16],	445.0,	290.0,	130.0,	56.0,	11,	13,	 8,	 4,	Func_ConfigPad2Buttons,	Func_ReturnFromConfigureInputFrame }, // Configure Pad 0 Buttons
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[16],	445.0,	360.0,	130.0,	56.0,	12,	 1,	 9,	 5,	Func_ConfigPad3Buttons,	Func_ReturnFromConfigureInputFrame }, // Configure Pad 0 Buttons
 };
 
 struct TextBoxInfo
@@ -127,10 +127,10 @@ struct TextBoxInfo
 } FRAME_TEXTBOXES[NUM_FRAME_TEXTBOXES] =
 { //	textBox	textBoxString		x		y		scale	centered
 	{	NULL,	FRAME_STRINGS[0],	125.0,	108.0,	 1.0,	true }, // Pad Assignment
-	{	NULL,	FRAME_STRINGS[1],	125.0,	178.0,	 1.0,	true }, // Pad 1
-	{	NULL,	FRAME_STRINGS[2],	125.0,	248.0,	 1.0,	true }, // Pad 2
-	{	NULL,	FRAME_STRINGS[3],	125.0,	318.0,	 1.0,	true }, // Pad 3
-	{	NULL,	FRAME_STRINGS[4],	125.0,	388.0,	 1.0,	true }, // Pad 4
+	{	NULL,	FRAME_STRINGS[1],	 90.0,	178.0,	 1.0,	true }, // Pad 1
+	{	NULL,	FRAME_STRINGS[2],	 90.0,	248.0,	 1.0,	true }, // Pad 2
+	{	NULL,	FRAME_STRINGS[3],	 90.0,	318.0,	 1.0,	true }, // Pad 3
+	{	NULL,	FRAME_STRINGS[4],	 90.0,	388.0,	 1.0,	true }, // Pad 4
 };
 
 ConfigureInputFrame::ConfigureInputFrame()
@@ -207,8 +207,8 @@ void ConfigureInputFrame::activateSubmenu(int submenu)
 		FRAME_BUTTONS[1].button->setSelected(true);
 		FRAME_BUTTONS[0].button->setNextFocus(menu::Focus::DIRECTION_DOWN, FRAME_BUTTONS[2].button);
 		FRAME_BUTTONS[0].button->setNextFocus(menu::Focus::DIRECTION_UP, FRAME_BUTTONS[5].button);
-		FRAME_BUTTONS[1].button->setNextFocus(menu::Focus::DIRECTION_DOWN, FRAME_BUTTONS[6].button);
-		FRAME_BUTTONS[1].button->setNextFocus(menu::Focus::DIRECTION_UP, FRAME_BUTTONS[9].button);
+		FRAME_BUTTONS[1].button->setNextFocus(menu::Focus::DIRECTION_DOWN, FRAME_BUTTONS[10].button);
+		FRAME_BUTTONS[1].button->setNextFocus(menu::Focus::DIRECTION_UP, FRAME_BUTTONS[13].button);
 		for (int i = 0; i < 4; i++)
 		{
 			FRAME_BUTTONS[i+2].button->setActive(true);

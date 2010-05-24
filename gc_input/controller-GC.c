@@ -44,10 +44,10 @@ enum {
 
 static button_t buttons[] = {
 	{  0, ~0,                "None" },
-	{  1, PAD_BUTTON_UP,    "D-Pad Up" },
-	{  2, PAD_BUTTON_LEFT,  "D-Pad Left" },
-	{  3, PAD_BUTTON_RIGHT, "D-Pad Right" },
-	{  4, PAD_BUTTON_DOWN,  "D-Pad Down" },
+	{  1, PAD_BUTTON_UP,    "D-Up" },
+	{  2, PAD_BUTTON_LEFT,  "D-Left" },
+	{  3, PAD_BUTTON_RIGHT, "D-Right" },
+	{  4, PAD_BUTTON_DOWN,  "D-Down" },
 	{  5, PAD_TRIGGER_Z,    "Z" },
 	{  6, PAD_TRIGGER_L,    "L" },
 	{  7, PAD_TRIGGER_R,    "R" },
@@ -56,14 +56,14 @@ static button_t buttons[] = {
 	{ 10, PAD_BUTTON_X,     "X" },
 	{ 11, PAD_BUTTON_Y,     "Y" },
 	{ 12, PAD_BUTTON_START, "Start" },
-	{ 13, C_STICK_U,        "C-Stick Up" },
-	{ 14, C_STICK_L,        "C-Stick Left" },
-	{ 15, C_STICK_R,        "C-Stick Right" },
-	{ 16, C_STICK_D,        "C-Stick Down" },
-	{ 17, ANALOG_U,         "Analog Up" },
-	{ 18, ANALOG_L,         "Analog Left" },
-	{ 19, ANALOG_R,         "Analog Right" },
-	{ 20, ANALOG_D,         "Analog Down" },
+	{ 13, C_STICK_U,        "C-Up" },
+	{ 14, C_STICK_L,        "C-Left" },
+	{ 15, C_STICK_R,        "C-Right" },
+	{ 16, C_STICK_D,        "C-Down" },
+	{ 17, ANALOG_U,         "A-Up" },
+	{ 18, ANALOG_L,         "A-Left" },
+	{ 19, ANALOG_R,         "A-Right" },
+	{ 20, ANALOG_D,         "A-Down" },
 };
 
 static button_t analog_sources[] = {
