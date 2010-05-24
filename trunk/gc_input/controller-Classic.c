@@ -46,9 +46,91 @@ static int getStickValue(joystick_t* j, int axis, int maxAbsValue){
 }
 
 enum {
-	L_STICK_AS_ANALOG = 1, R_STICK_AS_C = 2,
-	L_STICK_AS_C = 4, R_STICK_AS_ANALOG = 8,
+	L_STICK_AS_ANALOG = 1, R_STICK_AS_ANALOG = 2,
 };
+
+enum {
+	L_STICK_L  = 0x01 << 16,
+	L_STICK_R  = 0x02 << 16,
+	L_STICK_U  = 0x04 << 16,
+	L_STICK_D  = 0x08 << 16,
+	R_STICK_L = 0x10 << 16,
+	R_STICK_R = 0x20 << 16,
+	R_STICK_U = 0x40 << 16,
+	R_STICK_D = 0x80 << 16,
+};
+
+static button_t buttons[] = {
+	{  0, ~0,                         "None" },
+	{  1, CLASSIC_CTRL_BUTTON_UP,     "D-Pad Up" },
+	{  2, CLASSIC_CTRL_BUTTON_LEFT,   "D-Pad Left" },
+	{  3, CLASSIC_CTRL_BUTTON_RIGHT,  "D-Pad Right" },
+	{  4, CLASSIC_CTRL_BUTTON_DOWN,   "D-Pad Down" },
+	{  5, CLASSIC_CTRL_BUTTON_FULL_L, "L" },
+	{  6, CLASSIC_CTRL_BUTTON_FULL_R, "R" },
+	{  7, CLASSIC_CTRL_BUTTON_ZL,     "Left Z" },
+	{  8, CLASSIC_CTRL_BUTTON_ZR,     "Right Z" },
+	{  9, CLASSIC_CTRL_BUTTON_A,      "A" },
+	{ 10, CLASSIC_CTRL_BUTTON_B,      "B" },
+	{ 11, CLASSIC_CTRL_BUTTON_X,      "X" },
+	{ 12, CLASSIC_CTRL_BUTTON_Y,      "Y" },
+	{ 13, CLASSIC_CTRL_BUTTON_PLUS,   "+" },
+	{ 14, CLASSIC_CTRL_BUTTON_MINUS,  "-" },
+	{ 15, CLASSIC_CTRL_BUTTON_HOME,   "Home" },
+	{ 16, R_STICK_U,                  "Right Stick Up" },
+	{ 17, R_STICK_L,                  "Right Stick Left" },
+	{ 18, R_STICK_R,                  "Right Stick Right" },
+	{ 19, R_STICK_D,                  "Right Stick Down" },
+	{ 20, L_STICK_U,                  "Left Stick Up" },
+	{ 21, L_STICK_L,                  "Left Stick Left" },
+	{ 22, L_STICK_R,                  "Left Stick Right" },
+	{ 23, L_STICK_D,                  "Left Stick Down" },
+};
+
+static button_t analog_sources[] = {
+	{ 0, L_STICK_AS_ANALOG,  "Left Stick" },
+	{ 1, R_STICK_AS_ANALOG,  "Right Stick" },
+};
+
+static button_t menu_combos[] = {
+	{ 0, CLASSIC_CTRL_BUTTON_X|CLASSIC_CTRL_BUTTON_Y, "X+Y" },
+};
+
+static unsigned int getButtons(classic_ctrl_t* controller)
+{
+	unsigned int b = (unsigned)controller->btns;
+	s8 stickX      = getStickValue(&controller->ljs, STICK_X, 7);
+	s8 stickY      = getStickValue(&controller->ljs, STICK_Y, 7);
+	s8 substickX   = getStickValue(&controller->rjs, STICK_X, 7);
+	s8 substickY   = getStickValue(&controller->rjs, STICK_Y, 7);
+	
+	if(stickX    < -3) b |= L_STICK_L;
+	if(stickX    >  3) b |= L_STICK_R;
+	if(stickY    >  3) b |= L_STICK_U;
+	if(stickY    < -3) b |= L_STICK_D;
+	
+	if(substickX < -3) b |= R_STICK_L;
+	if(substickY >  3) b |= R_STICK_R;
+	if(substickY >  3) b |= R_STICK_U;
+	if(substickY < -3) b |= R_STICK_D;
+	
+	return b;
+}
+
+static int available(int Control, WPADData* wpad) {
+	if(wpad->err == WPAD_ERR_NONE &&
+	   wpad->exp.type == WPAD_EXP_CLASSIC){
+		controller_Classic.available[Control] = 1;
+		return 1;
+	} else {
+		controller_Classic.available[Control] = 0;
+		if(wpad->err == WPAD_ERR_NONE &&
+		   wpad->exp.type == WPAD_EXP_NUNCHUK){
+			controller_WiimoteNunchuk.available[Control] = 1;
+		}
+		return 0;
+	}
+}
 
 static int _GetKeys(int Control, BUTTONS * Keys, controller_config_t* config)
 {
@@ -58,20 +140,11 @@ static int _GetKeys(int Control, BUTTONS * Keys, controller_config_t* config)
 	memset(c, 0, sizeof(BUTTONS));
 
 	// Only use a connected classic controller
-	if(wpad->err == WPAD_ERR_NONE &&
-	   wpad->exp.type == WPAD_EXP_CLASSIC){
-		controller_Classic.available[Control] = 1;
-	} else {
-		controller_Classic.available[Control] = 0;
-		if(wpad->err == WPAD_ERR_NONE &&
-		   wpad->exp.type == WPAD_EXP_NUNCHUK){
-			controller_WiimoteNunchuk.available[Control] = 1;
-		}
+	if(!available(Control, wpad))
 		return 0;
-	}
-/*
-	short b = wpad->exp.classic.btns;
-	int isHeld(short button){ return (b & button) == button; }
+
+	unsigned int b = getButtons(&wpad->exp.classic);
+	int isHeld(button_tp button){ return (b & button->mask) == button->mask; }
 	
 	c->R_DPAD       = isHeld(config->DR);
 	c->L_DPAD       = isHeld(config->DL);
@@ -86,37 +159,22 @@ static int _GetKeys(int Control, BUTTONS * Keys, controller_config_t* config)
 	c->R_TRIG       = isHeld(config->R);
 	c->L_TRIG       = isHeld(config->L);
 
-	if(config->flags & R_STICK_AS_C){
-		s8 substickX = getStickValue(&wpad->exp.classic.rjs, STICK_X, 7);
-		c->R_CBUTTON = substickX >  3;
-		c->L_CBUTTON = substickX < -3;
-		s8 substickY = getStickValue(&wpad->exp.classic.rjs, STICK_Y, 7);
-		c->D_CBUTTON = substickY < -3;
-		c->U_CBUTTON = substickY >  3;
-	} else if(config->flags & L_STICK_AS_C){
-		s8 stickX = getStickValue(&wpad->exp.classic.ljs, STICK_X, 7);
-		c->R_CBUTTON = stickX >  3;
-		c->L_CBUTTON = stickX < -3;
-		s8 stickY = getStickValue(&wpad->exp.classic.ljs, STICK_Y, 7);
-		c->D_CBUTTON = stickY < -3;
-		c->U_CBUTTON = stickY >  3;
-	} else {
-		c->R_CBUTTON = isHeld(config->CR);
-		c->L_CBUTTON = isHeld(config->CL);
-		c->D_CBUTTON = isHeld(config->CD);
-		c->U_CBUTTON = isHeld(config->CU);
-	}
+	c->R_CBUTTON    = isHeld(config->CR);
+	c->L_CBUTTON    = isHeld(config->CL);
+	c->D_CBUTTON    = isHeld(config->CD);
+	c->U_CBUTTON    = isHeld(config->CU);
 
-	if(config->flags & L_STICK_AS_ANALOG){
+	if(config->analog->mask & L_STICK_AS_ANALOG){
 		c->X_AXIS = getStickValue(&wpad->exp.classic.ljs, STICK_X, 127);
 		c->Y_AXIS = getStickValue(&wpad->exp.classic.ljs, STICK_Y, 127);
-	} else if(config->flags & R_STICK_AS_ANALOG){
+	} else if(config->analog->mask & R_STICK_AS_ANALOG){
 		c->X_AXIS = getStickValue(&wpad->exp.classic.rjs, STICK_X, 127);
 		c->Y_AXIS = getStickValue(&wpad->exp.classic.rjs, STICK_Y, 127);
 	}
+	if(config->invertedY) c->Y_AXIS = -c->Y_AXIS;
 
-	// X+Y quits to menu
-	return isHeld(config->exit);*/
+	// Return whether the exit button(s) are pressed
+	return isHeld(config->exit);
 }
 
 static void pause(int Control){
@@ -139,21 +197,6 @@ static void assign(int p, int v){
 
 static void init(void);
 
-static controller_config_t configs[] = {
-	{
-		.DL = CLASSIC_CTRL_BUTTON_LEFT, .DR = CLASSIC_CTRL_BUTTON_RIGHT,
-		.DU = CLASSIC_CTRL_BUTTON_UP, .DD = CLASSIC_CTRL_BUTTON_DOWN,
-		.A = CLASSIC_CTRL_BUTTON_A, .B = CLASSIC_CTRL_BUTTON_B,
-		.START = CLASSIC_CTRL_BUTTON_PLUS,
-		.L = CLASSIC_CTRL_BUTTON_FULL_L, .R = CLASSIC_CTRL_BUTTON_FULL_R,
-		.Z = CLASSIC_CTRL_BUTTON_ZR,
-		.CL = -1, .CR = -1, .CU = -1, .CD = -1,
-//		.flags = L_STICK_AS_ANALOG | R_STICK_AS_C,
-		.exit = CLASSIC_CTRL_BUTTON_X | CLASSIC_CTRL_BUTTON_Y,
-//		.description = "Default settings"
-	},
-};
-
 controller_t controller_Classic =
 	{ _GetKeys,
 	  configure,
@@ -163,8 +206,12 @@ controller_t controller_Classic =
 	  resume,
 	  rumble,
 	  {0, 0, 0, 0},
-	  sizeof(configs)/sizeof(configs[0]),
-	  configs
+	  sizeof(buttons)/sizeof(buttons[0]),
+	  buttons,
+	  sizeof(analog_sources)/sizeof(analog_sources[0]),
+	  analog_sources,
+	  sizeof(menu_combos)/sizeof(menu_combos[0]),
+	  menu_combos
 	 };
 
 static void init(void){
@@ -179,5 +226,29 @@ static void init(void){
 			WPAD_SetDataFormat(i, WPAD_DATA_EXPANSION);
 		} else
 			controller_Classic.available[i] = 0;
+	}
+	
+	controller_Classic.config_default.DU        = &buttons[1];  // D-Pad Up
+	controller_Classic.config_default.DL        = &buttons[2];  // D-Pad Left
+	controller_Classic.config_default.DR        = &buttons[3];  // D-Pad Right
+	controller_Classic.config_default.DD        = &buttons[4];  // D-Pad Down
+	controller_Classic.config_default.Z         = &buttons[7];  // Left Z
+	controller_Classic.config_default.L         = &buttons[5];  // Left Trigger
+	controller_Classic.config_default.R         = &buttons[6];  // Right Trigger
+	controller_Classic.config_default.A         = &buttons[9];  // A
+	controller_Classic.config_default.B         = &buttons[10]; // B
+	controller_Classic.config_default.START     = &buttons[13]; // +
+	controller_Classic.config_default.CU        = &buttons[16]; // Right Stick Up
+	controller_Classic.config_default.CL        = &buttons[17]; // Right Stick Left
+	controller_Classic.config_default.CR        = &buttons[18]; // Right Stick Right
+	controller_Classic.config_default.CD        = &buttons[19]; // Right Stick Down
+	controller_Classic.config_default.analog    = &analog_sources[0];
+	controller_Classic.config_default.exit      = &menu_combos[0];
+	controller_Classic.config_default.invertedY = 0;
+
+	for(i=0; i<4; ++i)
+	{
+		memcpy(&controller_Classic.config[i], &controller_Classic.config_default, sizeof(controller_config_t));
+		memcpy(&controller_Classic.config_slot[i], &controller_Classic.config_default, sizeof(controller_config_t));
 	}
 }
