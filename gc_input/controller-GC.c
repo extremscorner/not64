@@ -77,6 +77,27 @@ static button_t menu_combos[] = {
 
 u32 gc_connected;
 
+static unsigned int getButtons(int Control)
+{
+	unsigned int b = PAD_ButtonsHeld(Control);
+	s8 stickX      = PAD_StickX(Control);
+	s8 stickY      = PAD_StickY(Control);
+	s8 substickX   = PAD_SubStickX(Control);
+	s8 substickY   = PAD_SubStickY(Control);
+	
+	if(stickX    < -48) b |= ANALOG_L;
+	if(stickX    >  48) b |= ANALOG_R;
+	if(stickY    >  48) b |= ANALOG_U;
+	if(stickY    < -48) b |= ANALOG_D;
+	
+	if(substickX < -48) b |= C_STICK_L;
+	if(substickY >  48) b |= C_STICK_R;
+	if(substickY >  48) b |= C_STICK_U;
+	if(substickY < -48) b |= C_STICK_D;
+	
+	return b;
+}
+
 static int _GetKeys(int Control, BUTTONS * Keys, controller_config_t* config)
 {
 	if(padNeedScan){ gc_connected = PAD_ScanPads(); padNeedScan = 0; }
@@ -86,19 +107,7 @@ static int _GetKeys(int Control, BUTTONS * Keys, controller_config_t* config)
 	controller_GC.available[Control] = (gc_connected & (1<<Control)) ? 1 : 0;
 	if (!controller_GC.available[Control]) return 0;
 
-	unsigned int b = PAD_ButtonsHeld(Control);
-	s8 stickX      = PAD_StickX(Control);
-	s8 stickY      = PAD_StickY(Control);
-	s8 substickX   = PAD_SubStickX(Control);
-	s8 substickY   = PAD_SubStickY(Control);
-	if(stickX    < -48) b |= ANALOG_L;
-	if(stickX    >  48) b |= ANALOG_R;
-	if(stickY    >  48) b |= ANALOG_U;
-	if(stickY    < -48) b |= ANALOG_D;
-	if(substickX < -48) b |= C_STICK_L;
-	if(substickY >  48) b |= C_STICK_R;
-	if(substickY >  48) b |= C_STICK_U;
-	if(substickY < -48) b |= C_STICK_D;
+	unsigned int b = getButtons(Control);
 	int isHeld(button_tp button){ return (b & button->mask) == button->mask; }
 	
 	c->R_DPAD       = isHeld(config->DR);
@@ -120,15 +129,15 @@ static int _GetKeys(int Control, BUTTONS * Keys, controller_config_t* config)
 	c->U_CBUTTON    = isHeld(config->CU);
 
 	if(config->analog->mask & ANALOG_AS_ANALOG){
-		c->X_AXIS = stickX;
-		c->Y_AXIS = stickY;
+		c->X_AXIS = PAD_StickX(Control);
+		c->Y_AXIS = PAD_StickY(Control);
 	} else if(config->analog->mask & C_STICK_AS_ANALOG){
-		c->X_AXIS = substickX;
-		c->Y_AXIS = substickY;
+		c->X_AXIS = PAD_SubStickX(Control);
+		c->Y_AXIS = PAD_SubStickY(Control);
 	}
 	if(config->invertedY) c->Y_AXIS = -c->Y_AXIS;
 
-	// X+Y quits to menu
+	// Return whether the exit button(s) are pressed
 	return isHeld(config->exit);
 }
 
@@ -177,20 +186,20 @@ static void init(void){
 	for(i=0; i<4; ++i)
 		controller_GC.available[i] = (gc_connected & (1<<i));
 
-	controller_GC.config_default.DU        = &buttons[1];
-	controller_GC.config_default.DL        = &buttons[2];
-	controller_GC.config_default.DR        = &buttons[3];
-	controller_GC.config_default.DD        = &buttons[4];
-	controller_GC.config_default.Z         = &buttons[5];
-	controller_GC.config_default.L         = &buttons[6];
-	controller_GC.config_default.R         = &buttons[7];
-	controller_GC.config_default.A         = &buttons[8];
-	controller_GC.config_default.B         = &buttons[9];
-	controller_GC.config_default.START     = &buttons[12];
-	controller_GC.config_default.CU        = &buttons[13];
-	controller_GC.config_default.CL        = &buttons[14];
-	controller_GC.config_default.CR        = &buttons[15];
-	controller_GC.config_default.CD        = &buttons[16];
+	controller_GC.config_default.DU        = &buttons[1];  // D-Pad Up
+	controller_GC.config_default.DL        = &buttons[2];  // D-Pad Left
+	controller_GC.config_default.DR        = &buttons[3];  // D-Pad Right
+	controller_GC.config_default.DD        = &buttons[4];  // D-Pad Down
+	controller_GC.config_default.Z         = &buttons[5];  // Z
+	controller_GC.config_default.L         = &buttons[6];  // Left Trigger
+	controller_GC.config_default.R         = &buttons[7];  // Right Trigger
+	controller_GC.config_default.A         = &buttons[8];  // A
+	controller_GC.config_default.B         = &buttons[9];  // B
+	controller_GC.config_default.START     = &buttons[12]; // Start
+	controller_GC.config_default.CU        = &buttons[13]; // C-Stick Up
+	controller_GC.config_default.CL        = &buttons[14]; // C-Stick Left
+	controller_GC.config_default.CR        = &buttons[15]; // C-Stick Right
+	controller_GC.config_default.CD        = &buttons[16]; // C-Stick Down
 	controller_GC.config_default.analog    = &analog_sources[0];
 	controller_GC.config_default.exit      = &menu_combos[0];
 	controller_GC.config_default.invertedY = 0;
