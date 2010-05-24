@@ -50,10 +50,10 @@ enum {
 };
 
 enum {
-	L_STICK_L  = 0x01 << 16,
-	L_STICK_R  = 0x02 << 16,
-	L_STICK_U  = 0x04 << 16,
-	L_STICK_D  = 0x08 << 16,
+	L_STICK_L = 0x01 << 16,
+	L_STICK_R = 0x02 << 16,
+	L_STICK_U = 0x04 << 16,
+	L_STICK_D = 0x08 << 16,
 	R_STICK_L = 0x10 << 16,
 	R_STICK_R = 0x20 << 16,
 	R_STICK_U = 0x40 << 16,
@@ -144,7 +144,9 @@ static int _GetKeys(int Control, BUTTONS * Keys, controller_config_t* config)
 		return 0;
 
 	unsigned int b = getButtons(&wpad->exp.classic);
-	int isHeld(button_tp button){ return (b & button->mask) == button->mask; }
+	inline int isHeld(button_tp button){
+		return (b & button->mask) == button->mask;
+	}
 	
 	c->R_DPAD       = isHeld(config->DR);
 	c->L_DPAD       = isHeld(config->DL);
@@ -164,10 +166,10 @@ static int _GetKeys(int Control, BUTTONS * Keys, controller_config_t* config)
 	c->D_CBUTTON    = isHeld(config->CD);
 	c->U_CBUTTON    = isHeld(config->CU);
 
-	if(config->analog->mask & L_STICK_AS_ANALOG){
+	if(config->analog->mask == L_STICK_AS_ANALOG){
 		c->X_AXIS = getStickValue(&wpad->exp.classic.ljs, STICK_X, 127);
 		c->Y_AXIS = getStickValue(&wpad->exp.classic.ljs, STICK_Y, 127);
-	} else if(config->analog->mask & R_STICK_AS_ANALOG){
+	} else if(config->analog->mask == R_STICK_AS_ANALOG){
 		c->X_AXIS = getStickValue(&wpad->exp.classic.rjs, STICK_X, 127);
 		c->Y_AXIS = getStickValue(&wpad->exp.classic.rjs, STICK_Y, 127);
 	}
