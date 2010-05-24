@@ -43,7 +43,7 @@ enum {
 };
 
 static button_t buttons[] = {
-	{  0, 0,                "None" },
+	{  0, ~0,                "None" },
 	{  1, PAD_BUTTON_UP,    "D-Pad Up" },
 	{  2, PAD_BUTTON_LEFT,  "D-Pad Left" },
 	{  3, PAD_BUTTON_RIGHT, "D-Pad Right" },
