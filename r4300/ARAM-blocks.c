@@ -40,9 +40,9 @@ static ARQRequest ARQ_request_blocks;
 #define CACHED_BLOCK_ENTRIES    1024
 #define CACHED_BLOCK_SIZE       CACHED_BLOCK_ENTRIES * 4
 PowerPC_block*  cached_block[NUM_CACHE_BLOCKS][CACHED_BLOCK_ENTRIES] __attribute__((aligned(32))); //last 4kb chunk of ptrs pulled
-static u32      cached_dirty[NUM_CACHE_BLOCKS]     = {0,0,0,0};
-static u32      cached_last_addr[NUM_CACHE_BLOCKS] = {0,0,0,0};
-static u32      cached_block_lru[NUM_CACHE_BLOCKS] = {0,0,0,0};
+static u32      cached_dirty[NUM_CACHE_BLOCKS]     = {0,0,0,0,0,0,0,0};
+static u32      cached_last_addr[NUM_CACHE_BLOCKS] = {0,0,0,0,0,0,0,0};
+static u32      cached_block_lru[NUM_CACHE_BLOCKS] = {0,0,0,0,0,0,0,0};
 
 void ARAM_ReadBlock(u32 addr, int block_num);
 void ARAM_WriteBlock(u32 addr, int block_num);
@@ -51,13 +51,13 @@ PowerPC_block* blocks_get(u32 addr){
   int max_lru = cached_block_lru[0], max_lru_block = 0, i = 0, block_byte_address = ((addr - (addr % CACHED_BLOCK_ENTRIES)) * 4);
   
   for(i = 0; i < NUM_CACHE_BLOCKS; i++) {
-    if(max_lru > cached_block_lru[i]) {
-      max_lru = cached_block_lru[i];
-      max_lru_block = i;
-    }
     if(block_byte_address == cached_last_addr[i]) {  //if addr is in this block
       cached_block_lru[i] = gettick();
       return cached_block[i][(addr % CACHED_BLOCK_ENTRIES)];
+    }
+    if(max_lru > cached_block_lru[i]) {
+      max_lru = cached_block_lru[i];
+      max_lru_block = i;
     }
   }
   //we didn't find it, put it in the least recently used block
@@ -75,15 +75,15 @@ void blocks_set(u32 addr, PowerPC_block* ptr){
   int max_lru = cached_block_lru[0], max_lru_block = 0, i = 0, block_byte_address = ((addr - (addr % CACHED_BLOCK_ENTRIES)) * 4);
   
   for(i = 0; i < NUM_CACHE_BLOCKS; i++) {
-    if(max_lru > cached_block_lru[i]) {
-      max_lru = cached_block_lru[i];
-      max_lru_block = i;
-    }
     if(block_byte_address == cached_last_addr[i]) {  //the block we want to write to is cached
       cached_block[i][(addr % CACHED_BLOCK_ENTRIES)] = ptr;   //set the value
       cached_dirty[i]=1;                               // this block, is dirty now
       cached_block_lru[i] = gettick();
       return;
+    }
+    if(max_lru > cached_block_lru[i]) {
+      max_lru = cached_block_lru[i];
+      max_lru_block = i;
     }
   }
   //we don't have it, we need to grab it from ARAM
