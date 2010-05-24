@@ -269,7 +269,10 @@ extern MenuContext *pMenuContext;
 
 void Func_DefaultConfig()
 {
-	menu::MessageBox::getInstance().setMessage("Load Default Config not implemented");
+	controller_config_t* currentConfig = virtualControllers[activePad].config;
+	memcpy(currentConfig, &virtualControllers[activePad].control->config_default, sizeof(controller_config_t));
+
+	pMenuContext->getFrame(MenuContext::FRAME_CONFIGUREBUTTONS)->activateSubmenu(activePad);
 }
 
 static unsigned int which_slot = 0;
@@ -282,15 +285,23 @@ void Func_ToggleConfigSlot()
 
 void Func_LoadConfig()
 {
-	menu::MessageBox::getInstance().setMessage("Load Config not implemented");
-	//load config from which_slot+1
-//	pMenuContext->getFrame(MenuContext::FRAME_CONFIGUREBUTTONS)->activateSubmenu(activePad);
+	controller_config_t* currentConfig = virtualControllers[activePad].config;
+	memcpy(currentConfig, &virtualControllers[activePad].control->config_slot[which_slot], sizeof(controller_config_t));
+
+	pMenuContext->getFrame(MenuContext::FRAME_CONFIGUREBUTTONS)->activateSubmenu(activePad);
 }
 
 void Func_SaveConfig()
 {
-	menu::MessageBox::getInstance().setMessage("Save Config not implemented");
-	//save config to wich_slot+1
+	char buffer [50] = "";
+	controller_config_t* currentConfig = virtualControllers[activePad].config;
+	memcpy(&virtualControllers[activePad].control->config_slot[which_slot], currentConfig, sizeof(controller_config_t));
+
+	//todo: save button configuration to file here
+
+	sprintf(buffer,"Saved current button mapping to slot %d.",which_slot+1);
+	menu::MessageBox::getInstance().fadeMessage(buffer);
+//	menu::MessageBox::getInstance().setMessage(buffer);
 }
 
 void Func_ToggleButtonL()
