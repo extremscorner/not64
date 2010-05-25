@@ -10,14 +10,79 @@
 #include <di/di.h>
 #endif
 
-extern int dvdInitialized;
-int last_current_dir = -1;
-volatile unsigned long* dvd = (volatile unsigned long*)0xCC006000;
+/* DVD Stuff */
+static u32 read_cmd = NORMAL;
+static int last_current_dir = -1;
+int is_unicode,files;
 file_entries *DVDToc = NULL; //Dynamically allocate this
 
+
 #ifdef HW_DOL
+#define mfpvr()   ({unsigned int rval; \
+      asm volatile("mfpvr %0" : "=r" (rval)); rval;})
+#endif
+#ifdef HW_RVL
+volatile unsigned long* dvd = (volatile unsigned long*)0xCD806000;
+#else
+volatile unsigned long* dvd = (volatile unsigned long*)0xCC006000;
+#endif
+
+int have_hw_access() {
+  if((*(volatile unsigned int*)HW_ARMIRQMASK)&&(*(volatile unsigned int*)HW_ARMIRQFLAG)) {
+    return 1;
+  }
+  return 0;
+}
+
+int init_dvd() {
+// Gamecube Mode
+#ifdef HW_DOL
+  if(mfpvr()!=GC_CPU_VERSION) //GC mode on Wii, modchip required
+  {
+    DVD_Reset(DVD_RESETHARD);
+    dvd_read_id();
+    if(!dvd_get_error()) {
+      return 0; //we're ok
+    }
+  }
+  else      //GC, no modchip even required :)
+  {
+    DVD_Reset(DVD_RESETHARD);
+    DVD_Mount ();
+    if(!dvd_get_error()) {
+      return 0; //we're ok
+    }
+  }
+#endif
+// Wii (Wii mode)
+#ifdef HW_RVL
+  DI_Close();            // incase it was open last time
+  DI_Init ();            // first
+  if(!have_hw_access()) {
+    return NO_HW_ACCESS;
+  }
+  if((dvd_get_error()>>24) == 1) {
+    return NO_DISC;
+  }
+
+  DI_Mount();
+  while(DI_GetStatus() & DVD_INIT) usleep(20000);
+  DI_Close();
+  if((dvd_get_error()&0xFFFFFF)==0x053000) {
+    read_cmd = DVDR;
+  }
+  else {
+    read_cmd = NORMAL;
+  }
+  return 0;
+#endif
+}
+
 int dvd_read_id()
 {
+#ifdef HW_RVL
+  return 0;
+#endif
 	dvd[0] = 0x2E;
 	dvd[1] = 0;
 	dvd[2] = 0xA8000040;
@@ -32,14 +97,6 @@ int dvd_read_id()
 	return 0;
 }
 
-#else
-
-int dvd_read_id(){
-	return 0;
-}
-#endif
-
-#ifdef HW_DOL
 unsigned int dvd_get_error(void)
 {
 	dvd[2] = 0xE0000000;
@@ -48,16 +105,8 @@ unsigned int dvd_get_error(void)
 	while (dvd[7] & 1);
 	return dvd[8];
 }
-#else
-unsigned int dvd_get_error(void)
-{
-	unsigned int val;
-	DI_GetError(&val);
-	return val;
-}
-#endif
 
-#ifdef HW_DOL
+
 void dvd_motor_off()
 {
 	dvd[0] = 0x2E;
@@ -70,20 +119,23 @@ void dvd_motor_off()
 	dvd[7] = 1; // IMM
 	while (dvd[7] & 1);
 }
-#else
-void dvd_motor_off(){
-}
-#endif
 
-
-#ifdef HW_DOL
-int dvd_read(void* dst, unsigned int len, unsigned int offset)
+/* 
+DVD_LowRead64(void* dst, unsigned int len, uint64_t offset)
+  Read Raw, needs to be on sector boundaries
+  Has 8,796,093,020,160 byte limit (8 TeraBytes)
+  Synchronous function.
+    return -1 if offset is out of range
+*/
+int DVD_LowRead64(void* dst, unsigned int len, uint64_t offset)
 {
-	if ((((int)dst) & 0xC0000000) == 0x80000000) // cached?
+  if(offset>>2 > 0xFFFFFFFF)
+    return -1;
+    
+  if ((((int)dst) & 0xC0000000) == 0x80000000) // cached?
 		dvd[0] = 0x2E;
 	dvd[1] = 0;
-
-	dvd[2] = 0xA8000000;
+	dvd[2] = read_cmd;
 	dvd[3] = offset >> 2;
 	dvd[4] = len;
 	dvd[5] = (unsigned long)dst;
@@ -96,28 +148,99 @@ int dvd_read(void* dst, unsigned int len, unsigned int offset)
 		return 1;
 	return 0;
 }
-#endif
 
-#ifdef HW_DOL
+static char error_str[256];
+char *dvd_error_str()
+{
+  unsigned int err = dvd_get_error();
+  if(!err) return "OK";
+  
+  memset(&error_str[0],0,256);
+  switch(err>>24) {
+    case 0:
+      break;
+    case 1:
+      strcpy(&error_str[0],"Lid open");
+      break;
+    case 2:
+      strcpy(&error_str[0],"No disk/Disk changed");
+      break;
+    case 3:
+      strcpy(&error_str[0],"No disk");
+      break;  
+    case 4:
+      strcpy(&error_str[0],"Motor off");
+      break;  
+    case 5:
+      strcpy(&error_str[0],"Disk not initialized");
+      break;
+  }
+  switch(err&0xFFFFFF) {
+    case 0:
+      break;
+    case 0x020400:
+      strcat(&error_str[0]," Motor Stopped");
+      break;
+    case 0x020401:
+      strcat(&error_str[0]," Disk ID not read");
+      break;
+    case 0x023A00:
+      strcat(&error_str[0]," Medium not present / Cover opened");
+      break;  
+    case 0x030200:
+      strcat(&error_str[0]," No Seek complete");
+      break;  
+    case 0x031100:
+      strcat(&error_str[0]," UnRecoverd read error");
+      break;
+    case 0x040800:
+      strcat(&error_str[0]," Transfer protocol error");
+      break;
+    case 0x052000:
+      strcat(&error_str[0]," Invalid command operation code");
+      break;
+    case 0x052001:
+      strcat(&error_str[0]," Audio Buffer not set");
+      break;  
+    case 0x052100:
+      strcat(&error_str[0]," Logical block address out of range");
+      break;  
+    case 0x052400:
+      strcat(&error_str[0]," Invalid Field in command packet");
+      break;
+    case 0x052401:
+      strcat(&error_str[0]," Invalid audio command");
+      break;
+    case 0x052402:
+      strcat(&error_str[0]," Configuration out of permitted period");
+      break;
+    case 0x053000:
+      strcat(&error_str[0]," DVD-R"); //?
+      break;
+    case 0x053100:
+      strcat(&error_str[0]," Wrong Read Type"); //?
+      break;
+    case 0x056300:
+      strcat(&error_str[0]," End of user area encountered on this track");
+      break;  
+    case 0x062800:
+      strcat(&error_str[0]," Medium may have changed");
+      break;  
+    case 0x0B5A01:
+      strcat(&error_str[0]," Operator medium removal request");
+      break;
+  }
+  if(!error_str[0])
+    sprintf(&error_str[0],"Unknown %08X",err);
+  return &error_str[0];
+  
+}
+
+
 int read_sector(void* buffer, uint32_t sector)
 {
-	return dvd_read(buffer, 2048, sector * 2048);
+	return DVD_LowRead64(buffer, 2048, sector * 2048);
 }
-#else
-int read_sector(void* buffer, uint32_t sector){
-	uint8_t *read_buf = (uint8_t*)memalign(32,0x800);
-	int ret;
-	int retrycount = 0x20;
-
-	while(DI_GetStatus() & DVD_INIT);
-
-	ret = DI_ReadDVD(read_buf, 1, sector);
-
-	memcpy(buffer, read_buf, 0x800);
-	free(read_buf);
-	return ret;
-}
-#endif
 
 int read_safe(void* dst, uint64_t offset, int len)
 {
@@ -126,11 +249,7 @@ int read_safe(void* dst, uint64_t offset, int len)
   unsigned char* sector_buffer = (unsigned char*)memalign(32,32*1024);
 	while (len)
 	{
-#ifdef HW_RVL
-    ret |= DI_ReadDVD(sector_buffer, 2048*16, offset/2048);
-#else  	
-		ret |= dvd_read(sector_buffer, 32768, offset);
-#endif
+		ret |= DVD_LowRead64(sector_buffer, 32768, offset);
 		uint32_t off = offset & 32767;
 
 		int rl = 32768 - off;
@@ -147,7 +266,7 @@ int read_safe(void* dst, uint64_t offset, int len)
   	return -1;
   	
   if(dvd_get_error())
-  	  dvdInitialized=0;
+    init_dvd();
 
 	return ol;
 }
