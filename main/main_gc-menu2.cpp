@@ -55,6 +55,7 @@ extern "C" {
 #include "../gc_memory/TLB-Cache.h"
 #include "../gc_memory/tlb.h"
 #include "../gc_memory/pif.h"
+#include "../gc_memory/flashram.h"
 #include "../gc_memory/Saves.h"
 #include "../main/savestates.h"
 #include "ROM-Cache.h"
