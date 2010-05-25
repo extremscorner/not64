@@ -337,6 +337,7 @@ int loadROM(fileBrowser_file* rom){
 #endif
 	}
 	format_mempacks();
+	reset_flashram();
 	init_eeprom();
 	hasLoadedROM = TRUE;
 #ifndef HW_RVL

@@ -31,6 +31,7 @@ extern int use_flashram;
 
 
 void init_flashram();
+void reset_flashram();
 void flashram_command(unsigned long command);
 unsigned long flashram_status();
 void dma_read_flashram();
