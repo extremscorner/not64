@@ -129,7 +129,10 @@ void init_flashram()
 {
    mode = NOPES_MODE;
    status = 0;
-   memset(&flashram[0],0xFF,0x20000);
+}
+
+void reset_flashram() {
+  memset(&flashram[0],0xFF,0x20000);
 }
 
 unsigned long flashram_status()
