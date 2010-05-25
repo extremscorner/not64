@@ -18,6 +18,7 @@
  *
 **/
 
+#include <math.h>
 #include "GraphicsGX.h"
 #include "../main/wii64config.h"
 
@@ -338,6 +339,30 @@ void Graphics::drawLine(int x1, int y1, int x2, int y2)
 		GX_Position3f32((float) x2,(float) y2, depth );
 		GX_Color4u8(appliedColor[1].r, appliedColor[1].g, appliedColor[1].b, appliedColor[1].a);
 		GX_TexCoord2f32(0.0f,0.0f);
+	GX_End();
+}
+
+#ifndef PI
+#define PI 3.14159f
+#endif
+
+void Graphics::drawCircle(int x, int y, int radius, int numSegments)
+{
+	float angle, point_x, point_y;
+
+	GX_Begin(GX_LINESTRIP, GX_VTXFMT0, numSegments+1);
+
+	for (int i = 0; i<=numSegments; i++)
+	{
+		angle = 2*PI * i/numSegments;
+		point_x = (float)x + (float)radius * cos( angle );
+		point_y = (float)y + (float)radius * sin( angle );
+
+		GX_Position3f32((float) point_x,(float) point_y, depth );
+		GX_Color4u8(appliedColor[0].r, appliedColor[0].g, appliedColor[0].b, appliedColor[0].a);
+		GX_TexCoord2f32(0.0f,0.0f);
+	}
+
 	GX_End();
 }
 

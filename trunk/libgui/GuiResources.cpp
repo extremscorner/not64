@@ -52,6 +52,7 @@ Resources::Resources()
 	controllerGamecubeImage = new Image(ControlGamecubeTexture, 48, 64, GX_TF_I4, GX_CLAMP, GX_CLAMP, GX_FALSE);
 	controllerClassicImage = new Image(ControlClassicTexture, 48, 64, GX_TF_I4, GX_CLAMP, GX_CLAMP, GX_FALSE);
 	controllerWiimoteNunchuckImage = new Image(ControlWiimoteNunchuckTexture, 48, 64, GX_TF_I4, GX_CLAMP, GX_CLAMP, GX_FALSE);
+	n64ControllerImage = new Image(N64ControllerTexture, 208, 200, GX_TF_I4, GX_CLAMP, GX_CLAMP, GX_FALSE);
 
 }
 
@@ -71,6 +72,7 @@ Resources::~Resources()
 	delete controllerGamecubeImage;
 	delete controllerClassicImage;
 	delete controllerWiimoteNunchuckImage;
+	delete n64ControllerImage;
 }
 
 Image* Resources::getImage(int image)
@@ -119,6 +121,9 @@ Image* Resources::getImage(int image)
 		break;
 	case IMAGE_CONTROLLER_WIIMOTENUNCHUCK:
 		returnImage = controllerWiimoteNunchuckImage;
+		break;
+	case IMAGE_N64_CONTROLLER:
+		returnImage = n64ControllerImage;
 		break;
 	}
 	return returnImage;

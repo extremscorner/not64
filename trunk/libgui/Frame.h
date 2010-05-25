@@ -1,6 +1,6 @@
 /**
  * Wii64 - Frame.h
- * Copyright (C) 2009 sepp256
+ * Copyright (C) 2009, 2010 sepp256
  *
  * Wii64 homepage: http://www.emulatemii.com
  * email address: sepp256@gmail.com
@@ -36,7 +36,7 @@ public:
 	void showFrame();
 	void hideFrame();
 	void setEnabled(bool enable);
-	void drawChildren(Graphics& gfx) const;
+	virtual void drawChildren(Graphics& gfx) const;
 	void remove(Component* component);
 	void removeAll();
 	void add(Component* comp);

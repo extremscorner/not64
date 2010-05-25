@@ -60,3 +60,11 @@
    ControlWiimoteNunchuckTexture_length:
    .long (ControlWiimoteNunchuckTexture_length - ControlWiimoteNunchuckTexture)
 
+   .globl N64ControllerTexture
+   .balign 32
+   N64ControllerTexture:
+   .incbin	"./menu/resources/n64Cntrl.tx"
+   .globl N64ControllerTexture_length
+   N64ControllerTexture_length:
+   .long (N64ControllerTexture_length - N64ControllerTexture)
+
