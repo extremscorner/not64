@@ -32,15 +32,9 @@
 #include <di/di.h>
 #endif
 
-#ifdef HW_DOL
-#define mfpvr()   ({unsigned int rval; \
-      asm volatile("mfpvr %0" : "=r" (rval)); rval;})
-#endif
-
 /* DVD Globals */
 #define GC_CPU_VERSION 0x00083214
 extern int previously_initd;
-int dvdInitialized = 0;
 
 /* Worked out manually from my original Disc */
 #define OOT_OFFSET 0x54FBEEF4ULL
@@ -54,47 +48,17 @@ fileBrowser_file topLevel_DVD =
 	  0,         // size
 	  FILE_BROWSER_ATTR_DIR
 	};
-
-void init_dvd()
-{
-#ifdef HW_DOL
-  if(mfpvr()!=GC_CPU_VERSION) //GC mode on Wii, modchip required
-  {
-    DVD_Reset(DVD_RESETHARD);
-    dvd_read_id();
-    if(!dvd_get_error())
-      dvdInitialized=1;
-  }
-  else      //GC, no modchip even required :)
-  {
-    DVD_Reset(DVD_RESETHARD);
-    DVD_Mount ();
-    if(!dvd_get_error())
-      dvdInitialized=1;
-  }
-#endif
-#ifdef HW_RVL
-  //Wiimode stuff is handled by DVDx
-  u32 val;
-  DI_GetCoverRegister(&val);
-  if(val & 0x1) return; //no disc inserted
-	DI_Mount();
-	while(DI_GetStatus() & DVD_INIT) usleep(20000);
-	dvdInitialized=1;
-#endif
-}
  
-	 
 int fileBrowser_DVD_readDir(fileBrowser_file* ffile, fileBrowser_file** dir){	
-#ifdef HW_DOL
-  if(dvd_get_error())
-    dvdInitialized = 0;
-#endif
-  if(!dvdInitialized)
-    init_dvd();
-  if(!dvdInitialized) return FILE_BROWSER_ERROR;  //fails if No disc
-	
-  int num_entries = 0;
+  
+  int num_entries = 0, ret = 0;
+  
+  if(dvd_get_error()) { //if some error
+    ret = init_dvd();
+    if(ret) {    //try init
+      return ret; //fail
+    }
+  } 
 	
 	if (!memcmp((void*)0x80000000, "D43U01", 6)) { //OoT bonus disc support.
 		num_entries = 2;
