@@ -88,7 +88,8 @@ static button_t analog_sources_wmn[] = {
 static button_t analog_sources_wm[] = {
 	{ 0, TILT_AS_ANALOG,     "Tilt" },
 	{ 1, WHEEL_AS_ANALOG,    "Wheel" },
-	{ 2, NO_ANALOG,          "None" },
+	{ 2, IR_AS_ANALOG,       "IR" },
+	{ 3, NO_ANALOG,          "None" },
 };
 
 static button_t menu_combos[] = {
@@ -231,8 +232,9 @@ static void configure(int Control, controller_config_t* config){
 	static s32 analog_fmts[] = {
 		WPAD_DATA_EXPANSION, // Nunchuk
 		WPAD_DATA_IR,        // IR
-		WPAD_DATA_EXPANSION, // Tilt (could still use nunchuk)
-		WPAD_DATA_EXPANSION, // Wheel (could still use nunchuk?)
+		WPAD_DATA_ACCEL,     // Tilt
+		WPAD_DATA_ACCEL,     // Wheel
+		WPAD_DATA_BUTTONS,   // None
 	};
 	WPAD_SetDataFormat(Control, analog_fmts[config->analog->mask]);
 }
