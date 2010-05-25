@@ -34,7 +34,7 @@
 
 /* DVD Globals */
 #define GC_CPU_VERSION 0x00083214
-extern int previously_initd;
+int dvd_init = 0;
 
 /* Worked out manually from my original Disc */
 #define OOT_OFFSET 0x54FBEEF4ULL
@@ -53,11 +53,12 @@ int fileBrowser_DVD_readDir(fileBrowser_file* ffile, fileBrowser_file** dir){
   
   int num_entries = 0, ret = 0;
   
-  if(dvd_get_error()) { //if some error
+  if(dvd_get_error() || !dvd_init) { //if some error
     ret = init_dvd();
     if(ret) {    //try init
       return ret; //fail
     }
+    dvd_init = 1;
   } 
 	
 	if (!memcmp((void*)0x80000000, "D43U01", 6)) { //OoT bonus disc support.
