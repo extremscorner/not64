@@ -21,6 +21,8 @@
 
 #include "MenuContext.h"
 #include "ConfigureButtonsFrame.h"
+#include "../libgui/GuiTypes.h"
+#include "../libgui/GuiResources.h"
 #include "../libgui/Button.h"
 #include "../libgui/TextBox.h"
 #include "../libgui/resources.h"
@@ -42,7 +44,7 @@ void Func_SaveConfig();
 
 void Func_ToggleButtonL();
 void Func_ToggleButtonR();
-void Func_ToggleButtonZ();
+void Func_ToggleButtonStart();
 void Func_ToggleButtonDup();
 void Func_ToggleButtonDleft();
 void Func_ToggleButtonDright();
@@ -51,7 +53,7 @@ void Func_ToggleButtonCup();
 void Func_ToggleButtonCleft();
 void Func_ToggleButtonCright();
 void Func_ToggleButtonCdown();
-void Func_ToggleButtonStart();
+void Func_ToggleButtonZ();
 void Func_ToggleButtonB();
 void Func_ToggleButtonA();
 void Func_ToggleAnalogStick();
@@ -115,12 +117,12 @@ struct ButtonInfo
 	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[0],	 40.0,	 90.0,	115.0,	40.0,	20,	 5,	 4,	 1,	Func_NextPad,			Func_ReturnFromConfigureButtonsFrame }, // Next Pad
 	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[1],	175.0,	 90.0,	145.0,	40.0,	20,	 5,	 0,	 2,	Func_DefaultConfig,		Func_ReturnFromConfigureButtonsFrame }, // Restore Default Config
 	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[2],	340.0,	 90.0,	 80.0,	40.0,	19,	 7,	 1,	 3,	Func_ToggleConfigSlot,	Func_ReturnFromConfigureButtonsFrame }, // Cycle Through Config Slots
-	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[3],	440.0,	 90.0,	 70.0,	40.0,	18,	 7,	 2,	 4,	Func_LoadConfig,		Func_ReturnFromConfigureButtonsFrame }, // Load Config
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[3],	440.0,	 90.0,	 70.0,	40.0,	18,	 6,	 2,	 4,	Func_LoadConfig,		Func_ReturnFromConfigureButtonsFrame }, // Load Config
 	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[4],	530.0,	 90.0,	 70.0,	40.0,	21,	 6,	 3,	 0,	Func_SaveConfig,		Func_ReturnFromConfigureButtonsFrame }, // Save Config
 
 	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[5],	140.0,	150.0,	 80.0,	40.0,	 0,	 8,	 6,	 7,	Func_ToggleButtonL,		Func_ReturnFromConfigureButtonsFrame }, // Toggle Button L
-	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[6],	420.0,	150.0,	 80.0,	40.0,	 4,	12,	 7,	 5,	Func_ToggleButtonR,		Func_ReturnFromConfigureButtonsFrame }, // Toggle Button R
-	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[7],	280.0,	150.0,	 80.0,	40.0,	 2,	16,	 5,	 6,	Func_ToggleButtonZ,		Func_ReturnFromConfigureButtonsFrame }, // Toggle Button Z
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[6],	420.0,	150.0,	 80.0,	40.0,	 3,	12,	 7,	 5,	Func_ToggleButtonR,		Func_ReturnFromConfigureButtonsFrame }, // Toggle Button R
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[7],	280.0,	140.0,	 80.0,	40.0,	 2,	16,	 5,	 6,	Func_ToggleButtonStart,	Func_ReturnFromConfigureButtonsFrame }, // Toggle Button Z
 
 	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[8],	 85.0,	200.0,	 80.0,	40.0,	 5,	 9,	12,	12,	Func_ToggleButtonDup,	Func_ReturnFromConfigureButtonsFrame }, // Toggle Button D-up
 	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[9],	 40.0,	250.0,	 80.0,	40.0,	 8,	11,	14,	10,	Func_ToggleButtonDleft,	Func_ReturnFromConfigureButtonsFrame }, // Toggle Button D-left
@@ -132,11 +134,11 @@ struct ButtonInfo
 	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[14],	520.0,	250.0,	 80.0,	40.0,	12,	15,	13,	 9,	Func_ToggleButtonCright,Func_ReturnFromConfigureButtonsFrame }, // Toggle Button C-right
 	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[15],	475.0,	300.0,	 80.0,	40.0,	13,	17,	17,	11,	Func_ToggleButtonCdown,	Func_ReturnFromConfigureButtonsFrame }, // Toggle Button C-down
 
-	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[16],	200.0,	345.0,	 80.0,	40.0,	11,	19,	11,	17,	Func_ToggleButtonStart,	Func_ReturnFromConfigureButtonsFrame }, // Toggle Button Start
-	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[17],	350.0,	345.0,	 80.0,	40.0,	15,	18,	16,	15,	Func_ToggleButtonB,		Func_ReturnFromConfigureButtonsFrame }, // Toggle Button B
-	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[18],	385.0,	395.0,	 80.0,	40.0,	17,	 3,	19,	21,	Func_ToggleButtonA,		Func_ReturnFromConfigureButtonsFrame }, // Toggle Button A
-	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[19],	190.0,	395.0,	160.0,	40.0,	16,	 2,	20,	18,	Func_ToggleAnalogStick,	Func_ReturnFromConfigureButtonsFrame }, // Toggle Analog Stick
-	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[20],	 50.0,	395.0,	130.0,	40.0,	16,	 0,	21,	19,	Func_ToggleInvertY,		Func_ReturnFromConfigureButtonsFrame }, // Toggle Analog Invert Y
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[16],	210.0,	345.0,	 80.0,	40.0,	11,	19,	11,	17,	Func_ToggleButtonZ,		Func_ReturnFromConfigureButtonsFrame }, // Toggle Button Start
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[17],	370.0,	345.0,	 80.0,	40.0,	15,	18,	16,	15,	Func_ToggleButtonB,		Func_ReturnFromConfigureButtonsFrame }, // Toggle Button B
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[18],	395.0,	395.0,	 80.0,	40.0,	17,	 3,	19,	21,	Func_ToggleButtonA,		Func_ReturnFromConfigureButtonsFrame }, // Toggle Button A
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[19],	200.0,	395.0,	160.0,	40.0,	16,	 2,	20,	18,	Func_ToggleAnalogStick,	Func_ReturnFromConfigureButtonsFrame }, // Toggle Analog Stick
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[20],	 60.0,	395.0,	130.0,	40.0,	16,	 0,	21,	19,	Func_ToggleInvertY,		Func_ReturnFromConfigureButtonsFrame }, // Toggle Analog Invert Y
 	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[21],	495.0,	395.0,	100.0,	40.0,	17,	 4,	18,	20,	Func_ToggleButtonExit,	Func_ReturnFromConfigureButtonsFrame }, // Toggle Button Exit
 };
 
@@ -292,7 +294,7 @@ void ConfigureButtonsFrame::activateSubmenu(int submenu)
 		//Assign text to each button
 		strcpy(FRAME_STRINGS[5], currentConfig->L->name);
 		strcpy(FRAME_STRINGS[6], currentConfig->R->name);
-		strcpy(FRAME_STRINGS[7], currentConfig->Z->name);
+		strcpy(FRAME_STRINGS[7], currentConfig->START->name);
 		strcpy(FRAME_STRINGS[8], currentConfig->DU->name);
 		strcpy(FRAME_STRINGS[9], currentConfig->DL->name);
 		strcpy(FRAME_STRINGS[10], currentConfig->DR->name);
@@ -301,7 +303,7 @@ void ConfigureButtonsFrame::activateSubmenu(int submenu)
 		strcpy(FRAME_STRINGS[13], currentConfig->CL->name);
 		strcpy(FRAME_STRINGS[14], currentConfig->CR->name);
 		strcpy(FRAME_STRINGS[15], currentConfig->CD->name);
-		strcpy(FRAME_STRINGS[16], currentConfig->START->name);
+		strcpy(FRAME_STRINGS[16], currentConfig->Z->name);
 		strcpy(FRAME_STRINGS[17], currentConfig->B->name);
 		strcpy(FRAME_STRINGS[18], currentConfig->A->name);
 		strcpy(FRAME_STRINGS[19], currentConfig->analog->name);
@@ -317,6 +319,55 @@ void ConfigureButtonsFrame::activateSubmenu(int submenu)
 void ConfigureButtonsFrame::updateFrame(float deltaTime)
 {
 	activateSubmenu(activePad);
+}
+
+#define NUM_LINES 3
+
+void ConfigureButtonsFrame::drawChildren(menu::Graphics &gfx) const
+{
+	if(isVisible())
+	{
+		int base_x = 216;
+		int base_y = 182;
+		int lines[NUM_LINES][4] = {{320, 160, 320, 238}, //START
+								   {175, 235, 240, 235}, //D-pad
+								   {465, 235, 404, 235}};//C-pad
+
+		GXColor controllerColors[5] = {	{  0,   0, 255, 255},
+										{255,   0,   0, 255},
+										{255, 255,   0, 255},
+										{  0, 255,   0, 255},
+										{150, 150, 255, 255}};
+
+		//Draw N64 Controller
+		menu::Image* controllerIcon = NULL;
+		gfx.setColor(controllerColors[activePad]);
+		controllerIcon = menu::Resources::getInstance().getImage(menu::Resources::IMAGE_N64_CONTROLLER);
+		controllerIcon->activateImage(GX_TEXMAP0);
+		GX_SetTevColorIn(GX_TEVSTAGE0,GX_CC_ZERO,GX_CC_ZERO,GX_CC_ZERO,GX_CC_RASC);
+		GX_SetTevColorOp(GX_TEVSTAGE0,GX_TEV_ADD,GX_TB_ZERO,GX_CS_SCALE_1,GX_TRUE,GX_TEVPREV);
+		GX_SetTevAlphaIn(GX_TEVSTAGE0,GX_CA_ZERO,GX_CA_RASA,GX_CA_TEXA,GX_CA_ZERO);
+		GX_SetTevAlphaOp(GX_TEVSTAGE0,GX_TEV_ADD,GX_TB_ZERO,GX_CS_SCALE_1,GX_TRUE,GX_TEVPREV);
+		gfx.enableBlending(true);
+		gfx.drawImage(0, base_x, base_y, 208, 200, 0, 1, 0, 1);
+		gfx.setTEV(GX_PASSCLR);
+
+		//Draw lines and circles
+		gfx.setColor(controllerColors[4]);
+		gfx.setLineWidth(2);
+		gfx.drawCircle(125, 270, 60, 30);
+		gfx.drawCircle(515, 270, 60, 30);
+
+		for (int i=0; i<NUM_LINES; i++)
+			gfx.drawLine(lines[i][0], lines[i][1], lines[i][2], lines[i][3]);
+
+		//Draw buttons
+		menu::ComponentList::const_iterator iteration;
+		for (iteration = componentList.begin(); iteration != componentList.end(); iteration++)
+		{
+			(*iteration)->draw(gfx);
+		}
+	}
 }
 
 extern MenuContext *pMenuContext;
@@ -383,13 +434,13 @@ void Func_ToggleButtonR()
 	strcpy(FRAME_STRINGS[6], currentConfig->R->name);
 }
 
-void Func_ToggleButtonZ()
+void Func_ToggleButtonStart()
 {
 	controller_config_t* currentConfig = virtualControllers[activePad].config;
-	int currentButton = currentConfig->Z->index;
+	int currentButton = currentConfig->START->index;
 	currentButton = (currentButton+1) %virtualControllers[activePad].control->num_buttons;
-	currentConfig->Z = &virtualControllers[activePad].control->buttons[currentButton];
-	strcpy(FRAME_STRINGS[7], currentConfig->Z->name);
+	currentConfig->START = &virtualControllers[activePad].control->buttons[currentButton];
+	strcpy(FRAME_STRINGS[7], currentConfig->START->name);
 }
 
 void Func_ToggleButtonDup()
@@ -464,13 +515,13 @@ void Func_ToggleButtonCdown()
 	strcpy(FRAME_STRINGS[15], currentConfig->CD->name);
 }
 
-void Func_ToggleButtonStart()
+void Func_ToggleButtonZ()
 {
 	controller_config_t* currentConfig = virtualControllers[activePad].config;
-	int currentButton = currentConfig->START->index;
+	int currentButton = currentConfig->Z->index;
 	currentButton = (currentButton+1) %virtualControllers[activePad].control->num_buttons;
-	currentConfig->START = &virtualControllers[activePad].control->buttons[currentButton];
-	strcpy(FRAME_STRINGS[16], currentConfig->START->name);
+	currentConfig->Z = &virtualControllers[activePad].control->buttons[currentButton];
+	strcpy(FRAME_STRINGS[16], currentConfig->Z->name);
 }
 
 void Func_ToggleButtonB()

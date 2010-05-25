@@ -11,6 +11,8 @@
 #endif
 #include <stdio.h>
 
+#include "../gui/DEBUG.h"
+
 #ifdef __PPC__
 #include "RSPPlugin.h"
 #endif
@@ -120,15 +122,19 @@ static int audio_ucode(OSTask_t *task)
 	{
 	case 1: // mario ucode
 		memcpy( ABI, ABI1, sizeof(ABI[0])*0x20 );
+		DEBUG_print("Audio Ucode 1: Mario",DBG_RSPINFO1);
 		break;
 	case 2: // banjo kazooie ucode
 		memcpy( ABI, ABI2, sizeof(ABI[0])*0x20 );
+		DEBUG_print("Audio Ucode 2: Banjo",DBG_RSPINFO1);
 		break;
 	case 3: // zelda ucode
 		memcpy( ABI, ABI3, sizeof(ABI[0])*0x20 );
+		DEBUG_print("Audio Ucode 3: Zelda",DBG_RSPINFO1);
 		break;
 	default:
 		{
+		DEBUG_print("Audio Ucode Invalid",DBG_RSPINFO1);
 /*		char s[1024];
 		sprintf(s, "unknown audio\n\tsum:%x", sum);
 #ifdef __WIN32__
