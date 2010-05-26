@@ -124,6 +124,7 @@ char menuActive;
 	   char padType[4];
 	   char padAssign[4];
 	   char pakMode[4];
+	   char loadButtonSlot;
 
 static struct {
 	char* key;
@@ -153,6 +154,7 @@ static struct {
   { "Pak2", &pakMode[1], PAKMODE_MEMPAK, PAKMODE_RUMBLEPAK },
   { "Pak3", &pakMode[2], PAKMODE_MEMPAK, PAKMODE_RUMBLEPAK },
   { "Pak4", &pakMode[3], PAKMODE_MEMPAK, PAKMODE_RUMBLEPAK },
+  { "LoadButtonSlot", &loadButtonSlot, LOADBUTTON_SLOT0, LOADBUTTON_DEFAULT },
 };
 void handleConfigPair(char* kv);
 void readConfig(FILE* f);
@@ -234,6 +236,7 @@ int main(int argc, char* argv[]){
 	pakMode[1]		 = PAKMODE_MEMPAK;
 	pakMode[2]		 = PAKMODE_MEMPAK;
 	pakMode[3]		 = PAKMODE_MEMPAK;
+	loadButtonSlot	 = LOADBUTTON_DEFAULT;
 #ifdef GLN64_GX
 // glN64 specific  settings
  	glN64_useFrameBufferTextures = 0; // Disable FrameBuffer textures
