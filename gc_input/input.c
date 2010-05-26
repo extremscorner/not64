@@ -413,7 +413,7 @@ int load_configurations(FILE* f, controller_t* controller){
 	};
 	char actual[4];
 	fread(actual, 1, 4, f);
-	if(!memcmp(magic, actual, 4))
+	if(memcmp(magic, actual, 4))
 		return 0;
 	
 	inline button_t* getPointer(button_t* list, int size){
