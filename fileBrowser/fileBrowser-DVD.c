@@ -21,25 +21,31 @@
 **/
 
 
-#include "fileBrowser.h"
-#include <ogc/machine/processor.h>
-#include "../main/gc_dvd.h"
 #include <string.h>
 #include <unistd.h>
 #include <malloc.h>
 #include <ogc/dvd.h>
+#include <ogc/machine/processor.h>
+#include "fileBrowser.h"
+#include "../main/gc_dvd.h"
 #ifdef HW_RVL
 #include <di/di.h>
 #endif
 
 /* DVD Globals */
-#define GC_CPU_VERSION 0x00083214
 int dvd_init = 0;
 
 /* Worked out manually from my original Disc */
-#define OOT_OFFSET 0x54FBEEF4ULL
-#define MQ_OFFSET  0x52CCC5FCULL
-#define ZELDA_SIZE 0x2000000
+#define ZELDA_BONUS_ID "D43U01"
+#define ZELDA_CLCTR_ID "PZLP01"
+#define ZELDA_BONUS_OOT 0x54FBEEF4ULL
+#define ZELDA_BONUS_MQ  0x52CCC5FCULL
+#define ZELDA_CLCTR_OOT 0x3B9D1FC0ULL
+#define ZELDA_CLCTR_MM  0x0C4E1FC0ULL
+#define ZELDA_SIZE      0x2000000
+#define ZELDA_OOT_NAME  "Zelda - Ocarina of Time"
+#define ZELDA_MQ_NAME   "Zelda - Ocarina of Time Master Quest"
+#define ZELDA_MM_NAME   "Zelda - Majoras Mask"
 
 fileBrowser_file topLevel_DVD =
 	{ "\\", // file name
@@ -61,16 +67,31 @@ int fileBrowser_DVD_readDir(fileBrowser_file* ffile, fileBrowser_file** dir){
     dvd_init = 1;
   } 
 	
-	if (!memcmp((void*)0x80000000, "D43U01", 6)) { //OoT bonus disc support.
+	if (!memcmp((void*)0x80000000, ZELDA_BONUS_ID, 6)) { //OoT+MQ bonus disc support.
 		num_entries = 2;
 		*dir = malloc( num_entries * sizeof(fileBrowser_file) );
-		strcpy( (*dir)[0].name, "Zelda - Ocarina of Time");
-		(*dir)[0].discoffset = OOT_OFFSET;
+		strcpy( (*dir)[0].name, ZELDA_OOT_NAME);
+		(*dir)[0].discoffset = ZELDA_BONUS_OOT;
 		(*dir)[0].offset = 0;
 		(*dir)[0].size   = ZELDA_SIZE;
 		(*dir)[0].attr	 = 0;
-		strcpy( (*dir)[1].name, "Zelda - Ocarina of Time MQ" );
-		(*dir)[1].discoffset = MQ_OFFSET;
+		strcpy( (*dir)[1].name, ZELDA_MQ_NAME);
+		(*dir)[1].discoffset = ZELDA_BONUS_MQ;
+		(*dir)[1].offset = 0;
+		(*dir)[1].size   = ZELDA_SIZE;
+		(*dir)[1].attr	 = 0;
+		return num_entries;
+	}
+	else if (!memcmp((void*)0x80000000, ZELDA_CLCTR_ID, 6)) { //Zelda Collectors disc support.
+		num_entries = 2;
+		*dir = malloc( num_entries * sizeof(fileBrowser_file) );
+		strcpy( (*dir)[0].name, ZELDA_OOT_NAME);
+		(*dir)[0].discoffset = ZELDA_CLCTR_OOT;
+		(*dir)[0].offset = 0;
+		(*dir)[0].size   = ZELDA_SIZE;
+		(*dir)[0].attr	 = 0;
+		strcpy( (*dir)[1].name, ZELDA_MM_NAME);
+		(*dir)[1].discoffset = ZELDA_CLCTR_MM;
 		(*dir)[1].offset = 0;
 		(*dir)[1].size   = ZELDA_SIZE;
 		(*dir)[1].attr	 = 0;

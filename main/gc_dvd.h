@@ -12,6 +12,7 @@
 #define FATAL_ERROR -3
 #define MAXIMUM_ENTRIES_PER_DIR 2048
 
+#define GC_CPU_VERSION 0x00083214
 #define NO_HW_ACCESS -1000
 #define NO_DISC      -1001
 #define NORMAL 0xA8000000
@@ -34,6 +35,7 @@ typedef struct
 
 extern file_entries *DVDToc;
 
+int init_dvd();
 void dvd_motor_off();
 unsigned int dvd_get_error(void);
 int dvd_read_directoryentries(uint64_t offset, int size);
