@@ -122,19 +122,19 @@ static int audio_ucode(OSTask_t *task)
 	{
 	case 1: // mario ucode
 		memcpy( ABI, ABI1, sizeof(ABI[0])*0x20 );
-		DEBUG_print("Audio Ucode 1: Mario",DBG_RSPINFO1);
+//		DEBUG_print("Audio Ucode 1: Mario",DBG_RSPINFO1);
 		break;
 	case 2: // banjo kazooie ucode
 		memcpy( ABI, ABI2, sizeof(ABI[0])*0x20 );
-		DEBUG_print("Audio Ucode 2: Banjo",DBG_RSPINFO1);
+//		DEBUG_print("Audio Ucode 2: Banjo",DBG_RSPINFO1);
 		break;
 	case 3: // zelda ucode
 		memcpy( ABI, ABI3, sizeof(ABI[0])*0x20 );
-		DEBUG_print("Audio Ucode 3: Zelda",DBG_RSPINFO1);
+//		DEBUG_print("Audio Ucode 3: Zelda",DBG_RSPINFO1);
 		break;
 	default:
 		{
-		DEBUG_print("Audio Ucode Invalid",DBG_RSPINFO1);
+//		DEBUG_print("Audio Ucode Invalid",DBG_RSPINFO1);
 /*		char s[1024];
 		sprintf(s, "unknown audio\n\tsum:%x", sum);
 #ifdef __WIN32__
@@ -274,48 +274,6 @@ __declspec(dllexport) DWORD DoRspCycles ( DWORD Cycles )
 		    }
 	       }
 	     break;
-	  }
-     }
-
-     {
-	char s[1024];
-	FILE *f;
-	sprintf(s, "unknown task:\n\ttype:%d\n\tsum:%x\n\tPC:%x", (int)task->type, sum, (int)rsp.SP_PC_REG);
-#ifdef __WIN32__
-	MessageBox(NULL, s, "unknown task", MB_OK);
-#else
-	//printf("%s\n", s);
-#endif
-
-	if (task->ucode_size <= 0x1000)
-	  {
-	     //f = fopen("imem.dat", "wb");
-	     //fwrite(rsp.RDRAM + task->ucode, task->ucode_size, 1, f);
-	     //fclose(f);
-
-	     //f = fopen("dmem.dat", "wb");
-	     //fwrite(rsp.RDRAM + task->ucode_data, task->ucode_data_size, 1, f);
-	     //fclose(f);
-
-	     //f = fopen("disasm.txt", "wb");
-	     memcpy(rsp.DMEM, rsp.RDRAM+task->ucode_data, task->ucode_data_size);
-	     memcpy(rsp.IMEM+0x80, rsp.RDRAM+task->ucode, 0xF7F);
-	     //disasm(f, (unsigned int*)(rsp.IMEM));
-	     //fclose(f);
-	  }
-	else
-	  {
-	     /*f = fopen("imem.dat", "wb");
-	     fwrite(rsp.IMEM, 0x1000, 1, f);
-	     fclose(f);
-
-	     f = fopen("dmem.dat", "wb");
-	     fwrite(rsp.DMEM, 0x1000, 1, f);
-	     fclose(f);
-
-	     f = fopen("disasm.txt", "wb");
-	     disasm(f, (unsigned int*)(rsp.IMEM));
-	     fclose(f);*/
 	  }
      }
 
