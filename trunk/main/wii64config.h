@@ -137,6 +137,17 @@ enum pakMode
 	PAKMODE_RUMBLEPAK
 };
 
+extern char loadButtonSlot;
+enum loadButtonSlot
+{
+	LOADBUTTON_SLOT0=0,
+	LOADBUTTON_SLOT1,
+	LOADBUTTON_SLOT2,
+	LOADBUTTON_SLOT3,
+	LOADBUTTON_DEFAULT
+};
+
+
 //#ifdef GLN64_GX
 extern char glN64_useFrameBufferTextures;
 enum glN64_useFrameBufferTextures
