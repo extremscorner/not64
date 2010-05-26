@@ -20,7 +20,7 @@
  *
 **/
 
-#include <gccore.h>
+
 #include <ogc/lwp_heap.h>
 #include <stdlib.h>
 #include "../gc_memory/MEM2.h"
