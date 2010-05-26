@@ -40,4 +40,10 @@ void RecompCache_Free(unsigned int addr);
 //   (call when the block is accessed)
 void RecompCache_Update(PowerPC_func* func);
 
+// Allocate memory from the meta cache
+//   This will free from both the recomp and meta caches if capacity is hit
+void* MetaCache_Alloc(unsigned int num_bytes);
+// Free data from the meta cache
+void MetaCache_Free(void* ptr);
+
 #endif
