@@ -1,3 +1,25 @@
+/**
+ * Wii64/Cube64 - gc_dvd.c
+ * Copyright (C) 2007, 2008, 2009, 2010 emu_kidid
+ * 
+ * DVD Reading support for GC/Wii
+ *
+ * Wii64 homepage: http://www.emulatemii.com
+ * email address: emukidid@gmail.com
+ *
+ *
+ * This program is free software; you can redistribute it and/
+ * or modify it under the terms of the GNU General Public Li-
+ * cence as published by the Free Software Foundation; either
+ * version 2 of the Licence, or any later version.
+ *
+ * This program is distributed in the hope that it will be use-
+ * ful, but WITHOUT ANY WARRANTY; without even the implied war-
+ * ranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU General Public Licence for more details.
+ *
+**/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -5,12 +27,14 @@
 #include <malloc.h>
 #include <string.h>
 #include <gccore.h>
+#include <unistd.h>
 #include "gc_dvd.h"
 #ifdef WII
 #include <di/di.h>
 #endif
 
 /* DVD Stuff */
+static u32 dvd_hard_init = 0;
 static u32 read_cmd = NORMAL;
 static int last_current_dir = -1;
 int is_unicode,files;
@@ -60,18 +84,23 @@ int init_dvd() {
 #endif
 // Wii (Wii mode)
 #ifdef HW_RVL
-  DI_Close();            // incase it was open last time
-  DI_Init ();            // first
-  if(!have_hw_access()) {
-    return NO_HW_ACCESS;
-  }
-  if((dvd_get_error()>>24) == 1) {
-    return NO_DISC;
+  if(!dvd_hard_init) {
+    DI_Close();            // incase it was open last time
+    DI_Init ();            // first
+    if(!have_hw_access()) {
+      return NO_HW_ACCESS;
+    }
+    if((dvd_get_error()>>24) == 1) {
+      return NO_DISC;
+    }
   }
 
   DI_Mount();
   while(DI_GetStatus() & DVD_INIT) usleep(20000);
-  DI_Close();
+  if(!dvd_hard_init) {
+    DI_Close();
+    dvd_hard_init = 1;
+  }
   usleep(20000);
   if((dvd_get_error()&0xFFFFFF)==0x053000) {
     read_cmd = DVDR;
@@ -143,7 +172,7 @@ int DVD_LowRead64(void* dst, unsigned int len, uint64_t offset)
 	dvd[1] = 0;
 	dvd[2] = read_cmd;
 	dvd[3] = read_cmd == DVDR ? offset>>11 : offset >> 2;
-	dvd[4] = len;
+	dvd[4] = read_cmd == DVDR ? len>>11 : len;
 	dvd[5] = (unsigned long)dst;
 	dvd[6] = len;
 	dvd[7] = 3; // enable reading!
