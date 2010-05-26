@@ -163,14 +163,14 @@ void Func_Credits()
 {
 	char CreditsInfo[512] = "";
 #ifdef HW_RVL
-	strcat(CreditsInfo,"Wii64 Beta 1 - www.emulatemii.com\n");
+	strcat(CreditsInfo,"Wii64 Beta 1.1 'Honey'\n");
 #else
-	strcat(CreditsInfo,"Cube64 Beta 1 - www.emulatemii.com\n");
+	strcat(CreditsInfo,"Cube64 Beta 1.1 'Honey'\n");
 #endif
 	strcat(CreditsInfo,"\n");
-	strcat(CreditsInfo,"Wii64 Team:\n");
+	strcat(CreditsInfo,"Wii64 Team: www.emulatemii.com\n");
 	strcat(CreditsInfo,"tehpola - core  \n");
-	strcat(CreditsInfo,"sepp256 - graphics\n");
+	strcat(CreditsInfo,"sepp256 - graphics & menu\n");
 	strcat(CreditsInfo,"    emu_kidid - general coding\n");
 	strcat(CreditsInfo,"\n");
 	strcat(CreditsInfo,"Special Thanks To:\n");
