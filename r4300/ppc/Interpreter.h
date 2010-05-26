@@ -39,8 +39,9 @@ unsigned int decodeNInterpret();
 #define INTERPRET_LH
 #define INTERPRET_LHU
 #define INTERPRET_LW
+#define INTERPRET_LWU
+#define INTERPRET_LD
 #endif
-//#define INTERPRET_LWU
 #define INTERPRET_LWL
 #define INTERPRET_LWR
 
@@ -48,21 +49,23 @@ unsigned int decodeNInterpret();
 #define INTERPRET_SB
 #define INTERPRET_SH
 #define INTERPRET_SW
+#define INTERPRET_SD
 #endif
 #define INTERPRET_SWL
 #define INTERPRET_SWR
 
-//#define INTERPRET_LD
 #define INTERPRET_LDL
 #define INTERPRET_LDR
-//#define INTERPRET_SD
+
 #define INTERPRET_SDL
 #define INTERPRET_SDR
 
-//#define INTERPRET_LWC1
-//#define INTERPRET_LDC1
-//#define INTERPRET_SWC1
-//#define INTERPRET_SDC1
+#if 0
+#define INTERPRET_LWC1
+#define INTERPRET_LDC1
+#define INTERPRET_SWC1
+#define INTERPRET_SDC1
+#endif
 
 //#define INTERPRET_DW
 
@@ -118,7 +121,7 @@ unsigned int decodeNInterpret();
 
 //#define INTERPRET_COP0
 //#define INTERPRET_MFC0
-#define INTERPRET_MTC0
+//#define INTERPRET_MTC0
 //#define INTERPRET_TLB
 //#define INTERPRET_ERET
 #define INTERPRET_TLBR
@@ -128,17 +131,21 @@ unsigned int decodeNInterpret();
 
 //#define INTERPRET_FP
 
-//#define INTERPRET_MFC1
-//#define INTERPRET_DMFC1
-//#define INTERPRET_CFC1
-//#define INTERPRET_MTC1
-//#define INTERPRET_DMTC1
-//#define INTERPRET_CTC1
+#if 0
+#define INTERPRET_MFC1
+#define INTERPRET_DMFC1
+#define INTERPRET_CFC1
+#define INTERPRET_MTC1
+#define INTERPRET_DMTC1
+#define INTERPRET_CTC1
+#endif
 
-//#define INTERPRET_FP_S
-//#define INTERPRET_FP_D
-//#define INTERPRET_FP_W
-//#define INTERPRET_FP_L
+#if 0
+#define INTERPRET_FP_S
+#define INTERPRET_FP_D
+#define INTERPRET_FP_W
+#define INTERPRET_FP_L
+#endif
 
 #if 0
 #define INTERPRET_FP_ADD
@@ -151,20 +158,24 @@ unsigned int decodeNInterpret();
 #endif
 //#define INTERPRET_FP_SQRT
 
-//#define INTERPRET_FP_ROUND_L
-//#define INTERPRET_FP_TRUNC_L
-//#define INTERPRET_FP_FLOOR_L
-//#define INTERPRET_FP_CEIL_L
+#if 0
+#define INTERPRET_FP_ROUND_L
+#define INTERPRET_FP_TRUNC_L
+#define INTERPRET_FP_FLOOR_L
+#define INTERPRET_FP_CEIL_L
+#endif
 #if 0
 #define INTERPRET_FP_ROUND_W
 #define INTERPRET_FP_TRUNC_W
 #define INTERPRET_FP_FLOOR_W
 #define INTERPRET_FP_CEIL_W
 #endif
-//#define INTERPRET_FP_CVT_S
-//#define INTERPRET_FP_CVT_D
-//#define INTERPRET_FP_CVT_W
-//#define INTERPRET_FP_CVT_L
+#if 0
+#define INTERPRET_FP_CVT_S
+#define INTERPRET_FP_CVT_D
+#define INTERPRET_FP_CVT_W
+#define INTERPRET_FP_CVT_L
+#endif
 
 #if 0
 #define INTERPRET_FP_C_F
