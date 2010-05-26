@@ -208,10 +208,11 @@ ConfigureButtonsFrame::~ConfigureButtonsFrame()
 
 }
 
-static char controllerTypeStrings[4][17] =
+static char controllerTypeStrings[5][17] =
 	{ "Gamecube",
 	  "Classic",
 	  "Wiimote+Nunchuck",
+	  "Wiimote",
 	  "NULL"};
 
 enum ActivePadType
@@ -219,6 +220,7 @@ enum ActivePadType
 	ACTIVEPADTYPE_GAMECUBE=0,
 	ACTIVEPADTYPE_CLASSIC,
 	ACTIVEPADTYPE_WIIMOTENUNCHUCK,
+	ACTIVEPADTYPE_WIIMOTE,
 	ACTIVEPADTYPE_NONE,
 };
 
@@ -250,6 +252,8 @@ void ConfigureButtonsFrame::activateSubmenu(int submenu)
 		activePadType = ACTIVEPADTYPE_CLASSIC;
 	else if (virtualControllers[activePad].control == &controller_WiimoteNunchuk)
 		activePadType = ACTIVEPADTYPE_WIIMOTENUNCHUCK;
+	else if (virtualControllers[activePad].control == &controller_Wiimote)
+		activePadType = ACTIVEPADTYPE_WIIMOTE;
 #endif //HW_RVL
 	else
 		activePadType = ACTIVEPADTYPE_NONE;
@@ -274,7 +278,6 @@ void ConfigureButtonsFrame::activateSubmenu(int submenu)
 	}
 	else
 	{
-//		sprintf(TITLE_STRING, "%s Pad %d to N64 Pad %d Mapping", controllerTypeStrings[activePadType], virtualControllers[activePad].number+1, activePad+1 );
 		sprintf(TITLE_STRING, "N64 Pad %d: %s Pad %d Mapping", activePad+1, controllerTypeStrings[activePadType], virtualControllers[activePad].number+1 );
 	
 		currentConfig = virtualControllers[activePad].config;
@@ -329,7 +332,7 @@ void ConfigureButtonsFrame::drawChildren(menu::Graphics &gfx) const
 	{
 		int base_x = 216;
 		int base_y = 182;
-		int lines[NUM_LINES][4] = {{320, 160, 320, 238}, //START
+		int lines[NUM_LINES][4] = {{320, 160, 320, 237}, //START
 								   {175, 235, 240, 235}, //D-pad
 								   {465, 235, 404, 235}};//C-pad
 

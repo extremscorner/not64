@@ -1,7 +1,7 @@
 /**
  * Wii64 - controller-Classic.c
- * Copyright (C) 2007, 2008, 2009 Mike Slegeir
- * Copyright (C) 2007, 2008, 2009 sepp256
+ * Copyright (C) 2007, 2008, 2009, 2010 Mike Slegeir
+ * Copyright (C) 2007, 2008, 2009, 2010 sepp256
  * 
  * Classic controller input module
  *
@@ -117,16 +117,23 @@ static unsigned int getButtons(classic_ctrl_t* controller)
 	return b;
 }
 
-static int available(int Control, WPADData* wpad) {
-	if(wpad->err == WPAD_ERR_NONE &&
-	   wpad->exp.type == WPAD_EXP_CLASSIC){
+static int available(int Control) {
+	int err;
+	u32 expType;
+	err = WPAD_Probe(Control, &expType);
+	if(err == WPAD_ERR_NONE &&
+	   expType == WPAD_EXP_CLASSIC){
 		controller_Classic.available[Control] = 1;
 		return 1;
 	} else {
 		controller_Classic.available[Control] = 0;
-		if(wpad->err == WPAD_ERR_NONE &&
-		   wpad->exp.type == WPAD_EXP_NUNCHUK){
+		if(err == WPAD_ERR_NONE &&
+		   expType == WPAD_EXP_NUNCHUK){
 			controller_WiimoteNunchuk.available[Control] = 1;
+		}
+		else if (err == WPAD_ERR_NONE &&
+		   expType == WPAD_EXP_NONE){
+			controller_Wiimote.available[Control] = 1;
 		}
 		return 0;
 	}
@@ -140,7 +147,7 @@ static int _GetKeys(int Control, BUTTONS * Keys, controller_config_t* config)
 	memset(c, 0, sizeof(BUTTONS));
 
 	// Only use a connected classic controller
-	if(!available(Control, wpad))
+	if(!available(Control))
 		return 0;
 
 	unsigned int b = getButtons(&wpad->exp.classic);
@@ -238,13 +245,13 @@ controller_t controller_Classic =
 
 static void refreshAvailable(void){
 
-	int i;
+	int i, err;
+	u32 expType;
 	WPAD_ScanPads();
 	for(i=0; i<4; ++i){
-		WPADData* wpad = WPAD_Data(i);
-		// Only use a connected classic controller
-		if(wpad->err == WPAD_ERR_NONE &&
-		   wpad->exp.type == WPAD_EXP_CLASSIC){
+		err = WPAD_Probe(i, &expType);
+		if(err == WPAD_ERR_NONE &&
+		   expType == WPAD_EXP_CLASSIC){
 			controller_Classic.available[i] = 1;
 			WPAD_SetDataFormat(i, WPAD_DATA_EXPANSION);
 		} else

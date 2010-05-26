@@ -74,9 +74,6 @@ extern "C" BOOL flashramWritten;
 
 void InputStatusBar::drawComponent(Graphics& gfx)
 {
-#ifdef HW_RVL
-	WPADData* wpad;
-#endif
 	int box_x = 50;
 	int box_y = 0;
 	int width = 235;
@@ -84,7 +81,7 @@ void InputStatusBar::drawComponent(Graphics& gfx)
 	int labelScissor = 5;
 	GXColor activeColor = (GXColor) {255, 255, 255, 255};
 	GXColor inactiveColor = (GXColor) {192, 192, 192, 192};
-	//char statusText[20];
+//	char statusText[50];
 	Image* statusIcon = NULL;
 	//Draw Status Info Box
 	GXColor boxColor = (GXColor) {87, 90, 100,128};
@@ -143,9 +140,12 @@ void InputStatusBar::drawComponent(Graphics& gfx)
 			break;
 #ifdef HW_RVL
 		case PADTYPE_WII:
-			wpad = WPAD_Data((int)padAssign[i]);
-			controller_Classic.available[(int)padAssign[i]] = (wpad->err == WPAD_ERR_NONE && wpad->exp.type == WPAD_EXP_CLASSIC) ? 1 : 0;
-			controller_WiimoteNunchuk.available[(int)padAssign[i]] = (wpad->err == WPAD_ERR_NONE && wpad->exp.type == WPAD_EXP_NUNCHUK) ? 1 : 0;
+			u32 type;
+			s32 err;
+			err = WPAD_Probe((int)padAssign[i], &type);
+			controller_Classic.available[(int)padAssign[i]] = (err == WPAD_ERR_NONE && type == WPAD_EXP_CLASSIC) ? 1 : 0;
+			controller_WiimoteNunchuk.available[(int)padAssign[i]] = (err == WPAD_ERR_NONE && type == WPAD_EXP_NUNCHUK) ? 1 : 0;
+			controller_Wiimote.available[(int)padAssign[i]] = (err == WPAD_ERR_NONE && type == WPAD_EXP_NONE) ? 1 : 0;
 			if (controller_Classic.available[(int)padAssign[i]])
 			{
 				assign_controller(i, &controller_Classic, (int)padAssign[i]);
@@ -162,11 +162,19 @@ void InputStatusBar::drawComponent(Graphics& gfx)
 				statusIcon = Resources::getInstance().getImage(Resources::IMAGE_CONTROLLER_WIIMOTENUNCHUCK);
 //				sprintf (statusText, "Pad%d: WM+N%d", i+1, padAssign[i]+1);
 			}
+			else if (controller_Wiimote.available[(int)padAssign[i]])
+			{
+				assign_controller(i, &controller_Wiimote, (int)padAssign[i]);
+				gfx.setColor(activeColor);
+				IplFont::getInstance().drawInit(activeColor);
+				statusIcon = Resources::getInstance().getImage(Resources::IMAGE_CONTROLLER_WIIMOTE);
+//				sprintf (statusText, "Pad%d: WM%d", i+1, padAssign[i]+1);
+			}
 			else
 			{
 				gfx.setColor(inactiveColor);
 				IplFont::getInstance().drawInit(inactiveColor);
-				statusIcon = Resources::getInstance().getImage(Resources::IMAGE_CONTROLLER_WIIMOTENUNCHUCK);
+				statusIcon = Resources::getInstance().getImage(Resources::IMAGE_CONTROLLER_WIIMOTE);
 //				sprintf (statusText, "Pad%d: Wii%d", i+1, padAssign[i]+1);
 			}
 

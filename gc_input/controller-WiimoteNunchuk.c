@@ -1,7 +1,7 @@
 /**
  * Wii64 - controller-WiimoteNunchuk.c
- * Copyright (C) 2007, 2008, 2009 Mike Slegeir
- * Copyright (C) 2007, 2008, 2009 sepp256
+ * Copyright (C) 2007, 2008, 2009, 2010 Mike Slegeir
+ * Copyright (C) 2007, 2008, 2009, 2010 sepp256
  * 
  * Wiimote + Nunchuk input module
  *
@@ -97,7 +97,7 @@ static button_t menu_combos[] = {
 };
 
 static int _GetKeys(int Control, BUTTONS * Keys, controller_config_t* config,
-                    int (*available)(int,WPADData*),
+                    int (*available)(int),
                     unsigned int (*getButtons)(WPADData*))
 {
 	if(wpadNeedScan){ WPAD_ScanPads(); wpadNeedScan = 0; }
@@ -106,7 +106,7 @@ static int _GetKeys(int Control, BUTTONS * Keys, controller_config_t* config,
 	memset(c, 0, sizeof(BUTTONS));
 
 	// Only use a connected nunchuck controller
-	if(!available(Control, wpad))
+	if(!available(Control))
 		return 0;
 
 	unsigned int b = getButtons(wpad);
@@ -156,11 +156,15 @@ static int _GetKeys(int Control, BUTTONS * Keys, controller_config_t* config,
 	return isHeld(config->exit);
 }
 
-static int checkType(int Control, WPADData* wpad, int type){
-	if(wpad->err != WPAD_ERR_NONE)
+static int checkType(int Control, int type){
+	int err;
+	u32 expType;
+	err = WPAD_Probe(Control, &expType);
+
+	if(err != WPAD_ERR_NONE)
 		return -1;
 	
-	switch(wpad->exp.type){
+	switch(expType){
 	case WPAD_EXP_NONE:
 		controller_Wiimote.available[Control] = 1;
 		break;
@@ -172,11 +176,11 @@ static int checkType(int Control, WPADData* wpad, int type){
 		break;
 	}
 	
-	return wpad->exp.type;
+	return expType;
 }
 
-static int availableWM(int Control, WPADData* wpad){
-	if(checkType(Control, wpad, WPAD_EXP_NONE) != WPAD_EXP_NONE){
+static int availableWM(int Control){
+	if(checkType(Control, WPAD_EXP_NONE) != WPAD_EXP_NONE){
 		controller_Wiimote.available[Control] = 0;
 		return 0;
 	} else {
@@ -184,8 +188,8 @@ static int availableWM(int Control, WPADData* wpad){
 	}
 }
 
-static int availableWMN(int Control, WPADData* wpad){
-	if(checkType(Control, wpad, WPAD_EXP_NUNCHUK) != WPAD_EXP_NUNCHUK){
+static int availableWMN(int Control){
+	if(checkType(Control, WPAD_EXP_NUNCHUK) != WPAD_EXP_NUNCHUK){
 		controller_WiimoteNunchuk.available[Control] = 0;
 		return 0;
 	} else {
@@ -322,7 +326,7 @@ static void refreshAvailableWM(void){
 	int i;
 	WPAD_ScanPads();
 	for(i=0; i<4; ++i){
-		availableWM(i, WPAD_Data(i));
+		availableWM(i);
 	}
 }
 
@@ -330,6 +334,6 @@ static void refreshAvailableWMN(void){
 	int i;
 	WPAD_ScanPads();
 	for(i=0; i<4; ++i){
-		availableWMN(i, WPAD_Data(i));
+		availableWMN(i);
 	}
 }
