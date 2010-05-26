@@ -46,7 +46,6 @@
 #include "../r4300/macros.h"
 #include "../r4300/ARAM-blocks.h"
 #include "../r4300/Invalid_Code.h"
-#include "../r4300/Recomp-Cache.h"
 #include "../r4300/ops.h"
 #include "../fileBrowser/fileBrowser.h"
 #include "pif.h"
@@ -196,7 +195,7 @@ void dma_pi_write()
    if(!interpcore)
      {
      	// FIXME: This must be adjusted for GC
-     	ROMCache_read((u8*)((char*)rdram + ((unsigned int)(pi_register.pi_dram_addr_reg)^S8)), ((pi_register.pi_cart_addr_reg-0x10000000)&0x3FFFFFF)^S8, longueur);
+     	ROMCache_read((unsigned int*)((char*)rdram + ((unsigned int)(pi_register.pi_dram_addr_reg)^S8)), ((pi_register.pi_cart_addr_reg-0x10000000)&0x3FFFFFF)^S8, longueur);
 	for (i=0; i<longueur; i++)
 	  {
 	     unsigned long rdram_address1 = pi_register.pi_dram_addr_reg+i+0x80000000;
@@ -239,7 +238,7 @@ void dma_pi_write()
      	       ((pi_register.pi_cart_addr_reg-0x10000000)&0x3FFFFFF)^S8,
      	       ((unsigned int)(pi_register.pi_dram_addr_reg)^S8),
      	       longueur);*/
-	ROMCache_read((u8*)((char*)rdram + ((unsigned int)(pi_register.pi_dram_addr_reg)^S8)),
+	ROMCache_read((unsigned int*)((char*)rdram + ((unsigned int)(pi_register.pi_dram_addr_reg)^S8)),
 	              (((pi_register.pi_cart_addr_reg-0x10000000)&0x3FFFFFF))^S8, longueur);
 	/*for (i=0; i<longueur; i++)
 	  {
