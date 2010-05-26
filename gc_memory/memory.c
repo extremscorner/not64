@@ -3111,7 +3111,7 @@ void read_rom()
    else
      //*rdword = *((unsigned long *)(rom + (address & 0x03FFFFFF)));
      assert(rdword);
-     ROMCache_read((unsigned int*)rdword+1, (address & 0x03FFFFFF), 4);
+     ROMCache_read((u8*)rdword+1, (address & 0x03FFFFFF), 4);
      sign_extended(*rdword);
 }
 
@@ -3119,7 +3119,7 @@ void read_romb()
 {
    //*rdword = *(rom + ((address^S8) & 0x03FFFFFF));
    assert(rdword);
-   ROMCache_read((unsigned int*)((char*)rdword+7), (address & 0x03FFFFFF), 1);
+   ROMCache_read((u8*)((char*)rdword+7), (address & 0x03FFFFFF), 1);
    sign_extendedb(*rdword);
 }
 
@@ -3127,7 +3127,7 @@ void read_romh()
 {
    //*rdword = *((unsigned short *)(rom + ((address^S16) & 0x03FFFFFF)));
    assert(rdword);
-   ROMCache_read((unsigned int*)((short*)rdword+3), (address & 0x03FFFFFF), 2);
+   ROMCache_read((u8*)((short*)rdword+3), (address & 0x03FFFFFF), 2);
    sign_extendedh(*rdword);
 }
 
@@ -3136,7 +3136,7 @@ void read_romd()
    //*rdword = ((unsigned long long)(*((unsigned long *)(rom+(address&0x03FFFFFF))))<<32)|
    //  *((unsigned long *)(rom + ((address+4)&0x03FFFFFF)));
    assert(rdword);
-   ROMCache_read((unsigned int*)rdword, (address & 0x03FFFFFF), 8);
+   ROMCache_read((u8*)rdword, (address & 0x03FFFFFF), 8);
 }
 
 void write_rom()

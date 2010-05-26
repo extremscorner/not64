@@ -64,7 +64,7 @@ static void RSV()
 	//if(dynacore) genreserved();
 
 }
-
+/*
 static void RFIN_BLOCK()
 {
    dst->ops = FIN_BLOCK;
@@ -80,7 +80,7 @@ static void RNOTCOMPILED()
 	//if(dynacore) gennotcompiled();
 
 }
-
+*/
 static void recompile_standard_i_type()
 {
    dst->f.i.rs = reg + ((src >> 21) & 0x1F);
