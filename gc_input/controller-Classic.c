@@ -110,7 +110,7 @@ static unsigned int getButtons(classic_ctrl_t* controller)
 	if(stickY    < -3) b |= L_STICK_D;
 	
 	if(substickX < -3) b |= R_STICK_L;
-	if(substickY >  3) b |= R_STICK_R;
+	if(substickX >  3) b |= R_STICK_R;
 	if(substickY >  3) b |= R_STICK_U;
 	if(substickY < -3) b |= R_STICK_D;
 	
