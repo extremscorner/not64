@@ -53,6 +53,11 @@ int init_dvd() {
       return 0; //we're ok
     }
   }
+  if(dvd_get_error()>>24) {
+    return NO_DISC;
+  }
+  return -1;
+
 #endif
 // Wii (Wii mode)
 #ifdef HW_RVL
@@ -68,6 +73,7 @@ int init_dvd() {
   DI_Mount();
   while(DI_GetStatus() & DVD_INIT) usleep(20000);
   DI_Close();
+  usleep(20000);
   if((dvd_get_error()&0xFFFFFF)==0x053000) {
     read_cmd = DVDR;
   }
@@ -246,7 +252,7 @@ int read_safe(void* dst, uint64_t offset, int len)
 {
 	int ol = len;
 	int ret = 0;	
-  unsigned char* sector_buffer = (unsigned char*)memalign(32,32*1024);
+  unsigned char* sector_buffer = (unsigned char*)memalign(32,32768);
 	while (len)
 	{
 		ret |= DVD_LowRead64(sector_buffer, 32768, offset);
@@ -255,7 +261,9 @@ int read_safe(void* dst, uint64_t offset, int len)
 		int rl = 32768 - off;
 		if (rl > len)
 			rl = len;
-		memcpy(dst, sector_buffer + off, rl);	
+		else 
+		  rl = 32768;
+		memcpy(dst, sector_buffer, rl);	
 
 		offset += rl;
 		len -= rl;
@@ -459,7 +467,7 @@ int dvd_read_directoryentries(uint64_t offset, int size) {
   if((size + offset) == 0)  // enter root
     read_directory(DVDToc->file[0].sector, DVDToc->file[0].size);
   else
-    read_directory((offset/2048), size);
+    read_directory(offset>>11, size);
 
   free(bufferDVD);
   if(files>0)
