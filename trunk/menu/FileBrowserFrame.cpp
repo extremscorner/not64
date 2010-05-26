@@ -312,7 +312,7 @@ void fileBrowserFrame_FillPage()
 
 extern BOOL hasLoadedROM;
 extern int rom_length;
-extern char autoSaveLoaded;
+extern int autoSaveLoaded;
 void Func_SetPlayGame();
 
 void fileBrowserFrame_LoadFile(int i)

@@ -27,7 +27,9 @@
 
 #include <stdio.h>
 #include "../main/winlnxdefs.h"
+#ifndef PLUGIN_H
 #include "Controller_#1.1.h"
+#endif
 
 extern char padNeedScan, wpadNeedScan;
 extern u32 gc_connected;

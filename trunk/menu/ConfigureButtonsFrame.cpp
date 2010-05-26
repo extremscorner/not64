@@ -122,7 +122,7 @@ struct ButtonInfo
 
 	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[5],	140.0,	150.0,	 80.0,	40.0,	 0,	 8,	 6,	 7,	Func_ToggleButtonL,		Func_ReturnFromConfigureButtonsFrame }, // Toggle Button L
 	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[6],	420.0,	150.0,	 80.0,	40.0,	 3,	12,	 7,	 5,	Func_ToggleButtonR,		Func_ReturnFromConfigureButtonsFrame }, // Toggle Button R
-	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[7],	280.0,	140.0,	 80.0,	40.0,	 2,	16,	 5,	 6,	Func_ToggleButtonStart,	Func_ReturnFromConfigureButtonsFrame }, // Toggle Button Z
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[7],	280.0,	140.0,	 80.0,	40.0,	 2,	16,	 5,	 6,	Func_ToggleButtonStart,	Func_ReturnFromConfigureButtonsFrame }, // Toggle Button Start
 
 	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[8],	 85.0,	200.0,	 80.0,	40.0,	 5,	 9,	12,	12,	Func_ToggleButtonDup,	Func_ReturnFromConfigureButtonsFrame }, // Toggle Button D-up
 	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[9],	 40.0,	250.0,	 80.0,	40.0,	 8,	11,	14,	10,	Func_ToggleButtonDleft,	Func_ReturnFromConfigureButtonsFrame }, // Toggle Button D-left
@@ -134,7 +134,7 @@ struct ButtonInfo
 	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[14],	520.0,	250.0,	 80.0,	40.0,	12,	15,	13,	 9,	Func_ToggleButtonCright,Func_ReturnFromConfigureButtonsFrame }, // Toggle Button C-right
 	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[15],	475.0,	300.0,	 80.0,	40.0,	13,	17,	17,	11,	Func_ToggleButtonCdown,	Func_ReturnFromConfigureButtonsFrame }, // Toggle Button C-down
 
-	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[16],	210.0,	345.0,	 80.0,	40.0,	11,	19,	11,	17,	Func_ToggleButtonZ,		Func_ReturnFromConfigureButtonsFrame }, // Toggle Button Start
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[16],	210.0,	345.0,	 80.0,	40.0,	11,	19,	11,	17,	Func_ToggleButtonZ,		Func_ReturnFromConfigureButtonsFrame }, // Toggle Button Z
 	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[17],	370.0,	345.0,	 80.0,	40.0,	15,	18,	16,	15,	Func_ToggleButtonB,		Func_ReturnFromConfigureButtonsFrame }, // Toggle Button B
 	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[18],	395.0,	395.0,	 80.0,	40.0,	17,	 3,	19,	21,	Func_ToggleButtonA,		Func_ReturnFromConfigureButtonsFrame }, // Toggle Button A
 	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[19],	200.0,	395.0,	160.0,	40.0,	16,	 2,	20,	18,	Func_ToggleAnalogStick,	Func_ReturnFromConfigureButtonsFrame }, // Toggle Analog Stick
@@ -324,7 +324,7 @@ void ConfigureButtonsFrame::updateFrame(float deltaTime)
 	activateSubmenu(activePad);
 }
 
-#define NUM_LINES 3
+#define NUM_LINES 11
 
 void ConfigureButtonsFrame::drawChildren(menu::Graphics &gfx) const
 {
@@ -334,12 +334,20 @@ void ConfigureButtonsFrame::drawChildren(menu::Graphics &gfx) const
 		int base_y = 182;
 		int lines[NUM_LINES][4] = {{320, 160, 320, 237}, //START
 								   {175, 235, 240, 235}, //D-pad
-								   {465, 235, 404, 235}};//C-pad
+								   {465, 235, 404, 235}, //C-pad
+								   {264, 197, 220, 170}, //L
+								   {376, 197, 420, 170}, //R
+								   {295, 313, 250, 365}, //Z
+								   {320, 296, 320, 415}, //Analog
+								   {320, 415, 125, 415}, //Invert Y
+								   {375, 265, 375, 325}, //B
+								   {375, 325, 410, 345}, //
+								   {410, 385, 435, 395}};//A
 
 		GXColor controllerColors[5] = {	{  0,   0, 255, 255},
 										{255,   0,   0, 255},
-										{255, 255,   0, 255},
-										{  0, 255,   0, 255},
+										{200, 200,   0, 255},
+										{  0, 240,   0, 255},
 										{150, 150, 255, 255}};
 
 		//Draw N64 Controller
