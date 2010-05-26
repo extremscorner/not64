@@ -144,11 +144,11 @@ static int _GetKeys(int Control, BUTTONS * Keys, controller_config_t* config,
 			c->Y_AXIS = 0;
 		}
 	} else if(config->analog->mask == TILT_AS_ANALOG){
-		c->X_AXIS = wpad->orient.pitch * 0.71;
-		c->Y_AXIS = wpad->orient.roll * 0.71;
+		c->X_AXIS = -wpad->orient.pitch;
+		c->Y_AXIS = wpad->orient.roll;
 	} else if(config->analog->mask == WHEEL_AS_ANALOG){
-		c->X_AXIS = wpad->orient.yaw * 0.71;
-		c->Y_AXIS = wpad->orient.roll * 0.71;
+		c->X_AXIS = 512 - wpad->accel.y;
+		c->Y_AXIS = wpad->accel.z - 512;
 	}
 	if(config->invertedY) c->Y_AXIS = -c->Y_AXIS;
 
