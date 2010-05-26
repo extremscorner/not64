@@ -23,6 +23,7 @@
 #include <stdlib.h>
 #include "../r4300.h"
 #include "Recompile.h"
+#include "../Recomp-Cache.h"
 
 static inline PowerPC_func_node** _find(PowerPC_func_node** node, unsigned int addr){
 	while(*node){
@@ -47,7 +48,7 @@ void insert_func(PowerPC_func_node** root, PowerPC_func* func){
 	PowerPC_func_node** node = _find(root, func->start_addr);
 	if(*node) return; // Avoid a memory leak if this function exists
 
-	*node = malloc(sizeof(PowerPC_func_node));
+	*node = MetaCache_Alloc(sizeof(PowerPC_func_node));
 	(*node)->function = func;
 	(*node)->left = (*node)->right = NULL;
 }
@@ -70,6 +71,6 @@ void remove_func(PowerPC_func_node** root, PowerPC_func* func){
 		*pre = (*pre)->left;
 	}
 
-	free(old);
+	MetaCache_Free(old);
 }
 

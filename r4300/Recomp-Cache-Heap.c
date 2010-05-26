@@ -121,7 +121,7 @@ static void unlink_func(PowerPC_func* func){
 		ICInvalidateRange(link->branch-10, 11*sizeof(PowerPC_instr));
 		
 		remove_func(&link->func->links_out, func);
-		__lwp_heap_free(meta_cache, link);
+		MetaCache_Free(link);
 	}
 	func->links_in = NULL;
 	
@@ -137,12 +137,12 @@ static void unlink_func(PowerPC_func* func){
 			next = &(*link)->next;
 			if((*link)->func == func){
 				PowerPC_func_link_node* tmp = (*link)->next;
-				__lwp_heap_free(meta_cache, *link);
+				MetaCache_Free(*link);
 				*link = tmp;
 				next = link;
 			}
 		}
-		free(*node); // Free the PowerPC_func_node*
+		MetaCache_Free(*node); // Free the PowerPC_func_node*
 	}
 	remove_outgoing_links(&func->links_out);
 	func->links_out = NULL;
@@ -153,7 +153,7 @@ static void unlink_func(PowerPC_func* func){
 static void free_func(PowerPC_func* func, unsigned int addr){
 	// Free the code associated with the func
 	__lwp_heap_free(cache, func->code);
-	__lwp_heap_free(meta_cache, func->code_addr);
+	MetaCache_Free(func->code_addr);
 	// Remove any holes into this func
 	PowerPC_func_hole_node* hole, * next_hole;
 	for(hole = func->holes; hole != NULL; hole = next_hole){
@@ -225,11 +225,7 @@ void RecompCache_Alloc(unsigned int size, unsigned int address, PowerPC_func* fu
 		code = __lwp_heap_allocate(cache, size);
 	}
 	int num_instrs = (func->end_addr - func->start_addr) >> 2;
-	void* code_addr = __lwp_heap_allocate(meta_cache, num_instrs * sizeof(void*));
-	while(!code_addr){
-		release(num_instrs * sizeof(void*));
-		code_addr = __lwp_heap_allocate(meta_cache, num_instrs * sizeof(void*));
-	}
+	void* code_addr = MetaCache_Alloc(num_instrs * sizeof(void*));
 
 	cacheSize += size;
 	newBlock->func->code = code;
@@ -293,12 +289,7 @@ void RecompCache_Link(PowerPC_func* src_func, PowerPC_instr* src_instr,
 	// Setup book-keeping
 	// Create the incoming link info
 	PowerPC_func_link_node* fln =
-		__lwp_heap_allocate(meta_cache, sizeof(PowerPC_func_link_node));
-	while(!fln){
-		release(sizeof(PowerPC_func_link_node));
-		fln = 
-			__lwp_heap_allocate(meta_cache, sizeof(PowerPC_func_link_node));
-	}
+		MetaCache_Alloc(sizeof(PowerPC_func_link_node));
 	fln->branch = src_instr;
 	fln->func = src_func;
 	fln->next = dst_func->links_in;
@@ -334,3 +325,17 @@ void RecompCache_Init(void){
 	}
 }
 
+void* MetaCache_Alloc(unsigned int size){
+	void* ptr = __lwp_heap_allocate(meta_cache, size);
+	// While there's no room to allocate, call release
+	while(!ptr){
+		release(size);
+		ptr = __lwp_heap_allocate(meta_cache, size);
+	}
+	
+	return ptr;
+}
+
+void MetaCache_Free(void* ptr){
+	__lwp_heap_free(meta_cache, ptr);
+}
