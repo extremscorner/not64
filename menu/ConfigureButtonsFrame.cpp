@@ -324,7 +324,7 @@ void ConfigureButtonsFrame::updateFrame(float deltaTime)
 	activateSubmenu(activePad);
 }
 
-#define NUM_LINES 11
+#define NUM_LINES 10
 
 void ConfigureButtonsFrame::drawChildren(menu::Graphics &gfx) const
 {
@@ -333,21 +333,20 @@ void ConfigureButtonsFrame::drawChildren(menu::Graphics &gfx) const
 		int base_x = 216;
 		int base_y = 182;
 		int lines[NUM_LINES][4] = {{320, 160, 320, 237}, //START
-								   {175, 235, 240, 235}, //D-pad
-								   {465, 235, 404, 235}, //C-pad
+								   {174, 235, 240, 235}, //D-pad
+								   {466, 235, 404, 235}, //C-pad
 								   {264, 197, 220, 170}, //L
 								   {376, 197, 420, 170}, //R
 								   {295, 313, 250, 365}, //Z
-								   {320, 296, 320, 415}, //Analog
+								   {320, 299, 320, 415}, //Analog
 								   {320, 415, 125, 415}, //Invert Y
-								   {375, 265, 375, 325}, //B
-								   {375, 325, 410, 345}, //
-								   {410, 385, 435, 395}};//A
+								   {373, 268, 373, 325}, //B
+								   {373, 325, 435, 405}};//A
 
-		GXColor controllerColors[5] = {	{  0,   0, 255, 255},
-										{255,   0,   0, 255},
-										{200, 200,   0, 255},
-										{  0, 240,   0, 255},
+		GXColor controllerColors[5] = {	{  1,  29, 169, 255}, //blue
+										{254,  32,  21, 255}, //orange/red
+										{  8, 147,  48, 255}, //green
+										{255, 192,   1, 255}, //yellow/gold
 										{150, 150, 255, 255}};
 
 		//Draw N64 Controller
@@ -366,8 +365,8 @@ void ConfigureButtonsFrame::drawChildren(menu::Graphics &gfx) const
 		//Draw lines and circles
 		gfx.setColor(controllerColors[4]);
 		gfx.setLineWidth(2);
-		gfx.drawCircle(125, 270, 60, 30);
-		gfx.drawCircle(515, 270, 60, 30);
+		gfx.drawCircle(125, 270, 60, 33);
+		gfx.drawCircle(515, 270, 60, 33);
 
 		for (int i=0; i<NUM_LINES; i++)
 			gfx.drawLine(lines[i][0], lines[i][1], lines[i][2], lines[i][3]);
