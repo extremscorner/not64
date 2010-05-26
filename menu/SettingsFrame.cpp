@@ -32,6 +32,7 @@
 #include "../main/wii64config.h"
 
 extern "C" {
+#include "../gc_input/controller.h"
 #include "../fileBrowser/fileBrowser.h"
 #include "../fileBrowser/fileBrowser-libfat.h"
 #include "../fileBrowser/fileBrowser-CARD.h"
@@ -498,36 +499,94 @@ extern void writeConfig(FILE* f);
 
 void Func_SaveSettingsSD()
 {
-  fileBrowser_file* configFile_file;
-  int (*configFile_init)(fileBrowser_file*) = fileBrowser_libfat_init;
-  configFile_file = &saveDir_libfat_Default;
-  if(configFile_init(configFile_file)) {                //only if device initialized ok
-    FILE* f = fopen( "sd:/wii64/settings.cfg", "wb" );  //attempt to open file
-    if(f) {
-      writeConfig(f);                                   //write out the config
-      fclose(f);
-      menu::MessageBox::getInstance().setMessage("Saved settings.cfg to SD");
-      return;
-    }
-  }
-	menu::MessageBox::getInstance().setMessage("Error saving settings.cfg to SD");
+	fileBrowser_file* configFile_file;
+	int (*configFile_init)(fileBrowser_file*) = fileBrowser_libfat_init;
+	int num_written = 0;
+	configFile_file = &saveDir_libfat_Default;
+	if(configFile_init(configFile_file)) {                //only if device initialized ok
+		FILE* f = fopen( "sd:/wii64/settings.cfg", "wb" );  //attempt to open file
+		if(f) {
+			writeConfig(f);                                   //write out the config
+			fclose(f);
+			num_written++;
+		}
+		f = fopen( "sd:/wii64/controlG.cfg", "wb" );  //attempt to open file
+		if(f) {
+			save_configurations(f, &controller_GC);					//write out GC controller mappings
+			fclose(f);
+			num_written++;
+		}
+#ifdef HW_RVL
+		f = fopen( "sd:/wii64/controlC.cfg", "wb" );  //attempt to open file
+		if(f) {
+			save_configurations(f, &controller_Classic);			//write out Classic controller mappings
+			fclose(f);
+			num_written++;
+		}
+		f = fopen( "sd:/wii64/controlN.cfg", "wb" );  //attempt to open file
+		if(f) {
+			save_configurations(f, &controller_WiimoteNunchuk);	//write out WM+NC controller mappings
+			fclose(f);
+			num_written++;
+		}
+		f = fopen( "sd:/wii64/controlW.cfg", "wb" );  //attempt to open file
+		if(f) {
+			save_configurations(f, &controller_Wiimote);			//write out Wiimote controller mappings
+			fclose(f);
+			num_written++;
+		}
+#endif //HW_RVL
+	}
+	if (num_written == num_controller_t+1)
+		menu::MessageBox::getInstance().setMessage("Saved settings.cfg and \nController Configs to SD");
+	else
+		menu::MessageBox::getInstance().setMessage("Error saving settings.cfg and \nController Configs to SD");
 }
 
 void Func_SaveSettingsUSB()
 {
-  fileBrowser_file* configFile_file;
-  int (*configFile_init)(fileBrowser_file*) = fileBrowser_libfat_init;
-  configFile_file = &saveDir_libfat_USB;
-  if(configFile_init(configFile_file)) {                //only if device initialized ok
-    FILE* f = fopen( "usb:/wii64/settings.cfg", "wb" ); //attempt to open file
-    if(f) {
-      writeConfig(f);                                   //write out the config
-      fclose(f);
-      menu::MessageBox::getInstance().setMessage("Saved settings.cfg to USB");
-      return;
-    }
-  }
-	menu::MessageBox::getInstance().setMessage("Error saving settings.cfg to USB");
+	fileBrowser_file* configFile_file;
+	int (*configFile_init)(fileBrowser_file*) = fileBrowser_libfat_init;
+	int num_written = 0;
+	configFile_file = &saveDir_libfat_USB;
+	if(configFile_init(configFile_file)) {                //only if device initialized ok
+		FILE* f = fopen( "usb:/wii64/settings.cfg", "wb" ); //attempt to open file
+		if(f) {
+			writeConfig(f);                                   //write out the config
+			fclose(f);
+			num_written++;
+		}
+		f = fopen( "usb:/wii64/controlG.cfg", "wb" );  //attempt to open file
+		if(f) {
+			save_configurations(f, &controller_GC);					//write out GC controller mappings
+			fclose(f);
+			num_written++;
+		}
+#ifdef HW_RVL
+		f = fopen( "usb:/wii64/controlC.cfg", "wb" );  //attempt to open file
+		if(f) {
+			save_configurations(f, &controller_Classic);			//write out Classic controller mappings
+			fclose(f);
+			num_written++;
+		}
+		f = fopen( "usb:/wii64/controlN.cfg", "wb" );  //attempt to open file
+		if(f) {
+			save_configurations(f, &controller_WiimoteNunchuk);	//write out WM+NC controller mappings
+			fclose(f);
+			num_written++;
+		}
+		f = fopen( "usb:/wii64/controlW.cfg", "wb" );  //attempt to open file
+		if(f) {
+			save_configurations(f, &controller_Wiimote);			//write out Wiimote controller mappings
+			fclose(f);
+			num_written++;
+		}
+#endif //HW_RVL
+	}
+	if (num_written == num_controller_t+1)
+		menu::MessageBox::getInstance().setMessage("Saved settings.cfg and \nController Configs to USB");
+	else
+		menu::MessageBox::getInstance().setMessage("Error saving settings.cfg and \nController Configs to USB");
 }
 
 void Func_ShowFpsOn()

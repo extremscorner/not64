@@ -1,8 +1,8 @@
 /**
  * Wii64 - main_gc-menu2.cpp (aka MenuV2)
- * Copyright (C) 2007, 2008, 2009 Mike Slegeir
- * Copyright (C) 2007, 2008, 2009 sepp256
- * Copyright (C) 2007, 2008, 2009 emu_kidid
+ * Copyright (C) 2007, 2008, 2009, 2010 Mike Slegeir
+ * Copyright (C) 2007, 2008, 2009, 2010 sepp256
+ * Copyright (C) 2007, 2008, 2009, 2010 emu_kidid
  * 
  * New main that uses menu's instead of prompts
  *
@@ -48,6 +48,7 @@ extern "C" {
 #include "main.h"
 #include "rom.h"
 #include "plugin.h"
+#include "../gc_input/controller.h"
 
 #include "../r4300/r4300.h"
 #include "../gc_memory/memory.h"
@@ -208,7 +209,7 @@ int main(int argc, char* argv[]){
 #ifdef RELEASE
 	showFPSonScreen  = 0; // Show FPS on Screen
 #else
-  showFPSonScreen  = 1; // Show FPS on Screen
+	showFPSonScreen  = 1; // Show FPS on Screen
 #endif
 	printToScreen    = 1; // Show DEBUG text on screen
 	printToSD        = 0; // Disable SD logging
@@ -241,38 +242,82 @@ int main(int argc, char* argv[]){
 #endif //GLN64_GX
 	menuActive = 1;
 
-  //config stuff
-  fileBrowser_file* configFile_file;
-  int (*configFile_init)(fileBrowser_file*) = fileBrowser_libfat_init;
+	//config stuff
+	fileBrowser_file* configFile_file;
+	int (*configFile_init)(fileBrowser_file*) = fileBrowser_libfat_init;
 #ifdef HW_RVL
-  if(argv[0][0] == 'u') {  //assume USB
-    configFile_file = &saveDir_libfat_USB;
-    if(configFile_init(configFile_file)) {                //only if device initialized ok
-      FILE* f = fopen( "usb:/wii64/settings.cfg", "r" );  //attempt to open file
-      if(f) {        //open ok, read it
-        readConfig(f);
-        fclose(f);
-      }
-    }
-  }
-  else /*if((argv[0][0]=='s') || (argv[0][0]=='/'))*/
+	if(argv[0][0] == 'u') {  //assume USB
+		configFile_file = &saveDir_libfat_USB;
+		if(configFile_init(configFile_file)) {                //only if device initialized ok
+			FILE* f = fopen( "usb:/wii64/settings.cfg", "r" );  //attempt to open file
+			if(f) {        //open ok, read it
+				readConfig(f);
+				fclose(f);
+			}
+			f = fopen( "usb:/wii64/controlG.cfg", "r" );  //attempt to open file
+			if(f) {
+				load_configurations(f, &controller_GC);					//write out GC controller mappings
+				fclose(f);
+			}
+#ifdef HW_RVL
+			f = fopen( "usb:/wii64/controlC.cfg", "r" );  //attempt to open file
+			if(f) {
+				load_configurations(f, &controller_Classic);			//write out Classic controller mappings
+				fclose(f);
+			}
+			f = fopen( "usb:/wii64/controlN.cfg", "r" );  //attempt to open file
+			if(f) {
+				load_configurations(f, &controller_WiimoteNunchuk);	//write out WM+NC controller mappings
+				fclose(f);
+			}
+			f = fopen( "usb:/wii64/controlW.cfg", "r" );  //attempt to open file
+			if(f) {
+				load_configurations(f, &controller_Wiimote);			//write out Wiimote controller mappings
+				fclose(f);
+			}
+#endif //HW_RVL
+		}
+	}
+	else /*if((argv[0][0]=='s') || (argv[0][0]=='/'))*/
 #endif
-  { //assume SD
-    configFile_file = &saveDir_libfat_Default;
-    if(configFile_init(configFile_file)) {                //only if device initialized ok
-      FILE* f = fopen( "sd:/wii64/settings.cfg", "r" );  //attempt to open file
-      if(f) {        //open ok, read it
-        readConfig(f);
-        fclose(f);
-      }
-    }
-  }
+	{ //assume SD
+		configFile_file = &saveDir_libfat_Default;
+		if(configFile_init(configFile_file)) {                //only if device initialized ok
+			FILE* f = fopen( "sd:/wii64/settings.cfg", "r" );  //attempt to open file
+			if(f) {        //open ok, read it
+				readConfig(f);
+				fclose(f);
+			}
+			f = fopen( "sd:/wii64/controlG.cfg", "r" );  //attempt to open file
+			if(f) {
+				load_configurations(f, &controller_GC);					//write out GC controller mappings
+				fclose(f);
+			}
 #ifdef HW_RVL
-  // Handle options passed in through arguments
-  int i;
-  for(i=1; i<argc; ++i){
-	  handleConfigPair(argv[i]);
-  }
+			f = fopen( "sd:/wii64/controlC.cfg", "r" );  //attempt to open file
+			if(f) {
+				load_configurations(f, &controller_Classic);			//write out Classic controller mappings
+				fclose(f);
+			}
+			f = fopen( "sd:/wii64/controlN.cfg", "r" );  //attempt to open file
+			if(f) {
+				load_configurations(f, &controller_WiimoteNunchuk);	//write out WM+NC controller mappings
+				fclose(f);
+			}
+			f = fopen( "sd:/wii64/controlW.cfg", "r" );  //attempt to open file
+			if(f) {
+				load_configurations(f, &controller_Wiimote);			//write out Wiimote controller mappings
+				fclose(f);
+			}
+#endif //HW_RVL
+		}
+	}
+#ifdef HW_RVL
+	// Handle options passed in through arguments
+	int i;
+	for(i=1; i<argc; ++i){
+		handleConfigPair(argv[i]);
+	}
 #endif
 	while (menu->isRunning()) {}
 
@@ -309,7 +354,7 @@ extern BOOL mempakWritten;
 extern BOOL sramWritten;
 extern BOOL flashramWritten;
 BOOL hasLoadedROM = FALSE;
-char autoSaveLoaded = NATIVESAVEDEVICE_NONE;
+int autoSaveLoaded = NATIVESAVEDEVICE_NONE;
 
 int loadROM(fileBrowser_file* rom){
   int ret = 0;
