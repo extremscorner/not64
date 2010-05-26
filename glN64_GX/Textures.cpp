@@ -604,8 +604,12 @@ void TextureCache_Remove( CachedTexture *texture )
 
 CachedTexture *TextureCache_AddTop()
 {
+#ifndef __GX__
 	while (cache.cachedBytes > cache.maxBytes)
 //	while (cache.cachedBytes > 64) //cache.dummy->textureBytes)
+#else //!__GX__
+	while ((cache.cachedBytes > cache.maxBytes) || cache.numCached > GX_MAX_TEXTURES)
+#endif //__GX__
 	{
 		if (cache.bottom != cache.dummy)
 			TextureCache_RemoveBottom();

@@ -416,7 +416,7 @@ void VI_GX_showDEBUG()
 void VI_GX_showStats()
 {
 #ifdef SHOW_DEBUG
-	sprintf(txtbuffer,"texCache: %d bytes in %d cached textures; %d FB textures",cache.cachedBytes,cache.numCached,frameBuffer.numBuffers);
+	sprintf(txtbuffer,"texCache: %d bytes in %d cached textures; %d FB textures; %d max textures",cache.cachedBytes,cache.numCached,frameBuffer.numBuffers, GX_MAX_TEXTURES);
 	DEBUG_print(txtbuffer,DBG_CACHEINFO); 
 
 	sprintf(txtbuffer,"TriMatr: %d Proj; %d ProjW; %d Other; %d ProjWnear; %d PolyOff",CntTriProj,CntTriProjW,CntTriOther,CntTriNear,CntTriPolyOffset);
