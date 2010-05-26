@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
- <app version="1">
+ <app version="1.1">
    <name>Wii64</name>
    <coder>Wii64 Team</coder>
-   <version>Beta 1</version>
-   <release_date>200909290000</release_date>
+   <version>Beta 1.1 'Honey'</version>
+   <release_date>201002060000</release_date>
    <short_description>N64 Emulator for Wii</short_description>
    <long_description>
 
@@ -12,7 +12,7 @@ Core Coder - tehpola
 Graphics Coding - sepp256  
 General Coding - emu_kidid
 
-The Wii64Team proudly presents Wii64 Beta 1
+The Wii64Team proudly presents Wii64 Beta 1.1 'Honey'
 Wii64 is a port of Mupen64 to the Wii
 
 It currently runs most games at full speed or close to it, there are some known graphical and/or core issues which are posted on http://emulatemii.com/wii64/CompatList/
