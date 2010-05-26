@@ -16,7 +16,6 @@ static int last_current_dir = -1;
 int is_unicode,files;
 file_entries *DVDToc = NULL; //Dynamically allocate this
 
-
 #ifdef HW_DOL
 #define mfpvr()   ({unsigned int rval; \
       asm volatile("mfpvr %0" : "=r" (rval)); rval;})
@@ -87,6 +86,7 @@ int init_dvd() {
 int dvd_read_id()
 {
 #ifdef HW_RVL
+  DVD_LowRead64((void*)0x80000000, 32, 0ULL);  //for easter egg disc support
   return 0;
 #endif
 	dvd[0] = 0x2E;
@@ -142,7 +142,7 @@ int DVD_LowRead64(void* dst, unsigned int len, uint64_t offset)
 		dvd[0] = 0x2E;
 	dvd[1] = 0;
 	dvd[2] = read_cmd;
-	dvd[3] = offset >> 2;
+	dvd[3] = read_cmd == DVDR ? offset>>11 : offset >> 2;
 	dvd[4] = len;
 	dvd[5] = (unsigned long)dst;
 	dvd[6] = len;
