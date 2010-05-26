@@ -91,7 +91,7 @@ static unsigned int getButtons(int Control)
 	if(stickY    < -48) b |= ANALOG_D;
 	
 	if(substickX < -48) b |= C_STICK_L;
-	if(substickY >  48) b |= C_STICK_R;
+	if(substickX >  48) b |= C_STICK_R;
 	if(substickY >  48) b |= C_STICK_U;
 	if(substickY < -48) b |= C_STICK_D;
 	
