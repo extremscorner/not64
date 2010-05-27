@@ -405,6 +405,105 @@ void SettingsFrame::activateSubmenu(int submenu)
 	}
 }
 
+void SettingsFrame::drawChildren(menu::Graphics &gfx)
+{
+	if(isVisible())
+	{
+#ifdef HW_RVL
+		WPADData* wiiPad = menu::Input::getInstance().getWpad();
+#endif
+		for (int i=0; i<4; i++)
+		{
+			u16 currentButtonsGC = PAD_ButtonsHeld(i);
+			if (currentButtonsGC ^ previousButtonsGC[i])
+			{
+				u16 currentButtonsDownGC = (currentButtonsGC ^ previousButtonsGC[i]) & currentButtonsGC;
+				previousButtonsGC[i] = currentButtonsGC;
+				if (currentButtonsDownGC & PAD_TRIGGER_R)
+				{
+					//move to next tab
+					if(activeSubmenu < SUBMENU_SAVES) 
+					{
+						activateSubmenu(activeSubmenu+1);
+						menu::Focus::getInstance().clearPrimaryFocus();
+					}
+					break;
+				}
+				else if (currentButtonsDownGC & PAD_TRIGGER_L)
+				{
+					//move to the previous tab
+					if(activeSubmenu > SUBMENU_GENERAL) 
+					{
+						activateSubmenu(activeSubmenu-1);
+						menu::Focus::getInstance().clearPrimaryFocus();
+					}
+					break;
+				}
+			}
+#ifdef HW_RVL
+			else if (wiiPad[i].btns_h ^ previousButtonsWii[i])
+			{
+				u32 currentButtonsDownWii = (wiiPad[i].btns_h ^ previousButtonsWii[i]) & wiiPad[i].btns_h;
+				previousButtonsWii[i] = wiiPad[i].btns_h;
+				if (wiiPad[i].exp.type == WPAD_EXP_CLASSIC)
+				{
+					if (currentButtonsDownWii & WPAD_CLASSIC_BUTTON_FULL_R)
+					{
+						//move to next tab
+						if(activeSubmenu < SUBMENU_SAVES) 
+						{
+							activateSubmenu(activeSubmenu+1);
+							menu::Focus::getInstance().clearPrimaryFocus();
+						}
+						break;
+					}
+					else if (currentButtonsDownWii & WPAD_CLASSIC_BUTTON_FULL_L)
+					{
+						//move to the previous tab
+						if(activeSubmenu > SUBMENU_GENERAL) 
+						{
+							activateSubmenu(activeSubmenu-1);
+							menu::Focus::getInstance().clearPrimaryFocus();
+						}
+						break;
+					}
+				}
+				else
+				{
+					if (currentButtonsDownWii & WPAD_BUTTON_PLUS)
+					{
+						//move to next tab
+						if(activeSubmenu < SUBMENU_SAVES) 
+						{
+							activateSubmenu(activeSubmenu+1);
+							menu::Focus::getInstance().clearPrimaryFocus();
+						}
+						break;
+					}
+					else if (currentButtonsDownWii & WPAD_BUTTON_MINUS)
+					{
+						//move to the previous tab
+						if(activeSubmenu > SUBMENU_GENERAL) 
+						{
+							activateSubmenu(activeSubmenu-1);
+							menu::Focus::getInstance().clearPrimaryFocus();
+						}
+						break;
+					}
+				}
+			}
+#endif //HW_RVL
+		}
+
+		//Draw buttons
+		menu::ComponentList::const_iterator iteration;
+		for (iteration = componentList.begin(); iteration != componentList.end(); iteration++)
+		{
+			(*iteration)->draw(gfx);
+		}
+	}
+}
+
 extern MenuContext *pMenuContext;
 
 void Func_TabGeneral()
