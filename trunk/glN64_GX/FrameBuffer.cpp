@@ -1,7 +1,7 @@
 /**
  * glN64_GX - FrameBuffer.cpp
  * Copyright (C) 2003 Orkin
- * Copyright (C) 2008, 2009 sepp256 (Port to Wii/Gamecube/PS3)
+ * Copyright (C) 2008, 2009, 2010 sepp256 (Port to Wii/Gamecube/PS3)
  *
  * glN64 homepage: http://gln64.emulation64.com
  * Wii64 homepage: http://www.emulatemii.com
@@ -197,8 +197,13 @@ void FrameBuffer_SaveBuffer( u32 address, u16 size, u16 width, u16 height )
 			(current->height == height) &&
 			(current->size == size))
 		{
+#ifndef __GX__
 			if ((current->scaleX != OGL.scaleX) ||
 				(current->scaleY != OGL.scaleY))
+#else //!__GX__
+			if ((current->scaleX != OGL.GXscaleX) ||
+				(current->scaleY != OGL.GXscaleY))
+#endif //__GX__
 			{
 				FrameBuffer_Remove( current );
 				break;
@@ -208,7 +213,8 @@ void FrameBuffer_SaveBuffer( u32 address, u16 size, u16 width, u16 height )
 			glCopyTexSubImage2D( GL_TEXTURE_2D, 0, 0, 0, 0, OGL.height - current->texture->height + OGL.heightOffset, current->texture->width, current->texture->height );
 #else // !__GX__
 			//Note: texture realWidth and realHeight should be multiple of 2!
-			GX_SetTexCopySrc(0, 0,(u16) current->texture->realWidth,(u16) current->texture->realHeight);
+//			GX_SetTexCopySrc(0, 0,(u16) current->texture->realWidth,(u16) current->texture->realHeight);
+			GX_SetTexCopySrc(OGL.GXorigX, OGL.GXorigY,(u16) current->texture->realWidth,(u16) current->texture->realHeight);
 			GX_SetTexCopyDst((u16) current->texture->realWidth,(u16) current->texture->realHeight, current->texture->GXtexfmt, GX_FALSE);
 			if (current->texture->GXtexture) GX_CopyTex(current->texture->GXtexture, GX_FALSE);
 			GX_PixModeSync();
@@ -234,11 +240,21 @@ void FrameBuffer_SaveBuffer( u32 address, u16 size, u16 width, u16 height )
 	current->width = width;
 	current->height = height;
 	current->size = size;
+#ifndef __GX__
 	current->scaleX = OGL.scaleX;
 	current->scaleY = OGL.scaleY;
+#else //!__GX__
+	current->scaleX = OGL.GXscaleX;
+	current->scaleY = OGL.GXscaleY;
+#endif //__GX__
 
+#ifndef __GX__
 	current->texture->width = (unsigned long)(current->width * OGL.scaleX);
 	current->texture->height = (unsigned long)(current->height * OGL.scaleY);
+#else //!__GX__
+	current->texture->width = (unsigned long)(current->width * OGL.GXscaleX);
+	current->texture->height = (unsigned long)(current->height * OGL.GXscaleY);
+#endif //__GX__
 	current->texture->clampS = 1;
 	current->texture->clampT = 1;
 	current->texture->address = current->startAddress;
@@ -309,7 +325,8 @@ void FrameBuffer_SaveBuffer( u32 address, u16 size, u16 width, u16 height )
 	glCopyTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA8, 0, OGL.height - current->texture->height + OGL.heightOffset, current->texture->realWidth, current->texture->realHeight, 0 );
 #else // !__GX__
 	//Note: texture realWidth and realHeight should be multiple of 2!
-	GX_SetTexCopySrc(0, 0,(u16) current->texture->realWidth,(u16) current->texture->realHeight);
+//	GX_SetTexCopySrc(0, 0,(u16) current->texture->realWidth,(u16) current->texture->realHeight);
+	GX_SetTexCopySrc((u16) OGL.GXorigX, (u16) OGL.GXorigY,(u16) current->texture->realWidth,(u16) current->texture->realHeight);
 	GX_SetTexCopyDst((u16) current->texture->realWidth,(u16) current->texture->realHeight, current->texture->GXtexfmt, GX_FALSE);
 	if (current->texture->GXtexture) GX_CopyTex(current->texture->GXtexture, GX_FALSE);
 	GX_PixModeSync();
@@ -426,13 +443,17 @@ void FrameBuffer_RenderBuffer( u32 address )
 			GX_SetVtxAttrFmt(GX_VTXFMT0, GX_VA_POS, GX_POS_XY, GX_F32, 0);
 			GX_SetVtxAttrFmt(GX_VTXFMT0, GX_VA_TEX0, GX_TEX_ST, GX_F32, 0);
 			GX_Begin(GX_QUADS, GX_VTXFMT0, 4);
-				GX_Position2f32( 0.0f, 0.0f );
+//				GX_Position2f32( 0.0f, 0.0f );
+				GX_Position2f32( (f32) OGL.GXorigX, (f32) OGL.GXorigY );
 				GX_TexCoord2f32( 0.0f, 0.0f );
-				GX_Position2f32( current->texture->width, 0.0f );
+//				GX_Position2f32( current->texture->width, 0.0f );
+				GX_Position2f32( (f32) OGL.GXorigX + current->texture->width, (f32) OGL.GXorigY );
 				GX_TexCoord2f32( u1, 0.0f );
-				GX_Position2f32( current->texture->width, current->texture->height );
+//				GX_Position2f32( current->texture->width, current->texture->height );
+				GX_Position2f32( (f32) OGL.GXorigX + current->texture->width, (f32) OGL.GXorigY + current->texture->height );
 				GX_TexCoord2f32( u1, v1 );
-				GX_Position2f32( 0.0f, current->texture->height );
+//				GX_Position2f32( 0.0f, current->texture->height );
+				GX_Position2f32( (f32) OGL.GXorigX, (f32) OGL.GXorigY + current->texture->height );
 				GX_TexCoord2f32( 0.0f, v1 );
 			GX_End();
 
@@ -559,13 +580,17 @@ void FrameBuffer_RestoreBuffer( u32 address, u16 size, u16 width )
 			GX_SetVtxAttrFmt(GX_VTXFMT0, GX_VA_POS, GX_POS_XY, GX_F32, 0);
 			GX_SetVtxAttrFmt(GX_VTXFMT0, GX_VA_TEX0, GX_TEX_ST, GX_F32, 0);
 			GX_Begin(GX_QUADS, GX_VTXFMT0, 4);
-				GX_Position2f32( 0.0f, 0.0f );
+//				GX_Position2f32( 0.0f, 0.0f );
+				GX_Position2f32( (f32) OGL.GXorigX, (f32) OGL.GXorigY );
 				GX_TexCoord2f32( 0.0f, 0.0f );
-				GX_Position2f32( current->texture->width, 0.0f );
+//				GX_Position2f32( current->texture->width, 0.0f );
+				GX_Position2f32( (f32) OGL.GXorigX + current->texture->width, (f32) OGL.GXorigY );
 				GX_TexCoord2f32( u1, 0.0f );
-				GX_Position2f32( current->texture->width, current->texture->height );
+//				GX_Position2f32( current->texture->width, current->texture->height );
+				GX_Position2f32( (f32) OGL.GXorigX + current->texture->width, (f32) OGL.GXorigY + current->texture->height );
 				GX_TexCoord2f32( u1, v1 );
-				GX_Position2f32( 0.0f, current->texture->height );
+//				GX_Position2f32( 0.0f, current->texture->height );
+				GX_Position2f32( (f32) OGL.GXorigX, (f32) OGL.GXorigY + current->texture->height );
 				GX_TexCoord2f32( 0.0f, v1 );
 			GX_End();
 
@@ -605,8 +630,13 @@ FrameBuffer *FrameBuffer_FindBuffer( u32 address )
 
 void FrameBuffer_ActivateBufferTexture( s16 t, FrameBuffer *buffer )
 {
+#ifndef __GX__
     buffer->texture->scaleS = OGL.scaleX / (float)buffer->texture->realWidth;
     buffer->texture->scaleT = OGL.scaleY / (float)buffer->texture->realHeight;
+#else //!__GX__
+    buffer->texture->scaleS = OGL.GXscaleX / (float)buffer->texture->realWidth;
+    buffer->texture->scaleT = OGL.GXscaleY / (float)buffer->texture->realHeight;
+#endif //__GX__
 
 	if (gSP.textureTile[t]->shifts > 10)
 		buffer->texture->shiftScaleS = (float)(1 << (16 - gSP.textureTile[t]->shifts));

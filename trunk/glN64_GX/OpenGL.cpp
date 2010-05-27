@@ -319,6 +319,10 @@ void OGL_UpdateScale()
 {
 	OGL.scaleX = OGL.width / (float)VI.width;
 	OGL.scaleY = OGL.height / (float)VI.height;
+#ifdef __GX__
+	OGL.GXscaleX = (float)OGL.GXwidth / (float)VI.width;
+	OGL.GXscaleY = (float)OGL.GXheight / (float)VI.height;
+#endif //__GX__
 }
 
 void OGL_ResizeWindow()
@@ -602,8 +606,10 @@ void OGL_UpdateViewport()
 	            (int)(gSP.viewport.width * OGL.scaleX), (int)(gSP.viewport.height * OGL.scaleY) );
 	glDepthRange( 0.0f, 1.0f );//gSP.viewport.nearz, gSP.viewport.farz );
 #else // !__GX__
-	GX_SetViewport((f32) (gSP.viewport.x * OGL.scaleX),(f32) (gSP.viewport.y * OGL.scaleY),
-		(f32) (gSP.viewport.width * OGL.scaleX),(f32) (gSP.viewport.height * OGL.scaleY), 0.0f, 1.0f);
+//	GX_SetViewport((f32) (gSP.viewport.x * OGL.scaleX),(f32) (gSP.viewport.y * OGL.scaleY),
+//		(f32) (gSP.viewport.width * OGL.scaleX),(f32) (gSP.viewport.height * OGL.scaleY), 0.0f, 1.0f);
+	GX_SetViewport((f32) (OGL.GXorigX + gSP.viewport.x * OGL.GXscaleX),(f32) (OGL.GXorigY + gSP.viewport.y * OGL.GXscaleY),
+		(f32) (gSP.viewport.width * OGL.GXscaleX),(f32) (gSP.viewport.height * OGL.GXscaleY), 0.0f, 1.0f);
 #endif // __GX__
 }
 
@@ -799,10 +805,14 @@ void OGL_UpdateStates()
 #else // !__GX__
 	if (gDP.changed & CHANGED_SCISSOR)
 	{
-		float ulx = max(max(gDP.scissor.ulx,gSP.viewport.x) * OGL.scaleX,0);
-		float uly = max(max(gDP.scissor.uly,gSP.viewport.y) * OGL.scaleY,0);
-		float lrx = min(gDP.scissor.lrx,gSP.viewport.x + gSP.viewport.width) * OGL.scaleX;
-		float lry = min(gDP.scissor.lry,gSP.viewport.y + gSP.viewport.height) * OGL.scaleY;
+//		float ulx = max(max(gDP.scissor.ulx,gSP.viewport.x) * OGL.scaleX,0);
+//		float uly = max(max(gDP.scissor.uly,gSP.viewport.y) * OGL.scaleY,0);
+//		float lrx = min(gDP.scissor.lrx,gSP.viewport.x + gSP.viewport.width) * OGL.scaleX;
+//		float lry = min(gDP.scissor.lry,gSP.viewport.y + gSP.viewport.height) * OGL.scaleY;
+		float ulx = max(OGL.GXorigX + max(gDP.scissor.ulx,gSP.viewport.x) * OGL.GXscaleX, 0);
+		float uly = max(OGL.GXorigY + max(gDP.scissor.uly,gSP.viewport.y) * OGL.GXscaleY, 0);
+		float lrx = max(OGL.GXorigX + min(min(gDP.scissor.lrx,gSP.viewport.x + gSP.viewport.width) * OGL.GXscaleX,OGL.GXwidth), 0);
+		float lry = max(OGL.GXorigY + min(min(gDP.scissor.lry,gSP.viewport.y + gSP.viewport.height) * OGL.GXscaleY,OGL.GXheight), 0);
 		GX_SetScissor((u32) ulx,(u32) uly,(u32) (lrx - ulx),(u32) (lry - uly));
 	}
 #endif // __GX__
@@ -1366,7 +1376,8 @@ void OGL_DrawLine( SPVertex *vertices, int v0, int v1, float width )
 		}
 	glEnd();
 #else // !__GX__		//TODO: Implement secondary color.
-	GX_SetLineWidth( width * OGL.scaleX, GX_TO_ZERO );
+//	GX_SetLineWidth( width * OGL.scaleX, GX_TO_ZERO );
+	GX_SetLineWidth( width * OGL.GXscaleX * 6, GX_TO_ZERO );
 
 	GXColor GXcol;
 	float invW;
@@ -1511,7 +1522,7 @@ void OGL_DrawRect( int ulx, int uly, int lrx, int lry, float *color )
 	OGL_UpdateViewport();
 	glEnable( GL_SCISSOR_TEST );
 #else // !__GX__
-	GX_SetScissor((u32) 0,(u32) 0,(u32) OGL.width+1,(u32) OGL.height+1);	//Set to the same size as the viewport.
+	GX_SetScissor((u32) 0,(u32) 0,(u32) OGL.width+1,(u32) OGL.height+1);	//Disable Scissor
 	GX_SetCullMode (GX_CULL_NONE);
 	Mtx44 GXprojection;
 	guMtxIdentity(GXprojection);
@@ -1521,7 +1532,8 @@ void OGL_DrawRect( int ulx, int uly, int lrx, int lry, float *color )
 	GX_LoadProjectionMtx(GXprojection, GX_ORTHOGRAPHIC); 
 	GX_LoadPosMtxImm(OGL.GXmodelViewIdent,GX_PNMTX0);
 
-	GX_SetViewport((f32) 0,(f32) 0,(f32) OGL.width,(f32) OGL.height, 0.0f, 1.0f);
+//	GX_SetViewport((f32) 0,(f32) 0,(f32) OGL.width,(f32) OGL.height, 0.0f, 1.0f);
+	GX_SetViewport((f32) OGL.GXorigX,(f32) OGL.GXorigY,(f32) OGL.GXwidth,(f32) OGL.GXheight, 0.0f, 1.0f);
 
 	GXColor GXcol;
 	GXcol.r = (u8) (color[0]*255);
@@ -1609,7 +1621,8 @@ void OGL_DrawTexturedRect( float ulx, float uly, float lrx, float lry, float uls
 
 	GX_LoadPosMtxImm(OGL.GXmodelViewIdent,GX_PNMTX0);
 
-	GX_SetViewport((f32) 0,(f32) 0,(f32) OGL.width,(f32) OGL.height, 0.0f, 1.0f);
+//	GX_SetViewport((f32) 0,(f32) 0,(f32) OGL.width,(f32) OGL.height, 0.0f, 1.0f);
+	GX_SetViewport((f32) OGL.GXorigX,(f32) OGL.GXorigY,(f32) OGL.GXwidth,(f32) OGL.GXheight, 0.0f, 1.0f);
 #endif // __GX__
 
 	if (combiner.usesT0)
@@ -2167,8 +2180,9 @@ void OGL_GXclearEFB()
 	GX_SetZCompLoc(GX_TRUE);	// Do Z-compare before texturing.
 	GX_SetAlphaCompare(GX_ALWAYS,0,GX_AOP_AND,GX_ALWAYS,0);
 	GX_SetFog(GX_FOG_NONE,0.1,1.0,0.0,1.0,(GXColor){0,0,0,255});
-	GX_SetViewport((f32) 0,(f32) 0,(f32) OGL.width,(f32) OGL.height, 0.0f, 1.0f);
-	GX_SetScissor((u32) 0,(u32) 0,(u32) OGL.width+1,(u32) OGL.height+1);	//Set to the same size as the viewport.
+//	GX_SetViewport((f32) 0,(f32) 0,(f32) OGL.width,(f32) OGL.height, 0.0f, 1.0f);
+	GX_SetViewport((f32) OGL.GXorigX,(f32) OGL.GXorigY,(f32) OGL.GXwidth,(f32) OGL.GXheight, 0.0f, 1.0f);
+	GX_SetScissor((u32) 0,(u32) 0,(u32) OGL.width+1,(u32) OGL.height+1);	//Disable Scissor
 //	GX_SetScissor(0,0,rmode->fbWidth,rmode->efbHeight);
 	GX_SetCullMode (GX_CULL_NONE);
 	Mtx44 GXprojection;
