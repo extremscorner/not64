@@ -31,7 +31,7 @@ public:
 	~ConfigureButtonsFrame();
 	void activateSubmenu(int submenu);
 	void updateFrame(float deltaTime);
-	void drawChildren(menu::Graphics& gfx) const;
+	void drawChildren(menu::Graphics& gfx);
 
 	enum ConfigureButtonsSubmenus
 	{

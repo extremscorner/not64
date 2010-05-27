@@ -36,7 +36,7 @@ public:
 	void showFrame();
 	void hideFrame();
 	void setEnabled(bool enable);
-	virtual void drawChildren(Graphics& gfx) const;
+	virtual void drawChildren(Graphics& gfx);
 	void remove(Component* component);
 	void removeAll();
 	void add(Component* comp);
