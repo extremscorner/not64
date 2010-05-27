@@ -35,7 +35,7 @@
 
 /* DVD Stuff */
 static u32 dvd_hard_init = 0;
-static u32 read_cmd = NORMAL;
+static u32 read_cmd = DVDR;
 static int last_current_dir = -1;
 int is_unicode,files;
 file_entries *DVDToc = NULL; //Dynamically allocate this
@@ -57,7 +57,7 @@ void di_reset_ppc() {
   
   /* reset dvd unit */
   hw_resets[0] = hw_resets[0] & ~(1<<10);
-  usleep(20000);
+  usleep(50000);
   hw_resets[0] = hw_resets[0]  | (1<<10);
   
   /* enable dvd-video */
@@ -113,13 +113,17 @@ int init_dvd() {
   
   if(!dvd_hard_init || dvd_get_error()) {
     di_reset_ppc(); //reset, and enable dvd-video
+    usleep(20000);
     di_identify();  //wait for identify (disc spinup+auth)
+    usleep(20000);
     dvd_hard_init = 1;
   }
   dvd_read_id();
+  usleep(20000);
   
   if(DVD_LowRead64((void*)0x80000000, 32, 0LL)) {
-    read_cmd = DVDR;
+    read_cmd = NORMAL;
+    usleep(20000);
     if(DVD_LowRead64((void*)0x80000000, 32, 0LL)) {
       return -1;
     }
