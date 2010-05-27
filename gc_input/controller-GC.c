@@ -73,6 +73,7 @@ static button_t analog_sources[] = {
 
 static button_t menu_combos[] = {
 	{ 0, PAD_BUTTON_X|PAD_BUTTON_Y, "X+Y" },
+	{ 1, PAD_BUTTON_START|PAD_BUTTON_X, "Start+X" },
 };
 
 u32 gc_connected;

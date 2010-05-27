@@ -94,6 +94,7 @@ static button_t analog_sources_wm[] = {
 
 static button_t menu_combos[] = {
 	{ 0, WPAD_BUTTON_1|WPAD_BUTTON_2, "1+2" },
+	{ 1, WPAD_BUTTON_PLUS|WPAD_BUTTON_MINUS, "+&-" },
 };
 
 static int _GetKeys(int Control, BUTTONS * Keys, controller_config_t* config,
