@@ -1,6 +1,6 @@
 /**
  * Wii64 - Register-Cache.h
- * Copyright (C) 2009 Mike Slegeir
+ * Copyright (C) 2009, 2010 Mike Slegeir
  * 
  * Handle mappings from MIPS to PPC registers
  *

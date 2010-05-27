@@ -1,6 +1,6 @@
 /**
  * Wii64 - MIPS-to-PPC.c
- * Copyright (C) 2007, 2008, 2009 Mike Slegeir
+ * Copyright (C) 2007, 2008, 2009, 2010 Mike Slegeir
  * 
  * Convert MIPS code into PPC (take 2 1/2)
  *

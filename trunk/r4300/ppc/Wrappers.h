@@ -1,6 +1,6 @@
 /**
  * Wii64 - Wrappers.h
- * Copyright (C) 2007, 2008, 2009 Mike Slegeir
+ * Copyright (C) 2007, 2008, 2009, 2010 Mike Slegeir
  * 
  * Interface between emulator code and recompiled code
  *

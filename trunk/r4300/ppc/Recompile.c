@@ -1,6 +1,6 @@
 /**
  * Wii64 - Recompile.c
- * Copyright (C) 2007, 2008, 2009 Mike Slegeir
+ * Copyright (C) 2007, 2008, 2009, 2010 Mike Slegeir
  * 
  * Recompiles a block of MIPS code to PPC
  *
