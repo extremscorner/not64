@@ -103,7 +103,8 @@ extern char screenMode;
 enum screenMode
 {
 	SCREENMODE_4x3=0,
-	SCREENMODE_16x9
+	SCREENMODE_16x9,
+	SCREENMODE_16x9_PILLARBOX
 };
 
 extern char padAutoAssign;

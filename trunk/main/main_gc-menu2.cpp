@@ -136,7 +136,7 @@ static struct {
 //  { "Debug", &printToScreen, DEBUG_HIDE, DEBUG_SHOW },
   { "FBTex", &glN64_useFrameBufferTextures, GLN64_FBTEX_DISABLE, GLN64_FBTEX_ENABLE },
   { "2xSaI", &glN64_use2xSaiTextures, GLN64_2XSAI_DISABLE, GLN64_2XSAI_ENABLE },
-  { "ScreenMode", &screenMode, SCREENMODE_4x3, SCREENMODE_16x9 },
+  { "ScreenMode", &screenMode, SCREENMODE_4x3, SCREENMODE_16x9_PILLARBOX },
   { "Core", ((char*)&dynacore)+3, DYNACORE_INTERPRETER, DYNACORE_PURE_INTERP },
   { "NativeDevice", &nativeSaveDevice, NATIVESAVEDEVICE_SD, NATIVESAVEDEVICE_CARDB },
   { "StatesDevice", &saveStateDevice, SAVESTATEDEVICE_SD, SAVESTATEDEVICE_USB },
@@ -409,10 +409,10 @@ int loadROM(fileBrowser_file* rom){
 	init_memory();
 
 	gfx_set_fb(xfb[0], xfb[1]);
-	if (screenMode == SCREENMODE_4x3)
-		gfx_set_window( 0, 0, 640, 480);
-	else
+	if (screenMode == SCREENMODE_16x9_PILLARBOX)
 		gfx_set_window( 78, 0, 483, 480);
+	else
+		gfx_set_window( 0, 0, 640, 480);
 
 	gfx_info_init();
 	audio_info_init();
