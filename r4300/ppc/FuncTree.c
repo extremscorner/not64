@@ -1,6 +1,6 @@
 /**
  * Wii64 - FuncTree.c
- * Copyright (C) 2009 Mike Slegeir
+ * Copyright (C) 2009, 2010 Mike Slegeir
  * 
  * Handles a BST of functions ordered by their address
  *

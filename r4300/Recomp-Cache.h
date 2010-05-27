@@ -1,6 +1,6 @@
 /**
  * Wii64 - Recomp-Cache.h
- * Copyright (C) 2008, 2009 Mike Slegeir
+ * Copyright (C) 2008, 2009, 2010 Mike Slegeir
  * 
  * Interface for allocating/freeing blocks of recompiled code
  *

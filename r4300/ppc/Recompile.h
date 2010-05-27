@@ -1,6 +1,6 @@
 /**
  * Wii64 - Recompile.h
- * Copyright (C) 2007, 2008, 2009 Mike Slegeir
+ * Copyright (C) 2007, 2008, 2009, 2010 Mike Slegeir
  * 
  * Functions and data structures for recompiling blocks of code
  *

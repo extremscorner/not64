@@ -1,6 +1,6 @@
 /**
  * Wii64 - Interpreter.h
- * Copyright (C) 2007, 2008, 2009 Mike Slegeir
+ * Copyright (C) 2007, 2008, 2009, 2010 Mike Slegeir
  * 
  * Defines and functions for calling the interpreter
  *
