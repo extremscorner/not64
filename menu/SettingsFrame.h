@@ -1,6 +1,6 @@
 /**
  * Wii64 - SettingsFrame.h
- * Copyright (C) 2009 sepp256
+ * Copyright (C) 2009, 2010 sepp256
  *
  * Wii64 homepage: http://www.emulatemii.com
  * email address: sepp256@gmail.com
@@ -30,6 +30,7 @@ public:
 	SettingsFrame();
 	~SettingsFrame();
 	void activateSubmenu(int submenu);
+	void drawChildren(menu::Graphics& gfx);
 
 	enum SettingsSubmenus
 	{
@@ -42,6 +43,8 @@ public:
 
 private:
 	int activeSubmenu;
+	u16 previousButtonsGC[4];
+	u32 previousButtonsWii[4];
 
 };
 

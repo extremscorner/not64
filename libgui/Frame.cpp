@@ -1,6 +1,6 @@
 /**
  * Wii64 - Frame.cpp
- * Copyright (C) 2009 sepp256
+ * Copyright (C) 2009, 2010 sepp256
  *
  * Wii64 homepage: http://www.emulatemii.com
  * email address: sepp256@gmail.com
