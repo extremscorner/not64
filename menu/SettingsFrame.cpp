@@ -683,12 +683,15 @@ void Func_ShowDebugOff()
 	printToScreen = DEBUG_HIDE;
 }
 
+void gfx_set_window(int x, int y, int width, int height);
+
 void Func_ScreenMode4_3()
 {
 	for (int i = 17; i <= 18; i++)
 		FRAME_BUTTONS[i].button->setSelected(false);
 	FRAME_BUTTONS[17].button->setSelected(true);
 	screenMode = SCREENMODE_4x3;
+	gfx_set_window( 0, 0, 640, 480);
 }
 
 void Func_ScreenMode16_9()
@@ -697,6 +700,7 @@ void Func_ScreenMode16_9()
 		FRAME_BUTTONS[i].button->setSelected(false);
 	FRAME_BUTTONS[18].button->setSelected(true);
 	screenMode = SCREENMODE_16x9;
+	gfx_set_window( 78, 0, 483, 480);
 }
 
 void Func_CpuFramebufferOn()

@@ -161,6 +161,7 @@ void readConfig(FILE* f);
 void writeConfig(FILE* f);
 
 extern "C" void gfx_set_fb(unsigned int* fb1, unsigned int* fb2);
+void gfx_set_window(int x, int y, int width, int height);
 // -- End plugin data --
 
 static u32* xfb[2] = { NULL, NULL };	/*** Framebuffers ***/
@@ -408,6 +409,11 @@ int loadROM(fileBrowser_file* rom){
 	init_memory();
 
 	gfx_set_fb(xfb[0], xfb[1]);
+	if (screenMode == SCREENMODE_4x3)
+		gfx_set_window( 0, 0, 640, 480);
+	else
+		gfx_set_window( 78, 0, 483, 480);
+
 	gfx_info_init();
 	audio_info_init();
 //	control_info_init();

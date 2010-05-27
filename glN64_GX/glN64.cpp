@@ -1,7 +1,7 @@
 /**
  * glN64_GX - glN64.cpp
  * Copyright (C) 2003 Orkin
- * Copyright (C) 2008, 2009 sepp256 (Port to Wii/Gamecube/PS3)
+ * Copyright (C) 2008, 2009, 2010 sepp256 (Port to Wii/Gamecube/PS3)
  *
  * glN64 homepage: http://gln64.emulation64.com
  * Wii64 homepage: http://www.emulatemii.com
@@ -31,6 +31,7 @@
 #include "Debug.h"
 #include "Zilmar GFX 1.3.h"
 #include "OpenGL.h"
+#include "FrameBuffer.h"
 #include "N64.h"
 #include "RSP.h"
 #include "RDP.h"
@@ -63,6 +64,14 @@ void gfx_set_fb(unsigned int* fb1, unsigned int* fb2){
 
 void showLoadProgress(float percent){
 	VI_GX_showLoadProg(percent);
+}
+
+void gfx_set_window(int x, int y, int width, int height){
+	OGL.GXorigX = x;
+	OGL.GXorigY = y;
+	OGL.GXwidth = width;
+	OGL.GXheight = height;
+//	FrameBuffer_Destroy();
 }
 #endif // __GX__
 
