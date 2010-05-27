@@ -1,6 +1,6 @@
 /**
  * Wii64 - FileBrowserFrame.cpp
- * Copyright (C) 2009 sepp256
+ * Copyright (C) 2009, 2010 sepp256
  *
  * Wii64 homepage: http://www.emulatemii.com
  * email address: sepp256@gmail.com
@@ -149,6 +149,111 @@ void fileBrowserFrame_OpenDirectory(fileBrowser_file* dir);
 void fileBrowserFrame_Error(fileBrowser_file* dir, int error_code);
 void fileBrowserFrame_FillPage();
 void fileBrowserFrame_LoadFile(int i);
+
+void FileBrowserFrame::drawChildren(menu::Graphics &gfx)
+{
+	if(isVisible())
+	{
+#ifdef HW_RVL
+		WPADData* wiiPad = menu::Input::getInstance().getWpad();
+#endif
+		for (int i=0; i<4; i++)
+		{
+			u16 currentButtonsGC = PAD_ButtonsHeld(i);
+			if (currentButtonsGC ^ previousButtonsGC[i])
+			{
+				u16 currentButtonsDownGC = (currentButtonsGC ^ previousButtonsGC[i]) & currentButtonsGC;
+				previousButtonsGC[i] = currentButtonsGC;
+				if (currentButtonsDownGC & PAD_TRIGGER_R)
+				{
+					//move to next set & return
+					if(current_page+1 < max_page) 
+					{
+						current_page +=1;
+						fileBrowserFrame_FillPage();
+						menu::Focus::getInstance().clearPrimaryFocus();
+					}
+					break;
+				}
+				else if (currentButtonsDownGC & PAD_TRIGGER_L)
+				{
+					//move to the previous set & return
+					if(current_page > 0) 
+					{
+						current_page -= 1;
+						fileBrowserFrame_FillPage();
+						menu::Focus::getInstance().clearPrimaryFocus();
+					}
+					break;
+				}
+			}
+#ifdef HW_RVL
+			else if (wiiPad[i].btns_h ^ previousButtonsWii[i])
+			{
+				u32 currentButtonsDownWii = (wiiPad[i].btns_h ^ previousButtonsWii[i]) & wiiPad[i].btns_h;
+				previousButtonsWii[i] = wiiPad[i].btns_h;
+				if (wiiPad[i].exp.type == WPAD_EXP_CLASSIC)
+				{
+					if (currentButtonsDownWii & WPAD_CLASSIC_BUTTON_FULL_R)
+					{
+						//move to next set & return
+						if(current_page+1 < max_page) 
+						{
+							current_page +=1;
+							fileBrowserFrame_FillPage();
+							menu::Focus::getInstance().clearPrimaryFocus();
+						}
+						break;
+					}
+					else if (currentButtonsDownWii & WPAD_CLASSIC_BUTTON_FULL_L)
+					{
+						//move to the previous set & return
+						if(current_page > 0) 
+						{
+							current_page -= 1;
+							fileBrowserFrame_FillPage();
+							menu::Focus::getInstance().clearPrimaryFocus();
+						}
+						break;
+					}
+				}
+				else
+				{
+					if (currentButtonsDownWii & WPAD_BUTTON_PLUS)
+					{
+						//move to next set & return
+						if(current_page+1 < max_page) 
+						{
+							current_page +=1;
+							fileBrowserFrame_FillPage();
+							menu::Focus::getInstance().clearPrimaryFocus();
+						}
+						break;
+					}
+					else if (currentButtonsDownWii & WPAD_BUTTON_MINUS)
+					{
+						//move to the previous set & return
+						if(current_page > 0) 
+						{
+							current_page -= 1;
+							fileBrowserFrame_FillPage();
+							menu::Focus::getInstance().clearPrimaryFocus();
+						}
+						break;
+					}
+				}
+			}
+#endif //HW_RVL
+		}
+
+		//Draw buttons
+		menu::ComponentList::const_iterator iteration;
+		for (iteration = componentList.begin(); iteration != componentList.end(); iteration++)
+		{
+			(*iteration)->draw(gfx);
+		}
+	}
+}
 
 void Func_PrevPage()
 {
@@ -304,10 +409,15 @@ void fileBrowserFrame_FillPage()
 		FRAME_BUTTONS[2].button->setNextFocus(menu::Focus::DIRECTION_UP, NULL);
 		FRAME_BUTTONS[2].button->setNextFocus(menu::Focus::DIRECTION_DOWN, NULL);
 	}
+	//activate next/prev buttons
 	if (current_page > 0) FRAME_BUTTONS[0].button->setActive(true);
 	if (current_page+1 < max_page) FRAME_BUTTONS[1].button->setActive(true);
-	if ((current_page == 0) && num_entries > 2) pMenuContext->getFrame(MenuContext::FRAME_FILEBROWSER)->setDefaultFocus(FRAME_BUTTONS[4].button);
-	else pMenuContext->getFrame(MenuContext::FRAME_FILEBROWSER)->setDefaultFocus(FRAME_BUTTONS[2].button);
+	//set default focus past "." and ".." entries
+	int default_index = 0;
+	while ( (!strcmp(filenameFromAbsPath(dir_entries[default_index+(current_page*NUM_FILE_SLOTS)].name),".") ||
+			 !strcmp(filenameFromAbsPath(dir_entries[default_index+(current_page*NUM_FILE_SLOTS)].name),"..")) &&
+			 num_entries > default_index+1 ) default_index++;
+	pMenuContext->getFrame(MenuContext::FRAME_FILEBROWSER)->setDefaultFocus(FRAME_BUTTONS[default_index+2].button);
 }
 
 extern BOOL hasLoadedROM;
@@ -325,7 +435,6 @@ void fileBrowserFrame_LoadFile(int i)
 		fileBrowserFrame_OpenDirectory(dir);
 		free(dir);
 		menu::Focus::getInstance().clearPrimaryFocus();
-		if (num_entries > 2) pMenuContext->getFrame(MenuContext::FRAME_FILEBROWSER)->setDefaultFocus(FRAME_BUTTONS[4].button);
 	} else {
 		// We must select this file
 		int ret = loadROM( &dir_entries[i] );

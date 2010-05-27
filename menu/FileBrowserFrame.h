@@ -1,6 +1,6 @@
 /**
  * Wii64 - FileBrowserFrame.h
- * Copyright (C) 2009 sepp256
+ * Copyright (C) 2009, 2010 sepp256
  *
  * Wii64 homepage: http://www.emulatemii.com
  * email address: sepp256@gmail.com
@@ -29,9 +29,12 @@ class FileBrowserFrame : public menu::Frame
 public:
 	FileBrowserFrame();
 	~FileBrowserFrame();
+	void drawChildren(menu::Graphics& gfx);
 
 private:
-	
+	u16 previousButtonsGC[4];
+	u32 previousButtonsWii[4];
+
 };
 
 #endif

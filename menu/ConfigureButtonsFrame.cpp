@@ -326,7 +326,7 @@ void ConfigureButtonsFrame::updateFrame(float deltaTime)
 
 #define NUM_LINES 10
 
-void ConfigureButtonsFrame::drawChildren(menu::Graphics &gfx) const
+void ConfigureButtonsFrame::drawChildren(menu::Graphics &gfx)
 {
 	if(isVisible())
 	{

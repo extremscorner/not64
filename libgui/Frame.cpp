@@ -60,7 +60,7 @@ void Frame::updateTime(float deltaTime)
 	}
 }
 
-void Frame::drawChildren(Graphics &gfx) const
+void Frame::drawChildren(Graphics &gfx)
 {
 	if(isVisible())
 	{
