@@ -119,30 +119,50 @@ static inline int signExtend(int value, int size){
 
 static void genCmp64(int cr, int _ra, int _rb){
 	PowerPC_instr ppc;
-	RegMapping ra = mapRegister64(_ra), rb = mapRegister64(_rb);
 	
-	GEN_CMP(ppc, ra.hi, rb.hi, 4);
-	set_next_dst(ppc);
-	// Skip low word comparison if high words are mismatched
-	GEN_BNE(ppc, 4, 2, 0, 0);
-	set_next_dst(ppc);
-	// Compare low words if hi words don't match
-	GEN_CMPL(ppc, ra.lo, rb.lo, 4);
-	set_next_dst(ppc);
+	if(getRegisterMapping(_ra) == MAPPING_32 ||
+	   getRegisterMapping(_rb) == MAPPING_32){
+		// Here we cheat a little bit: if either of the registers are mapped
+		// as 32-bit, only compare the 32-bit values
+		int ra = mapRegister(_ra), rb = mapRegister(_rb);
+		
+		GEN_CMP(ppc, ra, rb, 4);
+		set_next_dst(ppc);
+	} else {
+		RegMapping ra = mapRegister64(_ra), rb = mapRegister64(_rb);
+		
+		GEN_CMP(ppc, ra.hi, rb.hi, 4);
+		set_next_dst(ppc);
+		// Skip low word comparison if high words are mismatched
+		GEN_BNE(ppc, 4, 2, 0, 0);
+		set_next_dst(ppc);
+		// Compare low words if hi words don't match
+		GEN_CMPL(ppc, ra.lo, rb.lo, 4);
+		set_next_dst(ppc);
+	}
 }
 
 static void genCmpi64(int cr, int _ra, short immed){
 	PowerPC_instr ppc;
-	RegMapping ra = mapRegister64(_ra);
 	
-	GEN_CMPI(ppc, ra.hi, (immed&0x8000) ? ~0 : 0, 4);
-	set_next_dst(ppc);
-	// Skip low word comparison if high words are mismatched
-	GEN_BNE(ppc, 4, 2, 0, 0);
-	set_next_dst(ppc);
-	// Compare low words if hi words don't match
-	GEN_CMPLI(ppc, ra.lo, immed, 4);
-	set_next_dst(ppc);
+	if(getRegisterMapping(_ra) == MAPPING_32){
+		// If we've mapped this register as 32-bit, don't bother with 64-bit
+		int ra = mapRegister(_ra);
+		
+		GEN_CMPI(ppc, ra, immed, 4);
+		set_next_dst(ppc);
+	} else {
+		RegMapping ra = mapRegister64(_ra);
+		
+		GEN_CMPI(ppc, ra.hi, (immed&0x8000) ? ~0 : 0, 4);
+		set_next_dst(ppc);
+		// Skip low word comparison if high words are mismatched
+		GEN_BNE(ppc, 4, 2, 0, 0);
+		set_next_dst(ppc);
+		// Compare low words if hi words don't match
+		GEN_CMPLI(ppc, ra.lo, immed, 4);
+		set_next_dst(ppc);
+	}
 }
 
 typedef enum { NONE=0, EQ, NE, LT, GT, LE, GE } condition;
