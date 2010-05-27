@@ -186,13 +186,13 @@ struct ButtonInfo
 	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[10],	360.0,	310.0,	 70.0,	56.0,	27,	30,	28,	28,	Func_SaveButtonsUSB,	Func_ReturnFromSettingsFrame }, // Save Button Configs to USB
 	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[29],	295.0,	380.0,	135.0,	56.0,	28,	 2,	-1,	-1,	Func_ToggleButtonLoad,	Func_ReturnFromSettingsFrame }, // Toggle Button Load Slot
 	//Buttons for Audio Tab (starts at button[31])
-	{	NULL,	BTN_A_SEL,	FRAME_STRINGS[31],	345.0,	100.0,	 75.0,	56.0,	 3,	 3,	29,	29,	Func_DisableAudioYes,	Func_ReturnFromSettingsFrame }, // Disable Audio: Yes
-	{	NULL,	BTN_A_SEL,	FRAME_STRINGS[32],	440.0,	100.0,	 75.0,	56.0,	 3,	 3,	28,	28,	Func_DisableAudioNo,	Func_ReturnFromSettingsFrame }, // Disable Audio: No
+	{	NULL,	BTN_A_SEL,	FRAME_STRINGS[31],	345.0,	100.0,	 75.0,	56.0,	 3,	 3,	32,	32,	Func_DisableAudioYes,	Func_ReturnFromSettingsFrame }, // Disable Audio: Yes
+	{	NULL,	BTN_A_SEL,	FRAME_STRINGS[32],	440.0,	100.0,	 75.0,	56.0,	 3,	 3,	31,	31,	Func_DisableAudioNo,	Func_ReturnFromSettingsFrame }, // Disable Audio: No
 	//Buttons for Saves Tab (starts at button[33])
-	{	NULL,	BTN_A_SEL,	FRAME_STRINGS[31],	375.0,	100.0,	 75.0,	56.0,	 4,	32,	31,	31,	Func_AutoSaveNativeYes,	Func_ReturnFromSettingsFrame }, // Auto Save Native: Yes
-	{	NULL,	BTN_A_SEL,	FRAME_STRINGS[32],	470.0,	100.0,	 75.0,	56.0,	 4,	32,	30,	30,	Func_AutoSaveNativeNo,	Func_ReturnFromSettingsFrame }, // Auto Save Native: No
-	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[34],	365.0,	170.0,	190.0,	56.0,	30,	33,	-1,	-1,	Func_CopySaves,			Func_ReturnFromSettingsFrame }, // Copy Saves
-	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[35],	365.0,	240.0,	190.0,	56.0,	32,	 4,	-1,	-1,	Func_DeleteSaves,		Func_ReturnFromSettingsFrame }, // Delete Saves
+	{	NULL,	BTN_A_SEL,	FRAME_STRINGS[31],	375.0,	100.0,	 75.0,	56.0,	 4,	35,	34,	34,	Func_AutoSaveNativeYes,	Func_ReturnFromSettingsFrame }, // Auto Save Native: Yes
+	{	NULL,	BTN_A_SEL,	FRAME_STRINGS[32],	470.0,	100.0,	 75.0,	56.0,	 4,	35,	33,	33,	Func_AutoSaveNativeNo,	Func_ReturnFromSettingsFrame }, // Auto Save Native: No
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[34],	365.0,	170.0,	190.0,	56.0,	33,	36,	-1,	-1,	Func_CopySaves,			Func_ReturnFromSettingsFrame }, // Copy Saves
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[35],	365.0,	240.0,	190.0,	56.0,	35,	 4,	-1,	-1,	Func_DeleteSaves,		Func_ReturnFromSettingsFrame }, // Delete Saves
 };
 
 struct TextBoxInfo
@@ -374,8 +374,8 @@ void SettingsFrame::activateSubmenu(int submenu)
 			for (int i = 11; i < 12; i++)
 				FRAME_TEXTBOXES[i].textBox->setVisible(true);
 			FRAME_BUTTONS[3].button->setSelected(true);
-			if (audioEnabled == AUDIO_DISABLE)	FRAME_BUTTONS[30].button->setSelected(true);
-			else								FRAME_BUTTONS[31].button->setSelected(true);
+			if (audioEnabled == AUDIO_DISABLE)	FRAME_BUTTONS[31].button->setSelected(true);
+			else								FRAME_BUTTONS[32].button->setSelected(true);
 			for (int i = 31; i < 33; i++)
 			{
 				FRAME_BUTTONS[i].button->setVisible(true);
