@@ -3108,11 +3108,12 @@ void read_rom()
 	*rdword = lastwrite;
 	lastwrite = 0;
      }
-   else
+   else {
      //*rdword = *((unsigned long *)(rom + (address & 0x03FFFFFF)));
      assert(rdword);
      ROMCache_read((unsigned int*)rdword+1, (address & 0x03FFFFFF), 4);
      sign_extended(*rdword);
+   }
 }
 
 void read_romb()
