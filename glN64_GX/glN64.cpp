@@ -67,11 +67,11 @@ void showLoadProgress(float percent){
 }
 
 void gfx_set_window(int x, int y, int width, int height){
+	//Note: this will break FB tex for x|y < 0
 	OGL.GXorigX = x;
 	OGL.GXorigY = y;
 	OGL.GXwidth = width;
 	OGL.GXheight = height;
-//	FrameBuffer_Destroy();
 }
 #endif // __GX__
 
