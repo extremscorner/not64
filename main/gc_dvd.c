@@ -35,7 +35,7 @@
 
 /* DVD Stuff */
 static u32 dvd_hard_init = 0;
-static u32 read_cmd = DVDR;
+static u32 read_cmd = NORMAL;
 static int last_current_dir = -1;
 int is_unicode,files;
 file_entries *DVDToc = NULL; //Dynamically allocate this
@@ -49,20 +49,6 @@ volatile unsigned long* dvd = (volatile unsigned long*)0xCD806000;
 #else
 volatile unsigned long* dvd = (volatile unsigned long*)0xCC006000;
 #endif
-
-
-void di_reset_ppc() {
-  volatile unsigned long* hw_diflags = (volatile unsigned long*)0xCD800180;
-  volatile unsigned long* hw_resets  = (volatile unsigned long*)0xCD800194;
-  
-  /* reset dvd unit */
-  hw_resets[0] = hw_resets[0] & ~(1<<10);
-  usleep(50000);
-  hw_resets[0] = hw_resets[0]  | (1<<10);
-  
-  /* enable dvd-video */
-  hw_diflags[0] = hw_diflags[0] & ~(1<<21);
-}
 
 int have_hw_access() {
   if((*(volatile unsigned int*)HW_ARMIRQMASK)&&(*(volatile unsigned int*)HW_ARMIRQFLAG)) {
@@ -100,64 +86,38 @@ int init_dvd() {
 #ifdef HW_RVL
   if(!dvd_hard_init) {
     DI_Close();            // incase it was open last time
-    DI_Init ();            // first, hit PPC on the head!
-    DI_Close();
+    DI_Init ();            // first
     if(!have_hw_access()) {
-      return NO_HW_ACCESS;  //No DVDXv2 installed
+      return NO_HW_ACCESS;
+    }
+    if((dvd_get_error()>>24) == 1) {
+      return NO_DISC;
     }
   }
 
-  if((dvd_get_error()>>24) == 1) {
-    return NO_DISC;
-  }
-  
-  if(!dvd_hard_init || dvd_get_error()) {
-    di_reset_ppc(); //reset, and enable dvd-video
-    usleep(20000);
-    di_identify();  //wait for identify (disc spinup+auth)
-    usleep(20000);
+  DI_Mount();
+  while(DI_GetStatus() & DVD_INIT) usleep(20000);
+  if(!dvd_hard_init) {
+    DI_Close();
     dvd_hard_init = 1;
   }
-  dvd_read_id();
   usleep(20000);
-  
-  if(DVD_LowRead64((void*)0x80000000, 32, 0LL)) {
-    read_cmd = NORMAL;
-    usleep(20000);
-    if(DVD_LowRead64((void*)0x80000000, 32, 0LL)) {
-      return -1;
-    }
+  if((dvd_get_error()&0xFFFFFF)==0x053000) {
+    read_cmd = DVDR;
   }
-
+  else {
+    read_cmd = NORMAL;
+  }
   return 0;
 #endif
 }
 
-unsigned int di_identify()
-{
-  char *tmpBuf = (char*)memalign(32,64);
-  unsigned int temp = 0;
-  
-  dvd[0] = 0x2e;
-  dvd[1] = 0;
-  dvd[2] = 0x12000000;
-  dvd[3] = 0;
-  dvd[4] = 0x20;
-  dvd[5] = (long)tmpBuf;
-  dvd[6] = 0x20;
-  dvd[7] = 3;
-
-  while( dvd[7] & 1 );
-  DCFlushRange((void *)tmpBuf, 64);
-  
-  temp = *(unsigned int*)&tmpBuf[0];      
-  free(tmpBuf);
-  
-  return temp;
-}
-
 int dvd_read_id()
 {
+#ifdef HW_RVL
+  DVD_LowRead64((void*)0x80000000, 32, 0ULL);  //for easter egg disc support
+  return 0;
+#endif
 	dvd[0] = 0x2E;
 	dvd[1] = 0;
 	dvd[2] = 0xA8000040;
@@ -543,3 +503,7 @@ int dvd_read_directoryentries(uint64_t offset, int size) {
     return files;
   return NO_FILES;
 }
+
+
+
+

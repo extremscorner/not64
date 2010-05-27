@@ -63,7 +63,6 @@ int read_sector(void* buffer, uint32_t sector);
 int dvd_read(void* dst,unsigned int len, unsigned int offset);
 int dvd_read_id();
 int DVD_LowRead64(void* dst, unsigned int len, uint64_t offset);
-unsigned int di_identify();
 
 struct pvd_s
 {
