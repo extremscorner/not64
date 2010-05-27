@@ -258,6 +258,14 @@ void flushRegister(int reg){
 	regMap[reg].map.hi = regMap[reg].map.lo = -1;
 }
 
+RegMappingType getRegisterMapping(int reg){
+	if(regMap[reg].map.hi >= 0)
+		return MAPPING_64;
+	else if(regMap[reg].map.lo >= 0)
+		return MAPPING_32;
+	else
+		return MAPPING_NONE;
+}
 
 // -- FPR mappings --
 static struct {
