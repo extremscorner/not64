@@ -25,21 +25,15 @@ QUICK USAGE:
      (Note: this must be done to save your game; it will not be done automatically)
 
 Controls:
-* Gamecube controllers are mapped 1:1 with N64 buttons
-* Classic controllers are mapped the same as on VC titles but Z is mapped to both
-   ZL and ZR for ease of use
-   * X+Y are used to exit to the menu on both classic controller and Gamecube controller
-* Wiimote+Nunchuck mappings are:
-   * Left-stick: Nunchuk-stick
-   * A: A
-   * B: + or -
-   * Z: Nunchuk Z
-   * L: Nunchuk C
-   * R: B
-   * Start: Home
-   * C-stick: D-pad
-   * D-pad: 2 + D-pad
-   * Return to menu: 1 + 2
+ * Controls are now fully configurable so any button on your controller can be mapped
+ * The controller configuration screen presents each N64 button and allows you to toggle through sources
+ * There are 4 configuration slots for each type of controller
+   * To load a different, previously saved configuration, select the slot, and click 'Load'
+   * After configuring the controls as desired, select the slot, and click 'Save'
+   * After saving different configurations to the slots, be sure to save your configs in the input frame
+ * Clicking 'Next Pad' will cycle through the N64 controllers assigned
+ * There is an option to invert the Y axis of the N64's analog stick; by default its 'Normal Y'
+ * The 'Menu Combo' configuration allows you to select a combination of buttons to return to the menu
 
 Settings:
  * General
@@ -50,8 +44,7 @@ Settings:
    * Save settings.cfg: Save all of these settings either SD or USB (to be loaded automatically next time)
  * Video
    * Show FPS: Display the framerate in the top-left corner of the screen
-   * Screen Mode: Select the aspect ratio to display in (doesn't affect
-     the aspect ratio games are rendered in)
+   * Screen Mode: Select the aspect ratio to display in; 'Force 16:9' will pillar-box in-game display
    * CPU Framebuffer: Enable for games which only draw directly to the
      framebuffer (this will only need to be set for some homebrew demos)
    * 2xSaI Tex: Scale and Interpolate in-game textures (unstable on GC)
@@ -60,6 +53,9 @@ Settings:
  * Input
    * Configure Input: Select controllers to use in game
    * Configure Paks: Select which controller paks to use in which controllers
+   * Configure Buttons: Enter the controller configuration screen described above
+   * Save Button Configs: Save all of the controller configuration slots to SD or USB
+   * Auto Load Slot: Select which slot to automatically be loaded for each type of controller
  * Audio
    * Disable Audio: Select to mute the sound
  * Saves
@@ -93,14 +89,16 @@ Beta 1.1:
      * Branch comparisons compare 64-bits when necessary
    + Reconfigurable button mapping
      + Save/Load button mapping from file
+   + Pillar-boxing 'Force 16:9' mode
+   * Fixed projection matrix for Rects
    * Autosave is now the default setting
    + ROMs displayed in alphabetical order
    + Invalid ROM type detection
    + Error message if /wii64/roms doesn't exist
-   * Changed C-Stick deadzone (Turok)
+   * Changed C-Stick deadzone
    * Compiled with devkitPPC r19 / libOGC 1.8.1
    * Fixed ROM cache bug for ROMs > ROM cache size
-   * Fixed resetting flashrom on ROM reset (Zelda MM)
+   * Fixed resetting flashrom on ROM reset
  Wii:
    * Compiled with new libDI / DVDx V2
    * Controller improvements
