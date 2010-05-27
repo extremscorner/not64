@@ -873,7 +873,7 @@ void OGL_UpdateStates()
 
 	if(OGL.GXupdateFog)
 	{
-		GX_SetFog(OGL.GXfogType,OGL.GXfogStartZ,OGL.GXfogEndZ,0.0,1.0,OGL.GXfogColor);
+		GX_SetFog(OGL.GXfogType,OGL.GXfogStartZ,OGL.GXfogEndZ,-1.0,1.0,OGL.GXfogColor);
 		OGL.GXupdateFog = false;
 		if(OGL.GXfogType == GX_FOG_ORTHO_LIN)
 		{
@@ -1515,7 +1515,7 @@ void OGL_DrawRect( int ulx, int uly, int lrx, int lry, float *color )
 	GX_SetCullMode (GX_CULL_NONE);
 	Mtx44 GXprojection;
 	guMtxIdentity(GXprojection);
-	guOrtho(GXprojection, 0, VI.height, 0, VI.width, 0.0f, 1.0f);
+	guOrtho(GXprojection, 0, VI.height, 0, VI.width, 1.0f, -1.0f);
 	if(OGL.GXpolyOffset)
 		GXprojection[2][3] -= GXpolyOffsetFactor;
 	GX_LoadProjectionMtx(GXprojection, GX_ORTHOGRAPHIC); 
@@ -1602,7 +1602,7 @@ void OGL_DrawTexturedRect( float ulx, float uly, float lrx, float lry, float uls
 	GX_SetCullMode (GX_CULL_NONE);
 	Mtx44 GXprojection;
 	guMtxIdentity(GXprojection);
-	guOrtho(GXprojection, 0, VI.height, 0, VI.width, 0.0f, 1.0f);
+	guOrtho(GXprojection, 0, VI.height, 0, VI.width, 1.0f, -1.0f);
 	if(OGL.GXpolyOffset)
 		GXprojection[2][3] -= GXpolyOffsetFactor;
 	GX_LoadProjectionMtx(GXprojection, GX_ORTHOGRAPHIC); 
@@ -2089,11 +2089,11 @@ void OGL_GXinitDlist()
 	OGL.GXuseMinMagNearest = false;
 
 	// init fog
-	OGL.GXfogStartZ = 0.0f;
+	OGL.GXfogStartZ = -1.0f;
 	OGL.GXfogEndZ = 1.0f;
 	OGL.GXfogColor = (GXColor){0,0,0,255};
 	OGL.GXfogType = GX_FOG_NONE;
-	GX_SetFog(OGL.GXfogType,OGL.GXfogStartZ,OGL.GXfogEndZ,0.0,1.0,OGL.GXfogColor);
+	GX_SetFog(OGL.GXfogType,OGL.GXfogStartZ,OGL.GXfogEndZ,-1.0,1.0,OGL.GXfogColor);
 	OGL.GXupdateFog = false;
 
 	//Reset Modelview matrix
