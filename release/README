@@ -1,5 +1,5 @@
-﻿README : Wii64 / Cube64
-Beta 1
+README : Wii64 / Cube64
+Beta 1.1
 
 LICENSE:
     This software is licensed under the GNU General Public License v2
@@ -12,7 +12,7 @@ LICENSE:
 
 QUICK USAGE:
  * ROMs can be z64 (big-endian) or v64 (little endian), or .n64, of any size
- * To install: Extract the contents of wii64-beta1.zip to the root of your SD card
+ * To install: Extract the contents of wii64-beta1.1.zip to the root of your SD card
  * For SD/USB: Put ROMs in the directory named /wii64/roms,
     All save types will automatically be placed in /wii64/saves
  * For DVD: ROMs may be anywhere on the disc  
@@ -80,11 +80,39 @@ CREDITS:
  * Original mupen64: Hactarux
  * Artwork: drmr
  * Wii64 Demo ROM: marshallh
- * Compiled using devKitPro r18 and libOGC
+ * Compiled using devKitPro r19 and libOGC
      ( http://sourceforge.net/projects/devkitpro )
  * Visit us on www.emulatemii.com and http://code.google.com/p/mupen64gc
 
 CHANGE LOG:
+Beta 1.1:
+   * Dynarec improvements
+     + Function linking
+     + Recompiling more instructions (LWC1/LDC1/FP rounding/partially MTC0)
+     * Execution from ROM
+     * Branch comparisons compare 64-bits when necessary
+   + Reconfigurable button mapping
+     + Save/Load button mapping from file
+   * Autosave is now the default setting
+   + ROMs displayed in alphabetical order
+   + Invalid ROM type detection
+   + Error message if /wii64/roms doesn't exist
+   * Changed C-Stick deadzone (Turok)
+   * Compiled with devkitPPC r19 / libOGC 1.8.1
+   * Fixed ROM cache bug for ROMs > ROM cache size
+   * Fixed resetting flashrom on ROM reset (Zelda MM)
+ Wii:
+   * Compiled with new libDI / DVDx V2
+   * Controller improvements
+     + Rumble for Wiimote-based input
+     + Wiimote-only controls
+     + IR/Accelerometer analog input
+ GC:
+   * Settings.cfg saving fixed
+   * Moved TLB & blocks array to ARAM
+   * Increased recompiler code cache size
+   - ARAM ROM cache
+   + 2Mb MEM1 ROM cache
 Beta 1:
    + Dynamic Recompiler
    + Expansion Pak Support (Wii only)
