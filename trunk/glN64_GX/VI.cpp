@@ -133,6 +133,7 @@ void VI_UpdateScreen()
 		GX_SetCopyClear ((GXColor){0,0,0,255}, 0xFFFFFF);
 		GX_CopyDisp (VI.xfb[VI.which_fb]+GX_xfb_offset, GX_FALSE);
 		GX_DrawDone(); //Wait until EFB->XFB copy is complete
+		VI.enableLoadIcon = true;
 		VI.EFBcleared = false;
 		VI.copy_fb = true;
 	}
@@ -162,6 +163,7 @@ void VI_UpdateScreen()
 			GX_CopyDisp (VI.xfb[VI.which_fb]+GX_xfb_offset, GX_FALSE);
 			GX_DrawDone(); //Wait until EFB->XFB copy is complete
 			VI.updateOSD = false;
+			VI.enableLoadIcon = true;
 			VI.copy_fb = true;
 
 			//Restore current EFB
@@ -185,10 +187,11 @@ void VI_UpdateScreen()
 			VI_GX_showFPS();
 			VI_GX_showDEBUG();
 			GX_SetCopyClear ((GXColor){0,0,0,255}, 0xFFFFFF);
-//			GX_CopyDisp (VI.xfb[VI.which_fb]+GX_xfb_offset, GX_FALSE);
-			GX_CopyDisp (VI.xfb[VI.which_fb]+GX_xfb_offset, GX_TRUE);
+			GX_CopyDisp (VI.xfb[VI.which_fb]+GX_xfb_offset, GX_FALSE);
+//			GX_CopyDisp (VI.xfb[VI.which_fb]+GX_xfb_offset, GX_TRUE);
 			GX_DrawDone(); //Wait until EFB->XFB copy is complete
 			VI.updateOSD = false;
+			VI.enableLoadIcon = true;
 			VI.EFBcleared = false;
 			VI.copy_fb = true;
 			gSP.changed &= ~CHANGED_COLORBUFFER;
@@ -210,6 +213,7 @@ void VI_GX_init() {
 	new_fb = false;
 	which_fb = 1;*/
 	VI.updateOSD = true;
+	VI.enableLoadIcon = false;
 	VI.EFBcleared = true;
 	VI.copy_fb = false;
 	VI.which_fb = 1;

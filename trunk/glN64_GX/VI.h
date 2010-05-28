@@ -21,6 +21,7 @@ struct VIInfo
 	unsigned int* xfb[2];
 	int which_fb;
 	bool updateOSD;
+	bool enableLoadIcon;
 	bool EFBcleared;
 	bool copy_fb;
 #endif // __GX__
