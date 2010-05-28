@@ -36,7 +36,7 @@ extern int savestates_job;
 
 void savestates_save();
 void savestates_load();
-int  savestates_exists();
+int  savestates_exists(int mode);
 
 void savestates_select_slot(unsigned int s);
 void savestates_select_filename();
