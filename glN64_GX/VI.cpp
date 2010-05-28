@@ -181,7 +181,7 @@ void VI_UpdateScreen()
 		if(VI.updateOSD && (gSP.changed & CHANGED_COLORBUFFER))
 		{
 			VI_GX_cleanUp();
-			VI_GX_showStats();
+//			VI_GX_showStats();
 			VI_GX_showFPS();
 			VI_GX_showDEBUG();
 			GX_SetCopyClear ((GXColor){0,0,0,255}, 0xFFFFFF);

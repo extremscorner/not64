@@ -38,7 +38,7 @@ void DEBUG_update() {
 			memset(text[i],0,DEBUG_TEXT_WIDTH);
 		}
 	}
-	check_heap_space();
+//	check_heap_space();
 	#endif
 }
 
