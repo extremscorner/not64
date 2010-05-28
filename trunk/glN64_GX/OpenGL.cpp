@@ -1160,85 +1160,54 @@ void OGL_DrawTriangles()
 	{
 		if(OGL.GXpolyOffset)
 		{
-			if(OGL.GXuseProj)
+			if(OGL.GXuseProjW)
 			{
-				CopyMatrix( OGL.GXprojTemp, OGL.GXproj );
-				if(OGL.GXprojTemp[3][2] == -1)
+				if(!OGL.GXuseProjWnear)
 				{
+					CopyMatrix( OGL.GXprojTemp, OGL.GXprojW );
 					OGL.GXprojTemp[2][2] += GXpolyOffsetFactor;
-					GX_LoadProjectionMtx(OGL.GXprojTemp, GX_PERSPECTIVE);
+					GX_LoadProjectionMtx(OGL.GXprojTemp, GX_PERSPECTIVE); 
 				}
 				else
 				{
-					OGL.GXprojTemp[2][3] -= GXpolyOffsetFactor;
-					GX_LoadProjectionMtx(OGL.GXprojTemp, GX_ORTHOGRAPHIC); 
+					GX_LoadProjectionMtx(OGL.GXprojWnear, GX_PERSPECTIVE); 
 				}
-				GX_LoadPosMtxImm(OGL.GXmodelView,GX_PNMTX0);
 			}
 			else
 			{
-				if(OGL.GXuseProjW)
-				{
-					if(!OGL.GXuseProjWnear)
-					{
-						CopyMatrix( OGL.GXprojTemp, OGL.GXprojW );
-						OGL.GXprojTemp[2][2] += GXpolyOffsetFactor;
-						GX_LoadProjectionMtx(OGL.GXprojTemp, GX_PERSPECTIVE); 
-					}
-					else
-					{
-						GX_LoadProjectionMtx(OGL.GXprojWnear, GX_PERSPECTIVE); 
-					}
-				}
-				else
-				{
-					CopyMatrix( OGL.GXprojTemp, OGL.GXprojIdent );
-					OGL.GXprojTemp[2][3] -= GXpolyOffsetFactor;
-					GX_LoadProjectionMtx(OGL.GXprojTemp, GX_ORTHOGRAPHIC); 
-				}
-				GX_LoadPosMtxImm(OGL.GXmodelViewIdent,GX_PNMTX0);
+				CopyMatrix( OGL.GXprojTemp, OGL.GXprojIdent );
+				OGL.GXprojTemp[2][3] -= GXpolyOffsetFactor;
+				GX_LoadProjectionMtx(OGL.GXprojTemp, GX_ORTHOGRAPHIC); 
 			}
+//			GX_LoadPosMtxImm(OGL.GXmodelViewIdent,GX_PNMTX0);
 		}
 		else
 		{
-			if(OGL.GXuseProj)
+			//TODO: handle this case when !G_ZBUFFER
+/*			if(!(gSP.geometryMode & G_ZBUFFER))
 			{
-				if(!(gSP.geometryMode & G_ZBUFFER))
+				CopyMatrix( OGL.GXprojTemp, OGL.GXproj );
+				OGL.GXprojTemp[2][2] =  0.0;
+				OGL.GXprojTemp[2][3] = -1.0;
+				if(OGL.GXprojTemp[3][2] == -1)
+					GX_LoadProjectionMtx(OGL.GXprojTemp, GX_PERSPECTIVE);
+				else
+					GX_LoadProjectionMtx(OGL.GXprojTemp, GX_ORTHOGRAPHIC); 
+			}*/
+			if(OGL.GXuseProjW)
+			{
+				if(!OGL.GXuseProjWnear)
 				{
-					CopyMatrix( OGL.GXprojTemp, OGL.GXproj );
-					OGL.GXprojTemp[2][2] =  0.0;
-					OGL.GXprojTemp[2][3] = -1.0;
-					if(OGL.GXprojTemp[3][2] == -1)
-						GX_LoadProjectionMtx(OGL.GXprojTemp, GX_PERSPECTIVE);
-					else
-						GX_LoadProjectionMtx(OGL.GXprojTemp, GX_ORTHOGRAPHIC); 
+					GX_LoadProjectionMtx(OGL.GXprojW, GX_PERSPECTIVE); 
 				}
 				else
 				{
-					if(OGL.GXproj[3][2] == -1)
-						GX_LoadProjectionMtx(OGL.GXproj, GX_PERSPECTIVE);
-					else
-						GX_LoadProjectionMtx(OGL.GXproj, GX_ORTHOGRAPHIC); 
+					GX_LoadProjectionMtx(OGL.GXprojWnear, GX_PERSPECTIVE); 
 				}
-				GX_LoadPosMtxImm(OGL.GXmodelView,GX_PNMTX0);
 			}
 			else
-			{
-				if(OGL.GXuseProjW)
-				{
-					if(!OGL.GXuseProjWnear)
-					{
-						GX_LoadProjectionMtx(OGL.GXprojW, GX_PERSPECTIVE); 
-					}
-					else
-					{
-						GX_LoadProjectionMtx(OGL.GXprojWnear, GX_PERSPECTIVE); 
-					}
-				}
-				else
-					GX_LoadProjectionMtx(OGL.GXprojIdent, GX_ORTHOGRAPHIC); 
-				GX_LoadPosMtxImm(OGL.GXmodelViewIdent,GX_PNMTX0);
-			}
+				GX_LoadProjectionMtx(OGL.GXprojIdent, GX_ORTHOGRAPHIC); 
+//			GX_LoadPosMtxImm(OGL.GXmodelViewIdent,GX_PNMTX0);
 		}
 		OGL.GXupdateMtx = false;
 	}
@@ -1256,8 +1225,7 @@ void OGL_DrawTriangles()
 
 	//set vertex description here
 	GX_ClearVtxDesc();
-	if (OGL.GXuseProj)	GX_SetVtxDesc(GX_VA_PTNMTXIDX, GX_PNMTX0);
-	else				GX_SetVtxDesc(GX_VA_PTNMTXIDX, GX_PNMTX0);
+	GX_SetVtxDesc(GX_VA_PTNMTXIDX, GX_PNMTX0);
 //	if (combiner.usesT0) GX_SetVtxDesc(GX_VA_TEX0MTXIDX, GX_TEXMTX0);
 //	if (combiner.usesT1) GX_SetVtxDesc(GX_VA_TEX1MTXIDX, GX_TEXMTX0);
 	GX_SetVtxDesc(GX_VA_TEX0MTXIDX, GX_TEXMTX0);
@@ -1285,13 +1253,7 @@ void OGL_DrawTriangles()
 
 
 #ifdef SHOW_DEBUG
-	if (!OGL.GXuseProj)
-	{
-		sprintf(txtbuffer,"OGL: using software MTX xforms");
-		DEBUG_print(txtbuffer,4);
-	}
-	if (OGL.GXuseProj) CntTriProj += OGL.numTriangles;
-	else if (OGL.GXuseProjW) CntTriProjW += OGL.numTriangles;
+	if (OGL.GXuseProjW) CntTriProjW += OGL.numTriangles;
 	else CntTriOther += OGL.numTriangles;
 	if (OGL.GXuseProjW && OGL.GXuseProjWnear) CntTriNear += OGL.numTriangles;
 	if (OGL.GXpolyOffset) CntTriPolyOffset += OGL.numTriangles;
@@ -1299,17 +1261,12 @@ void OGL_DrawTriangles()
 
 	GX_Begin(GX_TRIANGLES, GX_VTXFMT0, OGL.numVertices);
 	for (int i = 0; i < OGL.numVertices; i++) {
-		if(OGL.GXuseProj)
-			GX_Position3f32( OGL.vertices[i].x, OGL.vertices[i].y, OGL.vertices[i].z );
+		if(OGL.GXuseProjW)
+			GX_Position3f32( OGL.vertices[i].x, OGL.vertices[i].y, -OGL.vertices[i].w );
 		else
 		{
-			if(OGL.GXuseProjW)
-				GX_Position3f32( OGL.vertices[i].x, OGL.vertices[i].y, -OGL.vertices[i].w );
-			else
-			{
-				invW = (OGL.vertices[i].w != 0) ? 1/OGL.vertices[i].w : 0.0f;
-				GX_Position3f32( OGL.vertices[i].x*invW, OGL.vertices[i].y*invW, OGL.vertices[i].z*invW );
-			}
+			invW = (OGL.vertices[i].w != 0) ? 1/OGL.vertices[i].w : 0.0f;
+			GX_Position3f32( OGL.vertices[i].x*invW, OGL.vertices[i].y*invW, OGL.vertices[i].z*invW );
 		}
 //		GX_Position3f32(OGL.vertices[i].x/OGL.vertices[i].w, OGL.vertices[i].y/OGL.vertices[i].w, OGL.vertices[i].z/OGL.vertices[i].w);
 		GXcol.r = (u8) (min(OGL.vertices[i].color.r,1.0)*255);
@@ -1381,56 +1338,27 @@ void OGL_DrawLine( SPVertex *vertices, int v0, int v1, float width )
 	{
 		if(OGL.GXpolyOffset)
 		{
-			if(OGL.GXuseProj)
+			if(OGL.GXuseProjW)
 			{
-				CopyMatrix( OGL.GXprojTemp, OGL.GXproj );
-				if(OGL.GXprojTemp[3][2] == -1)
-				{
-					OGL.GXprojTemp[2][2] += GXpolyOffsetFactor;
-					GX_LoadProjectionMtx(OGL.GXprojTemp, GX_PERSPECTIVE);
-				}
-				else
-				{
-					OGL.GXprojTemp[2][3] -= GXpolyOffsetFactor;
-					GX_LoadProjectionMtx(OGL.GXprojTemp, GX_ORTHOGRAPHIC); 
-				}
-				GX_LoadPosMtxImm(OGL.GXmodelView,GX_PNMTX0);
+				CopyMatrix( OGL.GXprojTemp, OGL.GXprojW );
+				OGL.GXprojTemp[2][2] += GXpolyOffsetFactor;
+				GX_LoadProjectionMtx(OGL.GXprojTemp, GX_PERSPECTIVE); 
 			}
 			else
 			{
-				if(OGL.GXuseProjW)
-				{
-					CopyMatrix( OGL.GXprojTemp, OGL.GXprojW );
-					OGL.GXprojTemp[2][2] += GXpolyOffsetFactor;
-					GX_LoadProjectionMtx(OGL.GXprojTemp, GX_PERSPECTIVE); 
-				}
-				else
-				{
-					CopyMatrix( OGL.GXprojTemp, OGL.GXprojIdent );
-					OGL.GXprojTemp[2][3] -= GXpolyOffsetFactor;
-					GX_LoadProjectionMtx(OGL.GXprojTemp, GX_ORTHOGRAPHIC); 
-				}
-				GX_LoadPosMtxImm(OGL.GXmodelViewIdent,GX_PNMTX0);
+				CopyMatrix( OGL.GXprojTemp, OGL.GXprojIdent );
+				OGL.GXprojTemp[2][3] -= GXpolyOffsetFactor;
+				GX_LoadProjectionMtx(OGL.GXprojTemp, GX_ORTHOGRAPHIC); 
 			}
+//			GX_LoadPosMtxImm(OGL.GXmodelViewIdent,GX_PNMTX0);
 		}
 		else
 		{
-			if(OGL.GXuseProj)
-			{
-				if(OGL.GXproj[3][2] == -1)
-					GX_LoadProjectionMtx(OGL.GXproj, GX_PERSPECTIVE);
-				else
-					GX_LoadProjectionMtx(OGL.GXproj, GX_ORTHOGRAPHIC); 
-				GX_LoadPosMtxImm(OGL.GXmodelView,GX_PNMTX0);
-			}
+			if(OGL.GXuseProjW)
+				GX_LoadProjectionMtx(OGL.GXprojW, GX_PERSPECTIVE); 
 			else
-			{
-				if(OGL.GXuseProjW)
-					GX_LoadProjectionMtx(OGL.GXprojW, GX_PERSPECTIVE); 
-				else
-					GX_LoadProjectionMtx(OGL.GXprojIdent, GX_ORTHOGRAPHIC); 
-				GX_LoadPosMtxImm(OGL.GXmodelViewIdent,GX_PNMTX0);
-			}
+				GX_LoadProjectionMtx(OGL.GXprojIdent, GX_ORTHOGRAPHIC); 
+//			GX_LoadPosMtxImm(OGL.GXmodelViewIdent,GX_PNMTX0);
 		}
 		OGL.GXupdateMtx = false;
 	}
@@ -1448,8 +1376,7 @@ void OGL_DrawLine( SPVertex *vertices, int v0, int v1, float width )
 
 	//set vertex description here
 	GX_ClearVtxDesc();
-	if (OGL.GXuseProj)	GX_SetVtxDesc(GX_VA_PTNMTXIDX, GX_PNMTX0);
-	else				GX_SetVtxDesc(GX_VA_PTNMTXIDX, GX_PNMTX0);
+	GX_SetVtxDesc(GX_VA_PTNMTXIDX, GX_PNMTX0);
 	GX_SetVtxDesc(GX_VA_TEX2MTXIDX, GX_TEXMTX0);
 	GX_SetVtxDesc(GX_VA_POS, GX_DIRECT);
 	GX_SetVtxDesc(GX_VA_CLR0, GX_DIRECT);
@@ -1461,17 +1388,12 @@ void OGL_DrawLine( SPVertex *vertices, int v0, int v1, float width )
 	GX_Begin(GX_LINES, GX_VTXFMT0, 2);
 		for (int i = 0; i < 2; i++)
 		{
-			if(OGL.GXuseProj)
-				GX_Position3f32( vertices[v[i]].x, vertices[v[i]].y, vertices[v[i]].z );
+			if(OGL.GXuseProjW)
+				GX_Position3f32( OGL.vertices[i].x, OGL.vertices[i].y, -OGL.vertices[i].w );
 			else
 			{
-				if(OGL.GXuseProjW)
-					GX_Position3f32( OGL.vertices[i].x, OGL.vertices[i].y, -OGL.vertices[i].w );
-				else
-				{
-					invW = (OGL.vertices[i].w != 0) ? 1/OGL.vertices[i].w : 0.0f;
-					GX_Position3f32( OGL.vertices[i].x*invW, OGL.vertices[i].y*invW, OGL.vertices[i].z*invW );
-				}
+				invW = (OGL.vertices[i].w != 0) ? 1/OGL.vertices[i].w : 0.0f;
+				GX_Position3f32( OGL.vertices[i].x*invW, OGL.vertices[i].y*invW, OGL.vertices[i].z*invW );
 			}
 			color.r = vertices[v[i]].r;
 			color.g = vertices[v[i]].g;
@@ -2109,21 +2031,17 @@ void OGL_GXinitDlist()
 	OGL.GXupdateFog = false;
 
 	//Reset Modelview matrix
-	guMtxIdentity(OGL.GXmodelView);
 	guMtxIdentity(OGL.GXmodelViewIdent);
-	GX_LoadPosMtxImm(OGL.GXmodelView,GX_PNMTX0);
-	GX_LoadPosMtxImm(OGL.GXmodelViewIdent,GX_PNMTX2);
+	GX_LoadPosMtxImm(OGL.GXmodelViewIdent,GX_PNMTX0);
 	GX_LoadTexMtxImm(OGL.GXmodelViewIdent,GX_TEXMTX0,GX_MTX2x4);
 
 	//Reset projection matrix
-	guMtxIdentity(OGL.GXproj);
 	guMtxIdentity(OGL.GXprojW);
 	guMtxIdentity(OGL.GXprojWnear);
 	guMtxIdentity(OGL.GXprojIdent);
+//	guOrtho(OGL.GXprojIdent, -1, 1, -1, 1, 1.0f, -1.0f);
 	//N64 Z clip space is backwards, so mult z components by -1
 	//N64 Z [-1,1] whereas GC Z [-1,0], so mult by 0.5 and shift by -0.5
-	OGL.GXproj[2][2] = GXprojZScale; //0.5;
-	OGL.GXproj[2][3] = GXprojZOffset; //-0.5;
 	OGL.GXprojW[3][2] = -1;
 	OGL.GXprojW[3][3] = 0;
 	OGL.GXprojWnear[2][2] = 0.0f;
@@ -2135,7 +2053,7 @@ void OGL_GXinitDlist()
 	GX_LoadProjectionMtx(OGL.GXprojIdent, GX_ORTHOGRAPHIC);
 	OGL.GXpolyOffset = false;
 
-	OGL.GXnumVtxMP = OGL.GXnumVtx = 0;
+	OGL.GXnumVtxMP = 0;
 	cache.GXprimDepthCnt = cache.GXZTexPrimCnt = cache.GXnoZTexPrimCnt = 0;
 
 	//Not sure if this is needed.  Clipping is a slow process...
