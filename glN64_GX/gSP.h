@@ -31,6 +31,9 @@ struct SPVertex
 	f32		s, t;
 	f32		xClip, yClip, zClip;
 	s16		flag;
+#ifdef __GX__
+	f32		zPrime;
+#endif //__GX__
 };
 
 typedef SPVertex SPTriangle[3];

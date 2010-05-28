@@ -1041,6 +1041,7 @@ void OGL_AddTriangle( SPVertex *vertices, int v0, int v1, int v2 )
 		//Note: Could also handle primDepthZ by manipulating the Projection matrix
 //		OGL.vertices[OGL.numVertices].z = (gDP.otherMode.depthSource == G_ZS_PRIM) && !(OGL.GXuseProj) ? gDP.primDepth.z * vertices[v[i]].w : vertices[v[i]].z;
 		OGL.vertices[OGL.numVertices].z = vertices[v[i]].z;
+		OGL.vertices[OGL.numVertices].zPrime = vertices[v[i]].zPrime;
 #endif // __GX__
 		OGL.vertices[OGL.numVertices].w = vertices[v[i]].w;
 
@@ -1160,11 +1161,11 @@ void OGL_DrawTriangles()
 	{
 		if(OGL.GXpolyOffset)
 		{
-			if(OGL.GXuseProjW)
+			if(OGL.GXuseCombW)
 			{
 				if(!OGL.GXuseProjWnear)
 				{
-					CopyMatrix( OGL.GXprojTemp, OGL.GXprojW );
+					CopyMatrix( OGL.GXprojTemp, OGL.GXcombW );
 					OGL.GXprojTemp[2][2] += GXpolyOffsetFactor;
 					GX_LoadProjectionMtx(OGL.GXprojTemp, GX_PERSPECTIVE); 
 				}
@@ -1179,7 +1180,6 @@ void OGL_DrawTriangles()
 				OGL.GXprojTemp[2][3] -= GXpolyOffsetFactor;
 				GX_LoadProjectionMtx(OGL.GXprojTemp, GX_ORTHOGRAPHIC); 
 			}
-//			GX_LoadPosMtxImm(OGL.GXmodelViewIdent,GX_PNMTX0);
 		}
 		else
 		{
@@ -1194,11 +1194,11 @@ void OGL_DrawTriangles()
 				else
 					GX_LoadProjectionMtx(OGL.GXprojTemp, GX_ORTHOGRAPHIC); 
 			}*/
-			if(OGL.GXuseProjW)
+			if(OGL.GXuseCombW)
 			{
 				if(!OGL.GXuseProjWnear)
 				{
-					GX_LoadProjectionMtx(OGL.GXprojW, GX_PERSPECTIVE); 
+					GX_LoadProjectionMtx(OGL.GXcombW, GX_PERSPECTIVE); 
 				}
 				else
 				{
@@ -1207,7 +1207,6 @@ void OGL_DrawTriangles()
 			}
 			else
 				GX_LoadProjectionMtx(OGL.GXprojIdent, GX_ORTHOGRAPHIC); 
-//			GX_LoadPosMtxImm(OGL.GXmodelViewIdent,GX_PNMTX0);
 		}
 		OGL.GXupdateMtx = false;
 	}
@@ -1253,16 +1252,17 @@ void OGL_DrawTriangles()
 
 
 #ifdef SHOW_DEBUG
-	if (OGL.GXuseProjW) CntTriProjW += OGL.numTriangles;
+	if (OGL.GXuseCombW) CntTriProjW += OGL.numTriangles;
 	else CntTriOther += OGL.numTriangles;
-	if (OGL.GXuseProjW && OGL.GXuseProjWnear) CntTriNear += OGL.numTriangles;
+	if (OGL.GXuseCombW && OGL.GXuseProjWnear) CntTriNear += OGL.numTriangles;
 	if (OGL.GXpolyOffset) CntTriPolyOffset += OGL.numTriangles;
 #endif
 
 	GX_Begin(GX_TRIANGLES, GX_VTXFMT0, OGL.numVertices);
 	for (int i = 0; i < OGL.numVertices; i++) {
-		if(OGL.GXuseProjW)
+		if(OGL.GXuseCombW)
 			GX_Position3f32( OGL.vertices[i].x, OGL.vertices[i].y, -OGL.vertices[i].w );
+//			GX_Position3f32( OGL.vertices[i].x, OGL.vertices[i].y, OGL.vertices[i].zPrime );
 		else
 		{
 			invW = (OGL.vertices[i].w != 0) ? 1/OGL.vertices[i].w : 0.0f;
@@ -1338,9 +1338,9 @@ void OGL_DrawLine( SPVertex *vertices, int v0, int v1, float width )
 	{
 		if(OGL.GXpolyOffset)
 		{
-			if(OGL.GXuseProjW)
+			if(OGL.GXuseCombW)
 			{
-				CopyMatrix( OGL.GXprojTemp, OGL.GXprojW );
+				CopyMatrix( OGL.GXprojTemp, OGL.GXcombW );
 				OGL.GXprojTemp[2][2] += GXpolyOffsetFactor;
 				GX_LoadProjectionMtx(OGL.GXprojTemp, GX_PERSPECTIVE); 
 			}
@@ -1350,15 +1350,13 @@ void OGL_DrawLine( SPVertex *vertices, int v0, int v1, float width )
 				OGL.GXprojTemp[2][3] -= GXpolyOffsetFactor;
 				GX_LoadProjectionMtx(OGL.GXprojTemp, GX_ORTHOGRAPHIC); 
 			}
-//			GX_LoadPosMtxImm(OGL.GXmodelViewIdent,GX_PNMTX0);
 		}
 		else
 		{
-			if(OGL.GXuseProjW)
-				GX_LoadProjectionMtx(OGL.GXprojW, GX_PERSPECTIVE); 
+			if(OGL.GXuseCombW)
+				GX_LoadProjectionMtx(OGL.GXcombW, GX_PERSPECTIVE); 
 			else
 				GX_LoadProjectionMtx(OGL.GXprojIdent, GX_ORTHOGRAPHIC); 
-//			GX_LoadPosMtxImm(OGL.GXmodelViewIdent,GX_PNMTX0);
 		}
 		OGL.GXupdateMtx = false;
 	}
@@ -1388,7 +1386,7 @@ void OGL_DrawLine( SPVertex *vertices, int v0, int v1, float width )
 	GX_Begin(GX_LINES, GX_VTXFMT0, 2);
 		for (int i = 0; i < 2; i++)
 		{
-			if(OGL.GXuseProjW)
+			if(OGL.GXuseCombW)
 				GX_Position3f32( OGL.vertices[i].x, OGL.vertices[i].y, -OGL.vertices[i].w );
 			else
 			{
@@ -2036,14 +2034,14 @@ void OGL_GXinitDlist()
 	GX_LoadTexMtxImm(OGL.GXmodelViewIdent,GX_TEXMTX0,GX_MTX2x4);
 
 	//Reset projection matrix
-	guMtxIdentity(OGL.GXprojW);
+	guMtxIdentity(OGL.GXcombW);
 	guMtxIdentity(OGL.GXprojWnear);
 	guMtxIdentity(OGL.GXprojIdent);
 //	guOrtho(OGL.GXprojIdent, -1, 1, -1, 1, 1.0f, -1.0f);
 	//N64 Z clip space is backwards, so mult z components by -1
 	//N64 Z [-1,1] whereas GC Z [-1,0], so mult by 0.5 and shift by -0.5
-	OGL.GXprojW[3][2] = -1;
-	OGL.GXprojW[3][3] = 0;
+	OGL.GXcombW[3][2] = -1;
+	OGL.GXcombW[3][3] = 0;
 	OGL.GXprojWnear[2][2] = 0.0f;
 	OGL.GXprojWnear[2][3] = -0.5f;
 	OGL.GXprojWnear[3][2] = -1.0f;
