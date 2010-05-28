@@ -118,6 +118,39 @@ void gSPCombineMatrices()
 	MultMatrix( gSP.matrix.combined, gSP.matrix.modelView[gSP.matrix.modelViewi] );
 
 	gSP.changed &= ~CHANGED_MATRIX;
+
+#ifdef __GX__
+	if (OGL.numTriangles)
+		OGL_DrawTriangles();
+	OGL.GXupdateMtx = true;
+
+	if(gSP.matrix.combined[2][3] != 0)
+	{
+		OGL.GXcombW[2][2] = -GXprojZOffset - (GXprojZScale*gSP.matrix.combined[2][2]/gSP.matrix.combined[2][3]);
+		OGL.GXcombW[2][3] = GXprojZScale*(gSP.matrix.combined[3][2] - (gSP.matrix.combined[2][2]*gSP.matrix.combined[3][3]/gSP.matrix.combined[2][3]));
+//		OGL.GXcombW[2][3] = OGL.GXcombW[2][3]-0.25;
+		OGL.GXuseCombW = true;
+
+		//Transform for zPrime
+		if (gSP.matrix.combined[2][2] != 0)
+		{
+			OGL.GXzPrimeScale		= -gSP.matrix.combined[2][3]/gSP.matrix.combined[2][2];
+			OGL.GXzPrimeTranslate	= -(gSP.matrix.combined[3][2] - (gSP.matrix.combined[2][2]*gSP.matrix.combined[3][3]/gSP.matrix.combined[2][3]))*(gSP.matrix.combined[2][3]/gSP.matrix.combined[2][2]);
+//			OGL.GXzPrimeScale		= gSP.matrix.combined[2][3]/gSP.matrix.combined[2][2];
+//			OGL.GXzPrimeTranslate	= -(gSP.matrix.combined[3][2] + (gSP.matrix.combined[2][2]*gSP.matrix.combined[3][3]/gSP.matrix.combined[2][3]))*(gSP.matrix.combined[2][3]/gSP.matrix.combined[2][2]);
+		}
+		else
+		{
+			OGL.GXzPrimeScale = OGL.GXzPrimeTranslate = 0;
+# ifdef SHOW_DEBUG
+			sprintf(txtbuffer,"gSPCombineMtx: zPrime Error!");
+			DEBUG_print(txtbuffer,6+1); 
+# endif
+		}
+	}
+	else
+		OGL.GXuseCombW = false;
+#endif //__GX__
 }
 
 void gSPProcessVertex( u32 v )
@@ -154,6 +187,11 @@ void gSPProcessVertex( u32 v )
 	{
 		gSP.vertices[v].z = -gSP.vertices[v].w;
 	}
+
+#ifdef __GX__
+	//Alternative W for exact Z coordinate
+	gSP.vertices[v].zPrime = gSP.vertices[v].w*OGL.GXzPrimeScale + OGL.GXzPrimeTranslate;
+#endif
 
 	if (gSP.geometryMode & G_LIGHTING)
 	{
@@ -291,24 +329,6 @@ void gSPMatrix( u32 matrix, u8 param )
 			MultMatrix( gSP.matrix.modelView[gSP.matrix.modelViewi], mtx );
 	}
 
-#ifdef __GX__
-	if (OGL.numTriangles)
-		OGL_DrawTriangles();
-	OGL.GXupdateMtx = true;
-	if (param & G_MTX_PROJECTION)
-	{
-		if(gSP.matrix.projection[2][3] != 0)
-		{
-			OGL.GXprojW[2][2] = -GXprojZOffset - (GXprojZScale*gSP.matrix.projection[2][2]/gSP.matrix.projection[2][3]);
-			OGL.GXprojW[2][3] = GXprojZScale*(gSP.matrix.projection[3][2] - (gSP.matrix.projection[2][2]*gSP.matrix.projection[3][3]/gSP.matrix.projection[2][3]));
-//			OGL.GXprojW[2][3] = OGL.GXprojW[2][3]-0.25;
-			OGL.GXuseProjW = true;
-		}
-		else
-			OGL.GXuseProjW = false;
-	}
-#endif // __GX__
-
 	gSP.changed |= CHANGED_MATRIX;
 
 #ifdef DEBUG
@@ -358,19 +378,10 @@ void gSPDMAMatrix( u32 matrix, u8 index, u8 multiply )
 	CopyMatrix( gSP.matrix.projection, identityMatrix );
 
 #ifdef __GX__
-	if (OGL.GXuseProjW)
-	{
-		if (OGL.numTriangles)
-			OGL_DrawTriangles();
-		OGL.GXupdateMtx = true;
-		OGL.GXuseProjW = false;
-	}
-
-#ifdef SHOW_DEBUG
+# ifdef SHOW_DEBUG
 	sprintf(txtbuffer,"gSP: gSPDMAMatrix");
 	DEBUG_print(txtbuffer,6);
-#endif
-
+# endif
 #endif // __GX__
 
 	gSP.changed |= CHANGED_MATRIX;
@@ -455,18 +466,38 @@ void gSPForceMatrix( u32 mptr )
 	sprintf(txtbuffer,"gSP: gSPForceMatrix");
 	DEBUG_print(txtbuffer,7);
 #endif
+
 	if (OGL.numTriangles)
 		OGL_DrawTriangles();
 	OGL.GXupdateMtx = true;
-	if(gSP.matrix.projection[2][3] != 0)
+
+	if(gSP.matrix.combined[2][3] != 0)
 	{
-		OGL.GXprojW[2][2] = -GXprojZOffset - (GXprojZScale*gSP.matrix.projection[2][2]/gSP.matrix.projection[2][3]);
-		OGL.GXprojW[2][3] = GXprojZScale*(gSP.matrix.projection[3][2] - (gSP.matrix.projection[2][2]*gSP.matrix.projection[3][3]/gSP.matrix.projection[2][3]));
-//		OGL.GXprojW[2][3] = OGL.GXprojW[2][3]-0.25;
-		OGL.GXuseProjW = true;
+		OGL.GXcombW[2][2] = -GXprojZOffset - (GXprojZScale*gSP.matrix.combined[2][2]/gSP.matrix.combined[2][3]);
+		OGL.GXcombW[2][3] = GXprojZScale*(gSP.matrix.combined[3][2] - (gSP.matrix.combined[2][2]*gSP.matrix.combined[3][3]/gSP.matrix.combined[2][3]));
+//		OGL.GXcombW[2][3] = OGL.GXcombW[2][3]-0.25;
+		OGL.GXuseCombW = true;
+
+		//Transform for zPrime
+		if (gSP.matrix.combined[2][2] != 0)
+		{
+			OGL.GXzPrimeScale		= -gSP.matrix.combined[2][3]/gSP.matrix.combined[2][2];
+			OGL.GXzPrimeTranslate	= -(gSP.matrix.combined[3][2] - (gSP.matrix.combined[2][2]*gSP.matrix.combined[3][3]/gSP.matrix.combined[2][3]))*(gSP.matrix.combined[2][3]/gSP.matrix.combined[2][2]);
+//			OGL.GXzPrimeScale		= gSP.matrix.combined[2][3]/gSP.matrix.combined[2][2];
+//			OGL.GXzPrimeTranslate	= -(gSP.matrix.combined[3][2] + (gSP.matrix.combined[2][2]*gSP.matrix.combined[3][3]/gSP.matrix.combined[2][3]))*(gSP.matrix.combined[2][3]/gSP.matrix.combined[2][2]);
+		}
+		else
+		{
+			OGL.GXzPrimeScale = OGL.GXzPrimeTranslate = 0;
+# ifdef SHOW_DEBUG
+			sprintf(txtbuffer,"gSPCombineMtx: zPrime Error!");
+			DEBUG_print(txtbuffer,6+1); 
+# endif
+		}
 	}
 	else
-		OGL.GXuseProjW = false;
+		OGL.GXuseCombW = false;
+
 #endif //__GX__
 
 	gSP.changed &= ~CHANGED_MATRIX;
@@ -1067,7 +1098,6 @@ void gSPTriangle( s32 v0, s32 v1, s32 v2, s32 flag )
 		// TODO: Make this work with the current Mtx setup. Fix .zClip.
 
 		// NoN work-around, clips triangles, and draws the clipped-off parts with clamped z
-//		if (!OGL.GXuseProj &&		//leave NoN work-around out when using matrices in GX
 		if (GBI.current->NoN &&
 			((gSP.vertices[v0].zClip < 0.0f) ||
 			(gSP.vertices[v1].zClip < 0.0f) ||
@@ -1522,15 +1552,34 @@ void gSPInsertMatrix( u32 where, u32 num )
 	if (OGL.numTriangles)
 		OGL_DrawTriangles();
 	OGL.GXupdateMtx = true;
-	if(gSP.matrix.projection[2][3] != 0)
+
+	if(gSP.matrix.combined[2][3] != 0)
 	{
-		OGL.GXprojW[2][2] = -GXprojZOffset - (GXprojZScale*gSP.matrix.projection[2][2]/gSP.matrix.projection[2][3]);
-		OGL.GXprojW[2][3] = GXprojZScale*(gSP.matrix.projection[3][2] - (gSP.matrix.projection[2][2]*gSP.matrix.projection[3][3]/gSP.matrix.projection[2][3]));
-//		OGL.GXprojW[2][3] = OGL.GXprojW[2][3]-0.25;
-		OGL.GXuseProjW = true;
+		OGL.GXcombW[2][2] = -GXprojZOffset - (GXprojZScale*gSP.matrix.combined[2][2]/gSP.matrix.combined[2][3]);
+		OGL.GXcombW[2][3] = GXprojZScale*(gSP.matrix.combined[3][2] - (gSP.matrix.combined[2][2]*gSP.matrix.combined[3][3]/gSP.matrix.combined[2][3]));
+//		OGL.GXcombW[2][3] = OGL.GXcombW[2][3]-0.25;
+		OGL.GXuseCombW = true;
+
+		//Transform for zPrime
+		if (gSP.matrix.combined[2][2] != 0)
+		{
+			OGL.GXzPrimeScale		= -gSP.matrix.combined[2][3]/gSP.matrix.combined[2][2];
+			OGL.GXzPrimeTranslate	= -(gSP.matrix.combined[3][2] - (gSP.matrix.combined[2][2]*gSP.matrix.combined[3][3]/gSP.matrix.combined[2][3]))*(gSP.matrix.combined[2][3]/gSP.matrix.combined[2][2]);
+//			OGL.GXzPrimeScale		= gSP.matrix.combined[2][3]/gSP.matrix.combined[2][2];
+//			OGL.GXzPrimeTranslate	= -(gSP.matrix.combined[3][2] + (gSP.matrix.combined[2][2]*gSP.matrix.combined[3][3]/gSP.matrix.combined[2][3]))*(gSP.matrix.combined[2][3]/gSP.matrix.combined[2][2]);
+		}
+		else
+		{
+			OGL.GXzPrimeScale = OGL.GXzPrimeTranslate = 0;
+# ifdef SHOW_DEBUG
+			sprintf(txtbuffer,"gSPCombineMtx: zPrime Error!");
+			DEBUG_print(txtbuffer,6+1); 
+# endif
+		}
 	}
 	else
-		OGL.GXuseProjW = false;
+		OGL.GXuseCombW = false;
+
 #endif //__GX__
 
 #ifdef DEBUG
