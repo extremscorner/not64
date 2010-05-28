@@ -280,8 +280,7 @@ glN64_GX/F3DWRUS.o:		glN64_GX/F3DWRUS.cpp
 
 cube64-glN64.elf:	$(OBJ) $(OBJ_INPUT) $(OBJ_GLN64_GX) $(OBJ_AUDIO) $(OBJ_RSPHLE) $(OBJ_PPC)
 		$(LD) $^ $(LDFLAGS) $(LIBPATHS) $(LIB) -Wl -o $@
-		DolTool -d cube64-glN64.elf
-#		powerpc-gekko-objcopy -O binary $@ cube64-glN64.dol
+		$(DEVKITPRO)/devkitPPC/bin/elf2dol $@ cube64-glN64.dol
 
 install:
 	cp mupen64 "$(PREFIX)bin"
