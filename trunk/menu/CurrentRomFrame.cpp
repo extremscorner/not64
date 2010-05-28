@@ -306,8 +306,9 @@ void Func_SaveGame()
 
 void Func_LoadState()
 {
-  if(!savestates_exists())
+  if(!savestates_exists(LOADSTATE)) {
     menu::MessageBox::getInstance().setMessage("Save doesn't exist");
+  }
   else {
     savestates_job = LOADSTATE;
     menu::MessageBox::getInstance().setMessage("Gameplay will resume from the savestate");
@@ -316,8 +317,13 @@ void Func_LoadState()
 
 void Func_SaveState()
 {
-  savestates_job = SAVESTATE;
-	menu::MessageBox::getInstance().setMessage("Gameplay will be saved once resumed");
+  if(!savestates_exists(SAVESTATE)) {
+    menu::MessageBox::getInstance().setMessage("Failed to create save state");
+  }
+  else {
+    savestates_job = SAVESTATE;
+	  menu::MessageBox::getInstance().setMessage("Gameplay will be saved once resumed");
+  }
 }
 
 static unsigned int which_slot = 0;

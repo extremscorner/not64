@@ -49,6 +49,8 @@ char* statespath = "/wii64/saves/";
 
 extern unsigned long interp_addr;
 extern int *autoinc_save_slot;
+void pauseAudio(void);
+void resumeAudio(void);
 
 int savestates_job = 0;
 extern BOOL hasLoadedROM;
@@ -61,30 +63,25 @@ void savestates_select_slot(unsigned int s)
 }
 	
 //returns 0 on file not existing
-int savestates_exists()
+int savestates_exists(int mode)
 {
   gzFile f;
-	char *filename, buf[1024];
-  filename = malloc(256);
+	char *filename;
+  filename = malloc(1024);
 #ifdef HW_RVL
-  if(saveStateDevice==SAVESTATEDEVICE_USB)
-    strcpy(filename,"usb:");
+  sprintf(filename, "%s%s%s%s.st%d",(saveStateDevice==SAVESTATEDEVICE_USB)?"usb:":"sd:",
+                           statespath, ROM_SETTINGS.goodname, saveregionstr(),savestates_slot);
+#else
+  sprintf(filename, "sd:%s%s%s.st%d", statespath, ROM_SETTINGS.goodname, saveregionstr(),savestates_slot);
 #endif
-  if(saveStateDevice==SAVESTATEDEVICE_SD)
-    strcpy(filename,"sd:"); //"sd:/" is any currently mounted SD on GC or Wii
-	strcat(filename, statespath);
-  strcat(filename, ROM_SETTINGS.goodname);
-  strcat(filename, saveregionstr());
-	strcat(filename, ".st");
-	sprintf(buf, "%d", savestates_slot);
-	strcat(filename, buf);
 
-	f = gzopen(filename, "rb");
+	f = gzopen(filename, (mode == SAVESTATE) ? "wb" : "rb");
   free(filename);
    	
-  if(!f)
+  if(!f) {
     return 0;
-  fclose(f);
+  }
+  gzclose(f);
   return 1;
 }
 
@@ -95,26 +92,27 @@ void savestates_save()
   int len, i;
 	
   /* fix the filename to %s.st%d format */
-	filename = malloc(256);
+  filename = malloc(1024);
 #ifdef HW_RVL
-  if(saveStateDevice==SAVESTATEDEVICE_USB)
-    strcpy(filename,"usb:");
+  sprintf(filename, "%s%s%s%s.st%d",(saveStateDevice==SAVESTATEDEVICE_USB)?"usb:":"sd:",
+                           statespath, ROM_SETTINGS.goodname, saveregionstr(),savestates_slot);
+#else
+  sprintf(filename, "sd:%s%s%s.st%d", statespath, ROM_SETTINGS.goodname, saveregionstr(),savestates_slot);
 #endif
-  if(saveStateDevice==SAVESTATEDEVICE_SD)
-    strcpy(filename,"sd:"); //"sd:/" is any currently mounted SD on GC or Wii
-	strcat(filename, statespath);
-  strcat(filename, ROM_SETTINGS.goodname);
-  strcat(filename, saveregionstr());
-	strcat(filename, ".st");
-	sprintf(buf, "%d", savestates_slot);
-	strcat(filename, buf);
+
 
 	f = gzopen(filename, "wb");
   free(filename);
    	
-  if(!f)
+  if(!f) {
   	return;
-  pauseRemovalThread();    
+	}
+  if(stop) {
+	  pauseRemovalThread();
+  }
+  else {
+    pauseAudio();
+  }  
   gzwrite(f, &rdram_register, sizeof(RDRAM_register));
 	gzwrite(f, &MI_register, sizeof(mips_register));
 	gzwrite(f, &pi_register, sizeof(PI_register));
@@ -165,7 +163,12 @@ void savestates_save()
 	gzwrite(f, buf, len);
 	
 	gzclose(f);
-	continueRemovalThread();
+	if(stop) {
+	  continueRemovalThread();
+  }
+  else {
+    resumeAudio();
+  }
 }
 
 void savestates_load()
@@ -175,26 +178,26 @@ void savestates_load()
 	int len, i;
 		
 	/* fix the filename to %s.st%d format */
-	filename = malloc(256);
+  filename = malloc(1024);
 #ifdef HW_RVL
-  if(saveStateDevice==SAVESTATEDEVICE_USB)
-    strcpy(filename,"usb:");
+  sprintf(filename, "%s%s%s%s.st%d",(saveStateDevice==SAVESTATEDEVICE_USB)?"usb:":"sd:",
+                           statespath, ROM_SETTINGS.goodname, saveregionstr(),savestates_slot);
+#else
+  sprintf(filename, "sd:%s%s%s.st%d", statespath, ROM_SETTINGS.goodname, saveregionstr(),savestates_slot);
 #endif
-  if(saveStateDevice==SAVESTATEDEVICE_SD)
-    strcpy(filename,"sd:"); //"sd:/" is any currently mounted SD on GC or Wii
-	strcat(filename, statespath);
-  strcat(filename, ROM_SETTINGS.goodname);
-  strcat(filename, saveregionstr());
-	strcat(filename, ".st");
-	sprintf(buf, "%d", savestates_slot);
-	strcat(filename, buf);
 	
 	f = gzopen(filename, "rb");
 	free(filename);
 	
-	if (!f)
+	if (!f) {
 		return;
-  pauseRemovalThread();
+	}
+	if(stop) {
+	  pauseRemovalThread();
+  }
+  else {
+    pauseAudio();
+  }
   gzread(f, &rdram_register, sizeof(RDRAM_register));
 	gzread(f, &MI_register, sizeof(mips_register));
 	gzread(f, &pi_register, sizeof(PI_register));
@@ -271,5 +274,10 @@ void savestates_load()
 	
 	gzclose(f);
 	last_addr = interp_addr;
-	continueRemovalThread();
+	if(stop) {
+	  continueRemovalThread();
+  }
+  else {
+    resumeAudio();
+  }
 }
