@@ -801,7 +801,7 @@ void OGL_UpdateStates()
 			(int)((gDP.scissor.lrx - gDP.scissor.ulx) * OGL.scaleX), (int)((gDP.scissor.lry - gDP.scissor.uly) * OGL.scaleY) );
 	}
 #else // !__GX__
-	if (gDP.changed & CHANGED_SCISSOR)
+	if ((gDP.changed & CHANGED_SCISSOR) || (gSP.changed & CHANGED_VIEWPORT))
 	{
 		float ulx = max(OGL.GXorigX + max(gDP.scissor.ulx,gSP.viewport.x) * OGL.GXscaleX, 0);
 		float uly = max(OGL.GXorigY + max(gDP.scissor.uly,gSP.viewport.y) * OGL.GXscaleY, 0);
@@ -1604,6 +1604,12 @@ void OGL_DrawTexturedRect( float ulx, float uly, float lrx, float lry, float uls
 	glOrtho( 0, VI.width, VI.height, 0, 1.0f, -1.0f );
 	glViewport( 0, OGL.heightOffset, OGL.width, OGL.height );
 #else // !__GX__
+	//Note: Scissoring may need to be reworked here
+	float ulx1 = max(OGL.GXorigX + gDP.scissor.ulx * OGL.GXscaleX, 0);
+	float uly1 = max(OGL.GXorigY + gDP.scissor.uly * OGL.GXscaleY, 0);
+	float lrx1 = max(OGL.GXorigX + min(gDP.scissor.lrx * OGL.GXscaleX,OGL.GXwidth), 0);
+	float lry1 = max(OGL.GXorigY + min(gDP.scissor.lry * OGL.GXscaleY,OGL.GXheight), 0);
+	GX_SetScissor((u32) ulx1,(u32) uly1,(u32) (lrx1 - ulx1),(u32) (lry1 - uly1));
 	GX_SetCullMode (GX_CULL_NONE);
 	Mtx44 GXprojection;
 	guMtxIdentity(GXprojection);
@@ -1918,6 +1924,7 @@ void OGL_DrawTexturedRect( float ulx, float uly, float lrx, float lry, float uls
 #else // !__GX__
 	OGL.GXrenderTexRect = false;
 	OGL.GXupdateMtx = true;
+	gDP.changed |= CHANGED_SCISSOR;	//Restore scissor in OGL_UpdateStates() before drawing next geometry.
 #endif // __GX__
 	OGL_UpdateCullFace();
 	OGL_UpdateViewport();
@@ -2133,7 +2140,7 @@ void OGL_GXinitDlist()
 
 	//Not sure if this is needed.  Clipping is a slow process...
 	//Note: gx.h has GX_CLIP_ENABLE and GX_CLIP_DISABLE backwards!!
-//	GX_SetClipMode(GX_CLIP_ENABLE);
+	GX_SetClipMode(GX_CLIP_ENABLE);
 //	GX_SetClipMode(GX_CLIP_DISABLE);
 
 	//These are here temporarily until combining/blending is sorted out...
