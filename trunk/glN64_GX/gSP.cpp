@@ -422,15 +422,32 @@ void gSPDMAMatrix( u32 matrix, u8 index, u8 multiply )
 	if (OGL.numTriangles)
 		OGL_DrawTriangles();
 	OGL.GXupdateMtx = true;
-	OGL.GXuseProj = true;
-	for (int j=0; j<4; j++)
-		for (int i=0; i<4; i++)
-			OGL.GXproj[j][i] = gSP.matrix.projection[i][j];
-	//N64 Z clip space is backwards, so mult z components by -1
-	//N64 Z [-1,1] whereas GC Z [-1,0], so mult by 0.5 and shift by -0.5
-	OGL.GXproj[2][2] = 0.5*OGL.GXproj[2][2] - 0.5*OGL.GXproj[3][2];
-	OGL.GXproj[2][3] = 0.5*OGL.GXproj[2][3] - 0.5*OGL.GXproj[3][3];
-//	OGL.GXproj[2][3] = OGL.GXproj[2][3]-0.25;
+
+	if (1)
+	{
+		OGL.GXuseProj = false;
+		if(gSP.matrix.projection[2][3] != 0)
+		{
+			OGL.GXprojW[2][2] = -GXprojZOffset - (GXprojZScale*gSP.matrix.projection[2][2]/gSP.matrix.projection[2][3]);
+			OGL.GXprojW[2][3] = GXprojZScale*(gSP.matrix.projection[3][2] - (gSP.matrix.projection[2][2]*gSP.matrix.projection[3][3]/gSP.matrix.projection[2][3]));
+//			OGL.GXprojW[2][3] = OGL.GXprojW[2][3]-0.25;
+			OGL.GXuseProjW = true;
+		}
+		else
+			OGL.GXuseProjW = false;
+	}
+	else
+	{
+		OGL.GXuseProj = true;
+		for (int j=0; j<4; j++)
+			for (int i=0; i<4; i++)
+				OGL.GXproj[j][i] = gSP.matrix.projection[i][j];
+		//N64 Z clip space is backwards, so mult z components by -1
+		//N64 Z [-1,1] whereas GC Z [-1,0], so mult by 0.5 and shift by -0.5
+		OGL.GXproj[2][2] = 0.5*OGL.GXproj[2][2] - 0.5*OGL.GXproj[3][2];
+		OGL.GXproj[2][3] = 0.5*OGL.GXproj[2][3] - 0.5*OGL.GXproj[3][3];
+//		OGL.GXproj[2][3] = OGL.GXproj[2][3]-0.25;
+	}
 
 #ifdef SHOW_DEBUG
 	sprintf(txtbuffer,"gSP: gSPDMAMatrix");
@@ -524,7 +541,8 @@ void gSPForceMatrix( u32 mptr )
 	sprintf(txtbuffer,"gSP: gSPForceMatrix");
 	DEBUG_print(txtbuffer,7);
 #endif
-	if (OGL.GXuseProj)
+	if (1)
+//	if (OGL.GXuseProj)
 	{
 		if (OGL.numTriangles)
 			OGL_DrawTriangles();
