@@ -173,22 +173,25 @@ void VI_UpdateScreen()
 	}
 	else
 	{
-		if (gSP.changed & CHANGED_COLORBUFFER)
-			OGL_SwapBuffers();
-
-		VI_GX_cleanUp();
-		if(VI.updateOSD && gDP.colorImage.changed)
+/*		if (gSP.changed & CHANGED_COLORBUFFER)
 		{
+			OGL_SwapBuffers();
+			gSP.changed &= ~CHANGED_COLORBUFFER;
+		}*/
+		if(VI.updateOSD && (gSP.changed & CHANGED_COLORBUFFER))
+		{
+			VI_GX_cleanUp();
 			VI_GX_showStats();
 			VI_GX_showFPS();
 			VI_GX_showDEBUG();
 			GX_SetCopyClear ((GXColor){0,0,0,255}, 0xFFFFFF);
-			GX_CopyDisp (VI.xfb[VI.which_fb]+GX_xfb_offset, GX_FALSE);
+//			GX_CopyDisp (VI.xfb[VI.which_fb]+GX_xfb_offset, GX_FALSE);
+			GX_CopyDisp (VI.xfb[VI.which_fb]+GX_xfb_offset, GX_TRUE);
 			GX_DrawDone(); //Wait until EFB->XFB copy is complete
 			VI.updateOSD = false;
-			gDP.colorImage.changed = FALSE;
 			VI.EFBcleared = false;
 			VI.copy_fb = true;
+			gSP.changed &= ~CHANGED_COLORBUFFER;
 		}
 	}
 #endif // __GX__
