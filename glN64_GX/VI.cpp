@@ -127,7 +127,6 @@ void VI_UpdateScreen()
 		//Only render N64 framebuffer in RDRAM and not EFB
 		VI_GX_cleanUp();
 		VI_GX_renderCpuFramebuffer();
-		VI_GX_showStats();
 		VI_GX_showFPS();
 		VI_GX_showDEBUG();
 		GX_SetCopyClear ((GXColor){0,0,0,255}, 0xFFFFFF);
@@ -155,7 +154,6 @@ void VI_UpdateScreen()
 
 			//Draw DEBUG to screen
 			VI_GX_cleanUp();
-			VI_GX_showStats();
 			VI_GX_showFPS();
 			VI_GX_showDEBUG();
 			GX_SetCopyClear ((GXColor){0,0,0,255}, 0xFFFFFF);
@@ -183,12 +181,10 @@ void VI_UpdateScreen()
 		if(VI.updateOSD && (gSP.changed & CHANGED_COLORBUFFER))
 		{
 			VI_GX_cleanUp();
-//			VI_GX_showStats();
 			VI_GX_showFPS();
 			VI_GX_showDEBUG();
 			GX_SetCopyClear ((GXColor){0,0,0,255}, 0xFFFFFF);
 			GX_CopyDisp (VI.xfb[VI.which_fb]+GX_xfb_offset, GX_FALSE);
-//			GX_CopyDisp (VI.xfb[VI.which_fb]+GX_xfb_offset, GX_TRUE);
 			GX_DrawDone(); //Wait until EFB->XFB copy is complete
 			VI.updateOSD = false;
 			VI.enableLoadIcon = true;
@@ -260,6 +256,9 @@ void VI_GX_showFPS(){
 
 void VI_GX_showLoadProg(float percent)
 {
+	if (!VI.enableLoadIcon)
+		return;
+
 #ifndef MENU_V2
 	GXColor GXcol1 = {0,128,255,255};
 	GXColor GXcol2 = {0,64,128,255};
@@ -378,9 +377,30 @@ void VI_GX_showLoadProg(float percent)
 
 #endif //MENU_V2
 
-	if (VI.copy_fb)	GX_CopyDisp (VI.xfb[VI.which_fb]+GX_xfb_offset, GX_FALSE);
-	else			GX_CopyDisp (VI.xfb[VI.which_fb^1]+GX_xfb_offset, GX_FALSE);
-	GX_Flush();
+	if (OGL.frameBufferTextures)
+	{
+		//Draw DEBUG to screen
+		VI_GX_cleanUp();
+		VI_GX_showFPS();
+		VI_GX_showDEBUG();
+		GX_SetCopyClear ((GXColor){0,0,0,255}, 0xFFFFFF);
+		//Copy EFB->XFB
+		if (VI.copy_fb)	GX_CopyDisp (VI.xfb[VI.which_fb]+GX_xfb_offset, GX_FALSE);
+		else			GX_CopyDisp (VI.xfb[VI.which_fb^1]+GX_xfb_offset, GX_FALSE);
+		GX_DrawDone(); //Wait until EFB->XFB copy is complete
+		VI.updateOSD = false;
+		VI.enableLoadIcon = true;
+		VI.copy_fb = true;
+
+		//Restore current EFB
+		FrameBuffer_RestoreBuffer( gDP.colorImage.address, gDP.colorImage.size, gDP.colorImage.width );
+	}
+	else
+	{
+		if (VI.copy_fb)	GX_CopyDisp (VI.xfb[VI.which_fb]+GX_xfb_offset, GX_FALSE);
+		else			GX_CopyDisp (VI.xfb[VI.which_fb^1]+GX_xfb_offset, GX_FALSE);
+		GX_Flush();
+	}
 //    GX_DrawDone();
 //	VI.copy_fb = true;
 }
@@ -396,6 +416,7 @@ void VI_GX_showDEBUG()
 {
 	int i = 0;
 	GXColor fontColor = {150, 255, 150, 255};
+//	VI_GX_showStats();
 	DEBUG_update();
 #ifndef MENU_V2
 	write_font_init_GX(fontColor);

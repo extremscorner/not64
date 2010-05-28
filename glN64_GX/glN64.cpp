@@ -324,15 +324,15 @@ EXPORT void CALL ProcessDList(void)
 	sprintf(txtbuffer,"\nPROCESS D LIST!!\n\n");
 	DEBUG_print(txtbuffer,DBG_SDGECKOPRINT);
 #endif // GLN64_SDLOG
-	if (VI.enableLoadIcon)
+	if (VI.enableLoadIcon && !OGL.frameBufferTextures)
 	{
 		float color[4] = {0.0f,0.0f,0.0f,0.0f};
 		OGL_ClearColorBuffer( color );
 		OGL_ClearDepthBuffer();
 		OGL_GXclearEFB();
 //		VI_GX_clearEFB();
-		VI.enableLoadIcon = false;
 	}
+	VI.enableLoadIcon = false;
 #endif // __GX__
 	RSP_ProcessDList();
 #endif
