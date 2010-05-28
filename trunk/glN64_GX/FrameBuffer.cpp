@@ -601,6 +601,11 @@ void FrameBuffer_RestoreBuffer( u32 address, u16 size, u16 width )
 		}
 		current = current->lower;
 	}
+#ifndef __GX__
+	//No framebuffer was found
+	float color[4] = {0.0f,0.0f,0.0f,0.0f};
+	OGL_ClearColorBuffer( color );
+#endif //!__GX__
 }
 
 FrameBuffer *FrameBuffer_FindBuffer( u32 address )
