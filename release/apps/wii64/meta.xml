@@ -3,13 +3,13 @@
    <name>Wii64</name>
    <coder>Wii64 Team</coder>
    <version>Beta 1.1 'Honey'</version>
-   <release_date>201002140000</release_date>
+   <release_date>201002230000</release_date>
    <short_description>N64 Emulator for Wii</short_description>
    <long_description>
 
 Wii64 Team is:
 Core Coder - tehpola  
-Graphics Coding - sepp256  
+Graphics & Menu Coding - sepp256  
 General Coding - emu_kidid
 
 The Wii64Team proudly presents Wii64 Beta 1.1 'Honey'

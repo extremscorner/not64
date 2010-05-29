@@ -15,7 +15,7 @@ QUICK USAGE:
  * To install: Extract the contents of wii64-beta1.1.zip to the root of your SD card
  * For SD/USB: Put ROMs in the directory named /wii64/roms,
     All save types will automatically be placed in /wii64/saves
- * For DVD: ROMs may be anywhere on the disc  
+ * For DVD: ROMs may be anywhere on the disc (requires DVDxV2 on Wii)
  * Load the executable from the HBC or in the loader of your choice
     Once loaded, select 'Load ROM' and choose the source and select the ROM to load
       (Note: to go up a directory select '..', B will exit the file browser)
@@ -30,10 +30,10 @@ Controls:
  * There are 4 configuration slots for each type of controller
    * To load a different, previously saved configuration, select the slot, and click 'Load'
    * After configuring the controls as desired, select the slot, and click 'Save'
-   * After saving different configurations to the slots, be sure to save your configs in the input frame
+   * After saving different configurations to the slots, be sure to save your configs in the input tab of the settings frame
  * Clicking 'Next Pad' will cycle through the N64 controllers assigned
- * There is an option to invert the Y axis of the N64's analog stick; by default its 'Normal Y'
- * The 'Menu Combo' configuration allows you to select a combination of buttons to return to the menu
+ * There is an option to invert the Y axis of the N64's analog stick; by default this is 'Normal Y'
+ * The 'Menu Combo' configuration allows you to select a button combination to return to the menu
 
 Settings:
  * General
@@ -44,12 +44,12 @@ Settings:
    * Save settings.cfg: Save all of these settings either SD or USB (to be loaded automatically next time)
  * Video
    * Show FPS: Display the framerate in the top-left corner of the screen
-   * Screen Mode: Select the aspect ratio to display in; 'Force 16:9' will pillar-box in-game display
+   * Screen Mode: Select the aspect ratio of the display; 'Force 16:9' will pillar-box the in-game display
    * CPU Framebuffer: Enable for games which only draw directly to the
      framebuffer (this will only need to be set for some homebrew demos)
    * 2xSaI Tex: Scale and Interpolate in-game textures (unstable on GC)
    * FB Textures: Enable framebuffer textures (necessary for some games to
-     render everything correctly (e.g. Zelda Subscreen), but can impact performance, unstable on GC)
+     render everything correctly (e.g. Zelda Subscreen), but can impact performance; unstable on GC)
  * Input
    * Configure Input: Select controllers to use in game
    * Configure Paks: Select which controller paks to use in which controllers
@@ -60,7 +60,7 @@ Settings:
    * Disable Audio: Select to mute the sound
  * Saves
    * Auto Save Native Saves: When enabled, the emulator will automatically load
-     saves from the selected device and save when returning to the menu or
+     saves from the selected device on ROM load and save when returning to the menu or
      turning off the console
    * Copy Saves: Not yet implemented
    * Delete Saves: Not yet implemented
@@ -71,7 +71,7 @@ COMPATIBILITY LIST:
 
 CREDITS:
  * Core Coder: tehpola
- * Graphics Coder: sepp256
+ * Graphics & Menu Coder: sepp256
  * General Coder: emu_kidid
  * Original mupen64: Hactarux
  * Artwork: drmr
@@ -87,24 +87,34 @@ Beta 1.1:
      + Recompiling more instructions (LWC1/LDC1/FP rounding/partially MTC0)
      * Execution from ROM
      * Branch comparisons compare 64-bits when necessary
-   + Reconfigurable button mapping
-     + Save/Load button mapping from file
-   + Pillar-boxing 'Force 16:9' mode
-   * Fixed projection matrix for Rects
-   * Autosave is now the default setting
-   + ROMs displayed in alphabetical order
-   + Invalid ROM type detection
-   + Error message if /wii64/roms doesn't exist
+   * glN64_GX improvements
+     + Pillar-boxing 'Force 16:9' mode
+     * Fixed projection matrix for Rects
+     * Fixed viewport and scissoring edge cases
+     * Fixed matrix transforms for several microcodes
+     * Improved EFB handling wrt VI timing
+     * Added upper limit to texture meta data
+     * Improved FPS display and loading icon stability
+   * Menu improvements
+     + Reconfigurable button mapping
+       + Save/Load button mapping from file
+     + ROMs displayed in alphabetical order
+     + Navigate filebrowser pages with R/L and +/- buttons
+     + Navigate settings tabs with R/L and +/- buttons
+     + Invalid ROM type detection
+     + Error message if /wii64/roms doesn't exist
+     * Autosave is now the default setting
    * Changed C-Stick deadzone
    * Compiled with devkitPPC r19 / libOGC 1.8.1
-   * Fixed ROM cache bug for ROMs > ROM cache size
    * Fixed resetting flashrom on ROM reset
  Wii:
    * Compiled with new libDI / DVDx V2
+   * DVD reads are now done with direct PowerPC access
    * Controller improvements
      + Rumble for Wiimote-based input
      + Wiimote-only controls
      + IR/Accelerometer analog input
+   * Fixed ROM cache bug for ROMs > ROM cache size
  GC:
    * Settings.cfg saving fixed
    * Moved TLB & blocks array to ARAM
