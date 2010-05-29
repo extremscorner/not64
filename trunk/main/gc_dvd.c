@@ -34,7 +34,7 @@
 #endif
 
 /* DVD Stuff */
-static u32 dvd_hard_init = 0;
+u32 dvd_hard_init = 0;
 static u32 read_cmd = NORMAL;
 static int last_current_dir = -1;
 int is_unicode,files;
@@ -84,24 +84,19 @@ int init_dvd() {
 #endif
 // Wii (Wii mode)
 #ifdef HW_RVL
-  if(!dvd_hard_init) {
-    DI_Close();            // incase it was open last time
-    DI_Init ();            // first
-    if(!have_hw_access()) {
-      return NO_HW_ACCESS;
-    }
-    if((dvd_get_error()>>24) == 1) {
-      return NO_DISC;
-    }
+  if(!have_hw_access()) {
+    return NO_HW_ACCESS;
+  }
+  if((dvd_get_error()>>24) == 1) {
+    return NO_DISC;
+  }
+  
+  if((!dvd_hard_init) || (dvd_get_error())) {
+    DI_Mount();
+    while(DI_GetStatus() & DVD_INIT) usleep(20000);
+    dvd_hard_init=1;
   }
 
-  DI_Mount();
-  while(DI_GetStatus() & DVD_INIT) usleep(20000);
-  if(!dvd_hard_init) {
-    DI_Close();
-    dvd_hard_init = 1;
-  }
-  usleep(20000);
   if((dvd_get_error()&0xFFFFFF)==0x053000) {
     read_cmd = DVDR;
   }

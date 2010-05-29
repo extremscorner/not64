@@ -36,6 +36,7 @@ extern "C" {
 }
 
 extern char shutdown;
+extern unsigned int dvd_hard_init;
 
 namespace menu {
 
@@ -117,7 +118,9 @@ void Gui::draw()
 			else			//Return to Loader
 			{
 #ifdef WII
-				DI_Close();
+        if(dvd_hard_init) {
+				  DI_Close();
+			  }
 #endif
 				void (*rld)() = (void (*)()) 0x80001800;
 				rld();
