@@ -44,6 +44,7 @@ extern "C" {
 #include "../fileBrowser/fileBrowser.h"
 #include "../fileBrowser/fileBrowser-libfat.h"
 #include "../fileBrowser/fileBrowser-CARD.h"
+#include "../fileBrowser/fileBrowser-SMB.h"
 #include "../main/gc_dvd.h"
 }
 #include <ogc/dvd.h>
@@ -246,6 +247,7 @@ void Func_PlayGame()
 
 	menu::Gui::getInstance().gfx->clearEFB((GXColor){0, 0, 0, 0xFF}, 0x000000);
 
+	pause_netinit_thread();
 	pauseRemovalThread();
 	resumeAudio();
 	resumeInput();
@@ -261,6 +263,7 @@ void Func_PlayGame()
 	pauseInput();
 	pauseAudio();
   continueRemovalThread();
+  resume_netinit_thread();
 	
   if(autoSave==AUTOSAVE_ENABLE) {
     if(flashramWritten || sramWritten || eepromWritten || mempakWritten) {  //something needs saving

@@ -1446,6 +1446,7 @@ void TextureCache_ActivateTexture( u32 t, CachedTexture *texture )
 				texture->clampS ? GX_CLAMP : GX_REPEAT, 
 				texture->clampT ? GX_CLAMP : GX_REPEAT, GX_FALSE); 
 		if (OGL.GXuseMinMagNearest) GX_InitTexObjLOD(&texture->GXtex, GX_NEAR, GX_NEAR, 0.0f, 0.0f, 0.0f, GX_FALSE, GX_FALSE, GX_ANISO_1);
+		else GX_InitTexObjLOD(&texture->GXtex, GX_LINEAR, GX_LINEAR, 0.0f, 0.0f, 0.0f, GX_TRUE, GX_TRUE, GX_ANISO_4);
 		GX_LoadTexObj(&texture->GXtex, t); // t = 0 is GX_TEXMAP0 and t = 1 is GX_TEXMAP1
 		OGL.GXuseMinMagNearest = false;
 #ifdef GLN64_SDLOG
@@ -1908,7 +1909,7 @@ void TextureCache_UpdatePrimDepthZtex( f32 z )
 	// TODO: Work around this with tokens.
 	GX_DrawDone();
 
-	u16 primDepthval = (u16) (z * 65535.0f);
+	u16 primDepthval = GXcastf32u16(z);
 	for (int i = 0; i < 16; i++)
 		cache.GXprimDepthZ[0]->GXtexture[i] = primDepthval;
 	if(cache.GXprimDepthZ[0]->GXtexture != NULL)

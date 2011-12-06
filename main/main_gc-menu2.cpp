@@ -63,6 +63,7 @@ extern "C" {
 #include "../fileBrowser/fileBrowser.h"
 #include "../fileBrowser/fileBrowser-libfat.h"
 #include "../fileBrowser/fileBrowser-CARD.h"
+#include "../fileBrowser/fileBrowser-SMB.h"
 #include "wii64config.h"
 }
 
@@ -71,6 +72,7 @@ unsigned int MALLOC_MEM2 = 0;
 #include <ogc/conf.h>
 #include <wiiuse/wpad.h>
 extern "C" {
+extern u32 __di_check_ahbprot(void);
 #include <di/di.h>
 }
 #include "../gc_memory/MEM2.h"
@@ -120,11 +122,20 @@ char menuActive;
 	   char saveStateDevice;
        char autoSave;
        char screenMode = 0;
+	   char deFlicker;
+	   char trapFilter;
 	   char padAutoAssign;
 	   char padType[4];
 	   char padAssign[4];
 	   char pakMode[4];
 	   char loadButtonSlot;
+
+#define CONFIG_STRING_TYPE 0
+#define CONFIG_STRING_SIZE 256
+char smbUserName[CONFIG_STRING_SIZE];
+char smbPassWord[CONFIG_STRING_SIZE];
+char smbShareName[CONFIG_STRING_SIZE];
+char smbIpAddr[CONFIG_STRING_SIZE];
 
 static struct {
 	char* key;
@@ -137,6 +148,8 @@ static struct {
   { "FBTex", &glN64_useFrameBufferTextures, GLN64_FBTEX_DISABLE, GLN64_FBTEX_ENABLE },
   { "2xSaI", &glN64_use2xSaiTextures, GLN64_2XSAI_DISABLE, GLN64_2XSAI_ENABLE },
   { "ScreenMode", &screenMode, SCREENMODE_4x3, SCREENMODE_16x9_PILLARBOX },
+  { "DeFlicker", &deFlicker, DEFLICKER_DISABLE, DEFLICKER_ENABLE },
+  { "TrapFilter", &trapFilter, TRAPFILTER_DISABLE, TRAPFILTER_ENABLE },
   { "Core", ((char*)&dynacore)+3, DYNACORE_INTERPRETER, DYNACORE_PURE_INTERP },
   { "NativeDevice", &nativeSaveDevice, NATIVESAVEDEVICE_SD, NATIVESAVEDEVICE_CARDB },
   { "StatesDevice", &saveStateDevice, SAVESTATEDEVICE_SD, SAVESTATEDEVICE_USB },
@@ -155,6 +168,10 @@ static struct {
   { "Pak3", &pakMode[2], PAKMODE_MEMPAK, PAKMODE_RUMBLEPAK },
   { "Pak4", &pakMode[3], PAKMODE_MEMPAK, PAKMODE_RUMBLEPAK },
   { "LoadButtonSlot", &loadButtonSlot, LOADBUTTON_SLOT0, LOADBUTTON_DEFAULT },
+  { "smbusername", smbUserName, CONFIG_STRING_TYPE, CONFIG_STRING_TYPE },
+  { "smbpassword", smbPassWord, CONFIG_STRING_TYPE, CONFIG_STRING_TYPE },
+  { "smbsharename", smbShareName, CONFIG_STRING_TYPE, CONFIG_STRING_TYPE },
+  { "smbipaddr", smbIpAddr, CONFIG_STRING_TYPE, CONFIG_STRING_TYPE }
 };
 void handleConfigPair(char* kv);
 void readConfig(FILE* f);
@@ -184,7 +201,14 @@ u16 readWPAD(void);
 int main(int argc, char* argv[]){
 	/* INITIALIZE */
 #ifdef HW_RVL
-  DI_Init();    // first
+	if (!__di_check_ahbprot()) {
+		s32 preferred = IOS_GetPreferredVersion();
+		if (preferred == 58 || preferred == 61)
+			IOS_ReloadIOS(preferred);
+	}
+	
+	DI_UseCache(false);
+	DI_Init();    // first
 #endif
 
 #ifdef DEBUGON
@@ -195,8 +219,6 @@ int main(int argc, char* argv[]){
 
 	Initialise(); // Stock OGC initialization
 //	vmode = VIDEO_GetPreferredMode(NULL);
-	MenuContext *menu = new MenuContext(vmode);
-	VIDEO_SetPostRetraceCallback (ScanPADSandReset);
 #ifndef WII
 	DVD_Init();
 #endif
@@ -216,7 +238,7 @@ int main(int argc, char* argv[]){
 #endif
 	printToScreen    = 1; // Show DEBUG text on screen
 	printToSD        = 0; // Disable SD logging
-	Timers.limitVIs  = 0; // Sync to Audio
+	Timers.limitVIs  = 1;
 	saveEnabled      = 0; // Don't save game
 	nativeSaveDevice = 0; // SD
 	saveStateDevice	 = 0; // SD
@@ -224,6 +246,8 @@ int main(int argc, char* argv[]){
 	creditsScrolling = 0; // Normal menu for now
 	dynacore         = 1; // Dynarec
 	screenMode		 = 0; // Stretch FB horizontally
+	deFlicker		 = 1;
+	trapFilter		 = 0;
 	padAutoAssign	 = PADAUTOASSIGN_AUTOMATIC;
 	padType[0]		 = PADTYPE_NONE;
 	padType[1]		 = PADTYPE_NONE;
@@ -322,6 +346,16 @@ int main(int argc, char* argv[]){
 	for(i=1; i<argc; ++i){
 		handleConfigPair(argv[i]);
 	}
+#endif
+
+	MenuContext *menu = new MenuContext(vmode);
+	VIDEO_SetPostRetraceCallback (ScanPADSandReset);
+
+#ifdef HW_RVL
+	// Initialize the network if the user has specified something in their SMB settings
+	if(strlen(&smbShareName[0]) && strlen(&smbIpAddr[0])) {
+	  init_network_thread();
+  }
 #endif
 	while (menu->isRunning()) {}
 
@@ -673,23 +707,8 @@ static void Initialise (void){
 #endif*/
 
 	// Init PS GQRs so I can load signed/unsigned chars/shorts as PS values
-	__asm__ volatile(
-		"lis	3, 4     \n"
-		"addi	3, 3, 4  \n"
-		"mtspr	913, 3   \n" // GQR1 = unsigned char
-		"lis	3, 6     \n"
-		"addi	3, 3, 6  \n"
-		"mtspr	914, 3   \n" // GQR2 = signed char
-		"lis	3, 5     \n"
-		"addi	3, 3, 5  \n"
-		"mtspr	915, 3   \n" // GQR3 = unsigned short
-		"lis	3, 7     \n"
-		"addi	3, 3, 7  \n"
-		"mtspr	916, 3   \n" // GQR4 = signed short
-		"lis	3, %0    \n"
-		"addi	3, 3, %0 \n"
-		"mtspr	917, 3   \n" // GQR5 = unsigned short / (2^16)
-		:: "n" (16<<8 | 5) : "r3");
+	CAST_SetGQR2(GQR_TYPE_U8, 8);
+	CAST_SetGQR3(GQR_TYPE_U16, 16);
 }
 
 void video_mode_init(GXRModeObj *videomode,unsigned int *fb1, unsigned int *fb2)
@@ -700,10 +719,24 @@ void video_mode_init(GXRModeObj *videomode,unsigned int *fb1, unsigned int *fb2)
 	xfb[1] = fb2;
 }
 
-void setOption(char* key, char value){
-	for(unsigned int i=0; i<sizeof(OPTIONS)/sizeof(OPTIONS[0]); ++i){
+void setOption(char* key, char* valuePointer){
+	bool isString = valuePointer[0] == '"';
+	char value = 0;
+	
+	if(isString) {
+		char* p = valuePointer++;
+		while(*++p != '"');
+		*p = 0;
+	} else
+		value = atoi(valuePointer);
+	
+	for(unsigned int i=0; i<sizeof(OPTIONS)/sizeof(OPTIONS[0]); i++){
 		if(!strcmp(OPTIONS[i].key, key)){
-			if(value >= OPTIONS[i].min && value <= OPTIONS[i].max)
+			if(isString) {
+				if(OPTIONS[i].max == CONFIG_STRING_TYPE)
+					strncpy(OPTIONS[i].value, valuePointer,
+					        CONFIG_STRING_SIZE-1);
+			} else if(value >= OPTIONS[i].min && value <= OPTIONS[i].max)
 				*OPTIONS[i].value = value;
 			break;
 		}
@@ -718,7 +751,7 @@ void handleConfigPair(char* kv){
 	while(*vs == ' ' || *vs == '\t' || *vs == ':' || *vs == '=')
 			++vs;
 
-	setOption(kv, atoi(vs));
+	setOption(kv, vs);
 }
 
 void readConfig(FILE* f){
@@ -731,6 +764,9 @@ void readConfig(FILE* f){
 
 void writeConfig(FILE* f){
 	for(unsigned int i=0; i<sizeof(OPTIONS)/sizeof(OPTIONS[0]); ++i){
-		fprintf(f, "%s = %d\n", OPTIONS[i].key, *OPTIONS[i].value);
+		if(OPTIONS[i].max == CONFIG_STRING_TYPE)
+			fprintf(f, "%s = \"%s\"\n", OPTIONS[i].key, OPTIONS[i].value);
+		else
+			fprintf(f, "%s = %d\n", OPTIONS[i].key, *OPTIONS[i].value);
 	}
 }

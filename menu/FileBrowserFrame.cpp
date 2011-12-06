@@ -33,6 +33,7 @@ extern "C" {
 #include "../fileBrowser/fileBrowser-libfat.h"
 #include "../fileBrowser/fileBrowser-DVD.h"
 #include "../fileBrowser/fileBrowser-CARD.h"
+#include "../fileBrowser/fileBrowser-SMB.h"
 #include "../main/rom.h"
 #include "../main/gc_dvd.h"
 #include "../main/ROM-Cache.h"
@@ -354,11 +355,14 @@ void fileBrowserFrame_Error(fileBrowser_file* dir, int error_code)
 		FRAME_BUTTONS[i].button->setActive(false);
 	for (int i = 1; i<NUM_FILE_SLOTS; i++)
 		FRAME_BUTTONS[i+2].buttonString = FRAME_STRINGS[2];
-	if(error_code == NO_HW_ACCESS) {
-  	sprintf(feedback_string,"DVDX v2 not found");
+	if(error_code == SMB_NETINITERR) {
+  	sprintf(feedback_string,"Network not yet initialized");
 	}
-	else if(error_code == NO_DISC) {
-  	sprintf(feedback_string,"NO Disc Inserted");
+	else if(error_code == SMB_SMBCFGERR) {
+  	sprintf(feedback_string,"SMB not configured");
+	}
+	else if(error_code == SMB_SMBERR) {
+  	sprintf(feedback_string,"SMB failed to connect");
 	}
 	//set first entry to read 'error' and return to main menu
 	else if(dir->name)

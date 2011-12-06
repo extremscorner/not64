@@ -317,11 +317,11 @@ void OGL_InitStates()
 
 void OGL_UpdateScale()
 {
-	OGL.scaleX = OGL.width / (float)VI.width;
-	OGL.scaleY = OGL.height / (float)VI.height;
+	OGL.scaleX = castu16f32(OGL.width) / castu16f32(VI.width);
+	OGL.scaleY = castu16f32(OGL.height) / castu16f32(VI.height);
 #ifdef __GX__
-	OGL.GXscaleX = (float)OGL.GXwidth / (float)VI.width;
-	OGL.GXscaleY = (float)OGL.GXheight / (float)VI.height;
+	OGL.GXscaleX = castu16f32(OGL.GXwidth) / castu16f32(VI.width);
+	OGL.GXscaleY = castu16f32(OGL.GXheight) / castu16f32(VI.height);
 #endif //__GX__
 }
 
@@ -753,7 +753,7 @@ void OGL_UpdateStates()
 //			glEnable( GL_ALPHA_TEST );
 //			glAlphaFunc( (gDP.blendColor.a > 0.0f) ? GL_GEQUAL : GL_GREATER, gDP.blendColor.a );
 			GXalphaFunc = (gDP.blendColor.a > 0.0f) ? GX_GEQUAL : GX_GREATER;
-			GXalphaRef = (u8) (gDP.blendColor.a*255);
+			GXalphaRef = GXcastf32u8(gDP.blendColor.a);
 		}
 		// Used in TEX_EDGE and similar render modes
 		else if (gDP.otherMode.cvgXAlpha)
@@ -868,10 +868,10 @@ void OGL_UpdateStates()
 #else // !__GX__
 	if ((gDP.changed & CHANGED_FOGCOLOR) && OGL.fog) 
 	{
-		OGL.GXfogColor.r = (u8) (gDP.fogColor.r*255);
-		OGL.GXfogColor.g = (u8) (gDP.fogColor.g*255);
-		OGL.GXfogColor.b = (u8) (gDP.fogColor.b*255);
-		OGL.GXfogColor.a = (u8) (gDP.fogColor.a*255);
+		OGL.GXfogColor.r = GXcastf32u8(gDP.fogColor.r);
+		OGL.GXfogColor.g = GXcastf32u8(gDP.fogColor.g);
+		OGL.GXfogColor.b = GXcastf32u8(gDP.fogColor.b);
+		OGL.GXfogColor.a = GXcastf32u8(gDP.fogColor.a);
 		OGL.GXupdateFog = true;
 	}
 
@@ -1163,16 +1163,9 @@ void OGL_DrawTriangles()
 		{
 			if(OGL.GXuseCombW)
 			{
-				if(!OGL.GXuseProjWnear)
-				{
-					CopyMatrix( OGL.GXprojTemp, OGL.GXcombW );
-					OGL.GXprojTemp[2][2] += GXpolyOffsetFactor;
-					GX_LoadProjectionMtx(OGL.GXprojTemp, GX_PERSPECTIVE); 
-				}
-				else
-				{
-					GX_LoadProjectionMtx(OGL.GXprojWnear, GX_PERSPECTIVE); 
-				}
+				CopyMatrix( OGL.GXprojTemp, OGL.GXcombW );
+				OGL.GXprojTemp[2][2] += GXpolyOffsetFactor;
+				GX_LoadProjectionMtx(OGL.GXprojTemp, GX_PERSPECTIVE); 
 			}
 			else
 			{
@@ -1195,16 +1188,7 @@ void OGL_DrawTriangles()
 					GX_LoadProjectionMtx(OGL.GXprojTemp, GX_ORTHOGRAPHIC); 
 			}*/
 			if(OGL.GXuseCombW)
-			{
-				if(!OGL.GXuseProjWnear)
-				{
-					GX_LoadProjectionMtx(OGL.GXcombW, GX_PERSPECTIVE); 
-				}
-				else
-				{
-					GX_LoadProjectionMtx(OGL.GXprojWnear, GX_PERSPECTIVE); 
-				}
-			}
+				GX_LoadProjectionMtx(OGL.GXcombW, GX_PERSPECTIVE); 
 			else
 				GX_LoadProjectionMtx(OGL.GXprojIdent, GX_ORTHOGRAPHIC); 
 		}
@@ -1269,10 +1253,10 @@ void OGL_DrawTriangles()
 			GX_Position3f32( OGL.vertices[i].x*invW, OGL.vertices[i].y*invW, OGL.vertices[i].z*invW );
 		}
 //		GX_Position3f32(OGL.vertices[i].x/OGL.vertices[i].w, OGL.vertices[i].y/OGL.vertices[i].w, OGL.vertices[i].z/OGL.vertices[i].w);
-		GXcol.r = (u8) (min(OGL.vertices[i].color.r,1.0)*255);
-		GXcol.g = (u8) (min(OGL.vertices[i].color.g,1.0)*255);
-		GXcol.b = (u8) (min(OGL.vertices[i].color.b,1.0)*255);
-		GXcol.a = (u8) (min(OGL.vertices[i].color.a,1.0)*255);
+		GXcol.r = GXcastf32u8(OGL.vertices[i].color.r);
+		GXcol.g = GXcastf32u8(OGL.vertices[i].color.g);
+		GXcol.b = GXcastf32u8(OGL.vertices[i].color.b);
+		GXcol.a = GXcastf32u8(OGL.vertices[i].color.a);
 		GX_Color4u8(GXcol.r, GXcol.g, GXcol.b, GXcol.a); 
 //		if (combiner.usesT0) GX_TexCoord2f32(OGL.vertices[i].s0,OGL.vertices[i].t0);
 //		if (combiner.usesT1) GX_TexCoord2f32(OGL.vertices[i].s1,OGL.vertices[i].t1);
@@ -1398,10 +1382,10 @@ void OGL_DrawLine( SPVertex *vertices, int v0, int v1, float width )
 			color.b = vertices[v[i]].b;
 			color.a = vertices[v[i]].a;
 			SetConstant( color, combiner.vertex.color, combiner.vertex.alpha );
-			GXcol.r = (u8) (color.r*255);
-			GXcol.g = (u8) (color.g*255);
-			GXcol.b = (u8) (color.b*255);
-			GXcol.a = (u8) (color.a*255);
+			GXcol.r = GXcastf32u8(color.r);
+			GXcol.g = GXcastf32u8(color.g);
+			GXcol.b = GXcastf32u8(color.b);
+			GXcol.a = GXcastf32u8(color.a);
 			GX_Color4u8(GXcol.r, GXcol.g, GXcol.b, GXcol.a); 
 			GX_TexCoord2f32(0.0f,0.0f);
 		}
@@ -1449,10 +1433,10 @@ void OGL_DrawRect( int ulx, int uly, int lrx, int lry, float *color )
 	GX_SetViewport((f32) OGL.GXorigX,(f32) OGL.GXorigY,(f32) OGL.GXwidth,(f32) OGL.GXheight, 0.0f, 1.0f);
 
 	GXColor GXcol;
-	GXcol.r = (u8) (color[0]*255);
-	GXcol.g = (u8) (color[1]*255);
-	GXcol.b = (u8) (color[2]*255);
-	GXcol.a = (u8) (color[3]*255);
+	GXcol.r = GXcastf32u8(color[0]);
+	GXcol.g = GXcastf32u8(color[1]);
+	GXcol.b = GXcastf32u8(color[2]);
+	GXcol.a = GXcastf32u8(color[3]);
 
 	if ((gDP.otherMode.depthSource == G_ZS_PRIM)||OGL.GXuseAlphaCompare)
 	{
@@ -1686,6 +1670,7 @@ void OGL_DrawTexturedRect( float ulx, float uly, float lrx, float lry, float uls
 				(cache.current[0]->clampS || OGL.GXforceClampS0) ? GX_CLAMP : GX_REPEAT, 
 				(cache.current[0]->clampT || OGL.GXforceClampT0) ? GX_CLAMP : GX_REPEAT, GX_FALSE); 
 		if (OGL.GXuseMinMagNearest) GX_InitTexObjLOD(&cache.current[0]->GXtex, GX_NEAR, GX_NEAR, 0.0f, 0.0f, 0.0f, GX_FALSE, GX_FALSE, GX_ANISO_1);
+		else GX_InitTexObjLOD(&cache.current[0]->GXtex, GX_LINEAR, GX_LINEAR, 0.0f, 0.0f, 0.0f, GX_TRUE, GX_TRUE, GX_ANISO_4);
 		GX_LoadTexObj(&cache.current[0]->GXtex, GX_TEXMAP0); // t = 0 is GX_TEXMAP0 and t = 1 is GX_TEXMAP1
 	}
 
@@ -1702,6 +1687,7 @@ void OGL_DrawTexturedRect( float ulx, float uly, float lrx, float lry, float uls
 				(cache.current[1]->clampS || OGL.GXforceClampS1) ? GX_CLAMP : GX_REPEAT, 
 				(cache.current[1]->clampT || OGL.GXforceClampT1) ? GX_CLAMP : GX_REPEAT, GX_FALSE); 
 		if (OGL.GXuseMinMagNearest) GX_InitTexObjLOD(&cache.current[1]->GXtex, GX_NEAR, GX_NEAR, 0.0f, 0.0f, 0.0f, GX_FALSE, GX_FALSE, GX_ANISO_1);
+		else GX_InitTexObjLOD(&cache.current[1]->GXtex, GX_LINEAR, GX_LINEAR, 0.0f, 0.0f, 0.0f, GX_TRUE, GX_TRUE, GX_ANISO_4);
 		GX_LoadTexObj(&cache.current[1]->GXtex, GX_TEXMAP1); // t = 0 is GX_TEXMAP0 and t = 1 is GX_TEXMAP1
 	}
 
@@ -1766,10 +1752,10 @@ void OGL_DrawTexturedRect( float ulx, float uly, float lrx, float lry, float uls
 #else // !__GX__
 	GXColor GXcol;
 
-	GXcol.r = (u8) (rect[0].color.r*255);
-	GXcol.g = (u8) (rect[0].color.g*255);
-	GXcol.b = (u8) (rect[0].color.b*255);
-	GXcol.a = (u8) (rect[0].color.a*255);
+	GXcol.r = GXcastf32u8(rect[0].color.r);
+	GXcol.g = GXcastf32u8(rect[0].color.g);
+	GXcol.b = GXcastf32u8(rect[0].color.b);
+	GXcol.a = GXcastf32u8(rect[0].color.a);
 
 	if ((gDP.otherMode.depthSource == G_ZS_PRIM)||OGL.GXuseAlphaCompare)
 	{
@@ -1879,10 +1865,10 @@ void OGL_ClearColorBuffer( float *color )
 
 	glEnable( GL_SCISSOR_TEST );
 #else // !__GX__
-	OGL.GXclearColor.r = (u8) (color[0]*255);
-	OGL.GXclearColor.g = (u8) (color[1]*255);
-	OGL.GXclearColor.b = (u8) (color[2]*255);
-	OGL.GXclearColor.a = (u8) (color[3]*255);
+	OGL.GXclearColor.r = GXcastf32u8(color[0]);
+	OGL.GXclearColor.g = GXcastf32u8(color[1]);
+	OGL.GXclearColor.b = GXcastf32u8(color[2]);
+	OGL.GXclearColor.a = GXcastf32u8(color[3]);
 
 	OGL.GXclearColorBuffer = true;
 	gDP.changed |= CHANGED_RENDERMODE;
@@ -2035,17 +2021,12 @@ void OGL_GXinitDlist()
 
 	//Reset projection matrix
 	guMtxIdentity(OGL.GXcombW);
-	guMtxIdentity(OGL.GXprojWnear);
 	guMtxIdentity(OGL.GXprojIdent);
 //	guOrtho(OGL.GXprojIdent, -1, 1, -1, 1, 1.0f, -1.0f);
 	//N64 Z clip space is backwards, so mult z components by -1
 	//N64 Z [-1,1] whereas GC Z [-1,0], so mult by 0.5 and shift by -0.5
 	OGL.GXcombW[3][2] = -1;
 	OGL.GXcombW[3][3] = 0;
-	OGL.GXprojWnear[2][2] = 0.0f;
-	OGL.GXprojWnear[2][3] = -0.5f;
-	OGL.GXprojWnear[3][2] = -1.0f;
-	OGL.GXprojWnear[3][3] = 0.0f;
 	OGL.GXprojIdent[2][2] = GXprojZScale; //0.5;
 	OGL.GXprojIdent[2][3] = GXprojZOffset; //-0.5;
 	GX_LoadProjectionMtx(OGL.GXprojIdent, GX_ORTHOGRAPHIC);

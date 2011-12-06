@@ -7,6 +7,7 @@
 
 extern "C" {
 #include "hle.h"
+#include "../main/fastmemcpy.h"
 }
 //#include "rsp.h"
 //#define SAFE_MEMORY
@@ -897,7 +898,7 @@ static void LOADBUFF () { // memcpy causes static... endianess issue :(
 	if (AudioCount == 0)
  		return;
 	v0 = (inst2 & 0xfffffc);// + SEGMENTS[(inst2>>24)&0xf];
-	memcpy (BufferSpace+(AudioInBuffer&0xFFFC), rsp.RDRAM+v0, (AudioCount+3)&0xFFFC);
+	fast_memcpy (BufferSpace+(AudioInBuffer&0xFFFC), rsp.RDRAM+v0, (AudioCount+3)&0xFFFC);
 }
 
 static void SAVEBUFF () { // memcpy causes static... endianess issue :(
@@ -906,7 +907,7 @@ static void SAVEBUFF () { // memcpy causes static... endianess issue :(
 	if (AudioCount == 0)
 		return;
 	v0 = (inst2 & 0xfffffc);// + SEGMENTS[(inst2>>24)&0xf];
-	memcpy (rsp.RDRAM+v0, BufferSpace+(AudioOutBuffer&0xFFFC), (AudioCount+3)&0xFFFC);
+	fast_memcpy (rsp.RDRAM+v0, BufferSpace+(AudioOutBuffer&0xFFFC), (AudioCount+3)&0xFFFC);
 }
 
 static void SEGMENT () { // Should work

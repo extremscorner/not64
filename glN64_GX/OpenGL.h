@@ -117,12 +117,10 @@ struct GLInfo
 	float	GXscaleX, GXscaleY;
 	float	GXzPrimeScale, GXzPrimeTranslate;
 	Mtx44	GXcombW;
-	Mtx44	GXprojWnear;
 	Mtx44	GXprojIdent;
 	Mtx44	GXprojTemp;
 	Mtx		GXmodelViewIdent;
 	BOOL	GXuseCombW;
-	BOOL	GXuseProjWnear;
 	BOOL	GXupdateMtx;
 	int		GXnumVtxMP;
 	bool	GXuseAlphaCompare;

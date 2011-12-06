@@ -107,6 +107,20 @@ enum screenMode
 	SCREENMODE_16x9_PILLARBOX
 };
 
+extern char deFlicker;
+enum deFlicker
+{
+	DEFLICKER_DISABLE=0,
+	DEFLICKER_ENABLE
+};
+
+extern char trapFilter;
+enum trapFilter
+{
+	TRAPFILTER_DISABLE=0,
+	TRAPFILTER_ENABLE
+};
+
 extern char padAutoAssign;
 enum padAutoAssign
 {

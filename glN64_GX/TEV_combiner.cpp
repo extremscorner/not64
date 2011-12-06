@@ -262,23 +262,23 @@ void Update_TEV_combine_Colors( TEVCombiner *TEVcombiner )	//Called from OGL_Upd
 			switch (i)
 			{
 			case TEV_PRIM:
-				GXconstantColor.r = (u8) (gDP.primColor.r*255);
-				GXconstantColor.g = (u8) (gDP.primColor.g*255);
-				GXconstantColor.b = (u8) (gDP.primColor.b*255);
-				GXconstantColor.a = (u8) (gDP.primColor.a*255);
+				GXconstantColor.r = GXcastf32u8(gDP.primColor.r);
+				GXconstantColor.g = GXcastf32u8(gDP.primColor.g);
+				GXconstantColor.b = GXcastf32u8(gDP.primColor.b);
+				GXconstantColor.a = GXcastf32u8(gDP.primColor.a);
 				break;
 			case TEV_ENV:
-				GXconstantColor.r = (u8) (gDP.envColor.r*255);
-				GXconstantColor.g = (u8) (gDP.envColor.g*255);
-				GXconstantColor.b = (u8) (gDP.envColor.b*255);
-				GXconstantColor.a = (u8) (gDP.envColor.a*255);
+				GXconstantColor.r = GXcastf32u8(gDP.envColor.r);
+				GXconstantColor.g = GXcastf32u8(gDP.envColor.g);
+				GXconstantColor.b = GXcastf32u8(gDP.envColor.b);
+				GXconstantColor.a = GXcastf32u8(gDP.envColor.a);
 				break;
 			case TEV_LODFRAC:	//not sure if LODFRAC == PRIMLODFRAC...
 			case TEV_PRIMLODFRAC:
-				GXconstantColor.r = (u8) (gDP.primColor.l*255);
-				GXconstantColor.g = (u8) (gDP.primColor.l*255);
-				GXconstantColor.b = (u8) (gDP.primColor.l*255);
-				GXconstantColor.a = (u8) (gDP.primColor.l*255);
+				GXconstantColor.r = GXcastf32u8(gDP.primColor.l);
+				GXconstantColor.g = GXcastf32u8(gDP.primColor.l);
+				GXconstantColor.b = GXcastf32u8(gDP.primColor.l);
+				GXconstantColor.a = GXcastf32u8(gDP.primColor.l);
 				break;
 			case TEV_K4:
 			case TEV_K5:

@@ -29,7 +29,6 @@ struct SPVertex
 	f32		nx, ny, nz;
 	f32		r, g, b, a;
 	f32		s, t;
-	f32		xClip, yClip, zClip;
 	s16		flag;
 #ifdef __GX__
 	f32		zPrime;
@@ -134,7 +133,6 @@ void gSP4Triangles( s32 v00, s32 v01, s32 v02,
 					s32 v30, s32 v31, s32 v32 );
 void gSPDMATriangles( u32 tris, u32 n );
 void gSP1Quadrangle( s32 v0, s32 v1, s32 v2, s32 v4 );
-void gSPCullDisplayList( u32 v0, u32 vn );
 void gSPPopMatrix( u32 param );
 void gSPPopMatrixN( u32 param, u32 num );
 void gSPSegment( s32 seg, s32 base );

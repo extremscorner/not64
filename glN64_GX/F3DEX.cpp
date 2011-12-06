@@ -34,7 +34,6 @@ void F3DEX_Tri1( u32 w0, u32 w1 )
 
 void F3DEX_CullDL( u32 w0, u32 w1 )
 {
-	gSPCullDisplayList( _SHIFTR( w0, 1, 15 ), _SHIFTR( w1, 1, 15 ) );
 }
 
 void F3DEX_ModifyVtx( u32 w0, u32 w1 )

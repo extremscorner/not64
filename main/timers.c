@@ -11,7 +11,7 @@
 #include "../gui/DEBUG.h"
 
 timers Timers = {0.0, 0.0, 0, 1, 0, 100};
-static float VILimit = 60.0;
+float VILimit = 60.0;
 static double VILimitMicroseconds = 1000000.0/60.0;
 
 int GetVILimit(void)
@@ -82,7 +82,6 @@ void new_frame(void) {
 	}
 
 	LastFPSTime = CurrentFPSTime;
-	Timers.lastFrameTime = CurrentFPSTime;
 }
 
 void new_vi(void) {
@@ -134,15 +133,6 @@ void new_vi(void) {
 		VI_Counter = 0 ;
 	}
 
-	LastFPSTime = CurrentFPSTime ;
-	Timers.lastViTime = CurrentFPSTime;
+	LastFPSTime = CurrentFPSTime;
     end_section(IDLE_SECTION);
-}
-
-void TimerUpdate(void) {
-	DWORD CurrentTime = ticks_to_microsecs(gettick());
-	if (CurrentTime - Timers.lastFrameTime > 1000000)
-		Timers.fps = 0.0f;
-	if (CurrentTime - Timers.lastViTime > 1000000) 
-		Timers.vis = 0.0f;
 }

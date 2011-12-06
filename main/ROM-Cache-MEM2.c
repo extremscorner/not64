@@ -32,6 +32,7 @@
 #include "../r4300/r4300.h"
 #include "../gui/DEBUG.h"
 #include "../gui/GUI.h"
+#include "fastmemcpy.h"
 #include "ROM-Cache.h"
 #include "gczip.h"
 #include "zlib.h"
@@ -158,13 +159,13 @@ void ROMCache_read(u8* dest, u32 offset, u32 length){
 			ROMBlocksLRU[block] = 0;
 			
 			// Actually read for this block
-			memcpy(dest, ROMBlocks[block] + offset2, length);
+			fast_memcpy(dest, ROMBlocks[block] + offset2, length);
 			
 			// In case the read spans multiple blocks, increment state
 			++block; length2 -= length; offset2 = 0; dest += length; offset += length;
 		}
 	} else {
-		memcpy(dest, ROMCACHE_LO + offset, length);
+		fast_memcpy(dest, ROMCACHE_LO + offset, length);
 	}
 }
 

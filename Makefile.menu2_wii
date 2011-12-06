@@ -4,17 +4,15 @@ CC		=powerpc-eabi-gcc
 CXX		=powerpc-eabi-g++
 AS		=powerpc-eabi-as
 
-CFLAGS  = -g -O3 -Wall $(MACHDEP) $(INCLUDE) \
-	  -DCPU_SHUTDOWN -DSPC700_SHUTDOWN -DVAR_CYCLES -DSOUND \
-	  -DNOASM -DNGC -DNOASM -DPIXEL_FORMAT=RGB565  \
+CFLAGS  = -g -Ofast -Wall $(MACHDEP) $(INCLUDE) \
 	  -fno-exceptions -Wno-unused-parameter -pipe \
-	  -DUSE_GUI -DWII -DHW_RVL -DGLN64_GX -DAIDUMP -DUSE_EXPANSION \
-	  -DTHREADED_AUDIO -DUSE_RECOMP_CACHE -DPPC_DYNAREC -DFASTMEM -DMENU_V2\
+	  -DUSE_GUI -DWII -DGLN64_GX -DUSE_EXPANSION \
+	  -DUSE_RECOMP_CACHE -DPPC_DYNAREC -DFASTMEM -DMENU_V2\
 	  -DRELEASE #-DSHOW_DEBUG #-DPRINTGECKO #-DPROFILE #-DDEBUGON #-DUSE_TLB_CACHE \
 	  #-DNO_BT -DUSE_ROM_CACHE_L1 -DPRINTGECKO -DGLN64_SDLOG -DEMBEDDED_FONTS -DUSE_EXPANSION -DSHOW_STATS
 
-MACHDEP	= -DGEKKO -mcpu=750 -meabi -mhard-float 
-LDFLAGS	=	$(MACHDEP) -mrvl -Wl,-Map,$(notdir $@).map -Wl,--cref
+MACHDEP	= -DGEKKO -mrvl -msdata
+LDFLAGS	=	$(MACHDEP) -Wl,-Map,$(notdir $@).map -Wl,--cref
 
 INCLUDE = -I$(DEVKITPRO)/libogc/include -I$(DEVKITPRO)/libfat/libogc/include
 LIBPATHS = -L$(DEVKITPRO)/libogc/lib/wii -L$(DEVKITPRO)/libfat/libogc/lib/wii
@@ -59,6 +57,7 @@ OBJ		=main/rom_gc.o \
 		libgui/MessageBox.o \
 		libgui/resources.o \
 		libgui/TextBox.o \
+		fileBrowser/fileBrowser-SMB.o \
 		fileBrowser/fileBrowser-DVD.o \
 		fileBrowser/fileBrowser-CARD.o \
 		fileBrowser/fileBrowser-libfat.o \
@@ -94,7 +93,8 @@ OBJ		=main/rom_gc.o \
 		main/md5.o \
 		main/savestates_gc.o \
 		r4300/profile.o \
-		main/adler32.o
+		main/adler32.o \
+		main/fastmemcpy.o
 		
 OBJ_PPC		=r4300/ppc/MIPS-to-PPC.o \
 		r4300/ppc/Recompile.o \
@@ -163,7 +163,7 @@ HEADER		=main/rom.h \
 		r4300/recomp.h \
 		gc_memory/pif.h
 
-LIB		=	-ldi -lm -lfat -ldb -lwiiuse -lbte -logc -lz
+LIB		=	-laesnd -ldi -ltinysmb -lwiiuse -lbte -lfat -logc -lz -static
 
 ifeq ($(strip mupen64_GX_gfx/main.cpp),)
 	export LD	:=	$(CC)
@@ -279,7 +279,7 @@ glN64_GX/F3DWRUS.o:		glN64_GX/F3DWRUS.cpp
 				$(CXX) $(CFLAGS) -D__LINUX__ -D__GX__ -c -o $@ $<
 
 wii64-glN64.elf:	$(OBJ) $(OBJ_INPUT) $(OBJ_GLN64_GX) $(OBJ_AUDIO) $(OBJ_RSPHLE) $(OBJ_PPC)
-		$(LD) $^ $(LDFLAGS) $(LIBPATHS) $(LIB) -Wl -o $@
+		$(LD) $^ $(LDFLAGS) $(LIBPATHS) $(LIB) -o $@
 		elf2dol wii64-glN64.elf wii64-glN64.dol
 
 install:

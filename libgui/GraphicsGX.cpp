@@ -43,23 +43,9 @@ Graphics::Graphics(GXRModeObj *rmode)
 
 	setColor((GXColor) {0,0,0,0});
 
-#ifdef HW_RVL
-	CONF_Init();
-#endif
 	VIDEO_Init();
-	//vmode = VIDEO_GetPreferredMode(NULL);
 	vmode = VIDEO_GetPreferredMode(&vmode_phys);
-#if 0
-	if(CONF_GetAspectRatio()) {
-		vmode->viWidth = 678;
-		vmode->viXOrigin = (VI_MAX_WIDTH_PAL - 678) / 2;
-	}
-#endif
-	if (memcmp( &vmode_phys, &TVPal528IntDf, sizeof(GXRModeObj)) == 0)
-		memcpy( &vmode_phys, &TVPal574IntDfScale, sizeof(GXRModeObj));
-
-	//vmode->efbHeight = viewportHeight; // Note: all possible modes have efbHeight of 480
-
+	VIDEO_SetTrapFilter(trapFilter);
 	VIDEO_Configure(vmode);
 
 	xfb[0] = MEM_K0_TO_K1(SYS_AllocateFramebuffer(vmode));
@@ -95,7 +81,6 @@ void Graphics::init()
 	GXColor background = {0, 0, 0, 0xff};
 
 	gpfifo = memalign(32,DEFAULT_FIFO_SIZE);
-	memset(gpfifo,0,DEFAULT_FIFO_SIZE);
 	GX_Init(gpfifo,DEFAULT_FIFO_SIZE);
 	GX_SetCopyClear(background, GX_MAX_Z24);
 
@@ -105,7 +90,7 @@ void Graphics::init()
 	GX_SetScissor(0,0,vmode->fbWidth,vmode->efbHeight);
 	GX_SetDispCopySrc(0,0,vmode->fbWidth,vmode->efbHeight);
 	GX_SetDispCopyDst(vmode->fbWidth,xfbHeight);
-	GX_SetCopyFilter(vmode->aa,vmode->sample_pattern,GX_TRUE,vmode->vfilter);
+	GX_SetCopyFilter(vmode->aa,vmode->sample_pattern,deFlicker,vmode->vfilter);
 	GX_SetFieldMode(vmode->field_rendering,((vmode->viHeight==2*vmode->xfbHeight)?GX_ENABLE:GX_DISABLE));
  
 	if (vmode->aa)
@@ -191,7 +176,7 @@ void Graphics::swapBuffers()
 	VIDEO_SetNextFramebuffer(xfb[which_fb]);
 	if(first_frame) {
 		first_frame = false;
-		VIDEO_SetBlack(GX_FALSE);
+		VIDEO_SetBlack(false);
 	}
 	VIDEO_Flush();
  	VIDEO_WaitVSync();

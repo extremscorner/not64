@@ -31,6 +31,7 @@ Image::Image(void* texture, u16 wd, u16 ht, u8 fmt, u8 wrap_s, u8 wrap_t, u8 mip
 		  tlut_format(0)
 {
 	GX_InitTexObj(&obj, img_ptr, width, height, format, wrap_s, wrap_t, mipmap);
+	GX_InitTexObjLOD(&obj, mipmap ? GX_LIN_MIP_LIN : GX_LINEAR, GX_LINEAR, 0.0f, 0.0f, 0.0f, GX_TRUE, GX_TRUE, GX_ANISO_4);
 }
 
 Image::Image(void* texture, u16 wd, u16 ht, u8 fmt, u8 wrap_s, u8 wrap_t, u8 mipmap, void* lut, u8 lut_fmt, u8 lut_name, u16 lut_size)
@@ -45,6 +46,7 @@ Image::Image(void* texture, u16 wd, u16 ht, u8 fmt, u8 wrap_s, u8 wrap_t, u8 mip
 {
 	GX_InitTlutObj(&tlut_obj, tlut_ptr, tlut_format, tlut_size);
 	GX_InitTexObjCI(&obj, img_ptr, width, height, format, wrap_s, wrap_t, mipmap, tlut_name);
+	GX_InitTexObjLOD(&obj, mipmap ? GX_LIN_MIP_NEAR : GX_LINEAR, GX_LINEAR, 0.0f, 0.0f, 0.0f, GX_FALSE, GX_FALSE, GX_ANISO_1);
 }
 
 Image::~Image()

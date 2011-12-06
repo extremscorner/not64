@@ -32,6 +32,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <ogc/machine/processor.h>
 #include "../gui/GUI.h"
 #include "rom.h"
 #include "ROM-Cache.h"
@@ -131,29 +132,13 @@ void byte_swap(char* buffer, unsigned int length){
 		return;
 
 	int i = 0;
-	u8 aByte = 0;
-	u16 aShort = 0;
-	u16 *buffer_short = (unsigned short*)buffer;
 
 	if(ROM_byte_swap == BYTE_SWAP_HALF){	//aka little endian (40123780) vs (80371240)
-		for(i=0; i<length; i+=2) 	//get it from (40123780) to (12408037)
-		{
-			aByte 		= buffer[i];
-			buffer[i] 	= buffer[i+1];
-			buffer[i+1] = aByte;
-		}
-		for(i=0; i<length/2; i+=2)	//get it from (12408037) to (80371240)
-		{
-			aShort        		= buffer_short[i];
-			buffer_short[i]   	= buffer_short[i+1];
-			buffer_short[i+1] 	= aShort;
-		}
+		for(i=0; i<length; i+=4)
+			*(u32 *)(buffer + i) = __lwbrx(buffer, i);
 	} else if(ROM_byte_swap == BYTE_SWAP_BYTE){	// (37804012) vs (80371240)
-		for(i=0; i<length; i+=2){
-			aByte 		= buffer[i];
-			buffer[i] 	= buffer[i+1];
-			buffer[i+1] = aByte;
-		}
+		for(i=0; i<length; i+=2)
+			*(u16 *)(buffer + i) = __lhbrx(buffer, i);
 	}
 }
 

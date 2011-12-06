@@ -9,6 +9,7 @@
 
 extern "C" {
 #include "hle.h"
+#include "../main/fastmemcpy.h"
 }
 
 static void SPNOOP () {
@@ -508,7 +509,7 @@ static void LOADBUFF3 () {
 	u32 cnt = (((inst1 >> 0xC)+3)&0xFFC);
 	v0 = (inst2 & 0xfffffc);
 	u32 src = (inst1&0xffc)+0x4f0;
-	memcpy (BufferSpace+src, rsp.RDRAM+v0, cnt);
+	fast_memcpy (BufferSpace+src, rsp.RDRAM+v0, cnt);
 }
 
 static void SAVEBUFF3 () {
@@ -516,7 +517,7 @@ static void SAVEBUFF3 () {
 	u32 cnt = (((inst1 >> 0xC)+3)&0xFFC);
 	v0 = (inst2 & 0xfffffc);
 	u32 src = (inst1&0xffc)+0x4f0;
-	memcpy (rsp.RDRAM+v0, BufferSpace+src, cnt);
+	fast_memcpy (rsp.RDRAM+v0, BufferSpace+src, cnt);
 }
 
 static void LOADADPCM3 () { // Loads an ADPCM table - Works 100% Now 03-13-01

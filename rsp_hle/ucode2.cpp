@@ -9,6 +9,7 @@
 
 extern "C" {
 #include "hle.h"
+#include "../main/fastmemcpy.h"
 }
 
 extern u8 BufferSpace[0x10000];
@@ -358,14 +359,14 @@ static void LOADBUFF2 () { // Needs accuracy verification...
 	u32 v0;
 	u32 cnt = (((inst1 >> 0xC)+3)&0xFFC);
 	v0 = (inst2 & 0xfffffc);// + SEGMENTS[(inst2>>24)&0xf];
-	memcpy (BufferSpace+(inst1&0xfffc), rsp.RDRAM+v0, (cnt+3)&0xFFFC);
+	fast_memcpy (BufferSpace+(inst1&0xfffc), rsp.RDRAM+v0, (cnt+3)&0xFFFC);
 }
 
 static void SAVEBUFF2 () { // Needs accuracy verification...
 	u32 v0;
 	u32 cnt = (((inst1 >> 0xC)+3)&0xFFC);
 	v0 = (inst2 & 0xfffffc);// + SEGMENTS[(inst2>>24)&0xf];
-	memcpy (rsp.RDRAM+v0, BufferSpace+(inst1&0xfffc), (cnt+3)&0xFFFC);
+	fast_memcpy (rsp.RDRAM+v0, BufferSpace+(inst1&0xfffc), (cnt+3)&0xFFFC);
 }
 
 
@@ -619,10 +620,10 @@ static void DUPLICATE2() {
 
 	WORD buff[64];
 
-	memcpy(buff,BufferSpace+In,128);
+	fast_memcpy(buff,BufferSpace+In,128);
 
 	while(Count) {
-		memcpy(BufferSpace+Out,buff,128);
+		fast_memcpy(BufferSpace+Out,buff,128);
 		Out+=128;
 		Count--;
 	}
@@ -877,7 +878,7 @@ static void FILTER2 () {
 			}
 //			memcpy (rsp.RDRAM+(inst2&0xFFFFFF), dmem+0xFB0, 0x20);
 			memcpy (save, inp2-8, 0x10);
-			memcpy (BufferSpace+(inst1&0xffff), outbuff, cnt);
+			fast_memcpy (BufferSpace+(inst1&0xffff), outbuff, cnt);
 }
 
 static void SEGMENT2 () {

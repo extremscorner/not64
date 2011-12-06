@@ -145,10 +145,10 @@ LoadLoop:
 			mtx[i][j] = (float)n64Mat->integer[i][j] + (float)n64Mat->fraction[i][j] * recip;*/
 		
 		__asm__ volatile(
-			"psq_l    3,   (%3*8)(%0), 0, 5 \n"
-			"psq_l    4,   (%3*8)(%1), 0, 4 \n"
-			"psq_l    5, (%3*8+4)(%0), 0, 5 \n"
-			"psq_l    6, (%3*8+4)(%1), 0, 4 \n"
+			"psq_l    3,   (%3*8)(%0), 0, 3 \n"
+			"psq_l    4,   (%3*8)(%1), 0, 7 \n"
+			"psq_l    5, (%3*8+4)(%0), 0, 3 \n"
+			"psq_l    6, (%3*8+4)(%1), 0, 7 \n"
 			
 			"ps_add  4, 3, 4     \n"
 			"ps_add  6, 5, 6     \n"

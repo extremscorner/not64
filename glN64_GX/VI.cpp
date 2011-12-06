@@ -234,8 +234,6 @@ extern timers Timers;
 void VI_GX_showFPS(){
 	static char caption[25];
 
-	TimerUpdate();
-
 	sprintf(caption, "%.1f VI/s, %.1f FPS",Timers.vis,Timers.fps);
 	
 	GXColor fontColor = {150,255,150,255};

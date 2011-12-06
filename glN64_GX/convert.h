@@ -514,6 +514,17 @@ DWordInterleaveLoop:
 	: /* no output */
 	: "S"(mem), "D"(mem), "c"(numDWords)
 	: "memory", "%eax", "%edx" );
+# elif defined(GEKKO)
+	do {
+		__asm__ volatile(
+			"lfs	2, 0(%0)	\n\t"
+			"lfs	3, 4(%0)	\n\t"
+			"stfs	2, 4(%0)	\n\t"
+			"stfs	3, 0(%0)	\n\t"
+			"addi	%0, %0, 8	\n\t"
+			:  "+b" (mem)
+			:: "memory", "fr2", "fr3" );
+	} while( --numDWords );
 # else
 	// ok
 	int tmp;
@@ -580,6 +591,18 @@ QWordInterleaveLoop:
 	: /* no output */
 	: "S"(mem), "D"(mem), "c"(numDWords)
 	: "memory", "%eax", "%edx" );
+# elif defined(GEKKO)
+	numDWords >>= 1;
+	do {
+		__asm__ volatile(
+			"lfd	2, 0(%0)	\n\t"
+			"lfd	3, 8(%0)	\n\t"
+			"stfd	2, 8(%0)	\n\t"
+			"stfd	3, 0(%0)	\n\t"
+			"addi	%0, %0, 16	\n\t"
+			:  "+b" (mem)
+			:: "memory", "fr2", "fr3" );
+	} while( --numDWords );
 # else
 	// ok
 	int tmp;

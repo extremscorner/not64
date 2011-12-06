@@ -122,8 +122,7 @@ void Gui::draw()
 				  DI_Close();
 			  }
 #endif
-				void (*rld)() = (void (*)()) 0x80001800;
-				rld();
+				exit(0);
 			}
 		}
 

@@ -8,6 +8,7 @@
 
 extern "C" {
 #include "hle.h"
+#include "../main/fastmemcpy.h"
 }
 
 static u16 DeWindowLUT [0x420] = {
@@ -210,7 +211,7 @@ void MP3 () {
 	readPtr += 8; // This must be a header byte or whatnot
 
 	for (int cnt = 0; cnt < 0x480; cnt += 0x180) {
-		memcpy (mp3data+0xCF0, rsp.RDRAM+readPtr, 0x180); // DMA: 0xCF0 <- RDRAM[s5] : 0x180
+		fast_memcpy (mp3data+0xCF0, rsp.RDRAM+readPtr, 0x180); // DMA: 0xCF0 <- RDRAM[s5] : 0x180
 		inPtr  = 0xCF0; // s7
 		outPtr = 0xE70; // s3
 // --------------- Inner Loop Start --------------------
@@ -228,7 +229,7 @@ void MP3 () {
 			inPtr += 0x40;
 		}
 // --------------- Inner Loop End --------------------
-		memcpy (rsp.RDRAM+writePtr, mp3data+0xe70, 0x180);
+		fast_memcpy (rsp.RDRAM+writePtr, mp3data+0xe70, 0x180);
 		writePtr += 0x180;
 		readPtr  += 0x180;
 	}

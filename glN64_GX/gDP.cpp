@@ -14,6 +14,7 @@
 #include <string.h>
 #include <stdio.h>
 #include "../gui/DEBUG.h"
+#include "../main/fastmemcpy.h"
 #endif // __GX__
 
 #include "glN64.h"
@@ -82,7 +83,7 @@ void gDPSetOtherMode( u32 mode0, u32 mode1 )
 
 void gDPSetPrimDepth( u16 z, u16 dz )
 {
-	gDP.primDepth.z = min( 1.0f, max( 0.0f, (_FIXED2FLOAT( z, 15 ) - gSP.viewport.vtrans[2]) / gSP.viewport.vscale[2] ) );
+	gDP.primDepth.z = min( 1.0f, max( 0.0f, (castufp16f32( z, 15 ) - gSP.viewport.vtrans[2]) / gSP.viewport.vscale[2] ) );
 	gDP.primDepth.deltaZ = dz;
 
 #ifdef __GX__
@@ -465,10 +466,10 @@ void gDPSetDepthImage( u32 address )
 
 void gDPSetEnvColor( u32 r, u32 g, u32 b, u32 a )
 {
-	gDP.envColor.r = r * 0.0039215689f;
-	gDP.envColor.g = g * 0.0039215689f;
-	gDP.envColor.b = b * 0.0039215689f;
-	gDP.envColor.a = a * 0.0039215689f;
+	gDP.envColor.r = GXcastu8f32( r );
+	gDP.envColor.g = GXcastu8f32( g );
+	gDP.envColor.b = GXcastu8f32( b );
+	gDP.envColor.a = GXcastu8f32( a );
 
 	gDP.changed |= CHANGED_COMBINE_COLORS;
 
@@ -480,10 +481,10 @@ void gDPSetEnvColor( u32 r, u32 g, u32 b, u32 a )
 
 void gDPSetBlendColor( u32 r, u32 g, u32 b, u32 a )
 {
-	gDP.blendColor.r = r * 0.0039215689f;
-	gDP.blendColor.g = g * 0.0039215689f;
-	gDP.blendColor.b = b * 0.0039215689f;
-	gDP.blendColor.a = a * 0.0039215689f;
+	gDP.blendColor.r = GXcastu8f32( r );
+	gDP.blendColor.g = GXcastu8f32( g );
+	gDP.blendColor.b = GXcastu8f32( b );
+	gDP.blendColor.a = GXcastu8f32( a );
 
 #ifdef DEBUG
 	DebugMsg( DEBUG_HIGH | DEBUG_HANDLED, "gDPSetBlendColor( %i, %i, %i, %i );\n",
@@ -493,10 +494,10 @@ void gDPSetBlendColor( u32 r, u32 g, u32 b, u32 a )
 
 void gDPSetFogColor( u32 r, u32 g, u32 b, u32 a )
 {
-	gDP.fogColor.r = r * 0.0039215689f;
-	gDP.fogColor.g = g * 0.0039215689f;
-	gDP.fogColor.b = b * 0.0039215689f;
-	gDP.fogColor.a = a * 0.0039215689f;
+	gDP.fogColor.r = GXcastu8f32( r );
+	gDP.fogColor.g = GXcastu8f32( g );
+	gDP.fogColor.b = GXcastu8f32( b );
+	gDP.fogColor.a = GXcastu8f32( a );
 
 	gDP.changed |= CHANGED_FOGCOLOR;
 
@@ -508,13 +509,13 @@ void gDPSetFogColor( u32 r, u32 g, u32 b, u32 a )
 
 void gDPSetFillColor( u32 c )
 {
-	gDP.fillColor.r = _SHIFTR( c, 11, 5 ) * 0.032258064f;
-	gDP.fillColor.g = _SHIFTR( c,  6, 5 ) * 0.032258064f;
-	gDP.fillColor.b = _SHIFTR( c,  1, 5 ) * 0.032258064f;
-	gDP.fillColor.a = _SHIFTR( c,  0, 1 );
+	gDP.fillColor.r = castufp8f32( _SHIFTR( c, 11, 5 ), 5);
+	gDP.fillColor.g = castufp8f32( _SHIFTR( c,  6, 5 ), 5);
+	gDP.fillColor.b = castufp8f32( _SHIFTR( c,  1, 5 ), 5);
+	gDP.fillColor.a = castu8f32( _SHIFTR( c,  0, 1 ) );
 
-	gDP.fillColor.z = _SHIFTR( c,  2, 14 );
-	gDP.fillColor.dz = _SHIFTR( c, 0, 2 );
+	gDP.fillColor.z = castu16f32( _SHIFTR( c, 2, 14 ) );
+	gDP.fillColor.dz = castu8f32( _SHIFTR( c, 0, 2 ) );
 
 #ifdef DEBUG
 	DebugMsg( DEBUG_HIGH | DEBUG_HANDLED, "gDPSetFillColor( 0x%08X );\n", c );
@@ -524,11 +525,11 @@ void gDPSetFillColor( u32 c )
 void gDPSetPrimColor( u32 m, u32 l, u32 r, u32 g, u32 b, u32 a )
 {
 	gDP.primColor.m = m;
-	gDP.primColor.l = l * 0.0039215689f;
-	gDP.primColor.r = r * 0.0039215689f;
-	gDP.primColor.g = g * 0.0039215689f;
-	gDP.primColor.b = b * 0.0039215689f;
-	gDP.primColor.a = a * 0.0039215689f;
+	gDP.primColor.l = GXcastu8f32( l );
+	gDP.primColor.r = GXcastu8f32( r );
+	gDP.primColor.g = GXcastu8f32( g );
+	gDP.primColor.b = GXcastu8f32( b );
+	gDP.primColor.a = GXcastu8f32( a );
 
 	gDP.changed |= CHANGED_COMBINE_COLORS;
 
@@ -668,7 +669,7 @@ void gDPLoadTile( u32 tile, u32 uls, u32 ult, u32 lrs, u32 lrt )
 #ifndef _BIG_ENDIAN
 		UnswapCopy( src, dest, bpl );
 #else // !_BIG_ENDIAN
-		memcpy( dest, src, bpl );
+		fast_memcpy( dest, src, bpl );
 #endif // _BIG_ENDIAN
 		if (y & 1) Interleave( dest, line );
 
@@ -745,7 +746,7 @@ void gDPLoadBlock( u32 tile, u32 uls, u32 ult, u32 lrs, u32 dxt )
 #ifndef _BIG_ENDIAN
 			UnswapCopy( src, dest, bpl );
 #else // !_BIG_ENDIAN
-			memcpy( dest, src, bpl );
+			fast_memcpy( dest, src, bpl );
 #endif // _BIG_ENDIAN
 			if (y & 1) Interleave( dest, line );
 
@@ -757,7 +758,7 @@ void gDPLoadBlock( u32 tile, u32 uls, u32 ult, u32 lrs, u32 dxt )
 #ifndef _BIG_ENDIAN
 		UnswapCopy( src, dest, bytes );
 #else // !_BIG_ENDIAN
-		memcpy( dest, src, bytes );
+		fast_memcpy( dest, src, bytes );
 #endif // _BIG_ENDIAN
 
 	gDP.textureMode = TEXTUREMODE_NORMAL;
@@ -884,23 +885,6 @@ void gDPSetConvert( s32 k0, s32 k1, s32 k2, s32 k3, s32 k4, s32 k5 )
 	gDP.convert.k3 = k3;
 	gDP.convert.k4 = k4;
 	gDP.convert.k5 = k5;
-}
-
-void gDPSetKeyR( u32 cR, u32 sR, u32 wR )
-{
-	gDP.key.center.r = cR * 0.0039215689f;;
-	gDP.key.scale.r = sR * 0.0039215689f;;
-	gDP.key.width.r = wR * 0.0039215689f;;
-}
-
-void gDPSetKeyGB(u32 cG, u32 sG, u32 wG, u32 cB, u32 sB, u32 wB )
-{
-	gDP.key.center.g = cG * 0.0039215689f;;
-	gDP.key.scale.g = sG * 0.0039215689f;;
-	gDP.key.width.g = wG * 0.0039215689f;;
-	gDP.key.center.b = cB * 0.0039215689f;;
-	gDP.key.scale.b = sB * 0.0039215689f;;
-	gDP.key.width.b = wB * 0.0039215689f;;
 }
 
 void gDPTextureRectangle( f32 ulx, f32 uly, f32 lrx, f32 lry, s32 tile, f32 s, f32 t, f32 dsdx, f32 dtdy )
