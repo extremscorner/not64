@@ -45,6 +45,8 @@ Graphics::Graphics(GXRModeObj *rmode)
 
 	VIDEO_Init();
 	vmode = VIDEO_GetPreferredMode(&vmode_phys);
+	vmode->viWidth = 720;
+	vmode->viXOrigin = 0;
 	VIDEO_SetTrapFilter(trapFilter);
 	VIDEO_Configure(vmode);
 
@@ -76,7 +78,6 @@ void Graphics::init()
 {
 
 	f32 yscale;
-	u32 xfbHeight;
 	void *gpfifo = NULL;
 	GXColor background = {0, 0, 0, 0xff};
 
@@ -86,20 +87,13 @@ void Graphics::init()
 
 	GX_SetViewport(0,0,vmode->fbWidth,vmode->efbHeight,0,1);
 	yscale = GX_GetYScaleFactor(vmode->efbHeight,vmode->xfbHeight);
-	xfbHeight = GX_SetDispCopyYScale(yscale);
+	GX_SetDispCopyYScale(yscale);
 	GX_SetScissor(0,0,vmode->fbWidth,vmode->efbHeight);
 	GX_SetDispCopySrc(0,0,vmode->fbWidth,vmode->efbHeight);
-	GX_SetDispCopyDst(vmode->fbWidth,xfbHeight);
-	GX_SetCopyFilter(vmode->aa,vmode->sample_pattern,deFlicker,vmode->vfilter);
-	GX_SetFieldMode(vmode->field_rendering,((vmode->viHeight==2*vmode->xfbHeight)?GX_ENABLE:GX_DISABLE));
- 
-	if (vmode->aa)
-        GX_SetPixelFmt(GX_PF_RGB565_Z16, GX_ZC_LINEAR);
-    else
-        GX_SetPixelFmt(GX_PF_RGB8_Z24, GX_ZC_LINEAR);
+	GX_SetDispCopyDst(vmode->fbWidth,vmode->xfbHeight);
+	GX_SetCopyFilter(GX_FALSE,NULL,GX_TRUE,vmode->vfilter);
 
 	GX_SetCullMode(GX_CULL_NONE);
-	GX_SetDispCopyGamma(GX_GM_1_0);
 
 	GX_InvVtxCache();
 	GX_InvalidateTexAll();
@@ -223,8 +217,8 @@ void Graphics::loadModelView()
 
 void Graphics::loadOrthographic()
 {
-	if(screenMode)	guOrtho(currentProjectionMtx, 0, 479, -104, 743, 0, 700);
-	else			guOrtho(currentProjectionMtx, 0, 479, 0, 639, 0, 700);
+	if(screenMode)	guOrtho(currentProjectionMtx, 0, 480, -104, 744, 0, 700);
+	else			guOrtho(currentProjectionMtx, 0, 480, 0, 640, 0, 700);
 	GX_LoadProjectionMtx(currentProjectionMtx, GX_ORTHOGRAPHIC);
 }
 

@@ -45,6 +45,7 @@ static unsigned int freq;
 static AESNDPB *voice;
 
 char audioEnabled;
+char scalePitch;
 
 static void aesnd_callback(AESNDPB *pb, uint32_t state)
 {
@@ -100,7 +101,9 @@ EXPORT void CALL AiLenChanged(void)
 			length -= len;
 		} while (length > 0);
 		
-		AESND_SetVoiceFrequency(voice, freq * (Timers.vis / VILimit));
+		if (scalePitch)
+			AESND_SetVoiceFrequency(voice, freq * (Timers.vis / VILimit));
+		
 		IRQ_Restore(level);
 	}
 }
@@ -120,6 +123,7 @@ EXPORT BOOL CALL InitiateAudio(AUDIO_INFO Audio_Info)
 	
 	AESND_SetVoiceFormat(voice, VOICE_STEREO16);
 	AESND_SetVoiceStream(voice, true);
+	AESND_SetVoiceLoop(voice, true);
 	
 	return TRUE;
 }
@@ -148,5 +152,5 @@ void pauseAudio(void) {
 
 void resumeAudio(void) {
 	AESND_SetVoiceFrequency(voice, freq);
-	AESND_Pause(false);
+	AESND_Pause(!audioEnabled);
 }

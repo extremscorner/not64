@@ -3,6 +3,7 @@
 
 #include <gctypes.h>
 
+#define GQR0			912
 #define GQR1			913
 #define	GQR2			914
 #define	GQR3			915
@@ -30,26 +31,6 @@ extern "C" {
 
 #define __set_gqr(_reg,_val)	asm volatile("mtspr %0,%1" : : "i"(_reg), "b"(_val))
 
-// does a default init
-static inline void CAST_Init()
-{
-	__asm__ __volatile__ (
-		"li		3,0x0004\n\
-		 oris	3,3,0x0004\n\
-		 mtspr	916,3\n\
-		 li		3,0x0005\n\
-		 oris	3,3,0x0005\n\
-		 mtspr	917,3\n\
-		 li		3,0x0006\n\
-		 oris	3,3,0x0006\n\
-		 mtspr	918,3\n\
-		 li		3,0x0007\n\
-		 oris	3,3,0x0007\n\
-		 mtspr	919,3\n"
-		 : : : "r3"
-	);
-}
-
 static inline void CAST_SetGQR2(u32 type,u32 scale)
 {
 	register u32 val = (((((scale)<<8)|(type))<<16)|(((scale)<<8)|(type)));
@@ -61,31 +42,6 @@ static inline void CAST_SetGQR3(u32 type,u32 scale)
 	register u32 val = (((((scale)<<8)|(type))<<16)|(((scale)<<8)|(type)));
 	__set_gqr(GQR3,val);
 }
-
-static inline void CAST_SetGQR4(u32 type,u32 scale)
-{
-	register u32 val = (((((scale)<<8)|(type))<<16)|(((scale)<<8)|(type)));
-	__set_gqr(GQR4,val);
-}
-
-static inline void CAST_SetGQR5(u32 type,u32 scale)
-{
-	register u32 val = (((((scale)<<8)|(type))<<16)|(((scale)<<8)|(type)));
-	__set_gqr(GQR5,val);
-}
-
-static inline void CAST_SetGQR6(u32 type,u32 scale)
-{
-	register u32 val = (((((scale)<<8)|(type))<<16)|(((scale)<<8)|(type)));
-	__set_gqr(GQR6,val);
-}
-
-static inline void CAST_SetGQR7(u32 type,u32 scale)
-{
-	register u32 val = (((((scale)<<8)|(type))<<16)|(((scale)<<8)|(type)));
-	__set_gqr(GQR7,val);
-}
-
 
 /******************************************************************/
 /*																  */

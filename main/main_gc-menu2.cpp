@@ -72,7 +72,6 @@ unsigned int MALLOC_MEM2 = 0;
 #include <ogc/conf.h>
 #include <wiiuse/wpad.h>
 extern "C" {
-extern u32 __di_check_ahbprot(void);
 #include <di/di.h>
 }
 #include "../gc_memory/MEM2.h"
@@ -100,6 +99,7 @@ static CONTROL_INFO control_info;
 static RSP_INFO     rsp_info;
 
 extern char audioEnabled;
+extern char scalePitch;
 extern char printToScreen;
 extern char showFPSonScreen;
 extern char printToSD;
@@ -122,7 +122,6 @@ char menuActive;
 	   char saveStateDevice;
        char autoSave;
        char screenMode = 0;
-	   char deFlicker;
 	   char trapFilter;
 	   char padAutoAssign;
 	   char padType[4];
@@ -143,12 +142,12 @@ static struct {
 	char  min, max;
 } OPTIONS[] =
 { { "Audio", &audioEnabled, AUDIO_DISABLE, AUDIO_ENABLE },
+  { "ScalePitch", &scalePitch, SCALEPITCH_DISABLE, SCALEPITCH_ENABLE },
   { "FPS", &showFPSonScreen, FPS_HIDE, FPS_SHOW },
 //  { "Debug", &printToScreen, DEBUG_HIDE, DEBUG_SHOW },
   { "FBTex", &glN64_useFrameBufferTextures, GLN64_FBTEX_DISABLE, GLN64_FBTEX_ENABLE },
   { "2xSaI", &glN64_use2xSaiTextures, GLN64_2XSAI_DISABLE, GLN64_2XSAI_ENABLE },
   { "ScreenMode", &screenMode, SCREENMODE_4x3, SCREENMODE_16x9_PILLARBOX },
-  { "DeFlicker", &deFlicker, DEFLICKER_DISABLE, DEFLICKER_ENABLE },
   { "TrapFilter", &trapFilter, TRAPFILTER_DISABLE, TRAPFILTER_ENABLE },
   { "Core", ((char*)&dynacore)+3, DYNACORE_INTERPRETER, DYNACORE_PURE_INTERP },
   { "NativeDevice", &nativeSaveDevice, NATIVESAVEDEVICE_SD, NATIVESAVEDEVICE_CARDB },
@@ -201,12 +200,6 @@ u16 readWPAD(void);
 int main(int argc, char* argv[]){
 	/* INITIALIZE */
 #ifdef HW_RVL
-	if (!__di_check_ahbprot()) {
-		s32 preferred = IOS_GetPreferredVersion();
-		if (preferred == 58 || preferred == 61)
-			IOS_ReloadIOS(preferred);
-	}
-	
 	DI_UseCache(false);
 	DI_Init();    // first
 #endif
@@ -231,6 +224,7 @@ int main(int argc, char* argv[]){
 
 	// Default Settings
 	audioEnabled     = 1; // Audio
+	scalePitch       = 1;
 #ifdef RELEASE
 	showFPSonScreen  = 0; // Show FPS on Screen
 #else
@@ -246,7 +240,6 @@ int main(int argc, char* argv[]){
 	creditsScrolling = 0; // Normal menu for now
 	dynacore         = 1; // Dynarec
 	screenMode		 = 0; // Stretch FB horizontally
-	deFlicker		 = 1;
 	trapFilter		 = 0;
 	padAutoAssign	 = PADAUTOASSIGN_AUTOMATIC;
 	padType[0]		 = PADTYPE_NONE;
@@ -444,7 +437,7 @@ int loadROM(fileBrowser_file* rom){
 
 	gfx_set_fb(xfb[0], xfb[1]);
 	if (screenMode == SCREENMODE_16x9_PILLARBOX)
-		gfx_set_window( 78, 0, 483, 480);
+		gfx_set_window( 80, 0, 480, 480);
 	else
 		gfx_set_window( 0, 0, 640, 480);
 

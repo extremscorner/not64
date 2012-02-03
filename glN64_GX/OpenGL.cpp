@@ -1420,7 +1420,7 @@ void OGL_DrawRect( int ulx, int uly, int lrx, int lry, float *color )
 	OGL_UpdateViewport();
 	glEnable( GL_SCISSOR_TEST );
 #else // !__GX__
-	GX_SetScissor((u32) 0,(u32) 0,(u32) OGL.width+1,(u32) OGL.height+1);	//Disable Scissor
+	GX_SetScissor((u32) 0,(u32) 0,(u32) OGL.width,(u32) OGL.height);	//Disable Scissor
 	GX_SetCullMode (GX_CULL_NONE);
 	Mtx44 GXprojection;
 	guMtxIdentity(GXprojection);
@@ -1993,6 +1993,7 @@ void OGL_GXinitDlist()
 
 	OGL.frameBufferTextures = glN64_useFrameBufferTextures;
 	OGL.enable2xSaI = glN64_use2xSaiTextures;
+	OGL.forceBilinear = glN64_use2xSaiTextures;
 
 	// init primeDepthZtex, Ztexture, AlphaCompare, and Texture Clamping
 	TextureCache_UpdatePrimDepthZtex( 1.0f );
@@ -2077,12 +2078,12 @@ void OGL_GXclearEFB()
 	GX_SetAlphaCompare(GX_ALWAYS,0,GX_AOP_AND,GX_ALWAYS,0);
 	GX_SetFog(GX_FOG_NONE,0.1,1.0,0.0,1.0,(GXColor){0,0,0,255});
 	GX_SetViewport((f32) OGL.GXorigX,(f32) OGL.GXorigY,(f32) OGL.GXwidth,(f32) OGL.GXheight, 0.0f, 1.0f);
-	GX_SetScissor((u32) 0,(u32) 0,(u32) OGL.width+1,(u32) OGL.height+1);	//Disable Scissor
+	GX_SetScissor((u32) 0,(u32) 0,(u32) OGL.width,(u32) OGL.height);	//Disable Scissor
 //	GX_SetScissor(0,0,rmode->fbWidth,rmode->efbHeight);
 	GX_SetCullMode (GX_CULL_NONE);
 	Mtx44 GXprojection;
 	guMtxIdentity(GXprojection);
-	guOrtho(GXprojection, 0, OGL.height-1, 0, OGL.width-1, 0.0f, 1.0f);
+	guOrtho(GXprojection, 0, OGL.height, 0, OGL.width, 0.0f, 1.0f);
 	GX_LoadProjectionMtx(GXprojection, GX_ORTHOGRAPHIC); 
 	GX_LoadPosMtxImm(OGL.GXmodelViewIdent,GX_PNMTX0);
 
@@ -2095,13 +2096,13 @@ void OGL_GXclearEFB()
 	GX_SetVtxAttrFmt(GX_VTXFMT0, GX_VA_CLR0, GX_CLR_RGBA, GX_RGBA8, 0);
 	f32 ZmaxDepth = (f32) -0xFFFFFF/0x1000000;
 	GX_Begin(GX_QUADS, GX_VTXFMT0, 4);
-		GX_Position3f32(-1.0f, -1.0f, ZmaxDepth);
+		GX_Position3f32(0.0f, 0.0f, ZmaxDepth);
 		GX_Color4u8(OGL.GXclearColor.r, OGL.GXclearColor.g, OGL.GXclearColor.b, OGL.GXclearColor.a); 
-		GX_Position3f32((f32) OGL.width+1, -1.0f, ZmaxDepth);
+		GX_Position3f32((f32) OGL.width, 0.0f, ZmaxDepth);
 		GX_Color4u8(OGL.GXclearColor.r, OGL.GXclearColor.g, OGL.GXclearColor.b, OGL.GXclearColor.a); 
-		GX_Position3f32((f32) OGL.width+1,(f32) OGL.height+1, ZmaxDepth);
+		GX_Position3f32((f32) OGL.width,(f32) OGL.height, ZmaxDepth);
 		GX_Color4u8(OGL.GXclearColor.r, OGL.GXclearColor.g, OGL.GXclearColor.b, OGL.GXclearColor.a); 
-		GX_Position3f32(-1.0f,(f32) OGL.height+1, ZmaxDepth);
+		GX_Position3f32(0.0f,(f32) OGL.height, ZmaxDepth);
 		GX_Color4u8(OGL.GXclearColor.r, OGL.GXclearColor.g, OGL.GXclearColor.b, OGL.GXclearColor.a); 
 	GX_End();
 

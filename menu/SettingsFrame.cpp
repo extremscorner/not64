@@ -76,6 +76,11 @@ void Func_ToggleButtonLoad();
 
 void Func_DisableAudioYes();
 void Func_DisableAudioNo();
+void Func_SpeedLimitOff();
+void Func_SpeedLimitVi();
+void Func_SpeedLimitFps();
+void Func_ScalePitchYes();
+void Func_ScalePitchNo();
 
 void Func_AutoSaveNativeYes();
 void Func_AutoSaveNativeNo();
@@ -84,14 +89,14 @@ void Func_DeleteSaves();
 void Func_ReturnFromSettingsFrame();
 
 
-#define NUM_FRAME_BUTTONS 38
+#define NUM_FRAME_BUTTONS 43
 #define NUM_TAB_BUTTONS 5
 #define FRAME_BUTTONS settingsFrameButtons
 #define FRAME_STRINGS settingsFrameStrings
-#define NUM_FRAME_TEXTBOXES 13
+#define NUM_FRAME_TEXTBOXES 15
 #define FRAME_TEXTBOXES settingsFrameTextBoxes
 
-static char FRAME_STRINGS[37][23] =
+static char FRAME_STRINGS[41][23] =
 	{ "General",
 	  "Video",
 	  "Input",
@@ -128,9 +133,13 @@ static char FRAME_STRINGS[37][23] =
 	  "Default",
 	//Strings for Audio tab [31]
 	  "Disable Audio",
+	  "Speed Limit",
+	  "Scale Pitch",
 	  "Yes",
 	  "No",
-	//Strings for Saves tab [34]
+	  "VI",
+	  "FPS",
+	//Strings for Saves tab [38]
 	  "Auto Save Native Saves",
 	  "Copy Saves",
 	  "Delete Saves"};
@@ -189,13 +198,18 @@ struct ButtonInfo
 	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[10],	360.0,	310.0,	 70.0,	56.0,	28,	31,	29,	29,	Func_SaveButtonsUSB,	Func_ReturnFromSettingsFrame }, // Save Button Configs to USB
 	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[30],	295.0,	380.0,	135.0,	56.0,	29,	 2,	-1,	-1,	Func_ToggleButtonLoad,	Func_ReturnFromSettingsFrame }, // Toggle Button Load Slot
 	//Buttons for Audio Tab (starts at button[32])
-	{	NULL,	BTN_A_SEL,	FRAME_STRINGS[32],	345.0,	100.0,	 75.0,	56.0,	 3,	 3,	33,	33,	Func_DisableAudioYes,	Func_ReturnFromSettingsFrame }, // Disable Audio: Yes
-	{	NULL,	BTN_A_SEL,	FRAME_STRINGS[33],	440.0,	100.0,	 75.0,	56.0,	 3,	 3,	32,	32,	Func_DisableAudioNo,	Func_ReturnFromSettingsFrame }, // Disable Audio: No
-	//Buttons for Saves Tab (starts at button[34])
-	{	NULL,	BTN_A_SEL,	FRAME_STRINGS[32],	375.0,	100.0,	 75.0,	56.0,	 4,	36,	35,	35,	Func_AutoSaveNativeYes,	Func_ReturnFromSettingsFrame }, // Auto Save Native: Yes
-	{	NULL,	BTN_A_SEL,	FRAME_STRINGS[33],	470.0,	100.0,	 75.0,	56.0,	 4,	36,	34,	34,	Func_AutoSaveNativeNo,	Func_ReturnFromSettingsFrame }, // Auto Save Native: No
-	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[35],	365.0,	170.0,	190.0,	56.0,	34,	37,	-1,	-1,	Func_CopySaves,			Func_ReturnFromSettingsFrame }, // Copy Saves
-	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[36],	365.0,	240.0,	190.0,	56.0,	36,	 4,	-1,	-1,	Func_DeleteSaves,		Func_ReturnFromSettingsFrame }, // Delete Saves
+	{	NULL,	BTN_A_SEL,	FRAME_STRINGS[34],	345.0,	100.0,	 75.0,	56.0,	 3,	35,	33,	33,	Func_DisableAudioYes,	Func_ReturnFromSettingsFrame }, // Disable Audio: Yes
+	{	NULL,	BTN_A_SEL,	FRAME_STRINGS[35],	440.0,	100.0,	 75.0,	56.0,	 3,	36,	32,	32,	Func_DisableAudioNo,	Func_ReturnFromSettingsFrame }, // Disable Audio: No
+	{	NULL,	BTN_A_SEL,	FRAME_STRINGS[21],	250.0,	170.0,	 75.0,	56.0,	32,	37,	36,	35,	Func_SpeedLimitOff,		Func_ReturnFromSettingsFrame }, // Speed Limit: Off
+	{	NULL,	BTN_A_SEL,	FRAME_STRINGS[36],	345.0,	170.0,	 75.0,	56.0,	32,	37,	34,	36,	Func_SpeedLimitVi,		Func_ReturnFromSettingsFrame }, // Speed Limit: VI
+	{	NULL,	BTN_A_SEL,	FRAME_STRINGS[37],	440.0,	170.0,	 75.0,	56.0,	33,	38,	35,	34,	Func_SpeedLimitFps,		Func_ReturnFromSettingsFrame }, // Speed Limit: FPS
+	{	NULL,	BTN_A_SEL,	FRAME_STRINGS[34],	345.0,	240.0,	 75.0,	56.0,	35,	 3,	38,	38,	Func_ScalePitchYes,		Func_ReturnFromSettingsFrame }, // Scale Pitch: Yes
+	{	NULL,	BTN_A_SEL,	FRAME_STRINGS[35],	440.0,	240.0,	 75.0,	56.0,	36,	 3,	37,	37,	Func_ScalePitchNo,		Func_ReturnFromSettingsFrame }, // Scale Pitch: No
+	//Buttons for Saves Tab (starts at button[39])
+	{	NULL,	BTN_A_SEL,	FRAME_STRINGS[34],	375.0,	100.0,	 75.0,	56.0,	 4,	41,	40,	40,	Func_AutoSaveNativeYes,	Func_ReturnFromSettingsFrame }, // Auto Save Native: Yes
+	{	NULL,	BTN_A_SEL,	FRAME_STRINGS[35],	470.0,	100.0,	 75.0,	56.0,	 4,	41,	39,	39,	Func_AutoSaveNativeNo,	Func_ReturnFromSettingsFrame }, // Auto Save Native: No
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[39],	365.0,	170.0,	190.0,	56.0,	39,	42,	-1,	-1,	Func_CopySaves,			Func_ReturnFromSettingsFrame }, // Copy Saves
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[40],	365.0,	240.0,	190.0,	56.0,	41,	 4,	-1,	-1,	Func_DeleteSaves,		Func_ReturnFromSettingsFrame }, // Delete Saves
 };
 
 struct TextBoxInfo
@@ -224,8 +238,10 @@ struct TextBoxInfo
 	{	NULL,	FRAME_STRINGS[29],	155.0,	408.0,	 1.0,	true }, // 2xSai: On/Off
 	//TextBoxes for Audio Tab (starts at textBox[11])
 	{	NULL,	FRAME_STRINGS[31],	210.0,	128.0,	 1.0,	true }, // Disable Audio: Yes/No
-	//TextBoxes for Saves Tab (starts at textBox[12])
-	{	NULL,	FRAME_STRINGS[34],	200.0,	128.0,	 1.0,	true }, // Auto Save Native Save: Yes/No
+	{	NULL,	FRAME_STRINGS[32],	150.0,	198.0,	 1.0,	true }, // Speed Limit: Off/VI/FPS
+	{	NULL,	FRAME_STRINGS[33],	210.0,	268.0,	 1.0,	true }, // Scale Pitch: Yes/No
+	//TextBoxes for Saves Tab (starts at textBox[14])
+	{	NULL,	FRAME_STRINGS[38],	200.0,	128.0,	 1.0,	true }, // Auto Save Native Save: Yes/No
 };
 
 SettingsFrame::SettingsFrame()
@@ -372,15 +388,20 @@ void SettingsFrame::activateSubmenu(int submenu)
 			{
 				FRAME_BUTTONS[i].button->setVisible(true);
 				FRAME_BUTTONS[i].button->setNextFocus(menu::Focus::DIRECTION_DOWN, FRAME_BUTTONS[32].button);
-				FRAME_BUTTONS[i].button->setNextFocus(menu::Focus::DIRECTION_UP, FRAME_BUTTONS[32].button);
+				FRAME_BUTTONS[i].button->setNextFocus(menu::Focus::DIRECTION_UP, FRAME_BUTTONS[37].button);
 				FRAME_BUTTONS[i].button->setActive(true);
 			}
-			for (int i = 11; i < 12; i++)
+			for (int i = 11; i < 14; i++)
 				FRAME_TEXTBOXES[i].textBox->setVisible(true);
 			FRAME_BUTTONS[3].button->setSelected(true);
 			if (audioEnabled == AUDIO_DISABLE)	FRAME_BUTTONS[32].button->setSelected(true);
 			else								FRAME_BUTTONS[33].button->setSelected(true);
-			for (int i = 32; i < 34; i++)
+			if (Timers.limitVIs == LIMITVIS_NONE)				FRAME_BUTTONS[34].button->setSelected(true);
+			else if (Timers.limitVIs == LIMITVIS_WAIT_FOR_VI)	FRAME_BUTTONS[35].button->setSelected(true);
+			else												FRAME_BUTTONS[36].button->setSelected(true);
+			if (scalePitch == SCALEPITCH_ENABLE)	FRAME_BUTTONS[37].button->setSelected(true);
+			else									FRAME_BUTTONS[38].button->setSelected(true);
+			for (int i = 32; i < 39; i++)
 			{
 				FRAME_BUTTONS[i].button->setVisible(true);
 				FRAME_BUTTONS[i].button->setActive(true);
@@ -391,16 +412,16 @@ void SettingsFrame::activateSubmenu(int submenu)
 			for (int i = 0; i < NUM_TAB_BUTTONS; i++)
 			{
 				FRAME_BUTTONS[i].button->setVisible(true);
-				FRAME_BUTTONS[i].button->setNextFocus(menu::Focus::DIRECTION_DOWN, FRAME_BUTTONS[34].button);
-				FRAME_BUTTONS[i].button->setNextFocus(menu::Focus::DIRECTION_UP, FRAME_BUTTONS[37].button);
+				FRAME_BUTTONS[i].button->setNextFocus(menu::Focus::DIRECTION_DOWN, FRAME_BUTTONS[39].button);
+				FRAME_BUTTONS[i].button->setNextFocus(menu::Focus::DIRECTION_UP, FRAME_BUTTONS[42].button);
 				FRAME_BUTTONS[i].button->setActive(true);
 			}
-			for (int i = 12; i < 13; i++)
+			for (int i = 14; i < 15; i++)
 				FRAME_TEXTBOXES[i].textBox->setVisible(true);
 			FRAME_BUTTONS[4].button->setSelected(true);
-			if (autoSave == AUTOSAVE_ENABLE)	FRAME_BUTTONS[34].button->setSelected(true);
-			else								FRAME_BUTTONS[35].button->setSelected(true);
-			for (int i = 34; i < NUM_FRAME_BUTTONS; i++)
+			if (autoSave == AUTOSAVE_ENABLE)	FRAME_BUTTONS[39].button->setSelected(true);
+			else								FRAME_BUTTONS[40].button->setSelected(true);
+			for (int i = 39; i < NUM_FRAME_BUTTONS; i++)
 			{
 				FRAME_BUTTONS[i].button->setVisible(true);
 				FRAME_BUTTONS[i].button->setActive(true);
@@ -713,7 +734,7 @@ void Func_ScreenForce16_9()
 		FRAME_BUTTONS[i].button->setSelected(false);
 	FRAME_BUTTONS[19].button->setSelected(true);
 	screenMode = SCREENMODE_16x9_PILLARBOX;
-	gfx_set_window( 78, 0, 483, 480);
+	gfx_set_window( 80, 0, 480, 480);
 }
 
 void Func_CpuFramebufferOn()
@@ -887,19 +908,59 @@ void Func_DisableAudioNo()
 	audioEnabled = AUDIO_ENABLE;
 }
 
-void Func_AutoSaveNativeYes()
+void Func_SpeedLimitOff()
 {
-	for (int i = 34; i <= 35; i++)
+	for (int i = 34; i <= 36; i++)
 		FRAME_BUTTONS[i].button->setSelected(false);
 	FRAME_BUTTONS[34].button->setSelected(true);
+	Timers.limitVIs = LIMITVIS_NONE;
+}
+
+void Func_SpeedLimitVi()
+{
+	for (int i = 34; i <= 36; i++)
+		FRAME_BUTTONS[i].button->setSelected(false);
+	FRAME_BUTTONS[35].button->setSelected(true);
+	Timers.limitVIs = LIMITVIS_WAIT_FOR_VI;
+}
+
+void Func_SpeedLimitFps()
+{
+	for (int i = 34; i <= 36; i++)
+		FRAME_BUTTONS[i].button->setSelected(false);
+	FRAME_BUTTONS[36].button->setSelected(true);
+	Timers.limitVIs = LIMITVIS_WAIT_FOR_FRAME;
+}
+
+void Func_ScalePitchYes()
+{
+	for (int i = 37; i <= 38; i++)
+		FRAME_BUTTONS[i].button->setSelected(false);
+	FRAME_BUTTONS[37].button->setSelected(true);
+	scalePitch = SCALEPITCH_ENABLE;
+}
+
+void Func_ScalePitchNo()
+{
+	for (int i = 37; i <= 38; i++)
+		FRAME_BUTTONS[i].button->setSelected(false);
+	FRAME_BUTTONS[38].button->setSelected(true);
+	scalePitch = SCALEPITCH_DISABLE;
+}
+
+void Func_AutoSaveNativeYes()
+{
+	for (int i = 39; i <= 40; i++)
+		FRAME_BUTTONS[i].button->setSelected(false);
+	FRAME_BUTTONS[39].button->setSelected(true);
 	autoSave = AUTOSAVE_ENABLE;
 }
 
 void Func_AutoSaveNativeNo()
 {
-	for (int i = 34; i <= 35; i++)
+	for (int i = 39; i <= 40; i++)
 		FRAME_BUTTONS[i].button->setSelected(false);
-	FRAME_BUTTONS[35].button->setSelected(true);
+	FRAME_BUTTONS[40].button->setSelected(true);
 	autoSave = AUTOSAVE_DISABLE;
 }
 
@@ -918,11 +979,3 @@ void Func_ReturnFromSettingsFrame()
 	menu::Gui::getInstance().menuLogo->setLocation(580.0, 70.0, -50.0);
 	pMenuContext->setActiveFrame(MenuContext::FRAME_MAIN);
 }
-
-/*extern timers Timers;
-
-void Func_ToggleVILimit()
-{
-	Timers.limitVIs = (Timers.limitVIs+1) % 3;
-	FRAME_BUTTONS[2].buttonString = FRAME_STRINGS[Timers.limitVIs + 4];
-}*/

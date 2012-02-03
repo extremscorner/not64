@@ -35,14 +35,6 @@
 /* DVD Globals */
 int dvd_init = 0;
 
-/* Worked out manually from my original Disc */
-#define ZELDA_BONUS_ID "D43U01"
-#define ZELDA_CLCTR_ID "PZLP01"
-#define ZELDA_BONUS_OOT 0x54FBEEF4ULL
-#define ZELDA_BONUS_MQ  0x52CCC5FCULL
-#define ZELDA_CLCTR_OOT 0x3B9D1FC0ULL
-#define ZELDA_CLCTR_MM  0x0C4E1FC0ULL
-#define ZELDA_SIZE      0x2000000
 #define ZELDA_OOT_NAME  "Zelda - Ocarina of Time"
 #define ZELDA_MQ_NAME   "Zelda - Ocarina of Time Master Quest"
 #define ZELDA_MM_NAME   "Zelda - Majoras Mask"
@@ -67,33 +59,48 @@ int fileBrowser_DVD_readDir(fileBrowser_file* ffile, fileBrowser_file** dir){
     dvd_init = 1;
   } 
 	
-	if (!memcmp((void*)0x80000000, ZELDA_BONUS_ID, 6)) { //OoT+MQ bonus disc support.
+	if (!memcmp((void*)0x80000000, "D43U01", 6)) { //OoT+MQ bonus disc support.
 		num_entries = 2;
 		*dir = malloc( num_entries * sizeof(fileBrowser_file) );
 		strcpy( (*dir)[0].name, ZELDA_OOT_NAME);
-		(*dir)[0].discoffset = ZELDA_BONUS_OOT;
+		(*dir)[0].discoffset = 0x54FBEEF4ULL;
 		(*dir)[0].offset = 0;
-		(*dir)[0].size   = ZELDA_SIZE;
+		(*dir)[0].size   = 0x2000000;
 		(*dir)[0].attr	 = 0;
 		strcpy( (*dir)[1].name, ZELDA_MQ_NAME);
-		(*dir)[1].discoffset = ZELDA_BONUS_MQ;
+		(*dir)[1].discoffset = 0x52CCC5FCULL;
 		(*dir)[1].offset = 0;
-		(*dir)[1].size   = ZELDA_SIZE;
+		(*dir)[1].size   = 0x2000000;
 		(*dir)[1].attr	 = 0;
 		return num_entries;
 	}
-	else if (!memcmp((void*)0x80000000, ZELDA_CLCTR_ID, 6)) { //Zelda Collectors disc support.
+	else if (!memcmp((void*)0x80000000, "D43E01", 6)) {
 		num_entries = 2;
 		*dir = malloc( num_entries * sizeof(fileBrowser_file) );
 		strcpy( (*dir)[0].name, ZELDA_OOT_NAME);
-		(*dir)[0].discoffset = ZELDA_CLCTR_OOT;
+		(*dir)[0].discoffset = 0x550569D8ULL;
 		(*dir)[0].offset = 0;
-		(*dir)[0].size   = ZELDA_SIZE;
+		(*dir)[0].size   = 0x2000000;
+		(*dir)[0].attr	 = 0;
+		strcpy( (*dir)[1].name, ZELDA_MQ_NAME);
+		(*dir)[1].discoffset = 0x52FBC1E0ULL;
+		(*dir)[1].offset = 0;
+		(*dir)[1].size   = 0x2000000;
+		(*dir)[1].attr	 = 0;
+		return num_entries;
+	}
+	else if (!memcmp((void*)0x80000000, "PZLP01", 6)) { //Zelda Collectors disc support.
+		num_entries = 2;
+		*dir = malloc( num_entries * sizeof(fileBrowser_file) );
+		strcpy( (*dir)[0].name, ZELDA_OOT_NAME);
+		(*dir)[0].discoffset = 0x3B9D1FC0ULL;
+		(*dir)[0].offset = 0;
+		(*dir)[0].size   = 0x2000000;
 		(*dir)[0].attr	 = 0;
 		strcpy( (*dir)[1].name, ZELDA_MM_NAME);
-		(*dir)[1].discoffset = ZELDA_CLCTR_MM;
+		(*dir)[1].discoffset = 0x0C4E1FC0ULL;
 		(*dir)[1].offset = 0;
-		(*dir)[1].size   = ZELDA_SIZE;
+		(*dir)[1].size   = 0x2000000;
 		(*dir)[1].attr	 = 0;
 		return num_entries;
 	}

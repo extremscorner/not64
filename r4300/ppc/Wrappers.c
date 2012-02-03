@@ -99,7 +99,7 @@ inline unsigned int dyna_run(PowerPC_func* func, unsigned int (*code)(void)){
 		: "=r" (naddr), "=r" (link_branch), "=r" (return_addr),
 		  "=r" (last_func)
 		: "r" (code)
-		: "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "22");
+		: "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "22");
 
 	link_branch = link_branch == return_addr ? NULL : link_branch - 1;
 	

@@ -4,15 +4,14 @@ CC		=powerpc-eabi-gcc
 CXX		=powerpc-eabi-g++
 AS		=powerpc-eabi-as
 
-CFLAGS  = -g -Ofast -Wall $(MACHDEP) $(INCLUDE) \
+CFLAGS  = -g -Ofast -mrvl -Wall $(INCLUDE) \
 	  -fno-exceptions -Wno-unused-parameter -pipe \
 	  -DUSE_GUI -DWII -DGLN64_GX -DUSE_EXPANSION \
 	  -DUSE_RECOMP_CACHE -DPPC_DYNAREC -DFASTMEM -DMENU_V2\
 	  -DRELEASE #-DSHOW_DEBUG #-DPRINTGECKO #-DPROFILE #-DDEBUGON #-DUSE_TLB_CACHE \
 	  #-DNO_BT -DUSE_ROM_CACHE_L1 -DPRINTGECKO -DGLN64_SDLOG -DEMBEDDED_FONTS -DUSE_EXPANSION -DSHOW_STATS
 
-MACHDEP	= -DGEKKO -mrvl -msdata
-LDFLAGS	=	$(MACHDEP) -Wl,-Map,$(notdir $@).map -Wl,--cref
+LDFLAGS	= -mrvl -Wl,-Map,$(notdir $@).map -Wl,--cref
 
 INCLUDE = -I$(DEVKITPRO)/libogc/include -I$(DEVKITPRO)/libfat/libogc/include
 LIBPATHS = -L$(DEVKITPRO)/libogc/lib/wii -L$(DEVKITPRO)/libfat/libogc/lib/wii

@@ -34,6 +34,13 @@ enum audioEnabled
 	AUDIO_ENABLE
 };
 
+extern char scalePitch;
+enum scalePitch
+{
+	SCALEPITCH_DISABLE=0,
+	SCALEPITCH_ENABLE
+};
+
 extern char showFPSonScreen;
 enum showFPSonScreen
 {
@@ -105,13 +112,6 @@ enum screenMode
 	SCREENMODE_4x3=0,
 	SCREENMODE_16x9,
 	SCREENMODE_16x9_PILLARBOX
-};
-
-extern char deFlicker;
-enum deFlicker
-{
-	DEFLICKER_DISABLE=0,
-	DEFLICKER_ENABLE
 };
 
 extern char trapFilter;

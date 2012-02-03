@@ -103,6 +103,7 @@ int init_dvd() {
   else {
     read_cmd = NORMAL;
   }
+  dvd_read_id();
   return 0;
 #endif
 }

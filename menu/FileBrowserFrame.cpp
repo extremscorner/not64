@@ -355,7 +355,13 @@ void fileBrowserFrame_Error(fileBrowser_file* dir, int error_code)
 		FRAME_BUTTONS[i].button->setActive(false);
 	for (int i = 1; i<NUM_FILE_SLOTS; i++)
 		FRAME_BUTTONS[i+2].buttonString = FRAME_STRINGS[2];
-	if(error_code == SMB_NETINITERR) {
+	if(error_code == NO_HW_ACCESS) {
+  	sprintf(feedback_string,"DVDX v2 not found");
+	}
+	else if(error_code == NO_DISC) {
+  	sprintf(feedback_string,"NO Disc Inserted");
+	}
+	else if(error_code == SMB_NETINITERR) {
   	sprintf(feedback_string,"Network not yet initialized");
 	}
 	else if(error_code == SMB_SMBCFGERR) {

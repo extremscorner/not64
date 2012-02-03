@@ -31,6 +31,8 @@
 
 FrameBufferInfo frameBuffer;
 
+extern GXRModeObj *vmode, *rmode;
+
 #ifdef __GX__
 extern heap_cntrl* GXtexCache;
 #endif //__GX__
@@ -215,8 +217,10 @@ void FrameBuffer_SaveBuffer( u32 address, u16 size, u16 width, u16 height )
 			//Note: texture realWidth and realHeight should be multiple of 2!
 			GX_SetTexCopySrc(OGL.GXorigX, OGL.GXorigY,(u16) current->texture->realWidth,(u16) current->texture->realHeight);
 			GX_SetTexCopyDst((u16) current->texture->realWidth,(u16) current->texture->realHeight, current->texture->GXtexfmt, GX_FALSE);
+			GX_SetCopyFilter(GX_FALSE, NULL, GX_FALSE, NULL);
 			if (current->texture->GXtexture) GX_CopyTex(current->texture->GXtexture, GX_FALSE);
 			GX_PixModeSync();
+			GX_SetCopyFilter(GX_FALSE, NULL, GX_TRUE, rmode->vfilter);
 #endif // __GX__
 
 			*(u32*)&RDRAM[current->startAddress] = current->startAddress;
@@ -326,8 +330,10 @@ void FrameBuffer_SaveBuffer( u32 address, u16 size, u16 width, u16 height )
 	//Note: texture realWidth and realHeight should be multiple of 2!
 	GX_SetTexCopySrc((u16) OGL.GXorigX, (u16) OGL.GXorigY,(u16) current->texture->realWidth,(u16) current->texture->realHeight);
 	GX_SetTexCopyDst((u16) current->texture->realWidth,(u16) current->texture->realHeight, current->texture->GXtexfmt, GX_FALSE);
+	GX_SetCopyFilter(GX_FALSE, NULL, GX_FALSE, NULL);
 	if (current->texture->GXtexture) GX_CopyTex(current->texture->GXtexture, GX_FALSE);
 	GX_PixModeSync();
+	GX_SetCopyFilter(GX_FALSE, NULL, GX_TRUE, rmode->vfilter);
 #endif // __GX__
 
 	*(u32*)&RDRAM[current->startAddress] = current->startAddress;

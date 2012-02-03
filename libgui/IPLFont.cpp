@@ -212,11 +212,11 @@ void IplFont::drawInit(GXColor fontColor)
 //	guMtxTransApply (GXmodelView2D, GXmodelView2D, 0.0F, 0.0F, -5.0F);
 	GX_LoadPosMtxImm(GXmodelView2D,GX_PNMTX0);
 	if(screenMode && menuActive)
-		guOrtho(GXprojection2D, 0, 479, -104, 743, 0, 700);
+		guOrtho(GXprojection2D, 0, 480, -104, 744, 0, 700);
 	else if(screenMode == SCREENMODE_16x9_PILLARBOX)
-		guOrtho(GXprojection2D, 0, 479, -104, 743, 0, 700);
+		guOrtho(GXprojection2D, 0, 480, -104, 744, 0, 700);
 	else
-		guOrtho(GXprojection2D, 0, 479, 0, 639, 0, 700);
+		guOrtho(GXprojection2D, 0, 480, 0, 640, 0, 700);
 	GX_LoadProjectionMtx(GXprojection2D, GX_ORTHOGRAPHIC);
 //	GX_SetViewport (0, 0, vmode->fbWidth, vmode->efbHeight, 0, 1);
 

@@ -90,7 +90,7 @@ static inline u8 GXcastf32u8(register f32 in)
 	return rval;
 }
 
-static inline u8 GXcastf32u16(register f32 in)
+static inline u16 GXcastf32u16(register f32 in)
 {
 	u16 rval;
 	asm("psq_st%U0%X0 %1,%0,1,3" : "=m"(rval) : "f"(in) : "memory");

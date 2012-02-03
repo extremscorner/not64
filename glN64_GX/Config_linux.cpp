@@ -441,7 +441,7 @@ void Config_LoadConfig()
 	OGL.fullscreenHeight = 480;
 	OGL.windowedWidth = 640;
 	OGL.windowedHeight = 480;
-	OGL.forceBilinear = 0;
+	OGL.forceBilinear = glN64_use2xSaiTextures;
 	OGL.enable2xSaI = glN64_use2xSaiTextures;
 	OGL.fog = 1;
 	OGL.textureBitDepth = 1; // normal (16 & 32 bits)
