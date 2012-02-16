@@ -344,12 +344,11 @@ int main(int argc, char* argv[]){
 	MenuContext *menu = new MenuContext(vmode);
 	VIDEO_SetPostRetraceCallback (ScanPADSandReset);
 
-#ifdef HW_RVL
 	// Initialize the network if the user has specified something in their SMB settings
 	if(strlen(&smbShareName[0]) && strlen(&smbIpAddr[0])) {
-	  init_network_thread();
-  }
-#endif
+		init_network_thread();
+	}
+
 	while (menu->isRunning()) {}
 
 	delete menu;

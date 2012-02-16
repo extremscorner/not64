@@ -171,12 +171,13 @@ void Func_LoadFromUSB()
 	
 	pMenuContext->setActiveFrame(MenuContext::FRAME_FILEBROWSER);
 	fileBrowserFrame_OpenDirectory(romFile_topLevel);
+#else
+	menu::MessageBox::getInstance().setMessage("Available only for Wii");
 #endif
 }
 
 void Func_LoadFromSamba()
 {
-#ifdef HW_RVL
 	// Deinit any existing romFile state
 	if(romFile_deinit) romFile_deinit( romFile_topLevel );
 	// Change all the romFile pointers
@@ -191,7 +192,6 @@ void Func_LoadFromSamba()
 	
 	pMenuContext->setActiveFrame(MenuContext::FRAME_FILEBROWSER);
 	fileBrowserFrame_OpenDirectory(romFile_topLevel);
-#endif
 }
 
 void Func_ReturnFromLoadRomFrame()

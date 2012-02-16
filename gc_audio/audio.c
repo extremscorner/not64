@@ -25,11 +25,11 @@
 
 #include "../main/winlnxdefs.h"
 #include <gccore.h>
+#include <string.h>
 #include <aesndlib.h>
 
 #include "AudioPlugin.h"
 #include "Audio_#1.1.h"
-#include "../main/fastmemcpy.h"
 #include "../main/timers.h"
 #include "../main/wii64config.h"
 
@@ -39,8 +39,8 @@ extern float VILimit;
 #define BUFFER_SIZE (DSP_STREAMBUFFER_SIZE * 64)
 static char buffer[BUFFER_SIZE];
 static const char *end_ptr = buffer + BUFFER_SIZE;
-static volatile char *write_ptr, *read_ptr;
-static volatile int buffered;
+static char *write_ptr, *read_ptr;
+static int buffered;
 static unsigned int freq;
 static AESNDPB *voice;
 
@@ -90,7 +90,7 @@ EXPORT void CALL AiLenChanged(void)
 		
 		do {
 			int len = MIN(end_ptr - write_ptr, length);
-			fast_memcpy(write_ptr, stream, len);
+			memcpy(write_ptr, stream, len);
 			stream = ((char *)stream + len);
 			
 			write_ptr += len;
@@ -111,6 +111,7 @@ EXPORT void CALL AiLenChanged(void)
 EXPORT void CALL CloseDLL(void)
 {
 	AESND_FreeVoice(voice);
+	voice = NULL;
 }
 
 EXPORT BOOL CALL InitiateAudio(AUDIO_INFO Audio_Info)
@@ -133,7 +134,6 @@ EXPORT void CALL RomOpen()
 	write_ptr = buffer;
 	read_ptr = buffer;
 	buffered = 0;
-	
 	AESND_SetVoiceStop(voice, false);
 }
 

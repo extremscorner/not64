@@ -14,7 +14,6 @@
 #include <string.h>
 #include <stdio.h>
 #include "../gui/DEBUG.h"
-#include "../main/fastmemcpy.h"
 #endif // __GX__
 
 #include "glN64.h"
@@ -669,7 +668,7 @@ void gDPLoadTile( u32 tile, u32 uls, u32 ult, u32 lrs, u32 lrt )
 #ifndef _BIG_ENDIAN
 		UnswapCopy( src, dest, bpl );
 #else // !_BIG_ENDIAN
-		fast_memcpy( dest, src, bpl );
+		memcpy( dest, src, bpl );
 #endif // _BIG_ENDIAN
 		if (y & 1) Interleave( dest, line );
 
@@ -746,7 +745,7 @@ void gDPLoadBlock( u32 tile, u32 uls, u32 ult, u32 lrs, u32 dxt )
 #ifndef _BIG_ENDIAN
 			UnswapCopy( src, dest, bpl );
 #else // !_BIG_ENDIAN
-			fast_memcpy( dest, src, bpl );
+			memcpy( dest, src, bpl );
 #endif // _BIG_ENDIAN
 			if (y & 1) Interleave( dest, line );
 
@@ -758,7 +757,7 @@ void gDPLoadBlock( u32 tile, u32 uls, u32 ult, u32 lrs, u32 dxt )
 #ifndef _BIG_ENDIAN
 		UnswapCopy( src, dest, bytes );
 #else // !_BIG_ENDIAN
-		fast_memcpy( dest, src, bytes );
+		memcpy( dest, src, bytes );
 #endif // _BIG_ENDIAN
 
 	gDP.textureMode = TEXTUREMODE_NORMAL;

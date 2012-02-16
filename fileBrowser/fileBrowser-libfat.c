@@ -176,7 +176,7 @@ static void *removalCallback (void *arg)
 void InitRemovalThread()
 {
 #ifdef DEVICE_REMOVAL_THREAD 
-  LWP_CreateThread (&removalThread, removalCallback, NULL, NULL, 0, 40);
+  LWP_CreateThread (&removalThread, removalCallback, NULL, NULL, 0, LWP_PRIO_NORMAL);
   rThreadCreated = 1;
 #endif
 }

@@ -242,7 +242,6 @@ void Func_PlayGame()
 	menu::Focus::getInstance().setFreezeAction(false);
 
 	menu::Gui::getInstance().gfx->clearEFB((GXColor){0, 0, 0, 0xFF}, 0x000000);
-
 	pause_netinit_thread();
 	pauseRemovalThread();
 	resumeAudio();
@@ -258,9 +257,7 @@ void Func_PlayGame()
 	menuActive = 1;
 	pauseInput();
 	pauseAudio();
-  continueRemovalThread();
-  resume_netinit_thread();
-	
+
   if(autoSave==AUTOSAVE_ENABLE) {
     if(flashramWritten || sramWritten || eepromWritten || mempakWritten) {  //something needs saving
       switch (nativeSaveDevice)
@@ -316,6 +313,9 @@ void Func_PlayGame()
       
     }
   }
+
+	continueRemovalThread();
+	resume_netinit_thread();
 	FRAME_BUTTONS[5].buttonString = FRAME_STRINGS[6];
 	menu::Cursor::getInstance().clearCursorFocus();
 }

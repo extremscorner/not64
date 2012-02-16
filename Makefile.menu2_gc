@@ -4,20 +4,15 @@ CC		=powerpc-eabi-gcc
 CXX		=powerpc-eabi-g++
 AS		=powerpc-eabi-as
 
-CFLAGS  = -g -O3 -Wall $(MACHDEP) $(INCLUDE) \
-	  -DCPU_SHUTDOWN -DSPC700_SHUTDOWN -DVAR_CYCLES -DSOUND \
-	  -DNOASM -DNGC -DNOASM -DPIXEL_FORMAT=RGB565  \
+CFLAGS  = -g -Ofast -mogc -Wall $(INCLUDE) \
 	  -fno-exceptions -Wno-unused-parameter -pipe \
-	  -DUSE_GUI -DNGC -DHW_DOL -DGLN64_GX -DUSE_TLB_CACHE -DARAM_BLOCKCACHE -DARAM_TLBCACHE \
-	  -DTHREADED_AUDIO -DUSE_RECOMP_CACHE -DPPC_DYNAREC -DFASTMEM -DRELEASE -DMENU_V2\
-	  #-DSHOW_DEBUG  #-DUSE_TLB_CACHE #-DNO_BT -DPROFILE #-DDEBUGON #-DPRINTGECKO \
-	  #-DUSE_ROM_CACHE_L1 -DGLN64_SDLOG -DEMBEDDED_FONTS -DUSE_EXPANSION -DSHOW_STATS
+	  -DUSE_GUI -DNGC -DGLN64_GX -DUSE_TLB_CACHE -DARAM_BLOCKCACHE -DARAM_TLBCACHE \
+	  -DUSE_RECOMP_CACHE -DPPC_DYNAREC -DFASTMEM -DRELEASE -DMENU_V2
 
-MACHDEP	= -DGEKKO -mcpu=750 -meabi -mhard-float 
-LDFLAGS	=	$(MACHDEP) -mogc -Wl,-Map,$(notdir $@).map -Wl,--cref
+LDFLAGS	= -mogc -Wl,-Map,$(notdir $@).map -Wl,--cref
 
-INCLUDE = -I$(DEVKITPRO)/libogc/include -I$(DEVKITPRO)/libfat/libogc/include
-LIBPATHS = -L$(DEVKITPRO)/libogc/lib/cube -L$(DEVKITPRO)/libfat/libogc/lib/cube
+INCLUDE = -I$(DEVKITPRO)/libogc/include
+LIBPATHS = -L$(DEVKITPRO)/libogc/lib/cube
 
 CXXFLAGS	=$(CFLAGS)
 
@@ -59,6 +54,7 @@ OBJ		=main/rom_gc.o \
 		libgui/MessageBox.o \
 		libgui/resources.o \
 		libgui/TextBox.o \
+		fileBrowser/fileBrowser-SMB.o \
 		fileBrowser/fileBrowser-DVD.o \
 		fileBrowser/fileBrowser-CARD.o \
 		fileBrowser/fileBrowser-libfat.o \
@@ -162,7 +158,7 @@ HEADER		=main/rom.h \
 		r4300/recomp.h \
 		gc_memory/pif.h
 
-LIB		=	-logc -lm -lfat -ldb -lz
+LIB		=	-laesnd -lbba -ltinysmb -lfat -logc -lz -static
 
 ifeq ($(strip mupen64_GX_gfx/main.cpp),)
 	export LD	:=	$(CC)
@@ -278,7 +274,7 @@ glN64_GX/F3DWRUS.o:		glN64_GX/F3DWRUS.cpp
 				$(CXX) $(CFLAGS) -D__LINUX__ -D__GX__ -c -o $@ $<
 
 cube64-glN64.elf:	$(OBJ) $(OBJ_INPUT) $(OBJ_GLN64_GX) $(OBJ_AUDIO) $(OBJ_RSPHLE) $(OBJ_PPC)
-		$(LD) $^ $(LDFLAGS) $(LIBPATHS) $(LIB) -Wl -o $@
+		$(LD) $^ $(LDFLAGS) $(LIBPATHS) $(LIB) -o $@
 		$(DEVKITPRO)/devkitPPC/bin/elf2dol $@ cube64-glN64.dol
 
 install:

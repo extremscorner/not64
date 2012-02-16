@@ -47,13 +47,14 @@ Graphics::Graphics(GXRModeObj *rmode)
 	vmode = VIDEO_GetPreferredMode(&vmode_phys);
 	vmode->viWidth = 720;
 	vmode->viXOrigin = 0;
+#ifdef HW_RVL
 	VIDEO_SetTrapFilter(trapFilter);
+#endif
+
 	VIDEO_Configure(vmode);
 
-	xfb[0] = MEM_K0_TO_K1(SYS_AllocateFramebuffer(vmode));
-	xfb[1] = MEM_K0_TO_K1(SYS_AllocateFramebuffer(vmode));
-
-	console_init (xfb[0], 20, 64, vmode->fbWidth, vmode->xfbHeight, vmode->fbWidth * 2);
+	xfb[0] = SYS_AllocateFramebuffer(vmode);
+	xfb[1] = SYS_AllocateFramebuffer(vmode);
 
 	VIDEO_SetNextFramebuffer(xfb[which_fb]);
 	VIDEO_Flush();

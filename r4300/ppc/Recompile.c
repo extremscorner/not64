@@ -40,7 +40,6 @@
 #include "../ARAM-blocks.h"
 
 #include "../../gui/DEBUG.h"
-#include "../../main/fastmemcpy.h"
 
 static MIPS_instr*    src;
 static PowerPC_instr* dst;
@@ -251,8 +250,8 @@ PowerPC_func* recompile_block(PowerPC_block* ppc_block, unsigned int addr){
 		// We're recompiling from a hole, and we need to adjust the buffer size
 		RecompCache_Realloc(func, code_length * sizeof(PowerPC_instr));
 	}
-	fast_memcpy(func->code, code_buffer, code_length * sizeof(PowerPC_instr));
-	fast_memcpy(func->code_addr, code_addr_buffer, addr_last - addr_first);
+	memcpy(func->code, code_buffer, code_length * sizeof(PowerPC_instr));
+	memcpy(func->code_addr, code_addr_buffer, addr_last - addr_first);
 
 	// Readjusting pointers to the func buffers
 	code_addr = func->code_addr;

@@ -7,14 +7,12 @@ AS		=powerpc-eabi-as
 CFLAGS  = -g -Ofast -mrvl -Wall $(INCLUDE) \
 	  -fno-exceptions -Wno-unused-parameter -pipe \
 	  -DUSE_GUI -DWII -DGLN64_GX -DUSE_EXPANSION \
-	  -DUSE_RECOMP_CACHE -DPPC_DYNAREC -DFASTMEM -DMENU_V2\
-	  -DRELEASE #-DSHOW_DEBUG #-DPRINTGECKO #-DPROFILE #-DDEBUGON #-DUSE_TLB_CACHE \
-	  #-DNO_BT -DUSE_ROM_CACHE_L1 -DPRINTGECKO -DGLN64_SDLOG -DEMBEDDED_FONTS -DUSE_EXPANSION -DSHOW_STATS
+	  -DUSE_RECOMP_CACHE -DPPC_DYNAREC -DFASTMEM -DRELEASE -DMENU_V2
 
 LDFLAGS	= -mrvl -Wl,-Map,$(notdir $@).map -Wl,--cref
 
-INCLUDE = -I$(DEVKITPRO)/libogc/include -I$(DEVKITPRO)/libfat/libogc/include
-LIBPATHS = -L$(DEVKITPRO)/libogc/lib/wii -L$(DEVKITPRO)/libfat/libogc/lib/wii
+INCLUDE = -I$(DEVKITPRO)/libogc/include
+LIBPATHS = -L$(DEVKITPRO)/libogc/lib/wii
 
 CXXFLAGS	=$(CFLAGS)
 
@@ -92,8 +90,7 @@ OBJ		=main/rom_gc.o \
 		main/md5.o \
 		main/savestates_gc.o \
 		r4300/profile.o \
-		main/adler32.o \
-		main/fastmemcpy.o
+		main/adler32.o
 		
 OBJ_PPC		=r4300/ppc/MIPS-to-PPC.o \
 		r4300/ppc/Recompile.o \
@@ -162,7 +159,7 @@ HEADER		=main/rom.h \
 		r4300/recomp.h \
 		gc_memory/pif.h
 
-LIB		=	-laesnd -ldi -ltinysmb -lwiiuse -lbte -lfat -logc -lz -static
+LIB		=	-laesnd -ldi -lwiiuse -lbte -ltinysmb -lfat -logc -lz -static
 
 ifeq ($(strip mupen64_GX_gfx/main.cpp),)
 	export LD	:=	$(CC)

@@ -53,6 +53,7 @@ void ARAM_manager_init(void){
 	if(initialized) return;
 	
 	AR_Init(NULL, 0);
+	AR_Reset();
 
 	max_blocks = (AR_GetSize() - (64*1024) - (4*1024*1024) - (8*1024*1024))/BLOCK_SIZE;
 	ARAM_blocks = malloc(max_blocks * sizeof(ARAM_block));
@@ -67,12 +68,11 @@ void ARAM_manager_init(void){
 	
 	alloced_blocks = 0;
 	initialized = 1;
-	ARQ_Reset();
 	ARQ_Init();
+	ARQ_Reset();
 }
 
 void ARAM_manager_deinit(void){
-	AR_Reset();
 	if(ARAM_blocks) free(ARAM_blocks);
 	ARAM_blocks = NULL;
 	initialized = 0;

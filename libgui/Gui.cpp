@@ -114,7 +114,7 @@ void Gui::draw()
 			VIDEO_Flush();
 		 	VIDEO_WaitVSync();
 			if(shutdown==1)	//Power off System
-				SYS_ResetSystem(SYS_POWEROFF, 0, 0);
+				SYS_ResetSystem(SYS_POWEROFF);
 			else			//Return to Loader
 			{
 #ifdef WII

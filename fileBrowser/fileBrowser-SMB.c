@@ -20,7 +20,6 @@
  *
 **/
 
-#ifdef HW_RVL
 
 #include <string.h>
 #include <unistd.h>
@@ -117,7 +116,7 @@ static void* init_network(void *args) {
 }
 
 void init_network_thread() {
-  LWP_CreateThread (&initnetthread, init_network, NULL, NULL, 0, 40);
+  LWP_CreateThread (&initnetthread, init_network, NULL, NULL, 0, LWP_PRIO_NORMAL);
 }
 
 // Connect to the share specified in settings.cfg
@@ -179,5 +178,3 @@ int fileBrowser_SMB_deinit(fileBrowser_file* file) {
   }*/
 	return fileBrowser_libfatROM_deinit(file);
 }
-
-#endif
