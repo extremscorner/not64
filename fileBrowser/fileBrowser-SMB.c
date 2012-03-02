@@ -178,3 +178,4 @@ int fileBrowser_SMB_deinit(fileBrowser_file* file) {
   }*/
 	return fileBrowser_libfatROM_deinit(file);
 }
+

@@ -122,6 +122,7 @@ char menuActive;
 	   char saveStateDevice;
        char autoSave;
        char screenMode = 0;
+       char videoMode = 0;
 	   char trapFilter;
 	   char padAutoAssign;
 	   char padType[4];
@@ -148,6 +149,7 @@ static struct {
   { "FBTex", &glN64_useFrameBufferTextures, GLN64_FBTEX_DISABLE, GLN64_FBTEX_ENABLE },
   { "2xSaI", &glN64_use2xSaiTextures, GLN64_2XSAI_DISABLE, GLN64_2XSAI_ENABLE },
   { "ScreenMode", &screenMode, SCREENMODE_4x3, SCREENMODE_16x9_PILLARBOX },
+  { "VideoMode", &videoMode, VIDEOMODE_AUTO, VIDEOMODE_PROGRESSIVE },
   { "TrapFilter", &trapFilter, TRAPFILTER_DISABLE, TRAPFILTER_ENABLE },
   { "Core", ((char*)&dynacore)+3, DYNACORE_INTERPRETER, DYNACORE_PURE_INTERP },
   { "NativeDevice", &nativeSaveDevice, NATIVESAVEDEVICE_SD, NATIVESAVEDEVICE_CARDB },
@@ -240,7 +242,8 @@ int main(int argc, char* argv[]){
 	creditsScrolling = 0; // Normal menu for now
 	dynacore         = 1; // Dynarec
 	screenMode		 = 0; // Stretch FB horizontally
-	trapFilter		 = 0;
+	videoMode		 = VIDEOMODE_AUTO;
+	trapFilter		 = TRAPFILTER_DISABLE;
 	padAutoAssign	 = PADAUTOASSIGN_AUTOMATIC;
 	padType[0]		 = PADTYPE_NONE;
 	padType[1]		 = PADTYPE_NONE;

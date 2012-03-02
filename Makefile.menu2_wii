@@ -32,10 +32,7 @@ OBJ		=main/rom_gc.o \
 		menu/ConfigureInputFrame.o\
 		menu/ConfigurePaksFrame.o\
 		menu/CurrentRomFrame.o \
-		menu/LoadSaveFrame.o \
-		menu/SaveGameFrame.o \
 		menu/SettingsFrame.o\
-		menu/SelectCPUFrame.o\
 		menu/MenuResources.o \
 		libgui/Button.o \
 		libgui/Component.o \
@@ -90,7 +87,8 @@ OBJ		=main/rom_gc.o \
 		main/md5.o \
 		main/savestates_gc.o \
 		r4300/profile.o \
-		main/adler32.o
+		main/adler32.o \
+		main/ata.o
 		
 OBJ_PPC		=r4300/ppc/MIPS-to-PPC.o \
 		r4300/ppc/Recompile.o \

@@ -155,7 +155,6 @@ void Func_LoadFromDVD()
 
 void Func_LoadFromUSB()
 {
-#ifdef WII
 	// Deinit any existing romFile state
 	if(romFile_deinit) romFile_deinit( romFile_topLevel );
 	// Change all the romFile pointers
@@ -171,9 +170,6 @@ void Func_LoadFromUSB()
 	
 	pMenuContext->setActiveFrame(MenuContext::FRAME_FILEBROWSER);
 	fileBrowserFrame_OpenDirectory(romFile_topLevel);
-#else
-	menu::MessageBox::getInstance().setMessage("Available only for Wii");
-#endif
 }
 
 void Func_LoadFromSamba()

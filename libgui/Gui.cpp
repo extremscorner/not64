@@ -26,6 +26,7 @@
 #include "MessageBox.h"
 #include "LoadingBar.h"
 #include "GuiResources.h"
+#include <unistd.h>
 #include "../main/wii64config.h"
 
 extern "C" {
@@ -36,7 +37,6 @@ extern "C" {
 }
 
 extern char shutdown;
-extern unsigned int dvd_hard_init;
 
 namespace menu {
 
@@ -118,11 +118,9 @@ void Gui::draw()
 			else			//Return to Loader
 			{
 #ifdef WII
-        if(dvd_hard_init) {
-				  DI_Close();
-			  }
+				DI_Close();
 #endif
-				exit(0);
+				_exit(EXIT_SUCCESS);
 			}
 		}
 

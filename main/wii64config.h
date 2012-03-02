@@ -114,6 +114,15 @@ enum screenMode
 	SCREENMODE_16x9_PILLARBOX
 };
 
+extern char videoMode;
+enum videoMode
+{
+	VIDEOMODE_AUTO=0,
+	VIDEOMODE_NTSC,
+	VIDEOMODE_PAL,
+	VIDEOMODE_PROGRESSIVE
+};
+
 extern char trapFilter;
 enum trapFilter
 {

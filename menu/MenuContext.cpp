@@ -30,10 +30,7 @@ MenuContext::MenuContext(GXRModeObj *vmode)
 		  loadRomFrame(0),
 		  fileBrowserFrame(0),
 		  currentRomFrame(0),
-		  loadSaveFrame(0),
-		  saveGameFrame(0),
 		  settingsFrame(0),
-		  selectCPUFrame(0),
 		  configureInputFrame(0),
 		  configurePaksFrame(0),
 		  configureButtonsFrame(0)
@@ -46,10 +43,7 @@ MenuContext::MenuContext(GXRModeObj *vmode)
 	loadRomFrame = new LoadRomFrame();
 	fileBrowserFrame = new FileBrowserFrame();
 	currentRomFrame = new CurrentRomFrame();
-	loadSaveFrame = new LoadSaveFrame();
-	saveGameFrame = new SaveGameFrame();
 	settingsFrame = new SettingsFrame();
-	selectCPUFrame = new SelectCPUFrame();
 	configureInputFrame = new ConfigureInputFrame();
 	configurePaksFrame = new ConfigurePaksFrame();
 	configureButtonsFrame = new ConfigureButtonsFrame();
@@ -58,10 +52,7 @@ MenuContext::MenuContext(GXRModeObj *vmode)
 	menu::Gui::getInstance().addFrame(loadRomFrame);
 	menu::Gui::getInstance().addFrame(fileBrowserFrame);
 	menu::Gui::getInstance().addFrame(currentRomFrame);
-	menu::Gui::getInstance().addFrame(loadSaveFrame);
-	menu::Gui::getInstance().addFrame(saveGameFrame);
 	menu::Gui::getInstance().addFrame(settingsFrame);
-	menu::Gui::getInstance().addFrame(selectCPUFrame);
 	menu::Gui::getInstance().addFrame(configureInputFrame);
 	menu::Gui::getInstance().addFrame(configurePaksFrame);
 	menu::Gui::getInstance().addFrame(configureButtonsFrame);
@@ -75,10 +66,7 @@ MenuContext::~MenuContext()
 	delete configureButtonsFrame;
 	delete configurePaksFrame;
 	delete configureInputFrame;
-	delete selectCPUFrame;
 	delete settingsFrame;
-	delete saveGameFrame;
-	delete loadSaveFrame;
 	delete currentRomFrame;
 	delete fileBrowserFrame;
 	delete loadRomFrame;
@@ -117,17 +105,8 @@ void MenuContext::setActiveFrame(int frameIndex)
 	case FRAME_CURRENTROM:
 		currentActiveFrame = currentRomFrame;
 		break;
-	case FRAME_LOADSAVE:
-		currentActiveFrame = loadSaveFrame;
-		break;
-	case FRAME_SAVEGAME:
-		currentActiveFrame = saveGameFrame;
-		break;
 	case FRAME_SETTINGS:
 		currentActiveFrame = settingsFrame;
-		break;
-	case FRAME_SELECTCPU:
-		currentActiveFrame = selectCPUFrame;
 		break;
 	case FRAME_CONFIGUREINPUT:
 		currentActiveFrame = configureInputFrame;
@@ -170,17 +149,8 @@ menu::Frame* MenuContext::getFrame(int frameIndex)
 	case FRAME_CURRENTROM:
 		pFrame = currentRomFrame;
 		break;
-	case FRAME_LOADSAVE:
-		pFrame = loadSaveFrame;
-		break;
-	case FRAME_SAVEGAME:
-		pFrame = saveGameFrame;
-		break;
 	case FRAME_SETTINGS:
 		pFrame = settingsFrame;
-		break;
-	case FRAME_SELECTCPU:
-		pFrame = selectCPUFrame;
 		break;
 	case FRAME_CONFIGUREINPUT:
 		pFrame = configureInputFrame;

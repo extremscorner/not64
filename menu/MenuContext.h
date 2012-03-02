@@ -31,7 +31,6 @@
 #include "LoadSaveFrame.h"
 #include "SaveGameFrame.h"
 #include "SettingsFrame.h"
-#include "SelectCPUFrame.h"
 #include "ConfigureInputFrame.h"
 #include "ConfigurePaksFrame.h"
 #include "ConfigureButtonsFrame.h"
@@ -53,10 +52,7 @@ public:
 		FRAME_LOADROM,
 		FRAME_FILEBROWSER,
 		FRAME_CURRENTROM,
-		FRAME_LOADSAVE,
-		FRAME_SAVEGAME,
 		FRAME_SETTINGS,
-		FRAME_SELECTCPU,
 		FRAME_CONFIGUREINPUT,
 		FRAME_CONFIGUREPAKS,
 		FRAME_CONFIGUREBUTTONS
@@ -70,10 +66,7 @@ private:
 	LoadRomFrame *loadRomFrame;
 	FileBrowserFrame *fileBrowserFrame;
 	CurrentRomFrame *currentRomFrame;
-	LoadSaveFrame *loadSaveFrame;
-	SaveGameFrame *saveGameFrame;
 	SettingsFrame *settingsFrame;
-	SelectCPUFrame *selectCPUFrame;
 	ConfigureInputFrame *configureInputFrame;
 	ConfigurePaksFrame *configurePaksFrame;
 	ConfigureButtonsFrame *configureButtonsFrame;

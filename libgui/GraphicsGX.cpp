@@ -44,7 +44,25 @@ Graphics::Graphics(GXRModeObj *rmode)
 	setColor((GXColor) {0,0,0,0});
 
 	VIDEO_Init();
-	vmode = VIDEO_GetPreferredMode(&vmode_phys);
+	switch (videoMode)
+	{
+	case VIDEOMODE_AUTO:
+		vmode = VIDEO_GetPreferredMode(&vmode_phys);
+		break;
+	case VIDEOMODE_NTSC:
+		vmode = &TVNtsc480IntDf;
+		memcpy( &vmode_phys, vmode, sizeof(GXRModeObj));
+		break;
+	case VIDEOMODE_PAL:
+		vmode = &TVPal576IntDfScale;
+		memcpy( &vmode_phys, vmode, sizeof(GXRModeObj));
+		break;
+	case VIDEOMODE_PROGRESSIVE:
+		vmode = &TVNtsc480Prog;
+		memcpy( &vmode_phys, vmode, sizeof(GXRModeObj));
+		break;
+	}
+
 	vmode->viWidth = 720;
 	vmode->viXOrigin = 0;
 #ifdef HW_RVL
