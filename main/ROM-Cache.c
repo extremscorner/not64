@@ -84,6 +84,7 @@ void ROMCache_init(fileBrowser_file* f){
 	ROMSize = f->size;
 	ROMTooBig = ROMSize > ROMCACHE_SIZE;
 
+	rom_length = ROMSize;
 	romFile_seekFile(f, 0, FILE_BROWSER_SEEK_SET);	// Lets be nice and keep the file at 0.
 }
 

@@ -28,10 +28,8 @@
 #include <string.h>
 #include <gccore.h>
 #include <unistd.h>
+#include <ogc/machine/processor.h>
 #include "gc_dvd.h"
-#ifdef WII
-#include <di/di.h>
-#endif
 
 /* DVD Stuff */
 u32 dvd_hard_init = 0;
@@ -41,8 +39,7 @@ int is_unicode,files;
 file_entries *DVDToc = NULL; //Dynamically allocate this
 
 #ifdef HW_DOL
-#define mfpvr()   ({unsigned int rval; \
-      asm volatile("mfpvr %0" : "=r" (rval)); rval;})
+#define is_gamecube() (((mfpvr() == GC_CPU_VERSION01)||((mfpvr() == GC_CPU_VERSION02))))
 #endif
 #ifdef HW_RVL
 volatile unsigned long* dvd = (volatile unsigned long*)0xCD806000;
@@ -50,17 +47,19 @@ volatile unsigned long* dvd = (volatile unsigned long*)0xCD806000;
 volatile unsigned long* dvd = (volatile unsigned long*)0xCC006000;
 #endif
 
-int have_hw_access() {
-  if((*(volatile unsigned int*)HW_ARMIRQMASK)&&(*(volatile unsigned int*)HW_ARMIRQFLAG)) {
-    return 1;
-  }
-  return 0;
+static int have_hw_access() {
+	if (read32(HW_ARMIRQMASK) && read32(HW_ARMIRQFLAG)) {
+		// disable DVD irq for starlet
+		mask32(HW_ARMIRQMASK, 1<<18, 0);
+		return 1;
+	}
+	return 0;
 }
 
 int init_dvd() {
 // Gamecube Mode
 #ifdef HW_DOL
-  if(mfpvr()!=GC_CPU_VERSION) //GC mode on Wii, modchip required
+  if(!is_gamecube()) //GC mode on Wii, modchip required
   {
     DVD_Reset(DVD_RESETHARD);
     dvd_read_id();
@@ -84,27 +83,44 @@ int init_dvd() {
 #endif
 // Wii (Wii mode)
 #ifdef HW_RVL
-  if(!have_hw_access()) {
-    return NO_HW_ACCESS;
-  }
-  if((dvd_get_error()>>24) == 1) {
-    return NO_DISC;
-  }
-  
-  if((!dvd_hard_init) || (dvd_get_error())) {
-    DI_Mount();
-    while(DI_GetStatus() & DVD_INIT) usleep(20000);
-    dvd_hard_init=1;
-  }
+	if (!have_hw_access()) {
+		return NO_HW_ACCESS;
+	}
 
-  if((dvd_get_error()&0xFFFFFF)==0x053000) {
-    read_cmd = DVDR;
-  }
-  else {
-    read_cmd = NORMAL;
-  }
-  dvd_read_id();
-  return 0;
+	// enable GPIO for spin-up on drive reset (active low)
+	mask32(0x0D8000E0, 0x10, 0);
+	// assert DI reset (active low)
+	mask32(0x0D800194, 0x400, 0);
+	usleep(1000);
+	// deassert DI reset
+	mask32(0x0D800194, 0, 0x400);
+
+	if ((dvd_get_error() >> 24) == 1) {
+		return NO_DISC;
+	}
+
+	if ((!dvd_hard_init) || (dvd_get_error())) {
+		// read id
+		dvd[0] = 0x54;
+		dvd[2] = 0xA8000040;
+		dvd[3] = 0;
+		dvd[4] = 0x20;
+		dvd[5] = 0;
+		dvd[6] = 0x20;
+		dvd[7] = 3;
+		while (dvd[7] & 1)
+			usleep(20000);
+		dvd_hard_init = 1;
+	}
+
+	if ((dvd_get_error() & 0xFFFFFF) == 0x053000) {
+		read_cmd = DVDR;
+	} else {
+		read_cmd = NORMAL;
+	}
+	dvd_read_id();
+
+	return 0;
 #endif
 }
 
@@ -222,7 +238,7 @@ char *dvd_error_str()
       strcat(&error_str[0]," No Seek complete");
       break;  
     case 0x031100:
-      strcat(&error_str[0]," UnRecoverd read error");
+      strcat(&error_str[0]," Unrecovered read error");
       break;
     case 0x040800:
       strcat(&error_str[0]," Transfer protocol error");
@@ -262,7 +278,7 @@ char *dvd_error_str()
       break;
   }
   if(!error_str[0])
-    sprintf(&error_str[0],"Unknown %08X",err);
+    sprintf(&error_str[0],"Unknown error %08X",err);
   return &error_str[0];
   
 }

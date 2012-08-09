@@ -9,7 +9,7 @@
  * For maximum compression, I'd recommend using 7Zip,
  *	7za a -tzip -mx=9 rom.zip rom.smc
  ****************************************************************************/
-#if 0
+
 #include <gccore.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -25,7 +25,7 @@
 
 int inflate_init(PKZIPHEADER* pkzip){
 	/*** Prepare the zip stream ***/
-	zipoffset = ( sizeof(PKZIPHEADER) + FLIP16(pkzip->filenameLength) + FLIP16(pkzip->extraDataLength ));
+	zipoffset = ( sizeof(PKZIPHEADER) + bswap16(pkzip->filenameLength) + bswap16(pkzip->extraDataLength ));
 
 	memset(&zs, 0, sizeof(z_stream));
 	zs.zalloc = Z_NULL;
@@ -71,4 +71,3 @@ int inflate_chunk(void* dst, void* src, int length){
 	zipoffset = 0;
 	return bufferoffset;
 }
-#endif

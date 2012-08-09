@@ -84,7 +84,6 @@ void Gui::draw()
 	FrameList::const_iterator iteration;
 	for (iteration = frameList.begin(); iteration != frameList.end(); iteration++)
 	{
-		(*iteration)->updateTime(0.0f); //TODO: Pass deltaTime
 		(*iteration)->drawChildren(*gfx);
 	}
 //	menuLogo->drawComponent(*gfx);
@@ -116,12 +115,7 @@ void Gui::draw()
 			if(shutdown==1)	//Power off System
 				SYS_ResetSystem(SYS_POWEROFF);
 			else			//Return to Loader
-			{
-#ifdef WII
-				DI_Close();
-#endif
 				_exit(EXIT_SUCCESS);
-			}
 		}
 
 		char increment = 3;

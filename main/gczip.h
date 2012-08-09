@@ -1,6 +1,8 @@
 #ifndef __GCZIP_H__
 #define __GCZIP_H__
 
+#include <ogc/machine/processor.h>
+
 /*** PKWare Zip Header ***/
 #define CRC_SEED 0xFFFFFFFF
 #define PKZIPID 0x504b0304
@@ -19,26 +21,6 @@ typedef struct {
     unsigned short filenameLength __attribute__ ((__packed__));
     unsigned short extraDataLength __attribute__ ((__packed__));
 } PKZIPHEADER;
-
-static inline u32 FLIP32(u32 b){
-    unsigned int c;
-
-    c = ( b & 0xff000000 ) >> 24;
-    c |= ( b & 0xff0000 ) >> 8;
-    c |= ( b & 0xff00 ) << 8;
-    c |= ( b & 0xff ) << 24;
-
-    return c;
-}
-
-static inline u16 FLIP16(u16 b){
-    u16 c;
-
-    c = ( b & 0xff00 ) >> 8;
-    c |= ( b &0xff ) << 8;
-
-    return c;
-}
 
 int inflate_init(PKZIPHEADER* pkzip);
 

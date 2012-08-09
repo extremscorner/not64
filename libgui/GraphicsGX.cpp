@@ -35,9 +35,7 @@ Graphics::Graphics(GXRModeObj *rmode)
 		  which_fb(0),
 		  first_frame(true),
 		  depth(1.0f),
-		  transparency(1.0f),
-		  viewportWidth(640.0f),
-		  viewportHeight(480.0f)
+		  transparency(1.0f)
 {
 //	printf("Graphics constructor\n");
 
@@ -57,13 +55,18 @@ Graphics::Graphics(GXRModeObj *rmode)
 		vmode = &TVPal576IntDfScale;
 		memcpy( &vmode_phys, vmode, sizeof(GXRModeObj));
 		break;
-	case VIDEOMODE_PROGRESSIVE:
+	case VIDEOMODE_480P:
 		vmode = &TVNtsc480Prog;
+		memcpy( &vmode_phys, vmode, sizeof(GXRModeObj));
+		break;
+	case VIDEOMODE_576P:
+		vmode = &TVPal576ProgScale;
 		memcpy( &vmode_phys, vmode, sizeof(GXRModeObj));
 		break;
 	}
 
 	vmode->viWidth = 720;
+	vmode->efbHeight = MIN(vmode->xfbHeight, 528);
 	vmode->viXOrigin = 0;
 #ifdef HW_RVL
 	VIDEO_SetTrapFilter(trapFilter);
@@ -409,15 +412,15 @@ void Graphics::enableScissor(int x, int y, int width, int height)
 	{
 		int x1 = (x+104)*640/848;
 		int x2 = (x+width+104)*640/848;
-		GX_SetScissor((u32) x1,(u32) y,(u32) x2-x1,(u32) height);
+		GX_SetScissor((u32) x1,(u32) y*vmode->efbHeight/480,(u32) x2-x1,(u32) height*vmode->efbHeight/480);
 	}
 	else
-		GX_SetScissor((u32) x,(u32) y,(u32) width,(u32) height);
+		GX_SetScissor((u32) x,(u32) y*vmode->efbHeight/480,(u32) width,(u32) height*vmode->efbHeight/480);
 }
 
 void Graphics::disableScissor()
 {
-	GX_SetScissor((u32) 0,(u32) 0,(u32) viewportWidth,(u32) viewportHeight); //Set to the same size as the viewport.
+	GX_SetScissor((u32) 0,(u32) 0,(u32) vmode->fbWidth,(u32) vmode->efbHeight);
 }
 
 void Graphics::enableBlending(bool blend)

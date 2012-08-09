@@ -42,7 +42,6 @@
 #define PRINT GUI_print
 
 unsigned char* rom;
-static fileBrowser_file* rom_file;
 int rom_length;
 int ROM_byte_swap;
 rom_header* ROM_HEADER = NULL;
@@ -147,13 +146,11 @@ int rom_read(fileBrowser_file* file){
 
    char buffer[1024];
    int i;
-   rom_file = file;
-   rom_length = file->size;
 
-   ROMCache_init(rom_file);
-   int ret = ROMCache_load(rom_file);
+   ROMCache_init(file);
+   int ret = ROMCache_load(file);
    if(ret) {
-     ROMCache_deinit(rom_file);
+     ROMCache_deinit(file);
      return ret;
    }
    if(!ROM_HEADER) ROM_HEADER = malloc(sizeof(rom_header));

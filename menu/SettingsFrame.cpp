@@ -640,40 +640,34 @@ void Func_SaveSettingsSD()
 {
 	fileBrowser_file* configFile_file;
 	int (*configFile_init)(fileBrowser_file*) = fileBrowser_libfat_init;
-	int num_written = 0;
 	configFile_file = &saveDir_libfat_Default;
 	if(configFile_init(configFile_file)) {                //only if device initialized ok
 		FILE* f = fopen( "sd:/wii64/settings.cfg", "wb" );  //attempt to open file
 		if(f) {
 			writeConfig(f);                                   //write out the config
 			fclose(f);
-			num_written++;
+			menu::MessageBox::getInstance().setMessage("Saved settings.cfg to SD");
+			return;
 		}
 	}
-	if (num_written == 1)
-		menu::MessageBox::getInstance().setMessage("Saved settings.cfg to SD");
-	else
-		menu::MessageBox::getInstance().setMessage("Error saving settings.cfg to SD");
+	menu::MessageBox::getInstance().setMessage("Error saving settings.cfg to SD");
 }
 
 void Func_SaveSettingsUSB()
 {
 	fileBrowser_file* configFile_file;
 	int (*configFile_init)(fileBrowser_file*) = fileBrowser_libfat_init;
-	int num_written = 0;
 	configFile_file = &saveDir_libfat_USB;
 	if(configFile_init(configFile_file)) {                //only if device initialized ok
 		FILE* f = fopen( "usb:/wii64/settings.cfg", "wb" ); //attempt to open file
 		if(f) {
 			writeConfig(f);                                   //write out the config
 			fclose(f);
-			num_written++;
+			menu::MessageBox::getInstance().setMessage("Saved settings.cfg to USB");
+			return;
 		}
 	}
-	if (num_written == 1)
-		menu::MessageBox::getInstance().setMessage("Saved settings.cfg to USB");
-	else
-		menu::MessageBox::getInstance().setMessage("Error saving settings.cfg to USB");
+	menu::MessageBox::getInstance().setMessage("Error saving settings.cfg to USB");
 }
 
 void Func_ShowFpsOn()
@@ -708,6 +702,7 @@ void Func_ShowDebugOff()
 	printToScreen = DEBUG_HIDE;
 }
 
+extern GXRModeObj *vmode, *rmode;
 void gfx_set_window(int x, int y, int width, int height);
 
 void Func_ScreenMode4_3()
@@ -716,7 +711,7 @@ void Func_ScreenMode4_3()
 		FRAME_BUTTONS[i].button->setSelected(false);
 	FRAME_BUTTONS[17].button->setSelected(true);
 	screenMode = SCREENMODE_4x3;
-	gfx_set_window( 0, 0, 640, 480);
+	gfx_set_window( 0, 0, 640, rmode->efbHeight);
 }
 
 void Func_ScreenMode16_9()
@@ -725,7 +720,7 @@ void Func_ScreenMode16_9()
 		FRAME_BUTTONS[i].button->setSelected(false);
 	FRAME_BUTTONS[18].button->setSelected(true);
 	screenMode = SCREENMODE_16x9;
-	gfx_set_window( 0, 0, 640, 480);
+	gfx_set_window( 0, 0, 640, rmode->efbHeight);
 }
 
 void Func_ScreenForce16_9()
@@ -734,7 +729,7 @@ void Func_ScreenForce16_9()
 		FRAME_BUTTONS[i].button->setSelected(false);
 	FRAME_BUTTONS[19].button->setSelected(true);
 	screenMode = SCREENMODE_16x9_PILLARBOX;
-	gfx_set_window( 80, 0, 480, 480);
+	gfx_set_window( 80, 0, 480, rmode->efbHeight);
 }
 
 void Func_CpuFramebufferOn()

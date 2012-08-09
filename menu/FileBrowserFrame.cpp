@@ -168,23 +168,17 @@ void FileBrowserFrame::drawChildren(menu::Graphics &gfx)
 				if (currentButtonsDownGC & PAD_TRIGGER_R)
 				{
 					//move to next set & return
-					if(current_page+1 < max_page) 
-					{
-						current_page +=1;
-						fileBrowserFrame_FillPage();
-						menu::Focus::getInstance().clearPrimaryFocus();
-					}
+					current_page = (current_page + 1) % max_page;
+					fileBrowserFrame_FillPage();
+					menu::Focus::getInstance().clearPrimaryFocus();
 					break;
 				}
 				else if (currentButtonsDownGC & PAD_TRIGGER_L)
 				{
 					//move to the previous set & return
-					if(current_page > 0) 
-					{
-						current_page -= 1;
-						fileBrowserFrame_FillPage();
-						menu::Focus::getInstance().clearPrimaryFocus();
-					}
+					current_page = (max_page + current_page - 1) % max_page;
+					fileBrowserFrame_FillPage();
+					menu::Focus::getInstance().clearPrimaryFocus();
 					break;
 				}
 			}
@@ -198,23 +192,17 @@ void FileBrowserFrame::drawChildren(menu::Graphics &gfx)
 					if (currentButtonsDownWii & WPAD_CLASSIC_BUTTON_FULL_R)
 					{
 						//move to next set & return
-						if(current_page+1 < max_page) 
-						{
-							current_page +=1;
-							fileBrowserFrame_FillPage();
-							menu::Focus::getInstance().clearPrimaryFocus();
-						}
+						current_page = (current_page + 1) % max_page;
+						fileBrowserFrame_FillPage();
+						menu::Focus::getInstance().clearPrimaryFocus();
 						break;
 					}
 					else if (currentButtonsDownWii & WPAD_CLASSIC_BUTTON_FULL_L)
 					{
 						//move to the previous set & return
-						if(current_page > 0) 
-						{
-							current_page -= 1;
-							fileBrowserFrame_FillPage();
-							menu::Focus::getInstance().clearPrimaryFocus();
-						}
+						current_page = (max_page + current_page - 1) % max_page;
+						fileBrowserFrame_FillPage();
+						menu::Focus::getInstance().clearPrimaryFocus();
 						break;
 					}
 				}
@@ -223,23 +211,17 @@ void FileBrowserFrame::drawChildren(menu::Graphics &gfx)
 					if (currentButtonsDownWii & WPAD_BUTTON_PLUS)
 					{
 						//move to next set & return
-						if(current_page+1 < max_page) 
-						{
-							current_page +=1;
-							fileBrowserFrame_FillPage();
-							menu::Focus::getInstance().clearPrimaryFocus();
-						}
+						current_page = (current_page + 1) % max_page;
+						fileBrowserFrame_FillPage();
+						menu::Focus::getInstance().clearPrimaryFocus();
 						break;
 					}
 					else if (currentButtonsDownWii & WPAD_BUTTON_MINUS)
 					{
 						//move to the previous set & return
-						if(current_page > 0) 
-						{
-							current_page -= 1;
-							fileBrowserFrame_FillPage();
-							menu::Focus::getInstance().clearPrimaryFocus();
-						}
+						current_page = (max_page + current_page - 1) % max_page;
+						fileBrowserFrame_FillPage();
+						menu::Focus::getInstance().clearPrimaryFocus();
 						break;
 					}
 				}
@@ -335,7 +317,7 @@ void fileBrowserFrame_OpenDirectory(fileBrowser_file* dir)
 	num_entries = romFile_readDir(dir, &dir_entries);
 	if(num_entries <= 0)
 	{ 
-		if(dir_entries) free(dir_entries); 
+		if(dir_entries) { free(dir_entries); dir_entries = NULL; } 
 		fileBrowserFrame_Error(dir, num_entries); 
 		return;
 	}
@@ -353,7 +335,7 @@ void fileBrowserFrame_Error(fileBrowser_file* dir, int error_code)
 	//disable all buttons
 	for (int i = 0; i < NUM_FRAME_BUTTONS; i++)
 		FRAME_BUTTONS[i].button->setActive(false);
-	for (int i = 1; i<NUM_FILE_SLOTS; i++)
+	for (int i = 0; i<NUM_FILE_SLOTS; i++)
 		FRAME_BUTTONS[i+2].buttonString = FRAME_STRINGS[2];
 	if(error_code == NO_HW_ACCESS) {
   	sprintf(feedback_string,"DVDX v2 not found");

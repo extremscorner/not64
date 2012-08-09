@@ -34,7 +34,6 @@
 #include "../gui/GUI.h"
 #include "ROM-Cache.h"
 #include "gczip.h"
-#include "zlib.h"
 
 #ifdef MENU_V2
 void LoadingBar_showBar(float percent, const char* string);
@@ -57,8 +56,7 @@ void LoadingBar_showBar(float percent, const char* string);
 
 static u32   ROMSize;
 static int   ROMTooBig;
-//static int   ROMCompressed;
-//static int   ROMHeaderSize;
+static int   ROMCompressed;
 static char* ROMBlocks[NUM_BLOCKS];
 static int   ROMBlocksLRU[NUM_BLOCKS];
 static fileBrowser_file* ROMFile;
@@ -80,9 +78,21 @@ PKZIPHEADER pkzip;
 void ROMCache_init(fileBrowser_file* f){
   readBefore = 0; //de-init byteswapping
   ROMFile = f;
-	ROMSize = f->size;
-	ROMTooBig = ROMSize > ROMCACHE_SIZE;
+	romFile_readFile(f, &pkzip, sizeof(PKZIPHEADER));
+	if(pkzip.zipid != PKZIPID){		//PKZIP magic
+		ROMSize = f->size;
+		ROMTooBig = ROMSize > ROMCACHE_SIZE;
+		ROMCompressed = 0;
+	}
+	else	// Compressed file found.
+	{
+		ROMCompressed = 1;
+		ROMTooBig = 0;		// Currently no way to swap out compressed ROMs from filesystem.
+		ROMSize = bswap32(pkzip.uncompressedSize);
+		inflate_init(&pkzip);
+	}
 
+	rom_length = ROMSize;
 	romFile_seekFile(f, 0, FILE_BROWSER_SEEK_SET);	// Lets be nice and keep the file at 0.
 }
 
@@ -170,6 +180,8 @@ void ROMCache_read(u8* dest, u32 offset, u32 length){
 
 int ROMCache_load(fileBrowser_file* f){
 	char txt[128];
+	void* buf;
+	int ret;
 #ifndef MENU_V2
 	GUI_clear();
 	GUI_centerText(true);
@@ -182,35 +194,75 @@ int ROMCache_load(fileBrowser_file* f){
 	u32 offset = 0,loads_til_update = 0;
 	int bytes_read;
 	u32 sizeToLoad = MIN(ROMCACHE_SIZE, ROMSize);
-	while(offset < sizeToLoad){
-		bytes_read = romFile_readFile(ROMFile, ROMCACHE_LO + offset, LOAD_SIZE);
-		
-		if(bytes_read < 0){		// Read fail!
+	if(ROMCompressed){
+		buf = malloc(LOAD_SIZE);
+		do{
+			bytes_read = romFile_readFile(ROMFile, buf, LOAD_SIZE);
 
+			if(bytes_read < 0){		// Read fail!
+				SETLOADPROG( -1.0f );
+				free(buf);
+				return -1;
+			}
+
+			ret = inflate_chunk(ROMCACHE_LO + offset, buf, bytes_read);
+			
+			if(ret > 0)
+				offset += ret;
+
+			if(!loads_til_update--){
+				SETLOADPROG( (float)offset/ROMSize );
+				DRAWGUI();
+#ifdef MENU_V2
+				LoadingBar_showBar((float)offset/ROMSize, txt);
+#endif
+				loads_til_update = 16;
+			}
+		}while(ret > 0 && offset < sizeToLoad);
+		free(buf);
+		if(ret){	// Uh oh, decompression fail!
 			SETLOADPROG( -1.0f );
 			return -1;
 		}
-		//initialize byteswapping if it isn't already
-		if(!readBefore)
-		{
- 			if(init_byte_swap(*(unsigned int*)ROMCACHE_LO) == BYTE_SWAP_BAD) {
- 			  romFile_deinit(ROMFile);
- 			  return -2;
-		  }
- 			readBefore = 1;
-		}
+		//initialize byteswapping
+ 		if(init_byte_swap(*(unsigned int*)ROMCACHE_LO) == BYTE_SWAP_BAD) {
+ 		  romFile_deinit(ROMFile);
+ 		  return -2;
+	  }
 		//byteswap
-		byte_swap(ROMCACHE_LO + offset, bytes_read);
-		
-		offset += bytes_read;
-		
-		if(!loads_til_update--){
-			SETLOADPROG( (float)offset/sizeToLoad );
-			DRAWGUI();
+		byte_swap(ROMCACHE_LO, sizeToLoad);
+	}
+	else
+	{
+		while(offset < sizeToLoad){
+			bytes_read = romFile_readFile(ROMFile, ROMCACHE_LO + offset, LOAD_SIZE);
+			
+			if(bytes_read < 0){		// Read fail!
+				SETLOADPROG( -1.0f );
+				return -1;
+			}
+			//initialize byteswapping if it isn't already
+			if(!readBefore)
+			{
+				if(init_byte_swap(*(unsigned int*)ROMCACHE_LO) == BYTE_SWAP_BAD) {
+				  romFile_deinit(ROMFile);
+				  return -2;
+			  }
+				readBefore = 1;
+			}
+			//byteswap
+			byte_swap(ROMCACHE_LO + offset, bytes_read);
+			
+			offset += bytes_read;
+			
+			if(!loads_til_update--){
+				SETLOADPROG( (float)offset/sizeToLoad );
+				DRAWGUI();
 #ifdef MENU_V2
-			LoadingBar_showBar((float)offset/sizeToLoad, txt);
+				LoadingBar_showBar((float)offset/sizeToLoad, txt);
 #endif
-			loads_til_update = 16;
+				loads_til_update = 16;
+			}
 		}
 	}
 	

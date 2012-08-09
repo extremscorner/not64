@@ -73,6 +73,8 @@ extern char glN64_use2xSaiTextures;
 
 GLInfo OGL;
 
+extern GXRModeObj *vmode, *rmode;
+
 #ifndef __LINUX__
 // NV_register_combiners functions
 PFNGLCOMBINERPARAMETERFVNVPROC glCombinerParameterfvNV;
@@ -498,7 +500,7 @@ bool OGL_Start()
 #else // !__GX__
 	//Set 'window height' to efb dimensions
 	OGL.width = 640;
-	OGL.height = 480;
+	OGL.height = rmode->efbHeight;
 
 	//Reset gDP and combiner colors between ROMs. This fixes fillColor when changing ROMs.
 	combiner.vertex.color = ZERO;
@@ -2056,8 +2058,6 @@ void OGL_GXinitDlist()
 //	OGL.GXclearDepthBuffer = false;
 	OGL.GXclearColor = (GXColor){0,0,0,255};
 }
-
-extern GXRModeObj *vmode, *rmode;
 
 void OGL_GXclearEFB()
 {

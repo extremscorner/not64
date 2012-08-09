@@ -73,7 +73,6 @@ private:
 	bool first_frame;
 	void *xfb[2];
 	float depth, transparency;
-	float viewportWidth, viewportHeight;
 	FloatStack depthStack, transparencyStack;
 	GXColor currentColor[4], appliedColor[4];
 	Mtx currentModelViewMtx;

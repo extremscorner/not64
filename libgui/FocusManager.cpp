@@ -190,6 +190,8 @@ Frame* Focus::getCurrentFrame()
 
 void Focus::setCurrentFrame(Frame* frame)
 {
+	if (focusActive && primaryFocusOwner)
+		currentFrame->setDefaultFocus(primaryFocusOwner);
 	currentFrame = frame;
 	frameSwitch = true;
 	Input::getInstance().clearInputData();

@@ -115,8 +115,8 @@ extern timers Timers;
 char menuActive;
        char saveEnabled;
        char creditsScrolling;
-       char padNeedScan;
-       char wpadNeedScan;
+       char padNeedScan = 1;
+       char wpadNeedScan = 1;
        char shutdown = 0;
 	   char nativeSaveDevice;
 	   char saveStateDevice;
@@ -149,7 +149,7 @@ static struct {
   { "FBTex", &glN64_useFrameBufferTextures, GLN64_FBTEX_DISABLE, GLN64_FBTEX_ENABLE },
   { "2xSaI", &glN64_use2xSaiTextures, GLN64_2XSAI_DISABLE, GLN64_2XSAI_ENABLE },
   { "ScreenMode", &screenMode, SCREENMODE_4x3, SCREENMODE_16x9_PILLARBOX },
-  { "VideoMode", &videoMode, VIDEOMODE_AUTO, VIDEOMODE_PROGRESSIVE },
+  { "VideoMode", &videoMode, VIDEOMODE_AUTO, VIDEOMODE_576P },
   { "TrapFilter", &trapFilter, TRAPFILTER_DISABLE, TRAPFILTER_ENABLE },
   { "Core", ((char*)&dynacore)+3, DYNACORE_INTERPRETER, DYNACORE_PURE_INTERP },
   { "NativeDevice", &nativeSaveDevice, NATIVESAVEDEVICE_SD, NATIVESAVEDEVICE_CARDB },
@@ -201,11 +201,6 @@ u16 readWPAD(void);
 
 int main(int argc, char* argv[]){
 	/* INITIALIZE */
-#ifdef HW_RVL
-	DI_UseCache(false);
-	DI_Init();    // first
-#endif
-
 #ifdef DEBUGON
 	//DEBUG_Init(GDBSTUB_DEVICE_TCP,GDBSTUB_DEF_TCPPORT); //Default port is 2828
 	DEBUG_Init(GDBSTUB_DEVICE_USB, 1);
@@ -283,7 +278,6 @@ int main(int argc, char* argv[]){
 				load_configurations(f, &controller_GC);					//write out GC controller mappings
 				fclose(f);
 			}
-#ifdef HW_RVL
 			f = fopen( "usb:/wii64/controlC.cfg", "r" );  //attempt to open file
 			if(f) {
 				load_configurations(f, &controller_Classic);			//write out Classic controller mappings
@@ -299,7 +293,6 @@ int main(int argc, char* argv[]){
 				load_configurations(f, &controller_Wiimote);			//write out Wiimote controller mappings
 				fclose(f);
 			}
-#endif //HW_RVL
 		}
 	}
 	else /*if((argv[0][0]=='s') || (argv[0][0]=='/'))*/
@@ -439,9 +432,9 @@ int loadROM(fileBrowser_file* rom){
 
 	gfx_set_fb(xfb[0], xfb[1]);
 	if (screenMode == SCREENMODE_16x9_PILLARBOX)
-		gfx_set_window( 80, 0, 480, 480);
+		gfx_set_window( 80, 0, 480, rmode->efbHeight);
 	else
-		gfx_set_window( 0, 0, 640, 480);
+		gfx_set_window( 0, 0, 640, rmode->efbHeight);
 
 	gfx_info_init();
 	audio_info_init();

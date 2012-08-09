@@ -187,11 +187,6 @@ void Func_ExitToLoader()
 {
 	if(menu::MessageBox::getInstance().askMessage("Are you sure you want to exit to loader?"))
 		shutdown = 2;
-//#ifdef WII
-//	DI_Close();
-//#endif
-//	void (*rld)() = (void (*)()) 0x80001800;
-//	rld();
 }
 
 extern "C" {
@@ -309,7 +304,7 @@ void Func_PlayGame()
     		flashramWritten = sramWritten = eepromWritten = mempakWritten = 0;  //nothing new written since save
   		}
   	  else		
-  	    menu::MessageBox::getInstance().setMessage("Failed to Save"); //one or more failed to save
+  	    menu::MessageBox::getInstance().setMessage("Failed to save game"); //one or more failed to save
       
     }
   }
@@ -323,9 +318,5 @@ void Func_PlayGame()
 void Func_SetPlayGame()
 {
 	FRAME_BUTTONS[5].buttonString = FRAME_STRINGS[5];
-}
-
-void Func_SetResumeGame()
-{
-	FRAME_BUTTONS[5].buttonString = FRAME_STRINGS[6];
+	pMenuContext->getFrame(MenuContext::FRAME_MAIN)->setDefaultFocus(FRAME_BUTTONS[5].button);
 }
