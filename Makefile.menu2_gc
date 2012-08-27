@@ -79,6 +79,7 @@ OBJ		=main/rom_gc.o \
 		r4300/cop1_s.o \
 		r4300/cop1_d.o \
 		r4300/recomp.o \
+		gc_memory/n64_cic_nus_6105.o \
 		gc_memory/pif.o \
 		r4300/bc.o \
 		r4300/cop1_l.o \
@@ -88,7 +89,6 @@ OBJ		=main/rom_gc.o \
 		main/md5.o \
 		main/savestates_gc.o \
 		r4300/profile.o \
-		main/adler32.o \
 		main/ata.o
 		
 OBJ_PPC		=r4300/ppc/MIPS-to-PPC.o \
@@ -102,6 +102,7 @@ OBJ_INPUT	=gc_input/main.o \
 
 OBJ_RSPHLE	=rsp_hle/main.o \
 		rsp_hle/jpeg.o \
+		rsp_hle/idct.o \
 		rsp_hle/ucode3.o \
 		rsp_hle/ucode2.o \
 		rsp_hle/ucode1.o \

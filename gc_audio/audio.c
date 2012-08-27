@@ -60,6 +60,14 @@ static void aesnd_callback(AESNDPB *pb, uint32_t state)
 	}
 }
 
+static void reset_buffer(void)
+{
+	write_ptr = buffer;
+	read_ptr = buffer;
+	buffered = 0;
+	memset(buffer, 0, BUFFER_SIZE);
+}
+
 EXPORT void CALL AiDacrateChanged(int SystemType)
 {
 	freq = DEFAULT_FREQUENCY;
@@ -85,21 +93,22 @@ EXPORT void CALL AiLenChanged(void)
 	if (audioEnabled) {
 		uint32_t level = IRQ_Disable();
 		
-		short *stream = (short *)(AudioInfo.RDRAM + (*AudioInfo.AI_DRAM_ADDR_REG & 0xFFFFFF));
+		void *stream = AudioInfo.RDRAM + (*AudioInfo.AI_DRAM_ADDR_REG & 0xFFFFFF);
 		unsigned int length = *AudioInfo.AI_LEN_REG;
 		
-		do {
-			int len = MIN(end_ptr - write_ptr, length);
-			memcpy(write_ptr, stream, len);
-			stream = ((char *)stream + len);
-			
-			write_ptr += len;
-			if (write_ptr >= end_ptr)
-				write_ptr = buffer;
-			buffered += len;
-			
-			length -= len;
-		} while (length > 0);
+		if (buffered + length < BUFFER_SIZE) {
+			do {
+				int size = MIN(end_ptr - write_ptr, length);
+				memcpy(write_ptr, stream, size);
+				stream = (char *)stream + size;
+				
+				write_ptr += size;
+				if (write_ptr >= end_ptr)
+					write_ptr = buffer;
+				buffered += size;
+				length -= size;
+			} while (length > 0);
+		}
 		
 		if (scalePitch)
 			AESND_SetVoiceFrequency(voice, freq * (Timers.vis / VILimit));
@@ -129,11 +138,9 @@ EXPORT BOOL CALL InitiateAudio(AUDIO_INFO Audio_Info)
 	return TRUE;
 }
 
-EXPORT void CALL RomOpen()
+EXPORT void CALL RomOpen(void)
 {
-	write_ptr = buffer;
-	read_ptr = buffer;
-	buffered = 0;
+	reset_buffer();
 	AESND_SetVoiceStop(voice, false);
 }
 
@@ -151,6 +158,7 @@ void pauseAudio(void) {
 }
 
 void resumeAudio(void) {
+	reset_buffer();
 	AESND_SetVoiceFrequency(voice, freq);
 	AESND_Pause(!audioEnabled);
 }

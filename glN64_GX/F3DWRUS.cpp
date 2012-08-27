@@ -32,14 +32,13 @@ void F3DWRUS_Tri1( u32 w0, u32 w1 )
 {
 	gSP1Triangle( _SHIFTR( w1, 16, 8 ) / 5, 
 		          _SHIFTR( w1, 8, 8 ) / 5, 
-				  _SHIFTR( w1, 0, 8 ) / 5, 
-				  _SHIFTR( w1, 24, 8 ) );
+				  _SHIFTR( w1, 0, 8 ) / 5 );
 }
 
 void F3DWRUS_Tri2( u32 w0, u32 w1 )
 {
-	gSP2Triangles( _SHIFTR( w0, 16, 8 ) / 5, _SHIFTR( w0, 8, 8 ) / 5, _SHIFTR( w0, 0, 8 ) / 5, 0,
-				   _SHIFTR( w1, 16, 8 ) / 5, _SHIFTR( w1, 8, 8 ) / 5, _SHIFTR( w1, 0, 8 ) / 5, 0);
+	gSP2Triangles( _SHIFTR( w0, 16, 8 ) / 5, _SHIFTR( w0, 8, 8 ) / 5, _SHIFTR( w0, 0, 8 ) / 5,
+				   _SHIFTR( w1, 16, 8 ) / 5, _SHIFTR( w1, 8, 8 ) / 5, _SHIFTR( w1, 0, 8 ) / 5 );
 }
 
 void F3DWRUS_Quad( u32 w0, u32 w1 )

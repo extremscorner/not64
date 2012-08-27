@@ -23,6 +23,7 @@
 
 #include <ogc/lwp_heap.h>
 #include <stdlib.h>
+#include <malloc.h>
 #include "../gc_memory/MEM2.h"
 #include "r4300.h"
 #include "ppc/Recompile.h"
@@ -310,7 +311,7 @@ void RecompCache_Link(PowerPC_func* src_func, PowerPC_instr* src_instr,
 void RecompCache_Init(void){
 	if(!cache){
 		cache = malloc(sizeof(heap_cntrl));
-		__lwp_heap_init(cache, malloc(RECOMP_CACHE_SIZE),
+		__lwp_heap_init(cache, memalign(32,RECOMP_CACHE_SIZE),
 		                RECOMP_CACHE_SIZE, 32);
 	}
 	if(!meta_cache){
@@ -319,7 +320,7 @@ void RecompCache_Init(void){
 		__lwp_heap_init(meta_cache, RECOMPMETA_LO,
 		                RECOMPMETA_SIZE, 32);
 #else
-    __lwp_heap_init(meta_cache, malloc(1*1024*1024),
+    __lwp_heap_init(meta_cache, memalign(32,1*1024*1024),
 		                1*1024*1024, 32);
 #endif
 	}

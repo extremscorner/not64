@@ -130,7 +130,8 @@ void VI_UpdateScreen()
 		VI_GX_showFPS();
 		VI_GX_showDEBUG();
 		GX_SetCopyClear ((GXColor){0,0,0,255}, 0xFFFFFF);
-		GX_CopyDisp (VI.xfb[VI.which_fb]+GX_xfb_offset, GX_FALSE);
+		if (VI.copy_fb)	GX_CopyDisp (VI.xfb[VI.which_fb^1]+GX_xfb_offset, GX_FALSE);
+		else			GX_CopyDisp (VI.xfb[VI.which_fb]+GX_xfb_offset, GX_FALSE);
 		GX_DrawDone(); //Wait until EFB->XFB copy is complete
 		VI.enableLoadIcon = true;
 		VI.EFBcleared = false;
@@ -158,7 +159,8 @@ void VI_UpdateScreen()
 			VI_GX_showDEBUG();
 			GX_SetCopyClear ((GXColor){0,0,0,255}, 0xFFFFFF);
 			//Copy EFB->XFB
-			GX_CopyDisp (VI.xfb[VI.which_fb]+GX_xfb_offset, GX_FALSE);
+			if (VI.copy_fb)	GX_CopyDisp (VI.xfb[VI.which_fb^1]+GX_xfb_offset, GX_FALSE);
+			else			GX_CopyDisp (VI.xfb[VI.which_fb]+GX_xfb_offset, GX_FALSE);
 			GX_DrawDone(); //Wait until EFB->XFB copy is complete
 			VI.updateOSD = false;
 			VI.enableLoadIcon = true;
@@ -184,7 +186,8 @@ void VI_UpdateScreen()
 			VI_GX_showFPS();
 			VI_GX_showDEBUG();
 			GX_SetCopyClear ((GXColor){0,0,0,255}, 0xFFFFFF);
-			GX_CopyDisp (VI.xfb[VI.which_fb]+GX_xfb_offset, GX_FALSE);
+			if (VI.copy_fb)	GX_CopyDisp (VI.xfb[VI.which_fb^1]+GX_xfb_offset, GX_FALSE);
+			else			GX_CopyDisp (VI.xfb[VI.which_fb]+GX_xfb_offset, GX_FALSE);
 			GX_DrawDone(); //Wait until EFB->XFB copy is complete
 			VI.updateOSD = false;
 			VI.enableLoadIcon = true;
@@ -383,8 +386,8 @@ void VI_GX_showLoadProg(float percent)
 		VI_GX_showDEBUG();
 		GX_SetCopyClear ((GXColor){0,0,0,255}, 0xFFFFFF);
 		//Copy EFB->XFB
-		if (VI.copy_fb)	GX_CopyDisp (VI.xfb[VI.which_fb]+GX_xfb_offset, GX_FALSE);
-		else			GX_CopyDisp (VI.xfb[VI.which_fb^1]+GX_xfb_offset, GX_FALSE);
+		if (VI.copy_fb)	GX_CopyDisp (VI.xfb[VI.which_fb^1]+GX_xfb_offset, GX_FALSE);
+		else			GX_CopyDisp (VI.xfb[VI.which_fb]+GX_xfb_offset, GX_FALSE);
 		GX_DrawDone(); //Wait until EFB->XFB copy is complete
 		VI.updateOSD = false;
 		VI.enableLoadIcon = true;
@@ -395,9 +398,10 @@ void VI_GX_showLoadProg(float percent)
 	}
 	else
 	{
-		if (VI.copy_fb)	GX_CopyDisp (VI.xfb[VI.which_fb]+GX_xfb_offset, GX_FALSE);
-		else			GX_CopyDisp (VI.xfb[VI.which_fb^1]+GX_xfb_offset, GX_FALSE);
+		if (VI.copy_fb)	GX_CopyDisp (VI.xfb[VI.which_fb^1]+GX_xfb_offset, GX_FALSE);
+		else			GX_CopyDisp (VI.xfb[VI.which_fb]+GX_xfb_offset, GX_FALSE);
 		GX_Flush();
+		VI.copy_fb = true;
 	}
 //    GX_DrawDone();
 //	VI.copy_fb = true;
@@ -512,7 +516,7 @@ void VI_GX_renderCpuFramebuffer()
 	//Init texture cache heap if not yet inited
 	if(!GXtexCache)
 	{
-		GXtexCache = (heap_cntrl*)memalign(32,sizeof(heap_cntrl));
+		GXtexCache = (heap_cntrl*)malloc(sizeof(heap_cntrl));
 #ifdef HW_RVL
 		__lwp_heap_init(GXtexCache, TEXCACHE_LO,GX_TEXTURE_CACHE_SIZE, 32);
 #else //HW_RVL

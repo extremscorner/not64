@@ -174,11 +174,11 @@ void RDP_SetPrimDepth( u32 w0, u32 w1 )
 
 void RDP_SetScissor( u32 w0, u32 w1 )
 {
-	gDPSetScissor( _SHIFTR( w1, 24, 2 ),						// mode
-		           castufp16f32( _SHIFTR( w0, 12, 12 ), 2 ),	// ulx
-				   castufp16f32( _SHIFTR( w0,  0, 12 ), 2 ),	// uly
-				   castufp16f32( _SHIFTR( w1, 12, 12 ), 2 ),	// lrx
-				   castufp16f32( _SHIFTR( w1,  0, 12 ), 2 ) );	// lry
+	gDPSetScissor( _SHIFTR( w1, 24, 2 ),							// mode
+		           _FIXED2FLOAT( (u16)_SHIFTR( w0, 12, 12 ), 2 ),	// ulx
+				   _FIXED2FLOAT( (u16)_SHIFTR( w0,  0, 12 ), 2 ),	// uly
+				   _FIXED2FLOAT( (u16)_SHIFTR( w1, 12, 12 ), 2 ),	// lrx
+				   _FIXED2FLOAT( (u16)_SHIFTR( w1,  0, 12 ), 2 ) );	// lry
 }
 
 void RDP_SetConvert( u32 w0, u32 w1 )
@@ -193,10 +193,19 @@ void RDP_SetConvert( u32 w0, u32 w1 )
 
 void RDP_SetKeyR( u32 w0, u32 w1 )
 {
+	gDPSetKeyR( _SHIFTR( w1,  8,  8 ),		// cR
+			    _SHIFTR( w1,  0,  8 ),		// sR
+				_SHIFTR( w1, 16, 12 ) );	// wR
 }
 
 void RDP_SetKeyGB( u32 w0, u32 w1 )
 {
+	gDPSetKeyGB( _SHIFTR( w1, 24,  8 ),		// cG
+		         _SHIFTR( w1, 16,  8 ),		// sG
+				 _SHIFTR( w0, 12, 12 ),		// wG
+				 _SHIFTR( w1,  8,  8 ),		// cB
+				 _SHIFTR( w1,  0,  8 ),		// SB
+				 _SHIFTR( w0,  0, 12 ) );	// wB
 }
 
 void RDP_FullSync( u32 w0, u32 w1 )
@@ -227,15 +236,15 @@ void RDP_TexRectFlip( u32 w0, u32 w1 )
 	u32 w3 = *(u32*)&RDRAM[RSP.PC[RSP.PCi] + 4];
 	RSP.PC[RSP.PCi] += 8;
 
-	gDPTextureRectangleFlip( castufp16f32( _SHIFTR( w1, 12, 12 ), 2 ),		// ulx
-							 castufp16f32( _SHIFTR( w1,  0, 12 ), 2 ),		// uly
-							 castufp16f32( _SHIFTR( w0, 12, 12 ), 2 ),		// lrx
-							 castufp16f32( _SHIFTR( w0,  0, 12 ), 2 ),		// lry
-							 _SHIFTR( w1, 24,  3 ),							// tile
-							 castsfp16f32( _SHIFTR( w2, 16, 16 ), 5 ),		// s
-							 castsfp16f32( _SHIFTR( w2,  0, 16 ), 5 ),		// t
-							 castsfp16f32( _SHIFTR( w3, 16, 16 ), 10 ),		// dsdx
-							 castsfp16f32( _SHIFTR( w3,  0, 16 ), 10 ) );	// dsdy
+	gDPTextureRectangleFlip( _FIXED2FLOAT( (u16)_SHIFTR( w1, 12, 12 ), 2 ),		// ulx
+							 _FIXED2FLOAT( (u16)_SHIFTR( w1,  0, 12 ), 2 ),		// uly
+							 _FIXED2FLOAT( (u16)_SHIFTR( w0, 12, 12 ), 2 ),		// lrx
+							 _FIXED2FLOAT( (u16)_SHIFTR( w0,  0, 12 ), 2 ),		// lry
+							 _SHIFTR( w1, 24,  3 ),								// tile
+							 _FIXED2FLOAT( (s16)_SHIFTR( w2, 16, 16 ), 5 ),		// s
+							 _FIXED2FLOAT( (s16)_SHIFTR( w2,  0, 16 ), 5 ),		// t
+							 _FIXED2FLOAT( (s16)_SHIFTR( w3, 16, 16 ), 10 ),	// dsdx
+							 _FIXED2FLOAT( (s16)_SHIFTR( w3,  0, 16 ), 10 ) );	// dsdy
 }
 
 void RDP_TexRect( u32 w0, u32 w1 )
@@ -246,15 +255,15 @@ void RDP_TexRect( u32 w0, u32 w1 )
 	u32 w3 = *(u32*)&RDRAM[RSP.PC[RSP.PCi] + 4];
 	RSP.PC[RSP.PCi] += 8;
 
-	gDPTextureRectangle( castufp16f32( _SHIFTR( w1, 12, 12 ), 2 ),		// ulx
-						 castufp16f32( _SHIFTR( w1,  0, 12 ), 2 ),		// uly
-						 castufp16f32( _SHIFTR( w0, 12, 12 ), 2 ),		// lrx
-						 castufp16f32( _SHIFTR( w0,  0, 12 ), 2 ),		// lry
-						 _SHIFTR( w1, 24,  3 ),							// tile
-						 castsfp16f32( _SHIFTR( w2, 16, 16 ), 5 ),		// s
-						 castsfp16f32( _SHIFTR( w2,  0, 16 ), 5 ),		// t
-						 castsfp16f32( _SHIFTR( w3, 16, 16 ), 10 ),		// dsdx
-						 castsfp16f32( _SHIFTR( w3,  0, 16 ), 10 ) );	// dsdy
+	gDPTextureRectangle( _FIXED2FLOAT( (u16)_SHIFTR( w1, 12, 12 ), 2 ),		// ulx
+						 _FIXED2FLOAT( (u16)_SHIFTR( w1,  0, 12 ), 2 ),		// uly
+						 _FIXED2FLOAT( (u16)_SHIFTR( w0, 12, 12 ), 2 ),		// lrx
+						 _FIXED2FLOAT( (u16)_SHIFTR( w0,  0, 12 ), 2 ),		// lry
+						 _SHIFTR( w1, 24,  3 ),								// tile
+						 _FIXED2FLOAT( (s16)_SHIFTR( w2, 16, 16 ), 5 ),		// s
+						 _FIXED2FLOAT( (s16)_SHIFTR( w2,  0, 16 ), 5 ),		// t
+						 _FIXED2FLOAT( (s16)_SHIFTR( w3, 16, 16 ), 10 ),	// dsdx
+						 _FIXED2FLOAT( (s16)_SHIFTR( w3,  0, 16 ), 10 ) );	// dsdy
 }
 
 void RDP_Init()

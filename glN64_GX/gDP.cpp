@@ -82,7 +82,7 @@ void gDPSetOtherMode( u32 mode0, u32 mode1 )
 
 void gDPSetPrimDepth( u16 z, u16 dz )
 {
-	gDP.primDepth.z = min( 1.0f, max( 0.0f, (castufp16f32( z, 15 ) - gSP.viewport.vtrans[2]) / gSP.viewport.vscale[2] ) );
+	gDP.primDepth.z = min( 1.0f, max( 0.0f, (_FIXED2FLOAT( z, 15 ) - gSP.viewport.vtrans[2]) / gSP.viewport.vscale[2] ) );
 	gDP.primDepth.deltaZ = dz;
 
 #ifdef __GX__
@@ -508,9 +508,9 @@ void gDPSetFogColor( u32 r, u32 g, u32 b, u32 a )
 
 void gDPSetFillColor( u32 c )
 {
-	gDP.fillColor.r = castufp8f32( _SHIFTR( c, 11, 5 ), 5);
-	gDP.fillColor.g = castufp8f32( _SHIFTR( c,  6, 5 ), 5);
-	gDP.fillColor.b = castufp8f32( _SHIFTR( c,  1, 5 ), 5);
+	gDP.fillColor.r = _FIXED2FLOAT( (u8)_SHIFTR( c, 11, 5 ), 5);
+	gDP.fillColor.g = _FIXED2FLOAT( (u8)_SHIFTR( c,  6, 5 ), 5);
+	gDP.fillColor.b = _FIXED2FLOAT( (u8)_SHIFTR( c,  1, 5 ), 5);
 	gDP.fillColor.a = castu8f32( _SHIFTR( c,  0, 1 ) );
 
 	gDP.fillColor.z = castu16f32( _SHIFTR( c, 2, 14 ) );
@@ -884,6 +884,23 @@ void gDPSetConvert( s32 k0, s32 k1, s32 k2, s32 k3, s32 k4, s32 k5 )
 	gDP.convert.k3 = k3;
 	gDP.convert.k4 = k4;
 	gDP.convert.k5 = k5;
+}
+
+void gDPSetKeyR( u32 cR, u32 sR, u32 wR )
+{
+	gDP.key.center.r = GXcastu8f32( cR );
+	gDP.key.scale.r = GXcastu8f32( sR );
+	gDP.key.width.r = GXcastu8f32( wR );
+}
+
+void gDPSetKeyGB(u32 cG, u32 sG, u32 wG, u32 cB, u32 sB, u32 wB )
+{
+	gDP.key.center.g = GXcastu8f32( cG );
+	gDP.key.scale.g = GXcastu8f32( sG );
+	gDP.key.width.g = GXcastu8f32( wG );
+	gDP.key.center.b = GXcastu8f32( cB );
+	gDP.key.scale.b = GXcastu8f32( sB );
+	gDP.key.width.b = GXcastu8f32( wB );
 }
 
 void gDPTextureRectangle( f32 ulx, f32 uly, f32 lrx, f32 lry, s32 tile, f32 s, f32 t, f32 dsdx, f32 dtdy )

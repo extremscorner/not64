@@ -399,13 +399,13 @@ void gSPViewport( u32 v )
 	gSP.viewport.vtrans[2] = _FIXED2FLOAT( *(s16*)&RDRAM[address + 14], 10 );// * 0.00097847357f;
 	gSP.viewport.vtrans[3] = *(s16*)&RDRAM[address + 12];
 #else // !_BIG_ENDIAN -> This is to correct for big endian
-	gSP.viewport.vscale[0] = castsfp16f32( *(s16*)&RDRAM[address     ], 2 );
-	gSP.viewport.vscale[1] = castsfp16f32( *(s16*)&RDRAM[address +  2], 2 );
-	gSP.viewport.vscale[2] = castsfp16f32( *(s16*)&RDRAM[address +  4], 10 );// * 0.00097847357f;
+	gSP.viewport.vscale[0] = _FIXED2FLOAT( *(s16*)&RDRAM[address     ], 2 );
+	gSP.viewport.vscale[1] = _FIXED2FLOAT( *(s16*)&RDRAM[address +  2], 2 );
+	gSP.viewport.vscale[2] = _FIXED2FLOAT( *(s16*)&RDRAM[address +  4], 10 );// * 0.00097847357f;
 	gSP.viewport.vscale[3] = casts16f32( *(s16*)&RDRAM[address +  6] );
-	gSP.viewport.vtrans[0] = castsfp16f32( *(s16*)&RDRAM[address +  8], 2 );
-	gSP.viewport.vtrans[1] = castsfp16f32( *(s16*)&RDRAM[address + 10], 2 );
-	gSP.viewport.vtrans[2] = castsfp16f32( *(s16*)&RDRAM[address + 12], 10 );// * 0.00097847357f;
+	gSP.viewport.vtrans[0] = _FIXED2FLOAT( *(s16*)&RDRAM[address +  8], 2 );
+	gSP.viewport.vtrans[1] = _FIXED2FLOAT( *(s16*)&RDRAM[address + 10], 2 );
+	gSP.viewport.vtrans[2] = _FIXED2FLOAT( *(s16*)&RDRAM[address + 12], 10 );// * 0.00097847357f;
 	gSP.viewport.vtrans[3] = casts16f32( *(s16*)&RDRAM[address + 14] );
 #endif // _BIG_ENDIAN
 
@@ -556,8 +556,8 @@ void gSPVertex( u32 v, u32 n, u32 v0 )
 			gSP.vertices[i].y = casts16f32( vertex->y );
 			gSP.vertices[i].z = casts16f32( vertex->z );
 			gSP.vertices[i].flag = vertex->flag;
-			gSP.vertices[i].s = castsfp16f32( vertex->s, 5 );
-			gSP.vertices[i].t = castsfp16f32( vertex->t, 5 );
+			gSP.vertices[i].s = _FIXED2FLOAT( vertex->s, 5 );
+			gSP.vertices[i].t = _FIXED2FLOAT( vertex->t, 5 );
 
 			if (gSP.geometryMode & G_LIGHTING)
 			{
@@ -632,8 +632,8 @@ void gSPCIVertex( u32 v, u32 n, u32 v0 )
 			gSP.vertices[i].y = casts16f32( vertex->y );
 			gSP.vertices[i].z = casts16f32( vertex->z );
 			gSP.vertices[i].flag = 0;
-			gSP.vertices[i].s = castsfp16f32( vertex->s, 5 );
-			gSP.vertices[i].t = castsfp16f32( vertex->t, 5 );
+			gSP.vertices[i].s = _FIXED2FLOAT( vertex->s, 5 );
+			gSP.vertices[i].t = _FIXED2FLOAT( vertex->t, 5 );
 
 			u8 *color = &RDRAM[gSP.vertexColorBase + (vertex->ci & 0xff)];
 
@@ -950,107 +950,10 @@ void gSPInterpolateVertex( SPVertex *dest, f32 percent, SPVertex *first, SPVerte
 	dest->t = first->t + percent * (second->t - first->t);
 }
 
-void gSPTriangle( s32 v0, s32 v1, s32 v2, s32 flag )
+void gSPTriangle( s32 v0, s32 v1, s32 v2 )
 {
 	if ((v0 < 80) && (v1 < 80) && (v2 < 80))
-	{
-#ifndef __GX__
-		// Don't bother with triangles completely outside clipping frustrum
-		if (((gSP.vertices[v0].xClip < 0.0f) &&
-			 (gSP.vertices[v1].xClip < 0.0f) &&
-			 (gSP.vertices[v2].xClip < 0.0f)) ||
-		    ((gSP.vertices[v0].xClip > 0.0f) &&
-			 (gSP.vertices[v1].xClip > 0.0f) &&
-			 (gSP.vertices[v2].xClip > 0.0f)) ||
-		    ((gSP.vertices[v0].yClip < 0.0f) &&
-			 (gSP.vertices[v1].yClip < 0.0f) &&
-			 (gSP.vertices[v2].yClip < 0.0f)) ||
-		    ((gSP.vertices[v0].yClip > 0.0f) &&
-			 (gSP.vertices[v1].yClip > 0.0f) &&
-			 (gSP.vertices[v2].yClip > 0.0f)) ||
-			((gSP.vertices[v0].zClip > 0.1f) &&
-			 (gSP.vertices[v1].zClip > 0.1f) &&
-			 (gSP.vertices[v2].zClip > 0.1f)) ||
-			((gSP.vertices[v0].zClip < -0.1f) &&
-			 (gSP.vertices[v1].zClip < -0.1f) &&
-			 (gSP.vertices[v2].zClip < -0.1f)))
-			 return;
-
-		// NoN work-around, clips triangles, and draws the clipped-off parts with clamped z
-		if (GBI.current->NoN &&
-			((gSP.vertices[v0].zClip < 0.0f) ||
-			(gSP.vertices[v1].zClip < 0.0f) ||
-			(gSP.vertices[v2].zClip < 0.0f)))
-		{
-			SPVertex nearVertices[4];
-			SPVertex clippedVertices[4];
-			//s32 numNearTris = 0;
-			//s32 numClippedTris = 0;
-			s32 nearIndex = 0;
-			s32 clippedIndex = 0;
-
-			s32 v[3] = { v0, v1, v2 };
-
-			for (s32 i = 0; i < 3; i++)
-			{
-				s32 j = i + 1;
-				if (j == 3) j = 0;
-
-				if (((gSP.vertices[v[i]].zClip < 0.0f) && (gSP.vertices[v[j]].zClip >= 0.0f)) ||
-					((gSP.vertices[v[i]].zClip >= 0.0f) && (gSP.vertices[v[j]].zClip < 0.0f)))
-				{
-					f32 percent = (-gSP.vertices[v[i]].w - gSP.vertices[v[i]].z) / ((gSP.vertices[v[j]].z - gSP.vertices[v[i]].z) + (gSP.vertices[v[j]].w - gSP.vertices[v[i]].w));
-
-					gSPInterpolateVertex( &clippedVertices[clippedIndex], percent, &gSP.vertices[v[i]], &gSP.vertices[v[j]] );
-
-					gSPCopyVertex( &nearVertices[nearIndex], &clippedVertices[clippedIndex] );
-					nearVertices[nearIndex].z = -nearVertices[nearIndex].w;
-
-					clippedIndex++;
-					nearIndex++;
-				}
-
-				if (((gSP.vertices[v[i]].zClip < 0.0f) && (gSP.vertices[v[j]].zClip >= 0.0f)) ||
-					((gSP.vertices[v[i]].zClip >= 0.0f) && (gSP.vertices[v[j]].zClip >= 0.0f)))
-				{
-					gSPCopyVertex( &clippedVertices[clippedIndex], &gSP.vertices[v[j]] );
-					clippedIndex++;
-				}
-				else
-				{
-					gSPCopyVertex( &nearVertices[nearIndex], &gSP.vertices[v[j]] );
-					nearVertices[nearIndex].z = -nearVertices[nearIndex].w;// + 0.00001f;
-					nearIndex++;
-				}
-			}
-
-			OGL_AddTriangle( clippedVertices, 0, 1, 2 );
-
-			if (clippedIndex == 4)
-				OGL_AddTriangle( clippedVertices, 0, 2, 3 );
-
-			glDisable( GL_POLYGON_OFFSET_FILL );
-
-//			glDepthFunc( GL_LEQUAL );
-
-			OGL_AddTriangle( nearVertices, 0, 1, 2 );
-			if (nearIndex == 4)
-				OGL_AddTriangle( nearVertices, 0, 2, 3 );
-
-			if (gDP.otherMode.depthMode == ZMODE_DEC)
-				glEnable( GL_POLYGON_OFFSET_FILL );
-
-//			if (gDP.otherMode.depthCompare)
-//				glDepthFunc( GL_LEQUAL );
-		}
-		else
-			OGL_AddTriangle( gSP.vertices, v0, v1, v2 );
-
-#else // !__GX__
 		OGL_AddTriangle( gSP.vertices, v0, v1, v2 );
-#endif // __GX__
-
-	}
 #ifdef DEBUG
 	else
 		DebugMsg( DEBUG_HIGH | DEBUG_ERROR | DEBUG_TRIANGLE, "// Vertex index out of range\n" );
@@ -1061,9 +964,9 @@ void gSPTriangle( s32 v0, s32 v1, s32 v2, s32 flag )
 	gDP.colorImage.height = (unsigned long)(max( gDP.colorImage.height, gDP.scissor.lry ));
 }
 
-void gSP1Triangle( s32 v0, s32 v1, s32 v2, s32 flag )
+void gSP1Triangle( s32 v0, s32 v1, s32 v2 )
 {
-	gSPTriangle( v0, v1, v2, flag );
+	gSPTriangle( v0, v1, v2 );
 
 	gSPFlushTriangles();
 
@@ -1073,11 +976,11 @@ void gSP1Triangle( s32 v0, s32 v1, s32 v2, s32 flag )
 #endif
 }
 
-void gSP2Triangles( s32 v00, s32 v01, s32 v02, s32 flag0, 
-				    s32 v10, s32 v11, s32 v12, s32 flag1 )
+void gSP2Triangles( s32 v00, s32 v01, s32 v02,
+				    s32 v10, s32 v11, s32 v12 )
 {
-	gSPTriangle( v00, v01, v02, flag0 );
-	gSPTriangle( v10, v11, v12, flag1 );
+	gSPTriangle( v00, v01, v02 );
+	gSPTriangle( v10, v11, v12 );
 
 	gSPFlushTriangles();
 
@@ -1094,10 +997,10 @@ void gSP4Triangles( s32 v00, s32 v01, s32 v02,
 					s32 v20, s32 v21, s32 v22,
 					s32 v30, s32 v31, s32 v32 )
 {
-	gSPTriangle( v00, v01, v02, 0 );
-	gSPTriangle( v10, v11, v12, 0 );
-	gSPTriangle( v20, v21, v22, 0 );
-	gSPTriangle( v30, v31, v32, 0 );
+	gSPTriangle( v00, v01, v02 );
+	gSPTriangle( v10, v11, v12 );
+	gSPTriangle( v20, v21, v22 );
+	gSPTriangle( v30, v31, v32 );
 
 	gSPFlushTriangles();
 
@@ -1141,16 +1044,16 @@ void gSPDMATriangles( u32 tris, u32 n )
 		}
 		gSP.changed |= CHANGED_GEOMETRYMODE;
 		
-		gSP.vertices[triangles->v0].s = castsfp16f32( triangles->s0, 5 );
-		gSP.vertices[triangles->v0].t = castsfp16f32( triangles->t0, 5 );
+		gSP.vertices[triangles->v0].s = _FIXED2FLOAT( triangles->s0, 5 );
+		gSP.vertices[triangles->v0].t = _FIXED2FLOAT( triangles->t0, 5 );
 
-		gSP.vertices[triangles->v1].s = castsfp16f32( triangles->s1, 5 );
-		gSP.vertices[triangles->v1].t = castsfp16f32( triangles->t1, 5 );
+		gSP.vertices[triangles->v1].s = _FIXED2FLOAT( triangles->s1, 5 );
+		gSP.vertices[triangles->v1].t = _FIXED2FLOAT( triangles->t1, 5 );
 
-		gSP.vertices[triangles->v2].s = castsfp16f32( triangles->s2, 5 );
-		gSP.vertices[triangles->v2].t = castsfp16f32( triangles->t2, 5 );
+		gSP.vertices[triangles->v2].s = _FIXED2FLOAT( triangles->s2, 5 );
+		gSP.vertices[triangles->v2].t = _FIXED2FLOAT( triangles->t2, 5 );
 
-		gSPTriangle( triangles->v0, triangles->v1, triangles->v2, 0 );
+		gSPTriangle( triangles->v0, triangles->v1, triangles->v2 );
 
 		triangles++;
 	}
@@ -1165,8 +1068,8 @@ void gSPDMATriangles( u32 tris, u32 n )
 
 void gSP1Quadrangle( s32 v0, s32 v1, s32 v2, s32 v3 )
 {
-	gSPTriangle( v0, v1, v2, 0 );
-	gSPTriangle( v0, v2, v3, 0 );
+	gSPTriangle( v0, v1, v2 );
+	gSPTriangle( v0, v2, v3 );
 
 	gSPFlushTriangles();
 
@@ -1357,8 +1260,8 @@ void gSPModifyVertex( u32 vtx, u32 where, u32 val )
 #endif
 			break;
 		case G_MWO_POINT_ST:
-			gSP.vertices[vtx].s = castsfp16f32( _SHIFTR( val, 16, 16 ), 5 );
-			gSP.vertices[vtx].t = castsfp16f32( _SHIFTR( val, 0, 16 ), 5 );
+			gSP.vertices[vtx].s = _FIXED2FLOAT( (s16)_SHIFTR( val, 16, 16 ), 5 );
+			gSP.vertices[vtx].t = _FIXED2FLOAT( (s16)_SHIFTR( val, 0, 16 ), 5 );
 #ifdef DEBUG
 			DebugMsg( DEBUG_HIGH | DEBUG_HANDLED, "gSPModifyVertex( %i, %s, 0x%08X );\n",
 				vtx, MWOPointText[(where - 0x10) >> 2], val );
@@ -1578,17 +1481,17 @@ void gSPBgRect1Cyc( u32 bg )
 	gSP.bgImage.palette = objScaleBg->imagePal;
 	gDP.textureMode = TEXTUREMODE_BGIMAGE;
 
-	f32 imageX = castufp16f32( objScaleBg->imageX, 5 );
-	f32 imageY = castufp16f32( objScaleBg->imageY, 5 );
+	f32 imageX = _FIXED2FLOAT( objScaleBg->imageX, 5 );
+	f32 imageY = _FIXED2FLOAT( objScaleBg->imageY, 5 );
 	f32 imageW = castu16f32( objScaleBg->imageW >> 2 );
 	f32 imageH = castu16f32( objScaleBg->imageH >> 2 );
 
-	f32 frameX = castsfp16f32( objScaleBg->frameX, 2 );
-	f32 frameY = castsfp16f32( objScaleBg->frameY, 2 );
-	f32 frameW = castufp16f32( objScaleBg->frameW, 2 );
-	f32 frameH = castufp16f32( objScaleBg->frameH, 2 );
-	f32 scaleW = castufp16f32( objScaleBg->scaleW, 10 );
-	f32 scaleH = castufp16f32( objScaleBg->scaleH, 10 );
+	f32 frameX = _FIXED2FLOAT( objScaleBg->frameX, 2 );
+	f32 frameY = _FIXED2FLOAT( objScaleBg->frameY, 2 );
+	f32 frameW = _FIXED2FLOAT( objScaleBg->frameW, 2 );
+	f32 frameH = _FIXED2FLOAT( objScaleBg->frameH, 2 );
+	f32 scaleW = _FIXED2FLOAT( objScaleBg->scaleW, 10 );
+	f32 scaleH = _FIXED2FLOAT( objScaleBg->scaleH, 10 );
 
 	f32 frameX0 = frameX;
 	f32 frameY0 = frameY;
@@ -1678,10 +1581,10 @@ void gSPObjRectangle( u32 sp )
 	u32 address = RSP_SegmentToPhysical( sp );
 	uObjSprite *objSprite = (uObjSprite*)&RDRAM[address];
 
-	f32 scaleW = castufp16f32( objSprite->scaleW, 10 );
-	f32 scaleH = castufp16f32( objSprite->scaleH, 10 );
-	f32 objX = castsfp16f32( objSprite->objX, 2 );
-	f32 objY = castsfp16f32( objSprite->objY, 2 );
+	f32 scaleW = _FIXED2FLOAT( objSprite->scaleW, 10 );
+	f32 scaleH = _FIXED2FLOAT( objSprite->scaleH, 10 );
+	f32 objX = _FIXED2FLOAT( objSprite->objX, 2 );
+	f32 objY = _FIXED2FLOAT( objSprite->objY, 2 );
 	f32 imageW = castu16f32( objSprite->imageW >> 2 );
 	f32 imageH = castu16f32( objSprite->imageH >> 2 );
 
@@ -1722,10 +1625,10 @@ void gSPObjSprite( u32 sp )
 	u32 address = RSP_SegmentToPhysical( sp );
 	uObjSprite *objSprite = (uObjSprite*)&RDRAM[address];
 
-	f32 scaleW = castufp16f32( objSprite->scaleW, 10 );
-	f32 scaleH = castufp16f32( objSprite->scaleH, 10 );
-	f32 objX = castsfp16f32( objSprite->objX, 2 );
-	f32 objY = castsfp16f32( objSprite->objY, 2 );
+	f32 scaleW = _FIXED2FLOAT( objSprite->scaleW, 10 );
+	f32 scaleH = _FIXED2FLOAT( objSprite->scaleH, 10 );
+	f32 objX = _FIXED2FLOAT( objSprite->objX, 2 );
+	f32 objY = _FIXED2FLOAT( objSprite->objY, 2 );
 	f32 imageW = castu16f32( objSprite->imageW >> 5 );
 	f32 imageH = castu16f32( objSprite->imageH >> 5 );
 
@@ -1812,10 +1715,10 @@ void gSPObjMatrix( u32 mtx )
 	gSP.objMatrix.B = _FIXED2FLOAT( objMtx->B, 16 );
 	gSP.objMatrix.C = _FIXED2FLOAT( objMtx->C, 16 );
 	gSP.objMatrix.D = _FIXED2FLOAT( objMtx->D, 16 );
-	gSP.objMatrix.X = castsfp16f32( objMtx->X, 2 );
-	gSP.objMatrix.Y = castsfp16f32( objMtx->Y, 2 );
-	gSP.objMatrix.baseScaleX = castufp16f32( objMtx->BaseScaleX, 10 );
-	gSP.objMatrix.baseScaleY = castufp16f32( objMtx->BaseScaleY, 10 );
+	gSP.objMatrix.X = _FIXED2FLOAT( objMtx->X, 2 );
+	gSP.objMatrix.Y = _FIXED2FLOAT( objMtx->Y, 2 );
+	gSP.objMatrix.baseScaleX = _FIXED2FLOAT( objMtx->BaseScaleX, 10 );
+	gSP.objMatrix.baseScaleY = _FIXED2FLOAT( objMtx->BaseScaleY, 10 );
 }
 
 void gSPObjSubMatrix( u32 mtx )

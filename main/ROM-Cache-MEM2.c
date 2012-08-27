@@ -114,8 +114,6 @@ void* ROMCache_pointer(u32 rom_offset){
 }
 
 static void ROMCache_load_block(char* dst, u32 rom_offset){
-  if((hasLoadedROM) && (!stop))
-    pauseAudio();
 	showLoadProgress( 1.0f );
 	u32 offset = 0, bytes_read, loads_til_update = 0;
 	romFile_seekFile(ROMFile, rom_offset, FILE_BROWSER_SEEK_SET);
@@ -130,8 +128,6 @@ static void ROMCache_load_block(char* dst, u32 rom_offset){
 		}
 	}
 //	showLoadProgress( 1.0f );
-	if((hasLoadedROM) && (!stop))
-	  resumeAudio();
 }
 
 static void ensure_block(u32 block){

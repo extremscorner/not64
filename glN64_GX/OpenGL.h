@@ -112,8 +112,8 @@ struct GLInfo
 	BYTE	combiner;
 
 #ifdef __GX__	//Variables specific to GX
-	int		GXorigX, GXorigY;
-	int		GXwidth, GXheight;
+	u32		GXorigX, GXorigY;
+	u32		GXwidth, GXheight;
 	float	GXscaleX, GXscaleY;
 	float	GXzPrimeScale, GXzPrimeTranslate;
 	Mtx44	GXcombW;

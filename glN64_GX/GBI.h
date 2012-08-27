@@ -67,7 +67,7 @@ static const int numMicrocodeTypes = 11;
 #define FIXED2FLOATRECIP16	1.5258789e-05f
 
 #define _FIXED2FLOAT( v, b ) \
-	((f64)v * FIXED2FLOATRECIP##b)
+	((f32)v * FIXED2FLOATRECIP##b)
 
 static inline f32 GXcastu8f32(u8 in)
 {

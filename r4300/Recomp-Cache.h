@@ -23,9 +23,9 @@
 #ifndef RECOMP_CACHE_H
 #define RECOMP_CACHE_H
 
-// Hold 8MB worth of recompiled data max on Wii, 5 on GC
+// Hold 9MB worth of recompiled data max on Wii, 7 on GC
 #ifdef HW_RVL
-#define RECOMP_CACHE_SIZE (8*1024*1024)
+#define RECOMP_CACHE_SIZE (9*1024*1024)
 #else
 #define RECOMP_CACHE_SIZE (7*1024*1024)
 #endif

@@ -319,11 +319,11 @@ void OGL_InitStates()
 
 void OGL_UpdateScale()
 {
-	OGL.scaleX = castu16f32(OGL.width) / castu16f32(VI.width);
-	OGL.scaleY = castu16f32(OGL.height) / castu16f32(VI.height);
+	OGL.scaleX = OGL.width / (float)VI.width;
+	OGL.scaleY = OGL.height / (float)VI.height;
 #ifdef __GX__
-	OGL.GXscaleX = castu16f32(OGL.GXwidth) / castu16f32(VI.width);
-	OGL.GXscaleY = castu16f32(OGL.GXheight) / castu16f32(VI.height);
+	OGL.GXscaleX = (float)OGL.GXwidth / (float)VI.width;
+	OGL.GXscaleY = (float)OGL.GXheight / (float)VI.height;
 #endif //__GX__
 }
 

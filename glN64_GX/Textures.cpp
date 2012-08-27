@@ -28,6 +28,9 @@
 # ifndef min
 #  define min(a,b) ((a) < (b) ? (a) : (b))
 # endif
+# ifndef max
+#  define max(a,b) ((a) > (b) ? (a) : (b))
+# endif
 # define timeGetTime() time(NULL)
 #endif
 #ifndef __GX__
@@ -1399,10 +1402,10 @@ void TextureCache_Load( CachedTexture *texInfo )
 u32 TextureCache_CalculateCRC( u32 t, u32 width, u32 height )
 {
 	u32 crc;
-	u32 y, /*i,*/ bpl, lineBytes, line;
+	u32 y, n, bpl, lineBytes, line;
 	u64 *src;
 
-	src = (u64*)&TMEM[gSP.textureTile[t]->tmem];
+	n = max( 1, height >> 3 );
 	bpl = width << gSP.textureTile[t]->size >> 1;
 	lineBytes = gSP.textureTile[t]->line << 3;
 
@@ -1411,11 +1414,10 @@ u32 TextureCache_CalculateCRC( u32 t, u32 width, u32 height )
 		line <<= 1;
 
 	crc = 0xFFFFFFFF;
- 	for (y = 0; y < height; y++)
+ 	for (y = 0; y < height; y += n)
 	{
+		src = (u64*)&TMEM[(gSP.textureTile[t]->tmem + line * y) & 0x1FF];
 		crc = CRC_Calculate( crc, src, bpl );
-
-		src += line;
 	}
 
    	if (gSP.textureTile[t]->format == G_IM_FMT_CI)
