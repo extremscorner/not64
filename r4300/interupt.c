@@ -403,6 +403,7 @@ void gen_interupt()
       remove_interupt_event();
       MI_register.mi_intr_reg |= 0x02;
       si_register.si_status |= 0x1000;
+      si_register.si_status &= ~0x1;
       if(!chk_status(1)) {
         return;
       }
@@ -438,7 +439,7 @@ void gen_interupt()
   
     case SP_INT:
       remove_interupt_event();
-      sp_register.sp_status_reg |= 0x303;
+      sp_register.sp_status_reg |= 0x203;
       sp_register.signal2 = 1;
       sp_register.broke = 1;
       sp_register.halt = 1;

@@ -101,7 +101,7 @@
                         + FONT_SIZE + FLASHRAM_SIZE \
                         + SRAM_SIZE + MEMPACK_SIZE \
                         + BLOCKS_SIZE + RECOMPMETA_SIZE)
-#if MEM2_USED_SIZE > (0x933E0000-0x90000800)
+#if MEM2_USED_SIZE > (0x933E0000-0x90080000)
 #error Too much MEM2 used!
 #endif
 

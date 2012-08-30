@@ -250,7 +250,9 @@ void dma_pi_write()
    /*for (i=0; i<=((longueur+0x800)>>12); i++)
      invalid_code[(((pi_register.pi_dram_addr_reg&0xFFFFFF)|0x80000000)>>12)+i] = 1;*/
 
-   if ((debug_count+Count) < 0x100000)
+   // Set the RDRAM memory size when copying main ROM code
+   // (This is just a convenient way to run this code once at the beginning)
+   if (pi_register.pi_cart_addr_reg == 0x10001000)
      {
 	switch(CIC_Chip)
 	  {
@@ -285,36 +287,54 @@ void dma_pi_write()
 
 void dma_sp_write()
 {
-   int i;
-   if ((sp_register.sp_mem_addr_reg & 0x1000) > 0)
-     {
-	for (i=0; i<((sp_register.sp_rd_len_reg & 0xFFF)+1); i++)
-	  ((unsigned char *)(SP_IMEM))[((sp_register.sp_mem_addr_reg & 0xFFF)+i)^S8]=
-	  ((unsigned char *)(rdram))[((sp_register.sp_dram_addr_reg & 0xFFFFFF)+i)^S8];
+   unsigned int i,j;
+
+   unsigned int l = sp_register.sp_rd_len_reg;
+
+   unsigned int length = ((l & 0xfff) | 7) + 1;
+   unsigned int count = ((l >> 12) & 0xff) + 1;
+   unsigned int skip = ((l >> 20) & 0xfff);
+ 
+   unsigned int memaddr = sp_register.sp_mem_addr_reg & 0xfff;
+   unsigned int dramaddr = sp_register.sp_dram_addr_reg & 0xffffff;
+
+   unsigned char *spmem = ((sp_register.sp_mem_addr_reg & 0x1000) != 0) ? (unsigned char*)SP_IMEM : (unsigned char*)SP_DMEM;
+   unsigned char *dram = (unsigned char*)rdram;
+
+   for(j=0; j<count; j++) {
+     for(i=0; i<length; i++) {
+       spmem[memaddr^S8] = dram[dramaddr^S8];
+       memaddr++;
+       dramaddr++;
      }
-   else
-     {
-	for (i=0; i<((sp_register.sp_rd_len_reg & 0xFFF)+1); i++)
-	  ((unsigned char *)(SP_DMEM))[((sp_register.sp_mem_addr_reg & 0xFFF)+i)^S8]=
-	  ((unsigned char *)(rdram))[((sp_register.sp_dram_addr_reg & 0xFFFFFF)+i)^S8];
-     }
+     dramaddr+=skip;
+   }
 }
 
 void dma_sp_read()
 {
-   int i;
-   if ((sp_register.sp_mem_addr_reg & 0x1000) > 0)
-     {
-	for (i=0; i<((sp_register.sp_wr_len_reg & 0xFFF)+1); i++)
-	  ((unsigned char *)(rdram))[((sp_register.sp_dram_addr_reg & 0xFFFFFF)+i)^S8]=
-	  ((unsigned char *)(SP_IMEM))[((sp_register.sp_mem_addr_reg & 0xFFF)+i)^S8];
+   unsigned int i,j;
+
+   unsigned int l = sp_register.sp_wr_len_reg;
+
+   unsigned int length = ((l & 0xfff) | 7) + 1;
+   unsigned int count = ((l >> 12) & 0xff) + 1;
+   unsigned int skip = ((l >> 20) & 0xfff);
+
+   unsigned int memaddr = sp_register.sp_mem_addr_reg & 0xfff;
+   unsigned int dramaddr = sp_register.sp_dram_addr_reg & 0xffffff;
+
+   unsigned char *spmem = ((sp_register.sp_mem_addr_reg & 0x1000) != 0) ? (unsigned char*)SP_IMEM : (unsigned char*)SP_DMEM;
+   unsigned char *dram = (unsigned char*)rdram;
+
+   for(j=0; j<count; j++) {
+     for(i=0; i<length; i++) {
+       dram[dramaddr^S8] = spmem[memaddr^S8];
+       memaddr++;
+       dramaddr++;
      }
-   else
-     {
-	for (i=0; i<((sp_register.sp_wr_len_reg & 0xFFF)+1); i++)
-	  ((unsigned char *)(rdram))[((sp_register.sp_dram_addr_reg & 0xFFFFFF)+i)^S8]=
-	  ((unsigned char *)(SP_DMEM))[((sp_register.sp_mem_addr_reg & 0xFFF)+i)^S8];
-     }
+     dramaddr+=skip;
+   }
 }
 
 void dma_si_write()
@@ -328,6 +348,8 @@ void dma_si_write()
    for (i=0; i<(64/4); i++)
      PIF_RAM[i] = sl(rdram[si_register.si_dram_addr/4+i]);
    update_pif_write();
+   // TODO: under what circumstances should bits 1 or 3 be set?
+   si_register.si_status |= 1;
    update_count();
    add_interupt_event(SI_INT, /*0x100*/0x900);
 }
@@ -343,6 +365,8 @@ void dma_si_read()
    update_pif_read();
    for (i=0; i<(64/4); i++)
      rdram[si_register.si_dram_addr/4+i] = sl(PIF_RAM[i]);
+   // TODO: under what circumstances should bits 1 or 3 be set?
+   si_register.si_status |= 1;
    update_count();
    add_interupt_event(SI_INT, /*0x100*/0x900);
 }

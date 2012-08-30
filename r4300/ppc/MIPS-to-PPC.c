@@ -562,7 +562,7 @@ static int SLTI(MIPS_instr mips){
 	// FIXME: Do I need to worry about 64-bit values?
 	int rs = mapRegister( MIPS_GET_RS(mips) );
 	int rt = mapRegisterNew( MIPS_GET_RT(mips) );
-	int tmp = (rs == rt) ? mapRegisterTemp() : rt;
+	int tmp = (rs == rt) ? R2 : rt;
 
 	// tmp = immed (sign extended)
 	GEN_ADDI(ppc, tmp, 0, MIPS_GET_IMMED(mips));
@@ -582,8 +582,6 @@ static int SLTI(MIPS_instr mips){
 	// rt &= 1 ( = (sign(rs) == sign(immed)) xor (rs < immed (unsigned)) )
 	GEN_RLWINM(ppc, rt, rt, 0, 31, 31);
 	set_next_dst(ppc);
-
-	if(rs == rt) unmapRegisterTemp(tmp);
 
 	return CONVERT_SUCCESS;
 #endif
@@ -2079,18 +2077,17 @@ static int DSLLV(MIPS_instr mips){
 #else  // INTERPRET_DW || INTERPRET_DSLLV
 
 	int rs = mapRegister( MIPS_GET_RS(mips) );
-	int sa = mapRegisterTemp();
 	RegMapping rt = mapRegister64( MIPS_GET_RT(mips) );
 	RegMapping rd = mapRegister64New( MIPS_GET_RD(mips) );
 
 	// Mask off the shift amount (0x3f)
-	GEN_RLWINM(ppc, sa, rs, 0, 26, 31);
+	GEN_RLWINM(ppc, 2, rs, 0, 26, 31);
 	set_next_dst(ppc);
 	// Shift the MSW
-	GEN_SLW(ppc, rd.hi, rt.hi, sa);
+	GEN_SLW(ppc, rd.hi, rt.hi, 2);
 	set_next_dst(ppc);
 	// Calculate 32-sh
-	GEN_SUBFIC(ppc, 0, sa, 32);
+	GEN_SUBFIC(ppc, 0, 2, 32);
 	set_next_dst(ppc);
 	// Extract the bits that will be shifted out the LSW (sh < 32)
 	GEN_SRW(ppc, 0, rt.lo, 0);
@@ -2099,7 +2096,7 @@ static int DSLLV(MIPS_instr mips){
 	GEN_OR(ppc, rd.hi, rd.hi, 0);
 	set_next_dst(ppc);
 	// Calculate sh-32
-	GEN_ADDI(ppc, 0, sa, -32);
+	GEN_ADDI(ppc, 0, 2, -32);
 	set_next_dst(ppc);
 	// Extract the bits that will be shifted out the LSW (sh > 31)
 	GEN_SLW(ppc, 0, rt.lo, 0);
@@ -2108,10 +2105,8 @@ static int DSLLV(MIPS_instr mips){
 	GEN_OR(ppc, rd.hi, rd.hi, 0);
 	set_next_dst(ppc);
 	// Shift the LSW
-	GEN_SLW(ppc, rd.lo, rt.lo, sa);
+	GEN_SLW(ppc, rd.lo, rt.lo, 2);
 	set_next_dst(ppc);
-
-	unmapRegisterTemp(sa);
 
 	return CONVERT_SUCCESS;
 #endif
@@ -2125,18 +2120,17 @@ static int DSRLV(MIPS_instr mips){
 #else  // INTERPRET_DW || INTERPRET_DSRLV
 
 	int rs = mapRegister( MIPS_GET_RS(mips) );
-	int sa = mapRegisterTemp();
 	RegMapping rt = mapRegister64( MIPS_GET_RT(mips) );
 	RegMapping rd = mapRegister64New( MIPS_GET_RD(mips) );
 
 	// Mask off the shift amount (0x3f)
-	GEN_RLWINM(ppc, sa, rs, 0, 26, 31);
+	GEN_RLWINM(ppc, 2, rs, 0, 26, 31);
 	set_next_dst(ppc);
 	// Shift the LSW
-	GEN_SRW(ppc, rd.lo, rt.lo, sa);
+	GEN_SRW(ppc, rd.lo, rt.lo, 2);
 	set_next_dst(ppc);
 	// Calculate 32-sh
-	GEN_SUBFIC(ppc, 0, sa, 32);
+	GEN_SUBFIC(ppc, 0, 2, 32);
 	set_next_dst(ppc);
 	// Extract the bits that will be shifted out the MSW (sh < 32)
 	GEN_SLW(ppc, 0, rt.hi, 0);
@@ -2145,7 +2139,7 @@ static int DSRLV(MIPS_instr mips){
 	GEN_OR(ppc, rd.lo, rd.lo, 0);
 	set_next_dst(ppc);
 	// Calculate sh-32
-	GEN_ADDI(ppc, 0, sa, -32);
+	GEN_ADDI(ppc, 0, 2, -32);
 	set_next_dst(ppc);
 	// Extract the bits that will be shifted out the MSW (sh > 31)
 	GEN_SRW(ppc, 0, rt.hi, 0);
@@ -2154,10 +2148,8 @@ static int DSRLV(MIPS_instr mips){
 	GEN_OR(ppc, rd.lo, rd.lo, 0);
 	set_next_dst(ppc);
 	// Shift the MSW
-	GEN_SRW(ppc, rd.hi, rt.hi, sa);
+	GEN_SRW(ppc, rd.hi, rt.hi, 2);
 	set_next_dst(ppc);
-
-	unmapRegisterTemp(sa);
 
 	return CONVERT_SUCCESS;
 #endif
@@ -2171,24 +2163,23 @@ static int DSRAV(MIPS_instr mips){
 #else  // INTERPRET_DW || INTERPRET_DSRAV
 
 	int rs = mapRegister( MIPS_GET_RS(mips) );
-	int sa = mapRegisterTemp();
 	RegMapping rt = mapRegister64( MIPS_GET_RT(mips) );
 	RegMapping rd = mapRegister64New( MIPS_GET_RD(mips) );
 
 	// Mask off the shift amount (0x3f)
-	GEN_RLWINM(ppc, sa, rs, 0, 26, 31);
+	GEN_RLWINM(ppc, 2, rs, 0, 26, 31);
 	set_next_dst(ppc);
 	// Check whether the shift amount is < 32
-	GEN_CMPI(ppc, sa, 32, 1);
+	GEN_CMPI(ppc, 2, 32, 1);
 	set_next_dst(ppc);
 	// Shift the LSW
-	GEN_SRW(ppc, rd.lo, rt.lo, sa);
+	GEN_SRW(ppc, rd.lo, rt.lo, 2);
 	set_next_dst(ppc);
 	// Skip over this code if sh >= 32
 	GEN_BGE(ppc, 1, 5, 0, 0);
 	set_next_dst(ppc);
 	// Calculate 32-sh
-	GEN_SUBFIC(ppc, 0, sa, 32);
+	GEN_SUBFIC(ppc, 0, 2, 32);
 	set_next_dst(ppc);
 	// Extract the bits that will be shifted out the MSW (sh < 32)
 	GEN_SLW(ppc, 0, rt.hi, 0);
@@ -2200,7 +2191,7 @@ static int DSRAV(MIPS_instr mips){
 	GEN_B(ppc, 4, 0, 0);
 	set_next_dst(ppc);
 	// Calculate sh-32
-	GEN_ADDI(ppc, 0, sa, -32);
+	GEN_ADDI(ppc, 0, 2, -32);
 	set_next_dst(ppc);
 	// Extract the bits that will be shifted out the MSW (sh > 31)
 	GEN_SRAW(ppc, 0, rt.hi, 0);
@@ -2209,10 +2200,8 @@ static int DSRAV(MIPS_instr mips){
 	GEN_OR(ppc, rd.lo, rd.lo, 0);
 	set_next_dst(ppc);
 	// Shift the MSW
-	GEN_SRAW(ppc, rd.hi, rt.hi, sa);
+	GEN_SRAW(ppc, rd.hi, rt.hi, 2);
 	set_next_dst(ppc);
-
-	unmapRegisterTemp(sa);
 
 	return CONVERT_SUCCESS;
 #endif
@@ -2803,7 +2792,6 @@ static int MTC0(MIPS_instr mips){
 	
 	int rt = MIPS_GET_RT(mips), rrt;
 	int rd = MIPS_GET_RD(mips);
-	int tmp;
 	
 	switch(rd){
 	case 0: // Index
@@ -2828,21 +2816,21 @@ static int MTC0(MIPS_instr mips){
 		return CONVERT_SUCCESS;
 	
 	case 4: // Context
-		rrt = mapRegister(rt), tmp = mapRegisterTemp();
-		// tmp = reg_cop0[rd]
-		GEN_LWZ(ppc, tmp, rd*4, DYNAREG_COP0);
+		rrt = mapRegister(rt);
+		// r2 = reg_cop0[rd]
+		GEN_LWZ(ppc, 2, rd*4, DYNAREG_COP0);
 		set_next_dst(ppc);
 		// r0 = rt & 0xFF800000
 		GEN_RLWINM(ppc, 0, rrt, 0, 0, 8);
 		set_next_dst(ppc);
-		// tmp &= 0x007FFFF0
-		GEN_RLWINM(ppc, tmp, tmp, 0, 9, 27);
+		// r2 &= 0x007FFFF0
+		GEN_RLWINM(ppc, 2, 2, 0, 9, 27);
 		set_next_dst(ppc);
-		// tmp |= r0
-		GEN_OR(ppc, tmp, tmp, 0);
+		// r2 |= r0
+		GEN_OR(ppc, 2, 2, 0);
 		set_next_dst(ppc);
-		// reg_cop0[rd] = tmp
-		GEN_STW(ppc, tmp, rd*4, DYNAREG_COP0);
+		// reg_cop0[rd] = r2
+		GEN_STW(ppc, 2, rd*4, DYNAREG_COP0);
 		set_next_dst(ppc);
 		return CONVERT_SUCCESS;
 	
@@ -2995,20 +2983,17 @@ static int DMFC1(MIPS_instr mips){
 
 	int fs = MIPS_GET_FS(mips);
 	RegMapping rt = mapRegister64New( MIPS_GET_RT(mips) );
-	int addr = mapRegisterTemp();
 	flushFPR(fs);
 
-	// addr = reg_cop1_double[fs]
-	GEN_LWZ(ppc, addr, fs*4, DYNAREG_FPR_64);
+	// r2 = reg_cop1_double[fs]
+	GEN_LWZ(ppc, 2, fs*4, DYNAREG_FPR_64);
 	set_next_dst(ppc);
-	// rt[hi] = *addr
-	GEN_LWZ(ppc, rt.hi, 0, addr);
+	// rt[hi] = *r2
+	GEN_LWZ(ppc, rt.hi, 0, 2);
 	set_next_dst(ppc);
-	// rt[lo] = *(addr+4)
-	GEN_LWZ(ppc, rt.lo, 4, addr);
+	// rt[lo] = *(r2+4)
+	GEN_LWZ(ppc, rt.lo, 4, 2);
 	set_next_dst(ppc);
-
-	unmapRegisterTemp(addr);
 
 	return CONVERT_SUCCESS;
 #endif
@@ -3050,17 +3035,14 @@ static int MTC1(MIPS_instr mips){
 
 	int rt = mapRegister( MIPS_GET_RT(mips) );
 	int fs = MIPS_GET_FS(mips);
-	int addr = mapRegisterTemp();
 	invalidateFPR(fs);
 
-	// addr = reg_cop1_simple[fs]
-	GEN_LWZ(ppc, addr, fs*4, DYNAREG_FPR_32);
+	// r2 = reg_cop1_simple[fs]
+	GEN_LWZ(ppc, 2, fs*4, DYNAREG_FPR_32);
 	set_next_dst(ppc);
-	// *addr = rt
-	GEN_STW(ppc, rt, 0, addr);
+	// *r2 = rt
+	GEN_STW(ppc, rt, 0, 2);
 	set_next_dst(ppc);
-
-	unmapRegisterTemp(addr);
 
 	return CONVERT_SUCCESS;
 #endif
@@ -3077,17 +3059,14 @@ static int DMTC1(MIPS_instr mips){
 
 	RegMapping rt = mapRegister64( MIPS_GET_RT(mips) );
 	int fs = MIPS_GET_FS(mips);
-	int addr = mapRegisterTemp();
 	invalidateFPR(fs);
 
-	GEN_LWZ(ppc, addr, fs*4, DYNAREG_FPR_64);
+	GEN_LWZ(ppc, 2, fs*4, DYNAREG_FPR_64);
 	set_next_dst(ppc);
-	GEN_STW(ppc, rt.hi, 0, addr);
+	GEN_STW(ppc, rt.hi, 0, 2);
 	set_next_dst(ppc);
-	GEN_STW(ppc, rt.lo, 4, addr);
+	GEN_STW(ppc, rt.lo, 4, 2);
 	set_next_dst(ppc);
-
-	unmapRegisterTemp(addr);
 
 	return CONVERT_SUCCESS;
 #endif
@@ -3349,21 +3328,20 @@ static int ROUND_L_FP(MIPS_instr mips, int dbl){
 	GEN_B(ppc, add_jump(dbl ? &__fixdfdi : &__fixsfdi, 1, 1), 0, 1);
 	set_next_dst(ppc);
 	
-	int addr = 5; // Use r5 for the addr (to not clobber r3/r4)
-	// addr = reg_cop1_double[fd]
-	GEN_LWZ(ppc, addr, fd*4, DYNAREG_FPR_64);
+	// r2 = reg_cop1_double[fd]
+	GEN_LWZ(ppc, 2, fd*4, DYNAREG_FPR_64);
 	set_next_dst(ppc);
 	// Load old LR
 	GEN_LWZ(ppc, 0, DYNAOFF_LR, 1);
 	set_next_dst(ppc);
-	// stw r3, 0(addr)
-	GEN_STW(ppc, 3, 0, addr);
+	// stw r3, 0(r2)
+	GEN_STW(ppc, 3, 0, 2);
 	set_next_dst(ppc);
 	// Restore LR
 	GEN_MTLR(ppc, 0);
 	set_next_dst(ppc);
-	// stw r4, 4(addr)
-	GEN_STW(ppc, 4, 4, addr);
+	// stw r4, 4(r2)
+	GEN_STW(ppc, 4, 4, 2);
 	set_next_dst(ppc);
 
 	return CONVERT_SUCCESS;
@@ -3388,21 +3366,20 @@ static int TRUNC_L_FP(MIPS_instr mips, int dbl){
 	GEN_B(ppc, add_jump(dbl ? &__fixdfdi : &__fixsfdi, 1, 1), 0, 1);
 	set_next_dst(ppc);
 	
-	int addr = 5; // Use r5 for the addr (to not clobber r3/r4)
-	// addr = reg_cop1_double[fd]
-	GEN_LWZ(ppc, addr, fd*4, DYNAREG_FPR_64);
+	// r2 = reg_cop1_double[fd]
+	GEN_LWZ(ppc, 2, fd*4, DYNAREG_FPR_64);
 	set_next_dst(ppc);
 	// Load old LR
 	GEN_LWZ(ppc, 0, DYNAOFF_LR, 1);
 	set_next_dst(ppc);
-	// stw r3, 0(addr)
-	GEN_STW(ppc, 3, 0, addr);
+	// stw r3, 0(r2)
+	GEN_STW(ppc, 3, 0, 2);
 	set_next_dst(ppc);
 	// Restore LR
 	GEN_MTLR(ppc, 0);
 	set_next_dst(ppc);
-	// stw r4, 4(addr)
-	GEN_STW(ppc, 4, 4, addr);
+	// stw r4, 4(r2)
+	GEN_STW(ppc, 4, 4, 2);
 	set_next_dst(ppc);
 
 	return CONVERT_SUCCESS;
@@ -3430,21 +3407,20 @@ static int CEIL_L_FP(MIPS_instr mips, int dbl){
 	GEN_B(ppc, add_jump(dbl ? &__fixdfdi : &__fixsfdi, 1, 1), 0, 1);
 	set_next_dst(ppc);
 	
-	int addr = 5; // Use r5 for the addr (to not clobber r3/r4)
-	// addr = reg_cop1_double[fd]
-	GEN_LWZ(ppc, addr, fd*4, DYNAREG_FPR_64);
+	// r2 = reg_cop1_double[fd]
+	GEN_LWZ(ppc, 2, fd*4, DYNAREG_FPR_64);
 	set_next_dst(ppc);
 	// Load old LR
 	GEN_LWZ(ppc, 0, DYNAOFF_LR, 1);
 	set_next_dst(ppc);
-	// stw r3, 0(addr)
-	GEN_STW(ppc, 3, 0, addr);
+	// stw r3, 0(r2)
+	GEN_STW(ppc, 3, 0, 2);
 	set_next_dst(ppc);
 	// Restore LR
 	GEN_MTLR(ppc, 0);
 	set_next_dst(ppc);
-	// stw r4, 4(addr)
-	GEN_STW(ppc, 4, 4, addr);
+	// stw r4, 4(r2)
+	GEN_STW(ppc, 4, 4, 2);
 	set_next_dst(ppc);
 
 	return CONVERT_SUCCESS;
@@ -3472,21 +3448,20 @@ static int FLOOR_L_FP(MIPS_instr mips, int dbl){
 	GEN_B(ppc, add_jump(dbl ? &__fixdfdi : &__fixsfdi, 1, 1), 0, 1);
 	set_next_dst(ppc);
 	
-	int addr = 5; // Use r5 for the addr (to not clobber r3/r4)
-	// addr = reg_cop1_double[fd]
-	GEN_LWZ(ppc, addr, fd*4, DYNAREG_FPR_64);
+	// r2 = reg_cop1_double[fd]
+	GEN_LWZ(ppc, 2, fd*4, DYNAREG_FPR_64);
 	set_next_dst(ppc);
 	// Load old LR
 	GEN_LWZ(ppc, 0, DYNAOFF_LR, 1);
 	set_next_dst(ppc);
-	// stw r3, 0(addr)
-	GEN_STW(ppc, 3, 0, addr);
+	// stw r3, 0(r2)
+	GEN_STW(ppc, 3, 0, 2);
 	set_next_dst(ppc);
 	// Restore LR
 	GEN_MTLR(ppc, 0);
 	set_next_dst(ppc);
-	// stw r4, 4(addr)
-	GEN_STW(ppc, 4, 4, addr);
+	// stw r4, 4(r2)
+	GEN_STW(ppc, 4, 4, 2);
 	set_next_dst(ppc);
 
 	return CONVERT_SUCCESS;
@@ -3502,24 +3477,19 @@ static int ROUND_W_FP(MIPS_instr mips, int dbl){
 
 	genCheckFP();
 
-	set_rounding(PPC_ROUNDING_NEAREST); // TODO: Presume its already set?
-
 	int fd = MIPS_GET_FD(mips);
 	int fs = mapFPR( MIPS_GET_FS(mips), dbl );
 	invalidateFPR(fd);
-	int addr = mapRegisterTemp();
 
 	// fctiw f0, fs
 	GEN_FCTIW(ppc, 0, fs);
 	set_next_dst(ppc);
-	// addr = reg_cop1_simple[fd]
-	GEN_LWZ(ppc, addr, fd*4, DYNAREG_FPR_32);
+	// r2 = reg_cop1_simple[fd]
+	GEN_LWZ(ppc, 2, fd*4, DYNAREG_FPR_32);
 	set_next_dst(ppc);
-	// stfiwx f0, 0, addr
-	GEN_STFIWX(ppc, 0, 0, addr);
+	// stfiwx f0, 0, r2
+	GEN_STFIWX(ppc, 0, 0, 2);
 	set_next_dst(ppc);
-
-	unmapRegisterTemp(addr);
 
 	return CONVERT_SUCCESS;
 #endif
@@ -3537,19 +3507,16 @@ static int TRUNC_W_FP(MIPS_instr mips, int dbl){
 	int fd = MIPS_GET_FD(mips);
 	int fs = mapFPR( MIPS_GET_FS(mips), dbl );
 	invalidateFPR(fd);
-	int addr = mapRegisterTemp();
 
 	// fctiwz f0, fs
 	GEN_FCTIWZ(ppc, 0, fs);
 	set_next_dst(ppc);
-	// addr = reg_cop1_simple[fd]
-	GEN_LWZ(ppc, addr, fd*4, DYNAREG_FPR_32);
+	// r2 = reg_cop1_simple[fd]
+	GEN_LWZ(ppc, 2, fd*4, DYNAREG_FPR_32);
 	set_next_dst(ppc);
-	// stfiwx f0, 0, addr
-	GEN_STFIWX(ppc, 0, 0, addr);
+	// stfiwx f0, 0, r2
+	GEN_STFIWX(ppc, 0, 0, 2);
 	set_next_dst(ppc);
-
-	unmapRegisterTemp(addr);
 
 	return CONVERT_SUCCESS;
 #endif
@@ -3569,20 +3536,17 @@ static int CEIL_W_FP(MIPS_instr mips, int dbl){
 	int fd = MIPS_GET_FD(mips);
 	int fs = mapFPR( MIPS_GET_FS(mips), dbl );
 	invalidateFPR(fd);
-	int addr = mapRegisterTemp();
 
 	// fctiw f0, fs
 	GEN_FCTIW(ppc, 0, fs);
 	set_next_dst(ppc);
-	// addr = reg_cop1_simple[fd]
-	GEN_LWZ(ppc, addr, fd*4, DYNAREG_FPR_32);
+	// r2 = reg_cop1_simple[fd]
+	GEN_LWZ(ppc, 2, fd*4, DYNAREG_FPR_32);
 	set_next_dst(ppc);
-	// stfiwx f0, 0, addr
-	GEN_STFIWX(ppc, 0, 0, addr);
+	// stfiwx f0, 0, r2
+	GEN_STFIWX(ppc, 0, 0, 2);
 	set_next_dst(ppc);
 
-	unmapRegisterTemp(addr);
-	
 	set_rounding(PPC_ROUNDING_NEAREST);
 
 	return CONVERT_SUCCESS;
@@ -3603,20 +3567,17 @@ static int FLOOR_W_FP(MIPS_instr mips, int dbl){
 	int fd = MIPS_GET_FD(mips);
 	int fs = mapFPR( MIPS_GET_FS(mips), dbl );
 	invalidateFPR(fd);
-	int addr = mapRegisterTemp();
 
 	// fctiw f0, fs
 	GEN_FCTIW(ppc, 0, fs);
 	set_next_dst(ppc);
-	// addr = reg_cop1_simple[fd]
-	GEN_LWZ(ppc, addr, fd*4, DYNAREG_FPR_32);
+	// r2 = reg_cop1_simple[fd]
+	GEN_LWZ(ppc, 2, fd*4, DYNAREG_FPR_32);
 	set_next_dst(ppc);
-	// stfiwx f0, 0, addr
-	GEN_STFIWX(ppc, 0, 0, addr);
+	// stfiwx f0, 0, r2
+	GEN_STFIWX(ppc, 0, 0, 2);
 	set_next_dst(ppc);
 
-	unmapRegisterTemp(addr);
-	
 	set_rounding(PPC_ROUNDING_NEAREST);
 
 	return CONVERT_SUCCESS;
@@ -3681,19 +3642,16 @@ static int CVT_W_FP(MIPS_instr mips, int dbl){
 	int fd = MIPS_GET_FD(mips);
 	int fs = mapFPR( MIPS_GET_FS(mips), dbl );
 	invalidateFPR(fd);
-	int addr = mapRegisterTemp();
 
 	// fctiw f0, fs
 	GEN_FCTIW(ppc, 0, fs);
 	set_next_dst(ppc);
-	// addr = reg_cop1_simple[fd]
-	GEN_LWZ(ppc, addr, fd*4, DYNAREG_FPR_32);
+	// r2 = reg_cop1_simple[fd]
+	GEN_LWZ(ppc, 2, fd*4, DYNAREG_FPR_32);
 	set_next_dst(ppc);
-	// stfiwx f0, 0, addr
-	GEN_STFIWX(ppc, 0, 0, addr);
+	// stfiwx f0, 0, r2
+	GEN_STFIWX(ppc, 0, 0, 2);
 	set_next_dst(ppc);
-
-	unmapRegisterTemp(addr);
 	
 	set_rounding(PPC_ROUNDING_NEAREST);
 
@@ -3720,21 +3678,20 @@ static int CVT_L_FP(MIPS_instr mips, int dbl){
 	GEN_B(ppc, add_jump(dbl ? &__fixdfdi : &__fixsfdi, 1, 1), 0, 1);
 	set_next_dst(ppc);
 	
-	int addr = 5; // Use r5 for the addr (to not clobber r3/r4)
-	// addr = reg_cop1_double[fd]
-	GEN_LWZ(ppc, addr, fd*4, DYNAREG_FPR_64);
+	// r2 = reg_cop1_double[fd]
+	GEN_LWZ(ppc, 2, fd*4, DYNAREG_FPR_64);
 	set_next_dst(ppc);
 	// Load old LR
 	GEN_LWZ(ppc, 0, DYNAOFF_LR, 1);
 	set_next_dst(ppc);
-	// stw r3, 0(addr)
-	GEN_STW(ppc, 3, 0, addr);
+	// stw r3, 0(r2)
+	GEN_STW(ppc, 3, 0, 2);
 	set_next_dst(ppc);
 	// Restore LR
 	GEN_MTLR(ppc, 0);
 	set_next_dst(ppc);
-	// stw r4, 4(addr)
-	GEN_STW(ppc, 4, 4, addr);
+	// stw r4, 4(r2)
+	GEN_STW(ppc, 4, 4, 2);
 	set_next_dst(ppc);
 
 	return CONVERT_SUCCESS;
@@ -4313,14 +4270,13 @@ static int CVT_FP_W(MIPS_instr mips, int dbl){
 	int fs = MIPS_GET_FS(mips);
 	flushFPR(fs);
 	int fd = mapFPRNew( MIPS_GET_FD(mips), dbl );
-	int tmp = mapRegisterTemp();
 
 	// Get the integer value into a GPR
-	// tmp = fpr32[fs]
-	GEN_LWZ(ppc, tmp, fs*4, DYNAREG_FPR_32);
+	// r2 = fpr32[fs]
+	GEN_LWZ(ppc, 2, fs*4, DYNAREG_FPR_32);
 	set_next_dst(ppc);
-	// tmp = *tmp (src)
-	GEN_LWZ(ppc, tmp, 0, tmp);
+	// r2 = *r2 (src)
+	GEN_LWZ(ppc, 2, 0, 2);
 	set_next_dst(ppc);
 
 	// lis r0, 0x4330
@@ -4336,7 +4292,7 @@ static int CVT_FP_W(MIPS_instr mips, int dbl){
 	GEN_STW(ppc, 0, -4, 1);
 	set_next_dst(ppc);
 	// xor r0, src, 0x80000000
-	GEN_XOR(ppc, 0, tmp, 0);
+	GEN_XOR(ppc, 0, 2, 0);
 	set_next_dst(ppc);
 	// lfd f0, -8(r1)
 	GEN_LFD(ppc, 0, -8, 1);
@@ -4350,8 +4306,6 @@ static int CVT_FP_W(MIPS_instr mips, int dbl){
 	// fsub fd, fd, f0
 	GEN_FSUB(ppc, fd, fd, 0, dbl);
 	set_next_dst(ppc);
-
-	unmapRegisterTemp(tmp);
 
 	return CONVERT_SUCCESS;
 }
@@ -4540,46 +4494,43 @@ static void genUpdateCount(int checkCount){
 	PowerPC_instr ppc = NEW_PPC_INSTR();
 #ifndef COMPARE_CORE
 	// Dynarec inlined code equivalent:
-	int tmp = mapRegisterTemp();
-	// lis    tmp, pc >> 16
-	GEN_LIS(ppc, tmp, (get_src_pc()+4)>>16);
+	// lis    r2,  pc >> 16
+	GEN_LIS(ppc, 2, (get_src_pc()+4)>>16);
 	set_next_dst(ppc);
 	// lwz    r0,  0(&last_addr)     // r0 = last_addr
 	GEN_LWZ(ppc, 0, 0, DYNAREG_LADDR);
 	set_next_dst(ppc);
-	// ori    tmp, tmp, pc & 0xffff  // tmp = pc
-	GEN_ORI(ppc, tmp, tmp, get_src_pc()+4);
+	// ori    r2,  r2,  pc & 0xffff  // r2 = pc
+	GEN_ORI(ppc, 2, 2, get_src_pc()+4);
 	set_next_dst(ppc);
-	// stw    tmp, 0(&last_addr)     // last_addr = pc
-	GEN_STW(ppc, tmp, 0, DYNAREG_LADDR);
+	// stw    r2,  0(&last_addr)     // last_addr = pc
+	GEN_STW(ppc, 2, 0, DYNAREG_LADDR);
 	set_next_dst(ppc);
-	// subf   r0,  r0, tmp           // r0 = pc - last_addr
-	GEN_SUBF(ppc, 0, 0, tmp);
+	// subf   r0,  r0,  r2           // r0 = pc - last_addr
+	GEN_SUBF(ppc, 0, 0, 2);
 	set_next_dst(ppc);
-	// lwz    tmp, 9*4(reg_cop0)     // tmp = Count
-	GEN_LWZ(ppc, tmp, 9*4, DYNAREG_COP0);
+	// lwz    r2,  9*4(reg_cop0)     // r2 = Count
+	GEN_LWZ(ppc, 2, 9*4, DYNAREG_COP0);
 	set_next_dst(ppc);
 	// srwi r0, r0, 1                // r0 = (pc - last_addr)/2
 	GEN_SRWI(ppc, 0, 0, 1);
 	set_next_dst(ppc);
-	// add    r0,  r0, tmp           // r0 += Count
-	GEN_ADD(ppc, 0, 0, tmp);
+	// add    r0,  r0,  r2           // r0 += Count
+	GEN_ADD(ppc, 0, 0, 2);
 	set_next_dst(ppc);
 	if(checkCount){
-		// lwz    tmp, 0(&next_interupt) // tmp = next_interupt
-		GEN_LWZ(ppc, tmp, 0, DYNAREG_NINTR);
+		// lwz    r2,  0(&next_interupt) // r2 = next_interupt
+		GEN_LWZ(ppc, 2, 0, DYNAREG_NINTR);
 		set_next_dst(ppc);
 	}
 	// stw    r0,  9*4(reg_cop0)    // Count = r0
 	GEN_STW(ppc, 0, 9*4, DYNAREG_COP0);
 	set_next_dst(ppc);
 	if(checkCount){
-		// cmpl   cr2,  tmp, r0  // cr2 = next_interupt ? Count
-		GEN_CMPL(ppc, tmp, 0, 2);
+		// cmpl   cr2,  r2,  r0  // cr2 = next_interupt ? Count
+		GEN_CMPL(ppc, 2, 0, 2);
 		set_next_dst(ppc);
 	}
-	// Free tmp register
-	unmapRegisterTemp(tmp);
 #else
 	// Load the current PC as the argument
 	GEN_LIS(ppc, 3, (get_src_pc()+4)>>16);

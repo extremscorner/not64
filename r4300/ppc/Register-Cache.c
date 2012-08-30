@@ -289,21 +289,17 @@ static int availableFPRs[32];
 static void _flushFPR(int reg){
 	PowerPC_instr ppc;
 	// Store the register to memory (indirectly)
-	int addr = mapRegisterTemp();
-	
 	if(fprMap[reg].dbl){
-		GEN_LWZ(ppc, addr, reg*4, DYNAREG_FPR_64);
+		GEN_LWZ(ppc, 2, reg*4, DYNAREG_FPR_64);
 		set_next_dst(ppc);
-		GEN_STFD(ppc, fprMap[reg].map, 0, addr);
+		GEN_STFD(ppc, fprMap[reg].map, 0, 2);
 		set_next_dst(ppc);
 	} else {
-		GEN_LWZ(ppc, addr, reg*4, DYNAREG_FPR_32);
+		GEN_LWZ(ppc, 2, reg*4, DYNAREG_FPR_32);
 		set_next_dst(ppc);
-		GEN_STFS(ppc, fprMap[reg].map, 0, addr);
+		GEN_STFS(ppc, fprMap[reg].map, 0, 2);
 		set_next_dst(ppc);
 	}
-	
-	unmapRegisterTemp(addr);
 }
 // Find an available HW reg or -1 for none
 static int getAvailableFPR(void){
@@ -367,21 +363,17 @@ int mapFPR(int fpr, int dbl){
 	if(fprMap[fpr].map < 0) fprMap[fpr].map = flushLRUFPR();
 	
 	// Load the register from memory (indirectly)
-	int addr = mapRegisterTemp();
-	
 	if(dbl){
-		GEN_LWZ(ppc, addr, fpr*4, DYNAREG_FPR_64);
+		GEN_LWZ(ppc, 2, fpr*4, DYNAREG_FPR_64);
 		set_next_dst(ppc);
-		GEN_LFD(ppc, fprMap[fpr].map, 0, addr);
+		GEN_LFD(ppc, fprMap[fpr].map, 0, 2);
 		set_next_dst(ppc);
 	} else {
-		GEN_LWZ(ppc, addr, fpr*4, DYNAREG_FPR_32);
+		GEN_LWZ(ppc, 2, fpr*4, DYNAREG_FPR_32);
 		set_next_dst(ppc);
-		GEN_LFS(ppc, fprMap[fpr].map, 0, addr);
+		GEN_LFS(ppc, fprMap[fpr].map, 0, 2);
 		set_next_dst(ppc);
 	}
-	
-	unmapRegisterTemp(addr);	
 	
 	return fprMap[fpr].map;
 }

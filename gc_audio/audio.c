@@ -153,11 +153,13 @@ EXPORT void CALL ProcessAlist(void)
 {
 }
 
-void pauseAudio(void) {
+void pauseAudio(void)
+{
 	AESND_Pause(true);
 }
 
-void resumeAudio(void) {
+void resumeAudio(void)
+{
 	reset_buffer();
 	AESND_SetVoiceFrequency(voice, freq);
 	AESND_Pause(!audioEnabled);
