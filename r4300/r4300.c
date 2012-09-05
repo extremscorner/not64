@@ -1928,6 +1928,6 @@ void cpu_deinit(void){
 		}
 	}
    // tehpola: modified condition from !dynacore && interpcore
-   if (dynacore) free(PC);
+   if (dynacore) { free(PC); PC = NULL; }
 }
 

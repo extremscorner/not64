@@ -5,11 +5,11 @@ CXX		=powerpc-eabi-g++
 AS		=powerpc-eabi-as
 
 CFLAGS  = -g -Ofast -mrvl -Wall $(INCLUDE) \
-	  -fno-exceptions -Wno-unused-parameter -pipe \
+	  -fno-exceptions -flto=jobserver -Wno-unused-parameter -pipe \
 	  -DUSE_GUI -DWII -DGLN64_GX -DUSE_EXPANSION \
 	  -DUSE_RECOMP_CACHE -DPPC_DYNAREC -DFASTMEM -DRELEASE -DMENU_V2
 
-LDFLAGS	= -mrvl -Wl,-Map,$(notdir $@).map -Wl,--cref
+LDFLAGS	=$(CFLAGS) -Wl,-Map,$(notdir $@).map -Wl,--cref
 
 INCLUDE = -I$(DEVKITPRO)/libogc/include
 LIBPATHS = -L$(DEVKITPRO)/libogc/lib/wii

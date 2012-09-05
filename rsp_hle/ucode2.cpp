@@ -897,6 +897,18 @@ static void SEGMENT2 (void) {
     }
 }
 
+static void NEAREST (void) {
+    u16 *src = (u16 *)(BufferSpace + AudioInBuffer);
+    u16 *dst = (u16 *)(BufferSpace + AudioOutBuffer);
+    u32 pitch = (inst1 & 0xFFFF) << 1;
+    u32 accum = 0;
+
+    for (int i = 0; i < AudioCount / 2; i++) {
+        dst[i^S] = src[(accum >> 16)^S];
+        accum   += pitch;
+    }
+}
+
 static void UNKNOWN (void) {
 }
 /*
@@ -908,7 +920,7 @@ void (*ABI2[0x20])(void) = {
 };*/
 
 void (*ABI2[0x20])(void) = {
-    SPNOOP , ADPCM2, CLEARBUFF2, UNKNOWN, ADDMIXER, RESAMPLE2, UNKNOWN, SEGMENT2,
+    SPNOOP , ADPCM2, CLEARBUFF2, UNKNOWN, ADDMIXER, RESAMPLE2, NEAREST, SEGMENT2,
     SETBUFF2 , DUPLICATE2, DMEMMOVE2, LOADADPCM2, MIXER2, INTERLEAVE2, HILOGAIN, SETLOOP2,
     SPNOOP, INTERL2 , ENVSETUP1, ENVMIXER2, LOADBUFF2, SAVEBUFF2, ENVSETUP2, SPNOOP,
     HILOGAIN , SPNOOP, DUPLICATE2 , UNKNOWN    , SPNOOP  , SPNOOP    , SPNOOP  , SPNOOP

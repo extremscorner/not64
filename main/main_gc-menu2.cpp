@@ -115,8 +115,8 @@ extern timers Timers;
 char menuActive;
        char saveEnabled;
        char creditsScrolling;
-       char padNeedScan = 1;
-       char wpadNeedScan = 1;
+       char padNeedScan;
+       char wpadNeedScan;
        char shutdown = 0;
 	   char nativeSaveDevice;
 	   char saveStateDevice;
@@ -136,6 +136,7 @@ char smbUserName[CONFIG_STRING_SIZE];
 char smbPassWord[CONFIG_STRING_SIZE];
 char smbShareName[CONFIG_STRING_SIZE];
 char smbIpAddr[CONFIG_STRING_SIZE];
+char romPath[CONFIG_STRING_SIZE];
 
 static struct {
 	char* key;
@@ -172,7 +173,8 @@ static struct {
   { "smbusername", smbUserName, CONFIG_STRING_TYPE, CONFIG_STRING_TYPE },
   { "smbpassword", smbPassWord, CONFIG_STRING_TYPE, CONFIG_STRING_TYPE },
   { "smbsharename", smbShareName, CONFIG_STRING_TYPE, CONFIG_STRING_TYPE },
-  { "smbipaddr", smbIpAddr, CONFIG_STRING_TYPE, CONFIG_STRING_TYPE }
+  { "smbipaddr", smbIpAddr, CONFIG_STRING_TYPE, CONFIG_STRING_TYPE },
+  { "rompath", romPath, CONFIG_STRING_TYPE, CONFIG_STRING_TYPE }
 };
 void handleConfigPair(char* kv);
 void readConfig(FILE* f);
@@ -338,7 +340,6 @@ int main(int argc, char* argv[]){
 #endif
 
 	MenuContext *menu = new MenuContext(vmode);
-	VIDEO_SetPostRetraceCallback (ScanPADSandReset);
 
 	// Initialize the network if the user has specified something in their SMB settings
 	if(strlen(&smbShareName[0]) && strlen(&smbIpAddr[0])) {
@@ -411,7 +412,6 @@ int loadROM(fileBrowser_file* rom){
 	format_mempacks();
 	reset_flashram();
 	init_eeprom();
-	hasLoadedROM = TRUE;
 #ifndef HW_RVL
 	ARAM_manager_init();
 #endif
@@ -428,6 +428,7 @@ int loadROM(fileBrowser_file* rom){
 	}
 
 	// Init everything for this ROM
+	hasLoadedROM = TRUE;
 	init_memory();
 
 	gfx_set_fb(xfb[0], xfb[1]);

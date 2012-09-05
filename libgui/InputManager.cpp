@@ -25,6 +25,7 @@
 
 
 void ShutdownWii();
+void ScanPADSandReset(u32 dummy);
 
 
 
@@ -43,7 +44,7 @@ Input::Input()
 	SYS_SetPowerCallback(ShutdownWii);
 
 #endif
-//	VIDEO_SetPostRetraceCallback (PAD_ScanPads);
+	VIDEO_SetPostRetraceCallback (ScanPADSandReset);
 }
 
 Input::~Input()
@@ -57,7 +58,6 @@ void Input::refreshInput()
 	PAD_Clamp(gcPad);
 #ifdef HW_RVL
 	if(wpadNeedScan){ WPAD_ScanPads(); wpadNeedScan = 0; }
-	WPAD_ScanPads();
 	wiiPad = WPAD_Data(0);
 #endif
 }

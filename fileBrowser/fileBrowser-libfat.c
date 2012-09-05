@@ -63,6 +63,14 @@ static char sdNeedsUnmount  = 0;
 static char usbMounted = 0;
 static char usbNeedsUnmount = 0;
 
+fileBrowser_file topLevel_libfat_Auto =
+	{ "\0",
+	  0,
+	  0,
+	  0,
+	  FILE_BROWSER_ATTR_DIR
+	 };
+
 fileBrowser_file topLevel_libfat_Default =
 	{ "sd:/wii64/roms", // file name
 	  0, // sector

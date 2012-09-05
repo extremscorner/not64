@@ -26,6 +26,7 @@
 #ifndef FILE_BROWSER_LIBFAT_H
 #define FILE_BROWSER_LIBFAT_H
 
+extern fileBrowser_file topLevel_libfat_Auto;
 extern fileBrowser_file topLevel_libfat_Default;  //GC SD Slots & Wii Front SD Slot
 extern fileBrowser_file topLevel_libfat_USB;      //Wii only, USB
 extern fileBrowser_file saveDir_libfat_Default;   //GC SD Slots & Wii Front SD Slot

@@ -23,6 +23,7 @@
 #include "../libgui/CursorManager.h"
 
 MenuContext *pMenuContext;
+void Func_LoadFromAuto();
 
 MenuContext::MenuContext(GXRModeObj *vmode)
 		: currentActiveFrame(0),
@@ -59,6 +60,7 @@ MenuContext::MenuContext(GXRModeObj *vmode)
 
 	menu::Focus::getInstance().setFocusActive(true);
 	setActiveFrame(FRAME_MAIN);
+	Func_LoadFromAuto();
 }
 
 MenuContext::~MenuContext()

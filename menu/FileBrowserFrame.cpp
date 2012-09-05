@@ -144,7 +144,6 @@ static fileBrowser_file* dir_entries;
 static int				num_entries;
 static int				current_page;
 static int				max_page;
-static char				feedback_string[36];
 
 void fileBrowserFrame_OpenDirectory(fileBrowser_file* dir);
 void fileBrowserFrame_Error(fileBrowser_file* dir, int error_code);
@@ -332,6 +331,7 @@ void fileBrowserFrame_OpenDirectory(fileBrowser_file* dir)
 
 void fileBrowserFrame_Error(fileBrowser_file* dir, int error_code)
 {
+	char feedback_string[256];
 	//disable all buttons
 	for (int i = 0; i < NUM_FRAME_BUTTONS; i++)
 		FRAME_BUTTONS[i].button->setActive(false);
@@ -366,8 +366,8 @@ void fileBrowserFrame_Error(fileBrowser_file* dir, int error_code)
 	FRAME_BUTTONS[2].button->setNextFocus(menu::Focus::DIRECTION_DOWN, NULL);
 	pMenuContext->getFrame(MenuContext::FRAME_FILEBROWSER)->setDefaultFocus(FRAME_BUTTONS[2].button);
 	menu::Focus::getInstance().clearPrimaryFocus();*/
+	pMenuContext->setActiveFrame(MenuContext::FRAME_LOADROM);
 	menu::MessageBox::getInstance().setMessage(feedback_string);
-	pMenuContext->setActiveFrame(MenuContext::FRAME_MAIN);
 }
 
 void fileBrowserFrame_FillPage()
@@ -419,6 +419,7 @@ void Func_SetPlayGame();
 
 void fileBrowserFrame_LoadFile(int i)
 {
+	char feedback_string[256];
 	if(dir_entries[i].attr & FILE_BROWSER_ATTR_DIR){
 		// Here we are 'recursing' into a subdirectory
 		// We have to do a little dance here to avoid a dangling pointer
@@ -469,6 +470,8 @@ void fileBrowserFrame_LoadFile(int i)
 			autoSaveLoaded = NATIVESAVEDEVICE_NONE;
 
 			menu::MessageBox::getInstance().setMessage(RomInfo);
+			pMenuContext->setActiveFrame(MenuContext::FRAME_MAIN);
+			Func_SetPlayGame();
 		}
 		else		// If not.
 		{
@@ -500,8 +503,15 @@ void fileBrowserFrame_LoadFile(int i)
 			FRAME_BUTTONS[i+2].buttonString = FRAME_STRINGS[2];
 		pMenuContext->getFrame(MenuContext::FRAME_FILEBROWSER)->setDefaultFocus(FRAME_BUTTONS[2].button);
 		menu::Focus::getInstance().clearPrimaryFocus();*/
+	}
+}
 
-		pMenuContext->setActiveFrame(MenuContext::FRAME_MAIN);
-		if(hasLoadedROM) Func_SetPlayGame();
+void fileBrowserFrame_AutoLoadFile(char* path)
+{
+	for (int i = 0; i < num_entries; i++) {
+		if (!strcasecmp(dir_entries[i].name, path)) {
+			fileBrowserFrame_LoadFile(i);
+			return;
+		}
 	}
 }

@@ -114,7 +114,31 @@ LoadRomFrame::~LoadRomFrame()
 }
 
 extern MenuContext *pMenuContext;
+extern char romPath[];
 extern void fileBrowserFrame_OpenDirectory(fileBrowser_file* dir);
+extern void fileBrowserFrame_AutoLoadFile(char* path);
+
+void Func_LoadFromAuto()
+{
+	if (!strlen(&romPath[0])) return;
+	strcpy(topLevel_libfat_Auto.name, &romPath[0]);
+	char *sep = strrchr(topLevel_libfat_Auto.name, '/');
+	if (sep)
+		*sep = '\0';
+
+	// Change all the romFile pointers
+	romFile_topLevel = &topLevel_libfat_Auto;
+	romFile_readDir  = fileBrowser_libfat_readDir;
+	romFile_readFile = fileBrowser_libfatROM_readFile;
+	romFile_seekFile = fileBrowser_libfat_seekFile;
+	romFile_init     = fileBrowser_libfat_init;
+	romFile_deinit   = fileBrowser_libfatROM_deinit;
+	// Make sure the romFile system is ready before we browse the filesystem
+	romFile_init( romFile_topLevel );
+
+	fileBrowserFrame_OpenDirectory(romFile_topLevel);
+	fileBrowserFrame_AutoLoadFile(romPath);
+}
 
 void Func_LoadFromSD()
 {
