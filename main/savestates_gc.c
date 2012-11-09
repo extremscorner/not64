@@ -39,6 +39,7 @@
 #include "rom.h"
 #include "../gc_memory/memory.h"
 #include "../gc_memory/flashram.h"
+#include "../r4300/macros.h"
 #include "../r4300/r4300.h"
 #include "../r4300/interupt.h"
 #include "../gc_memory/TLB-Cache.h"
@@ -149,7 +150,18 @@ void savestates_save()
 	for (i=0; i<32; i++) gzwrite(f, reg_cop0+i, 8); // *8 for compatibility with old versions purpose
 	gzwrite(f, &lo, 8);
 	gzwrite(f, &hi, 8);
-	gzwrite(f, reg_cop1_fgr_64, 32*8);
+
+	if ((Status & 0x04000000) == 0)
+	{   // FR bit == 0 means 32-bit (MIPS I) FGR mode
+		shuffle_fpr_data(0, 0x04000000);  // shuffle data into 64-bit register format for storage
+		gzwrite(f, reg_cop1_fgr_64, 32*8);
+		shuffle_fpr_data(0x04000000, 0);  // put it back in 32-bit mode
+	}
+	else
+	{
+		gzwrite(f, reg_cop1_fgr_64, 32*8);
+	}
+
 	gzwrite(f, &FCR0, 4);
 	gzwrite(f, &FCR31, 4);
 	gzwrite(f, tlb_e, 32*sizeof(tlb));
@@ -251,12 +263,17 @@ void savestates_load()
 		gzread(f, reg_cop0+i, 4);
 		gzread(f, buf, 4); // for compatibility with old versions purpose
 	}
+	set_fpr_pointers(Status);  // Status is reg_cop0[12]
 	gzread(f, &lo, 8);
 	gzread(f, &hi, 8);
 	gzread(f, reg_cop1_fgr_64, 32*8);
+	if ((Status & 0x04000000) == 0)  // 32-bit FPR mode requires data shuffling because 64-bit layout is always stored in savestate file
+		shuffle_fpr_data(0x04000000, 0);
 	gzread(f, &FCR0, 4);
 	gzread(f, &FCR31, 4);
 	gzread(f, tlb_e, 32*sizeof(tlb));
+	for (i=0; i<0x100000; i++)
+		invalid_code_set(i, 1);
 	gzread(f, &interp_addr, 4);       //dynarec should be ok with just this
 	gzread(f, &next_interupt, 4);
 	gzread(f, &next_vi, 4);

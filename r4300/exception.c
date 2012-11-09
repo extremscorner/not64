@@ -83,12 +83,7 @@ void TLB_refill_exception(unsigned long address, int w)
   Context = (Context & 0xFF80000F) | ((address >> 9) & 0x007FFFF0);
   EntryHi = address & 0xFFFFE000;
   if (Status & 0x2) { // Test de EXL
-    if(dynacore || interpcore) {  //wii64: used to be just interpcore here in mupen64 0.5 code
-      interp_addr = 0x80000180;
-    }
-    else {                        //wii64: path will never be taken (that's ok)
-      jump_to(0x80000180);
-    }
+    interp_addr = 0x80000180;
     if(delay_slot==1 || delay_slot==3) {
       Cause |= 0x80000000;
     }
@@ -97,8 +92,8 @@ void TLB_refill_exception(unsigned long address, int w)
     }
   }
   else {
-    if (!interpcore && !dynacore) { //wii64: used to be just (!interpcore) here in mupen64 0.5 code
-      EPC = w!=2 ? PC->addr: address; //wii64: this path should NEVER be taken, but what is w!=2 ?
+    if (dynacore && w == 2) {
+      EPC = address;
     }
     else {
       EPC = interp_addr;
@@ -119,20 +114,10 @@ void TLB_refill_exception(unsigned long address, int w)
       }
     }
     if (usual_handler) {
-      if(dynacore || interpcore) {  //wii64: used to be just interpcore in mupen64 0.5 code
-        interp_addr = 0x80000180;
-      }
-      else {                        //wii64: path never taken
-        jump_to(0x80000180);
-      }
+      interp_addr = 0x80000180;
     }
     else {
-      if(dynacore || interpcore) {  //wii64: used to be just interpcore in mupen64 0.5 code
-        interp_addr = 0x80000000;
-      }
-      else {                        //wii64: path never taken
-        jump_to(0x80000000);
-      }
+      interp_addr = 0x80000000;
     }
   }
   
@@ -143,40 +128,14 @@ void TLB_refill_exception(unsigned long address, int w)
   else {
     Cause &= 0x7FFFFFFF;
   }
+  if (w != 2) EPC -= 4;
   
-  if(w != 2) {
-    EPC-=4;  //wii64: wtf is w != 2 ?
+  last_addr = interp_addr;
+  
+  if (delay_slot) {
+    skip_jump = interp_addr;
+    next_interupt = 0;
   }
-   
-  if(dynacore || interpcore) {    //wii64: used to be just interpcore in mupen64 0.5 code
-    last_addr = interp_addr;
-  }
-  else {                          //wii64: path never taken
-    last_addr = PC->addr;
-  }
-   
-  /*
-  // wii64: I'm not sure if this does any good, WTF is dyna_interp?
-  if (dynacore) {
-    dyna_jump();
-    if (!dyna_interp) {
-      delay_slot = 0;
-    }
-  }  
-   
-  if (!dynacore || dyna_interp) {
-    dyna_interp = 0;
-    */
-    if (delay_slot) {
-      if (dynacore || interpcore) { //wii64: used to be (!dynacore || interpcore) in mupen64 0.5 code
-        skip_jump = interp_addr;
-      }
-      else {                        //wii64: path never taken
-        skip_jump = PC->addr;
-      }
-      next_interupt = 0;
-    }
-  /*}*/
 }
 
 void TLB_mod_exception()
@@ -205,12 +164,7 @@ void exception_general()
   update_count();
   Status |= 2;
    
-  if(!dynacore && !interpcore) {  // wii64: used to be !interpcore in mupen64 0.5 code
-    EPC = PC->addr;
-  }
-  else {
-    EPC = interp_addr;            // wii64: path never taken
-  }
+  EPC = interp_addr;
 
   if(delay_slot==1 || delay_slot==3) {
     Cause |= 0x80000000;
@@ -219,34 +173,12 @@ void exception_general()
   else {
     Cause &= 0x7FFFFFFF;
   }
-  if(dynacore || interpcore) {    // wii64: used to be interpcore in mupen64 0.5 code
-    interp_addr = 0x80000180;
-    last_addr = interp_addr;
-  }
-  else {                          // wii64: path never taken
-    jump_to(0x80000180);
-    last_addr = PC->addr;
-  }
   
-  /*
-  // wii64: Again, WTF?
-  if (dynacore) {
-    dyna_jump();
-    if (!dyna_interp) {
-      delay_slot = 0;
-    }
+  interp_addr = 0x80000180;
+  last_addr = interp_addr;
+  
+  if (delay_slot) {
+    skip_jump = interp_addr;
+    next_interupt = 0;
   }
-  if (!dynacore || dyna_interp) {
-    dyna_interp = 0;
-    */
-    if (delay_slot) {
-      if (dynacore || interpcore) { //wii64: used to be (!dynacore || interpcore) in mupen64 0.5 code
-        skip_jump = interp_addr;
-      }
-      else {                        //wii64: path never taken
-        skip_jump = PC->addr;
-      }
-      next_interupt = 0;
-    }
-  /*}*/
 }

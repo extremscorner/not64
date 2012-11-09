@@ -30,6 +30,7 @@
 #include "F3DDKR.h"
 #include "F3DWRUS.h"
 #include "F3DPD.h"
+#include "F3DCBFD.h"
 #include "Types.h"
 #ifndef __LINUX__
 # include "Resource.h"
@@ -59,6 +60,8 @@ SpecialMicrocodeInfo specialMicrocodes[] =
 	{ F3DDKR,	FALSE,	0x6e6fc893, (char*) "Diddy Kong Racing" },
 	{ F3DDKR,	FALSE,	0xbde9d1fb, (char*) "Jet Force Gemini" },
 	{ F3DPD,	FALSE,	0x1c4f7869, (char*) "Perfect Dark" },
+
+	{ F3DCBFD,	FALSE,	0x1b4ace88, (char*) "RSP Gfx ucode F3DEXBG.NoN fifo 2.08  Yoshitaka Yasumoto 1999 Nintendo." },
 
 	//This last one is for Mario Kart 64.
 	{ F3DEX,	FALSE,	0x0ace4c3f, (char*) "RSP Gfx ucode F3DEX         0.95 Toshitaka Yasumoto Nintendo." }
@@ -523,6 +526,7 @@ void GBI_MakeCurrent( MicrocodeInfo *current )
 			case F3DDKR:	F3DDKR_Init();	break;
 			case F3DWRUS:	F3DWRUS_Init();	break;
 			case F3DPD:		F3DPD_Init();	break;
+			case F3DCBFD:	F3DCBFD_Init();	break;
 		}
 	}
 

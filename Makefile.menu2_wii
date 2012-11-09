@@ -144,7 +144,8 @@ OBJ_GLN64_GX	=glN64_GX/glN64.o \
 		glN64_GX/S2DEX2.o \
 		glN64_GX/F3DPD.o \
 		glN64_GX/F3DDKR.o \
-		glN64_GX/F3DWRUS.o
+		glN64_GX/F3DWRUS.o \
+		glN64_GX/F3DCBFD.o
 
 HEADER		=main/rom.h \
 		r4300/r4300.h \
@@ -271,6 +272,9 @@ glN64_GX/F3DDKR.o:			glN64_GX/F3DDKR.cpp
 				$(CXX) $(CFLAGS) -D__LINUX__ -D__GX__ -c -o $@ $<
 
 glN64_GX/F3DWRUS.o:		glN64_GX/F3DWRUS.cpp
+				$(CXX) $(CFLAGS) -D__LINUX__ -D__GX__ -c -o $@ $<
+
+glN64_GX/F3DCBFD.o:		glN64_GX/F3DCBFD.cpp
 				$(CXX) $(CFLAGS) -D__LINUX__ -D__GX__ -c -o $@ $<
 
 wii64-glN64.elf:	$(OBJ) $(OBJ_INPUT) $(OBJ_GLN64_GX) $(OBJ_AUDIO) $(OBJ_RSPHLE) $(OBJ_PPC)

@@ -604,22 +604,12 @@ void Func_SaveStateUSB()
 	saveStateDevice = SAVESTATEDEVICE_USB;
 }
 
-extern "C" {
-void cpu_init();
-void cpu_deinit();
-}
-extern BOOL hasLoadedROM;
-
 void Func_CpuPureInterp()
 {
 	for (int i = 11; i <= 12; i++)
 		FRAME_BUTTONS[i].button->setSelected(false);
 	FRAME_BUTTONS[11].button->setSelected(true);
-
-	int needInit = 0;
-	if(hasLoadedROM && dynacore != DYNACORE_PURE_INTERP){ cpu_deinit(); needInit = 1; }
 	dynacore = DYNACORE_PURE_INTERP;
-	if(hasLoadedROM && needInit) cpu_init();
 }
 
 void Func_CpuDynarec()
@@ -627,11 +617,7 @@ void Func_CpuDynarec()
 	for (int i = 11; i <= 12; i++)
 		FRAME_BUTTONS[i].button->setSelected(false);
 	FRAME_BUTTONS[12].button->setSelected(true);
-
-	int needInit = 0;
-	if(hasLoadedROM && dynacore != DYNACORE_DYNAREC){ cpu_deinit(); needInit = 1; }
 	dynacore = DYNACORE_DYNAREC;
-	if(hasLoadedROM && needInit) cpu_init();
 }
 
 extern void writeConfig(FILE* f);

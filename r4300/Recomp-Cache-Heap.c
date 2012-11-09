@@ -38,6 +38,8 @@ typedef struct _meta_node {
 	unsigned int  size;
 } CacheMetaNode;
 
+unsigned int nextLRU = 0;
+
 static heap_cntrl* cache = NULL, * meta_cache = NULL;
 static int cacheSize = 0;
 
@@ -173,10 +175,9 @@ static void free_func(PowerPC_func* func, unsigned int addr){
 }
 
 static inline void update_lru(PowerPC_func* func){
-	static unsigned int nextLRU = 0;
-	/*if(func->lru != nextLRU-1)*/ func->lru = nextLRU++;
+	func->lru = nextLRU++;
 
-	if(!nextLRU){
+	if(!nextLRU || nextLRU>0x80000000){
 		// Handle nextLRU overflows
 		// By heap-sorting and assigning new LRUs
 		heapify();

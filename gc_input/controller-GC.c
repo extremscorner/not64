@@ -85,6 +85,8 @@ static unsigned int getButtons(int Control)
 	s8 stickY      = PAD_StickY(Control);
 	s8 substickX   = PAD_SubStickX(Control);
 	s8 substickY   = PAD_SubStickY(Control);
+	u8 triggerL    = PAD_TriggerL(Control);
+	u8 triggerR    = PAD_TriggerR(Control);
 	
 	if(stickX    < -48) b |= ANALOG_L;
 	if(stickX    >  48) b |= ANALOG_R;
@@ -95,6 +97,9 @@ static unsigned int getButtons(int Control)
 	if(substickX >  48) b |= C_STICK_R;
 	if(substickY >  48) b |= C_STICK_U;
 	if(substickY < -48) b |= C_STICK_D;
+	
+	if(triggerL & 0x80) b |= PAD_TRIGGER_L;
+	if(triggerR & 0x80) b |= PAD_TRIGGER_R;
 	
 	return b;
 }

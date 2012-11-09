@@ -511,10 +511,10 @@ void gDPSetFillColor( u32 c )
 	gDP.fillColor.r = _FIXED2FLOAT( (u8)_SHIFTR( c, 11, 5 ), 5);
 	gDP.fillColor.g = _FIXED2FLOAT( (u8)_SHIFTR( c,  6, 5 ), 5);
 	gDP.fillColor.b = _FIXED2FLOAT( (u8)_SHIFTR( c,  1, 5 ), 5);
-	gDP.fillColor.a = castu8f32( _SHIFTR( c,  0, 1 ) );
+	gDP.fillColor.a = (u8)_SHIFTR( c, 0, 1 );
 
-	gDP.fillColor.z = castu16f32( _SHIFTR( c, 2, 14 ) );
-	gDP.fillColor.dz = castu8f32( _SHIFTR( c, 0, 2 ) );
+	gDP.fillColor.z = (u16)_SHIFTR( c, 2, 14 );
+	gDP.fillColor.dz = (u8)_SHIFTR( c, 0, 2 );
 
 #ifdef DEBUG
 	DebugMsg( DEBUG_HIGH | DEBUG_HANDLED, "gDPSetFillColor( 0x%08X );\n", c );

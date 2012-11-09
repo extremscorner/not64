@@ -226,9 +226,9 @@ void gSPProcessVertex( u32 v )
 		DEBUG_print(txtbuffer,DBG_SDGECKOPRINT);
 #endif // GLN64_SDLOG
 
-		gSP.vertices[v].r = r;
-		gSP.vertices[v].g = g;
-		gSP.vertices[v].b = b;
+		gSP.vertices[v].r = min(1.0f, r);
+		gSP.vertices[v].g = min(1.0f, g);
+		gSP.vertices[v].b = min(1.0f, b);
 
 		if (gSP.geometryMode & G_TEXTURE_GEN)
 		{
@@ -402,11 +402,11 @@ void gSPViewport( u32 v )
 	gSP.viewport.vscale[0] = _FIXED2FLOAT( *(s16*)&RDRAM[address     ], 2 );
 	gSP.viewport.vscale[1] = _FIXED2FLOAT( *(s16*)&RDRAM[address +  2], 2 );
 	gSP.viewport.vscale[2] = _FIXED2FLOAT( *(s16*)&RDRAM[address +  4], 10 );// * 0.00097847357f;
-	gSP.viewport.vscale[3] = casts16f32( *(s16*)&RDRAM[address +  6] );
+	gSP.viewport.vscale[3] = *(s16*)&RDRAM[address +  6];
 	gSP.viewport.vtrans[0] = _FIXED2FLOAT( *(s16*)&RDRAM[address +  8], 2 );
 	gSP.viewport.vtrans[1] = _FIXED2FLOAT( *(s16*)&RDRAM[address + 10], 2 );
 	gSP.viewport.vtrans[2] = _FIXED2FLOAT( *(s16*)&RDRAM[address + 12], 10 );// * 0.00097847357f;
-	gSP.viewport.vtrans[3] = casts16f32( *(s16*)&RDRAM[address + 14] );
+	gSP.viewport.vtrans[3] = *(s16*)&RDRAM[address + 14];
 #endif // _BIG_ENDIAN
 
 	gSP.viewport.x		= gSP.viewport.vtrans[0] - gSP.viewport.vscale[0];
@@ -507,9 +507,9 @@ void gSPLight( u32 l, s32 n )
 		gSP.lights[n].g = GXcastu8f32( light->g );
 		gSP.lights[n].b = GXcastu8f32( light->b );
 
-		gSP.lights[n].x = casts8f32( light->x );
-		gSP.lights[n].y = casts8f32( light->y );
-		gSP.lights[n].z = casts8f32( light->z );
+		gSP.lights[n].x = light->x;
+		gSP.lights[n].y = light->y;
+		gSP.lights[n].z = light->z;
 
 #ifndef __GX__
 		Normalize( &gSP.lights[n].x );
@@ -552,18 +552,18 @@ void gSPVertex( u32 v, u32 n, u32 v0 )
 	{
 		for (unsigned int i = v0; i < n + v0; i++)
 		{
-			gSP.vertices[i].x = casts16f32( vertex->x );
-			gSP.vertices[i].y = casts16f32( vertex->y );
-			gSP.vertices[i].z = casts16f32( vertex->z );
+			gSP.vertices[i].x = vertex->x;
+			gSP.vertices[i].y = vertex->y;
+			gSP.vertices[i].z = vertex->z;
 			gSP.vertices[i].flag = vertex->flag;
 			gSP.vertices[i].s = _FIXED2FLOAT( vertex->s, 5 );
 			gSP.vertices[i].t = _FIXED2FLOAT( vertex->t, 5 );
 
 			if (gSP.geometryMode & G_LIGHTING)
 			{
-				gSP.vertices[i].nx = casts8f32( vertex->normal.x );
-				gSP.vertices[i].ny = casts8f32( vertex->normal.y );
-				gSP.vertices[i].nz = casts8f32( vertex->normal.z );
+				gSP.vertices[i].nx = vertex->normal.x;
+				gSP.vertices[i].ny = vertex->normal.y;
+				gSP.vertices[i].nz = vertex->normal.z;
 				gSP.vertices[i].a = GXcastu8f32( vertex->color.a );
 			}
 			else
@@ -608,6 +608,59 @@ void gSPVertex( u32 v, u32 n, u32 v0 )
 #endif
 }
 
+void gSPNIVertex( u32 v, u32 n, u32 v0 )
+{
+	u32 address = RSP_SegmentToPhysical( v );
+
+	if ((address + sizeof( Vertex ) * n) > RDRAMSize)
+	{
+		return;
+	}
+
+	Vertex* vertex = (Vertex*)&RDRAM[address];
+
+	if ((n + v0) < (80))
+	{
+		for (unsigned int i = v0; i < n + v0; i++)
+		{
+			gSP.vertices[i].x = vertex->x;
+			gSP.vertices[i].y = vertex->y;
+			gSP.vertices[i].z = vertex->z;
+			gSP.vertices[i].flag = 0;
+			gSP.vertices[i].s = _FIXED2FLOAT( vertex->s, 5 );
+			gSP.vertices[i].t = _FIXED2FLOAT( vertex->t, 5 );
+
+			u8 *color = &RDRAM[gSP.vertexColorBase + (i << 1)];
+
+			if (gSP.geometryMode & G_LIGHTING)
+			{
+				gSP.vertices[i].nx = (s8)color[0];
+				gSP.vertices[i].ny = (s8)color[1];
+				gSP.vertices[i].nz = (s8)vertex->flag;
+				gSP.vertices[i].a = GXcastu8f32( vertex->color.a );
+			}
+			else
+			{
+				gSP.vertices[i].r = GXcastu8f32( vertex->color.r );
+				gSP.vertices[i].g = GXcastu8f32( vertex->color.g );
+				gSP.vertices[i].b = GXcastu8f32( vertex->color.b );
+				gSP.vertices[i].a = GXcastu8f32( vertex->color.a );
+			}
+
+			gSPProcessVertex(i);
+
+			if (gSP.geometryMode & G_LIGHTING)
+			{
+				gSP.vertices[i].r *= GXcastu8f32( vertex->color.r );
+				gSP.vertices[i].g *= GXcastu8f32( vertex->color.g );
+				gSP.vertices[i].b *= GXcastu8f32( vertex->color.b );
+			}
+
+			vertex++;
+		}
+	}
+}
+
 void gSPCIVertex( u32 v, u32 n, u32 v0 )
 {
 	u32 address = RSP_SegmentToPhysical( v );
@@ -628,9 +681,9 @@ void gSPCIVertex( u32 v, u32 n, u32 v0 )
 	{
 		for (unsigned int i = v0; i < n + v0; i++)
 		{
-			gSP.vertices[i].x = casts16f32( vertex->x );
-			gSP.vertices[i].y = casts16f32( vertex->y );
-			gSP.vertices[i].z = casts16f32( vertex->z );
+			gSP.vertices[i].x = vertex->x;
+			gSP.vertices[i].y = vertex->y;
+			gSP.vertices[i].z = vertex->z;
 			gSP.vertices[i].flag = 0;
 			gSP.vertices[i].s = _FIXED2FLOAT( vertex->s, 5 );
 			gSP.vertices[i].t = _FIXED2FLOAT( vertex->t, 5 );
@@ -655,9 +708,9 @@ void gSPCIVertex( u32 v, u32 n, u32 v0 )
 #else // !_BIG_ENDIAN
 			if (gSP.geometryMode & G_LIGHTING)
 			{
-				gSP.vertices[i].nx = casts8f32( color[0] );
-				gSP.vertices[i].ny = casts8f32( color[1] );
-				gSP.vertices[i].nz = casts8f32( color[2] );
+				gSP.vertices[i].nx = (s8)color[0];
+				gSP.vertices[i].ny = (s8)color[1];
+				gSP.vertices[i].nz = (s8)color[2];
 				gSP.vertices[i].a = GXcastu8f32( color[3] );
 			}
 			else
@@ -723,15 +776,15 @@ void gSPDMAVertex( u32 v, u32 n, u32 v0 )
 				gSP.vertices[i].a = *(u8*)&RDRAM[(address + 9) ^ 3] * 0.0039215689f;
 			}
 #else // !_BIG_ENDIAN -> This fixes an endian issue.
-			gSP.vertices[i].x = casts16f32( *(s16*)&RDRAM[address ^ 0] );
-			gSP.vertices[i].y = casts16f32( *(s16*)&RDRAM[(address + 2) ^ 0] );
-			gSP.vertices[i].z = casts16f32( *(s16*)&RDRAM[(address + 4) ^ 0] );
+			gSP.vertices[i].x = *(s16*)&RDRAM[address ^ 0];
+			gSP.vertices[i].y = *(s16*)&RDRAM[(address + 2) ^ 0];
+			gSP.vertices[i].z = *(s16*)&RDRAM[(address + 4) ^ 0];
 
 			if (gSP.geometryMode & G_LIGHTING)
 			{
-				gSP.vertices[i].nx = casts8f32( *(s8*)&RDRAM[(address + 6) ^ 0] );
-				gSP.vertices[i].ny = casts8f32( *(s8*)&RDRAM[(address + 7) ^ 0] );
-				gSP.vertices[i].nz = casts8f32( *(s8*)&RDRAM[(address + 8) ^ 0] );
+				gSP.vertices[i].nx = *(s8*)&RDRAM[(address + 6) ^ 0];
+				gSP.vertices[i].ny = *(s8*)&RDRAM[(address + 7) ^ 0];
+				gSP.vertices[i].nz = *(s8*)&RDRAM[(address + 8) ^ 0];
 				gSP.vertices[i].a = GXcastu8f32( *(u8*)&RDRAM[(address + 9) ^ 0] );
 			}
 			else
@@ -1483,8 +1536,8 @@ void gSPBgRect1Cyc( u32 bg )
 
 	f32 imageX = _FIXED2FLOAT( objScaleBg->imageX, 5 );
 	f32 imageY = _FIXED2FLOAT( objScaleBg->imageY, 5 );
-	f32 imageW = castu16f32( objScaleBg->imageW >> 2 );
-	f32 imageH = castu16f32( objScaleBg->imageH >> 2 );
+	f32 imageW = objScaleBg->imageW >> 2;
+	f32 imageH = objScaleBg->imageH >> 2;
 
 	f32 frameX = _FIXED2FLOAT( objScaleBg->frameX, 2 );
 	f32 frameY = _FIXED2FLOAT( objScaleBg->frameY, 2 );
@@ -1585,8 +1638,8 @@ void gSPObjRectangle( u32 sp )
 	f32 scaleH = _FIXED2FLOAT( objSprite->scaleH, 10 );
 	f32 objX = _FIXED2FLOAT( objSprite->objX, 2 );
 	f32 objY = _FIXED2FLOAT( objSprite->objY, 2 );
-	f32 imageW = castu16f32( objSprite->imageW >> 2 );
-	f32 imageH = castu16f32( objSprite->imageH >> 2 );
+	u32 imageW = objSprite->imageW >> 2;
+	u32 imageH = objSprite->imageH >> 2;
 
 	gDPTextureRectangle( objX, objY, objX + imageW / scaleW - 1, objY + imageH / scaleH - 1, 0, 0.0f, 0.0f, scaleW * (gDP.otherMode.cycleType == G_CYC_COPY ? 4.0f : 1.0f), scaleH );
 }
@@ -1629,8 +1682,8 @@ void gSPObjSprite( u32 sp )
 	f32 scaleH = _FIXED2FLOAT( objSprite->scaleH, 10 );
 	f32 objX = _FIXED2FLOAT( objSprite->objX, 2 );
 	f32 objY = _FIXED2FLOAT( objSprite->objY, 2 );
-	f32 imageW = castu16f32( objSprite->imageW >> 5 );
-	f32 imageH = castu16f32( objSprite->imageH >> 5 );
+	u32 imageW = objSprite->imageW >> 5;
+	u32 imageH = objSprite->imageH >> 5;
 
 	f32 x0 = objX;
 	f32 y0 = objY;
@@ -1666,7 +1719,7 @@ void gSPObjSprite( u32 sp )
 	gSP.vertices[3].t = imageH - 1;
 
 	gDPSetTile( objSprite->imageFmt, objSprite->imageSiz, objSprite->imageStride, objSprite->imageAdrs, 0, objSprite->imagePal, G_TX_CLAMP, G_TX_CLAMP, 0, 0, 0, 0 );
-	gDPSetTileSize( 0, 0, 0, ((objSprite->imageW >> 5) - 1) << 2, ((objSprite->imageH >> 5) - 1) << 2 );
+	gDPSetTileSize( 0, 0, 0, (imageW - 1) << 2, (imageH - 1) << 2 );
 	gSPTexture( 1.0f, 1.0f, 0, 0, TRUE );
 
 #ifndef __GX__

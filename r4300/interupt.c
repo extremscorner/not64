@@ -277,6 +277,11 @@ void init_interupt()
 
 void check_interupt()
 {
+  if (q != NULL && q->type == CHECK_INT) {
+    // Don't add another CHECK_INT if there's one pending
+    // MI_register.mi_intr_reg is a bitmask so interupts can be combined
+    return;
+  }
   if (MI_register.mi_intr_reg & MI_register.mi_intr_mask_reg) {
     Cause = (Cause | 0x400) & 0xFFFFFF83;
   }
@@ -341,16 +346,8 @@ void gen_interupt()
     else {
       next_interupt = 0;
     }
-    if(dynacore || interpcore) { // wii64: originally this was for interpcore in mupen 0.5 (wii64 changed it)
-      interp_addr = skip_jump;
-      last_addr = interp_addr;
-    }
-    else {  // wii64: This path will never never hit?
-      unsigned long dest = skip_jump;
-      skip_jump=0;
-      jump_to(dest);
-      last_addr = PC->addr;
-    }
+    interp_addr = skip_jump;
+    last_addr = interp_addr;
     skip_jump=0;
     return;
   } 
@@ -403,7 +400,6 @@ void gen_interupt()
       remove_interupt_event();
       MI_register.mi_intr_reg |= 0x02;
       si_register.si_status |= 0x1000;
-      si_register.si_status &= ~0x1;
       if(!chk_status(1)) {
         return;
       }
@@ -432,33 +428,6 @@ void gen_interupt()
         ai_register.ai_status &= ~0x40000000;
       }
       MI_register.mi_intr_reg |= 0x04;
-      if(!chk_status(1)) {
-        return;
-      }
-    break;
-  
-    case SP_INT:
-      remove_interupt_event();
-      sp_register.sp_status_reg |= 0x203;
-      sp_register.signal2 = 1;
-      sp_register.broke = 1;
-      sp_register.halt = 1;
-
-      if (!sp_register.intr_break) {
-        return;
-      }
-      MI_register.mi_intr_reg |= 0x01;
-      if(!chk_status(1)) {
-        return;
-      }
-    break;
-  
-    case DP_INT:
-      remove_interupt_event();
-      dpc_register.dpc_status &= ~2;
-      dpc_register.dpc_status |= 0x81;
-      MI_register.mi_intr_reg |= 0x20;
-
       if(!chk_status(1)) {
         return;
       }

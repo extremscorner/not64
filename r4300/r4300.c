@@ -58,7 +58,6 @@ long local_rs32, local_rt32;
 unsigned long jump_target;
 float *reg_cop1_simple[32];
 double *reg_cop1_double[32];
-long reg_cop1_fgr_32[32];
 long long int reg_cop1_fgr_64[32];
 long FCR0, FCR31;
 tlb tlb_e[32];
@@ -1480,6 +1479,90 @@ inline void jump_to_func()
 #endif
 #undef addr
 
+/* Refer to Figure 6-2 on page 155 and explanation on page B-11
+   of MIPS R4000 Microprocessor User's Manual (Second Edition)
+   by Joe Heinrich.
+*/
+void shuffle_fpr_data(int oldStatus, int newStatus)
+{
+#if defined(_BIG_ENDIAN)
+    const int isBigEndian = 1;
+#else
+    const int isBigEndian = 0;
+#endif
+
+    if ((newStatus & 0x04000000) != (oldStatus & 0x04000000))
+    {
+        int i;
+        int temp_fgr_32[32];
+
+        // pack or unpack the FGR register data
+        if (newStatus & 0x04000000)
+        {   // switching into 64-bit mode
+            // retrieve 32 FPR values from packed 32-bit FGR registers
+            for (i = 0; i < 32; i++)
+            {
+                temp_fgr_32[i] = *((int *) &reg_cop1_fgr_64[i>>1] + ((i & 1) ^ isBigEndian));
+            }
+            // unpack them into 32 64-bit registers, taking the high 32-bits from their temporary place in the upper 16 FGRs
+            for (i = 0; i < 32; i++)
+            {
+                int high32 = *((int *) &reg_cop1_fgr_64[(i>>1)+16] + (i & 1));
+                *((int *) &reg_cop1_fgr_64[i] + isBigEndian)     = temp_fgr_32[i];
+                *((int *) &reg_cop1_fgr_64[i] + (isBigEndian^1)) = high32;
+            }
+        }
+        else
+        {   // switching into 32-bit mode
+            // retrieve the high 32 bits from each 64-bit FGR register and store in temp array
+            for (i = 0; i < 32; i++)
+            {
+                temp_fgr_32[i] = *((int *) &reg_cop1_fgr_64[i] + (isBigEndian^1));
+            }
+            // take the low 32 bits from each register and pack them together into 64-bit pairs
+            for (i = 0; i < 16; i++)
+            {
+                unsigned int least32 = *((unsigned int *) &reg_cop1_fgr_64[i*2] + isBigEndian);
+                unsigned int most32 = *((unsigned int *) &reg_cop1_fgr_64[i*2+1] + isBigEndian);
+                reg_cop1_fgr_64[i] = ((unsigned long long) most32 << 32) | (unsigned long long) least32;
+            }
+            // store the high bits in the upper 16 FGRs, which wont be accessible in 32-bit mode
+            for (i = 0; i < 32; i++)
+            {
+                *((int *) &reg_cop1_fgr_64[(i>>1)+16] + (i & 1)) = temp_fgr_32[i];
+            }
+        }
+    }
+}
+
+void set_fpr_pointers(int newStatus)
+{
+    int i;
+#if defined(_BIG_ENDIAN)
+    const int isBigEndian = 1;
+#else
+    const int isBigEndian = 0;
+#endif
+
+    // update the FPR register pointers
+    if (newStatus & 0x04000000)
+    {
+        for (i = 0; i < 32; i++)
+        {
+            reg_cop1_double[i] = (double*) &reg_cop1_fgr_64[i];
+            reg_cop1_simple[i] = ((float*) &reg_cop1_fgr_64[i]) + isBigEndian;
+        }
+    }
+    else
+    {
+        for (i = 0; i < 32; i++)
+        {
+            reg_cop1_double[i] = (double*) &reg_cop1_fgr_64[i>>1];
+            reg_cop1_simple[i] = ((float*) &reg_cop1_fgr_64[i>>1]) + ((i & 1) ^ isBigEndian);
+        }
+    }
+}
+
 int check_cop1_unusable()
 {
    if (!(Status & 0x20000000))
@@ -1666,11 +1749,7 @@ void cpu_init(void){
      {
 	reg[i]=0;
 	reg_cop0[i]=0;
-	reg_cop1_fgr_32[i]=0;
 	reg_cop1_fgr_64[i]=0;
-
-	reg_cop1_double[i]=(double *)&reg_cop1_fgr_64[i];
-	reg_cop1_simple[i]=(float *)&reg_cop1_fgr_64[i];
 
 	// --------------tlb------------------------
 	tlb_e[i].mask=0;
@@ -1730,6 +1809,7 @@ void cpu_init(void){
 
    Random = 31;
    Status= 0x34000000;
+   set_fpr_pointers(Status);
    Config= 0x6e463;
    PRevID = 0xb00;
    Count = 0x5000;
@@ -1888,10 +1968,6 @@ void cpu_init(void){
 
    // I'm adding this from pure_interpreter()
    interp_addr = 0xa4000040;
-   // FIXME: I'm making an assumption:
-   //          worst case is probably this will leak mem
-   if(dynacore == 2)
-   	PC = malloc(sizeof(precomp_instr));
    // Hack for the interpreter
    cpu_inited = 1;
 }

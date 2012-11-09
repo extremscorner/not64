@@ -99,34 +99,13 @@ void MTC0()
       case 12:   // Status
 	if((rrt & 0x04000000) != (Status & 0x04000000))
 	  {
-	     if (rrt & 0x04000000)
-	       {
-		  int i;
-		  for (i=0; i<32; i++)
-		    {
-		       reg_cop1_double[i]=(double*)&reg_cop1_fgr_64[i];
-		       reg_cop1_simple[i]=(float*)&reg_cop1_fgr_64[i];
-		    }
-	       }
-	     else
-	       {
-		  int i;
-		  for (i=0; i<32; i++)
-		    {
-		       if(!(i&1))
-			 reg_cop1_double[i]=(double*)&reg_cop1_fgr_64[i>>1];
-#ifndef _BIG_ENDIAN
-		       reg_cop1_simple[i]=(float*)&reg_cop1_fgr_64[i>>1]+(i&1);
-#else
-		       reg_cop1_simple[i]=(float*)&reg_cop1_fgr_64[i>>1]+(1-(i&1));
-#endif
-		    }
-	       }
+	     shuffle_fpr_data(Status, rrt);
+	     set_fpr_pointers(rrt);
 	  }
 	Status = rrt;
 	PC++;
-	check_interupt();
 	update_count();
+	check_interupt();
 	if (next_interupt <= Count) gen_interupt();
 	PC--;
 	break;

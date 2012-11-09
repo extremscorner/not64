@@ -27,6 +27,7 @@
 #include "../../gc_memory/memory.h"
 #include "../interupt.h"
 #include "../r4300.h"
+#include "../macros.h"
 #include "../Recomp-Cache.h"
 #include "Recompile.h"
 #include "Wrappers.h"
@@ -54,52 +55,34 @@ inline unsigned int dyna_run(PowerPC_func* func, unsigned int (*code)(void)){
 	unsigned int naddr;
 	PowerPC_instr* return_addr;
 
-	__asm__ volatile(
-		// Create the stack frame for code
-		"stwu	1, -16(1) \n"
-		"mfcr	14        \n"
-		"stw	14, 8(1)  \n"
-		// Setup saved registers for code
-		"mr	14, %0    \n"
-		"mr	15, %1    \n"
-		"mr	16, %2    \n"
-		"mr	17, %3    \n"
-		"mr	18, %4    \n"
-		"mr	19, %5    \n"
-		"mr	20, %6    \n"
-		"mr	21, %7    \n"
-		"mr	22, %8    \n"
-		"addi	23, 0, 0  \n"
-		:: "r" (reg), "r" (reg_cop0),
-		   "r" (reg_cop1_simple), "r" (reg_cop1_double),
-		   "r" (&FCR31), "r" (rdram),
-		   "r" (&last_addr), "r" (&next_interupt),
-		   "r" (func)
-		: "14", "15", "16", "17", "18", "19", "20", "21", "22", "23");
+	register void* r25 __asm__("r25") = reg;
+	register void* r26 __asm__("r26") = reg_cop0;
+	register void* r27 __asm__("r27") = reg_cop1_simple;
+	register void* r28 __asm__("r28") = reg_cop1_double;
+	register void* r29 __asm__("r29") = rdram;
+	register void* r30 __asm__("r30") = func;
+	register void* r31 __asm__("r31") = NULL;
 
 	end_section(TRAMP_SECTION);
 
-	// naddr = code();
 	__asm__ volatile(
-		// Save the lr so the recompiled code won't have to
-		"bl	4         \n"
-		"mtctr	%4        \n"
-		"mflr	4         \n"
-		"addi	4, 4, 20  \n"
-		"stw	4, 20(1)  \n"
-		// Execute the code
-		"bctrl           \n"
-		"mr	%0, 3     \n"
-		// Get return_addr, link_branch, and last_func
-		"lwz	%2, 20(1) \n"
-		"mflr	%1        \n"
-		"mr	%3, 22    \n"
-		// Pop the stack
-		"lwz	1, 0(1)   \n"
-		: "=r" (naddr), "=r" (link_branch), "=r" (return_addr),
-		  "=r" (last_func)
-		: "r" (code)
-		: "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "22");
+		"stwu   1, -8(1)  \n"
+		"bl     1f        \n"
+		"mflr   %0        \n"
+		"lwz    %1, 12(1) \n"
+		"mr     %2, 30    \n"
+		"mr     %3, 3     \n"
+		"addi   1, 1, 8   \n"
+		"b      2f        \n"
+		"1:               \n"
+		"mtctr  %4        \n"
+		"mflr   2         \n"
+		"stw    2, 12(1)  \n"
+		"bctr             \n"
+		"2:               \n"
+		: "=r" (link_branch), "=r" (return_addr), "=r" (last_func), "=r" (naddr)
+		: "r" (code), "r" (r25), "r" (r26), "r" (r27), "r" (r28), "r" (r29), "r" (r30), "r" (r31)
+		: "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12");
 
 	link_branch = link_branch == return_addr ? NULL : link_branch - 1;
 	
@@ -117,7 +100,10 @@ void dynarec(unsigned int address){
 		sprintf(txtbuffer, "trampolining to 0x%08x\n", address);
 		DEBUG_print(txtbuffer, DBG_USBGECKO);
 		*/
-		if(!paddr){ stop=1; return; }
+		if(!paddr){ 
+			address = paddr = update_invalid_addr(interp_addr);
+			dst_block = blocks_get(address>>12); 
+		}
 		
 		if(!dst_block){
 			/*sprintf(txtbuffer, "block at %08x doesn't exist\n", address&~0xFFF);
@@ -168,10 +154,10 @@ void dynarec(unsigned int address){
 			RecompCache_Link(last_func, link_branch, func, code);
 		clear_freed_funcs();
 		
-		address = dyna_run(func, code);
+		interp_addr = address = dyna_run(func, code);
 
 		if(!noCheckInterrupt){
-			last_addr = interp_addr = address;
+			last_addr = interp_addr;
 			// Check for interrupts
 			if(next_interupt <= Count){
 				gen_interupt();
@@ -288,6 +274,44 @@ unsigned int dyna_mem(unsigned int value, unsigned int addr,
 			read_dword_in_memory();
 			*((long long*)reg_cop1_double[value]) = dyna_rdword;
 			break;
+		case MEM_LWL:
+			address = addr & ~3;
+			read_word_in_memory();
+			switch(addr&3){
+				case 0:
+					reg[value] = dyna_rdword;
+					break;
+				case 1:
+					reg[value] = (reg[value]&0x000000FF) | (dyna_rdword<<8);
+					break;
+				case 2:
+					reg[value] = (reg[value]&0x0000FFFF) | (dyna_rdword<<16);
+					break;
+				case 3:
+					reg[value] = (reg[value]&0x00FFFFFF) | (dyna_rdword<<24);
+					break;
+			}
+			sign_extended(reg[value]);
+			break;
+		case MEM_LWR:
+			address = addr & ~3;
+			read_word_in_memory();
+			switch(addr&3){
+				case 0:
+					reg[value] = (reg[value]&0xFFFFFF00) | (dyna_rdword>>24);
+					break;
+				case 1:
+					reg[value] = (reg[value]&0xFFFF0000) | (dyna_rdword>>16);
+					break;
+				case 2:
+					reg[value] = (reg[value]&0xFF000000) | (dyna_rdword>>8);
+					break;
+				case 3:
+					reg[value] = dyna_rdword;
+					break;
+			}
+			sign_extended(reg[value]);
+			break;
 		case MEM_SW:
 			word = value;
 			write_word_in_memory();
@@ -316,6 +340,46 @@ unsigned int dyna_mem(unsigned int value, unsigned int addr,
 		case MEM_SDC1:
 			dword = *((unsigned long long*)reg_cop1_double[value]);
 			write_dword_in_memory();
+			check_memory();
+			break;
+		case MEM_SWL:
+			address = addr & ~3;
+			read_word_in_memory();
+			switch(addr&3){
+				case 0:
+					word = value;
+					break;
+				case 1:
+					word = (value>>8) | (dyna_rdword&0xFF000000);
+					break;
+				case 2:
+					word = (value>>16) | (dyna_rdword&0xFFFF0000);
+					break;
+				case 3:
+					word = (value>>24) | (dyna_rdword&0xFFFFFF00);
+					break;
+			}
+			write_word_in_memory();
+			check_memory();
+			break;
+		case MEM_SWR:
+			address = addr & ~3;
+			read_word_in_memory();
+			switch(addr&3){
+				case 0:
+					word = (value<<24) | (dyna_rdword&0x00FFFFFF);
+					break;
+				case 1:
+					word = (value<<16) | (dyna_rdword&0x0000FFFF);
+					break;
+				case 2:
+					word = (value<<8) | (dyna_rdword&0x000000FF);
+					break;
+				case 3:
+					word = value;
+					break;
+			}
+			write_word_in_memory();
 			check_memory();
 			break;
 		default:

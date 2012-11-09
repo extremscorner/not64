@@ -50,6 +50,7 @@ extern "C" {
 #include "plugin.h"
 #include "../gc_input/controller.h"
 
+#include "../r4300/interupt.h"
 #include "../r4300/r4300.h"
 #include "../gc_memory/memory.h"
 #include "../gc_memory/ARAM.h"
@@ -532,7 +533,7 @@ static void gfx_info_init(void){
 	gfx_info.VI_V_BURST_REG = &(vi_register.vi_v_burst);
 	gfx_info.VI_X_SCALE_REG = &(vi_register.vi_x_scale);
 	gfx_info.VI_Y_SCALE_REG = &(vi_register.vi_y_scale);
-	gfx_info.CheckInterrupts = dummy_func;
+	gfx_info.CheckInterrupts = check_interupt;
 	initiateGFX(gfx_info);
 }
 
@@ -591,7 +592,7 @@ static void rsp_info_init(void){
 	rsp_info.DPC_BUFBUSY_REG = &dpc_register.dpc_bufbusy;
 	rsp_info.DPC_PIPEBUSY_REG = &dpc_register.dpc_pipebusy;
 	rsp_info.DPC_TMEM_REG = &dpc_register.dpc_tmem;
-	rsp_info.CheckInterrupts = dummy_func;
+	rsp_info.CheckInterrupts = check_interupt;
 	rsp_info.ProcessDlistList = processDList;
 	rsp_info.ProcessAlistList = processAList;
 	rsp_info.ProcessRdpList = processRDPList;

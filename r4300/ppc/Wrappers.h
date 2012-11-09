@@ -25,18 +25,15 @@
 
 #include "Recompile.h"
 
-#define DYNAREG_REG    14
-#define DYNAREG_COP0   15
-#define DYNAREG_FPR_32 16
-#define DYNAREG_FPR_64 17
-#define DYNAREG_FCR31  18
-#define DYNAREG_RDRAM  19
-#define DYNAREG_LADDR  20
-#define DYNAREG_NINTR  21
-#define DYNAREG_FUNC   22
-#define DYNAREG_ZERO   23
+#define DYNAREG_REG    25
+#define DYNAREG_COP0   26
+#define DYNAREG_FPR_32 27
+#define DYNAREG_FPR_64 28
+#define DYNAREG_RDRAM  29
+#define DYNAREG_FUNC   30
+#define DYNAREG_ZERO   31
 
-#define DYNAOFF_LR     20
+#define DYNAOFF_LR     12
 
 extern long long int reg[34]; // game's registers
 extern float*  reg_cop1_simple[32]; // 32-bit fprs
@@ -46,9 +43,9 @@ extern int noCheckInterrupt;
 
 typedef enum { MEM_LW,   MEM_LH,   MEM_LB,   MEM_LD,
                MEM_LWU,  MEM_LHU,  MEM_LBU,
-               MEM_LWC1, MEM_LDC1,
+               MEM_LWC1, MEM_LDC1, MEM_LWL,  MEM_LWR,
                MEM_SW,   MEM_SH,   MEM_SB,   MEM_SD,
-               MEM_SWC1, MEM_SDC1                    } memType;
+               MEM_SWC1, MEM_SDC1, MEM_SWL,  MEM_SWR } memType;
 
 unsigned int decodeNInterpret(MIPS_instr, unsigned int, int);
 #ifdef COMPARE_CORE

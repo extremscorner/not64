@@ -23,7 +23,8 @@
 #define F3DPD		8
 #define F3DDKR		9
 #define F3DWRUS	    10
-#define NONE		11
+#define F3DCBFD		11
+#define NONE		12
 
 #ifdef MAINDEF
 const char *MicrocodeTypes[] =
@@ -39,13 +40,14 @@ const char *MicrocodeTypes[] =
 	"Perfect Dark",
 	"DKR/JFG",
 	"Waverace US",
+	"CBFD",
 	"None"
 };
 #else
 extern const char *MicrocodeTypes[];
 #endif
 
-static const int numMicrocodeTypes = 11;
+static const int numMicrocodeTypes = 12;
 
 
 // Fixed point conversion factors
@@ -69,31 +71,31 @@ static const int numMicrocodeTypes = 11;
 #define _FIXED2FLOAT( v, b ) \
 	((f32)v * FIXED2FLOATRECIP##b)
 
-static inline f32 GXcastu8f32(u8 in)
+static inline f32 GXcastu8f32( u8 val )
 {
-	register f32 rval;
-	asm("psq_l%U1%X1 %0,%1,1,2" : "=f"(rval) : "m"(in) : "memory");
+	f32 rval;
+	__asm__("psq_l%U1%X1 %0,%1,1,2" : "=f"(rval) : "m"(val) : "memory");
 	return rval;
 }
 
-static inline f32 GXcastu16f32(u16 in)
+static inline f32 GXcastu16f32( u16 val )
 {
-	register f32 rval;
-	asm("psq_l%U1%X1 %0,%1,1,3" : "=f"(rval) : "m"(in) : "memory");
+	f32 rval;
+	__asm__("psq_l%U1%X1 %0,%1,1,3" : "=f"(rval) : "m"(val) : "memory");
 	return rval;
 }
 
-static inline u8 GXcastf32u8(register f32 in)
+static inline u8 GXcastf32u8( f32 val )
 {
 	u8 rval;
-	asm("psq_st%U0%X0 %1,%0,1,2" : "=m"(rval) : "f"(in) : "memory");
+	__asm__("psq_st%U0%X0 %1,%0,1,2" : "=m"(rval) : "f"(val) : "memory");
 	return rval;
 }
 
-static inline u16 GXcastf32u16(register f32 in)
+static inline u16 GXcastf32u16( f32 val )
 {
 	u16 rval;
-	asm("psq_st%U0%X0 %1,%0,1,3" : "=m"(rval) : "f"(in) : "memory");
+	__asm__("psq_st%U0%X0 %1,%0,1,3" : "=m"(rval) : "f"(val) : "memory");
 	return rval;
 }
 

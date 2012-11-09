@@ -1178,41 +1178,13 @@ static void MTC0()
       case 12:   // Status
 	if((rrt & 0x04000000) != (Status & 0x04000000))
 	  {
-	     if (rrt & 0x04000000)
-	       {
-		  int i;
-		  for (i=0; i<32; i++)
-		    {
-		       //reg_cop1_fgr_64[i]=reg_cop1_fgr_32[i];
-		       reg_cop1_double[i]=(double*)&reg_cop1_fgr_64[i];
-		       reg_cop1_simple[i]=(float*)&reg_cop1_fgr_64[i];
-		    }
-	       }
-	     else
-	       {
-		  int i;
-		  for (i=0; i<32; i++)
-		    {
-		       //reg_cop1_fgr_32[i]=reg_cop1_fgr_64[i]&0xFFFFFFFF;
-		       //if (i<16) reg_cop1_double[i*2]=(double*)&reg_cop1_fgr_32[i*2];
-		       //reg_cop1_double[i]=(double*)&reg_cop1_fgr_64[i & 0xFFFE];
-		       if(!(i&1))
-			 reg_cop1_double[i]=(double*)&reg_cop1_fgr_64[i>>1];
-		       //reg_cop1_double[i]=(double*)&reg_cop1_fgr_64[i];
-		       //reg_cop1_simple[i]=(float*)&reg_cop1_fgr_32[i];
-		       //reg_cop1_simple[i]=(float*)&reg_cop1_fgr_64[i & 0xFFFE]+(i&1);
-#ifndef _BIG_ENDIAN
-		       reg_cop1_simple[i]=(float*)&reg_cop1_fgr_64[i>>1]+(i&1);
-#else
-		       reg_cop1_simple[i]=(float*)&reg_cop1_fgr_64[i>>1]+(1-(i&1));
-#endif
-		    }
-	       }
+	     shuffle_fpr_data(Status, rrt);
+	     set_fpr_pointers(rrt);
 	  }
 	Status = rrt;
 	interp_addr+=4;
-	check_interupt();
 	update_count();
+	check_interupt();
 	if (next_interupt <= Count) gen_interupt();
 	interp_addr-=4;
 	break;
@@ -3344,8 +3316,7 @@ void pure_interpreter()
 {
    //interp_addr = 0xa4000040;
    stop=0;
-   // FIXME: Do I have to adjust this now?
-   //PC = malloc(sizeof(precomp_instr));
+   PC = malloc(sizeof(precomp_instr));
    last_addr = interp_addr;
    while (!stop)
      {

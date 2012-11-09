@@ -1169,9 +1169,10 @@ void TextureCache_Load( CachedTexture *texInfo )
 		mirrorTBit = 0x0000;
 	}
 
-	// Hack for Zelda warp texture
-	if (((texInfo->tMem << 3) + (texInfo->width * texInfo->height << texInfo->size >> 1)) > 4096)
-		texInfo->tMem = 0;
+	if (clampSClamp & 0x8000)
+		clampSClamp = 0;
+	if (clampTClamp & 0x8000)
+		clampTClamp = 0;
 
 #ifdef __GX__
 	texInfo->GXtexture = (u16*) dest;
@@ -1192,7 +1193,7 @@ void TextureCache_Load( CachedTexture *texInfo )
 						ty = min(y+k, clampTClamp) & maskTMask;
 						if ((y+k) & mirrorTBit)
 							ty ^= maskTMask;
-						src = &TMEM[texInfo->tMem] + line * ty;
+						src = &TMEM[(texInfo->tMem + line * ty) & 0x1FF];
 						i = (ty & 1) << 1;
 						for (l = 0; l < 8; l++)
 						{
@@ -1220,7 +1221,7 @@ void TextureCache_Load( CachedTexture *texInfo )
 						ty = min(y+k, clampTClamp) & maskTMask;
 						if ((y+k) & mirrorTBit)
 							ty ^= maskTMask;
-						src = &TMEM[texInfo->tMem] + line * ty;
+						src = &TMEM[(texInfo->tMem + line * ty) & 0x1FF];
 						i = (ty & 1) << 1;
 						for (l = 0; l < 4; l++)
 						{
@@ -1249,7 +1250,7 @@ void TextureCache_Load( CachedTexture *texInfo )
 						ty = min(y+k, clampTClamp) & maskTMask;
 						if ((y+k) & mirrorTBit)
 							ty ^= maskTMask;
-						src = &TMEM[texInfo->tMem] + line * ty;
+						src = &TMEM[(texInfo->tMem + line * ty) & 0x1FF];
 						i = (ty & 1) << 1;
 						for (l = 0; l < 4; l++)
 						{
@@ -1282,7 +1283,7 @@ void TextureCache_Load( CachedTexture *texInfo )
 			if (y & mirrorTBit)
 				ty ^= maskTMask;
 	
-			src = &TMEM[texInfo->tMem] + line * ty;
+			src = &TMEM[(texInfo->tMem + line * ty) & 0x1FF];
 	
 			i = (ty & 1) << 1;
 			for (x = 0; x < texInfo->realWidth; x++)
