@@ -28,47 +28,36 @@
 #include "controller.h"
 
 enum {
-	ANALOG_AS_ANALOG = 1, C_STICK_AS_ANALOG = 2,
-};
-
-enum {
-	ANALOG_L  = 0x01 << 16,
-	ANALOG_R  = 0x02 << 16,
-	ANALOG_U  = 0x04 << 16,
-	ANALOG_D  = 0x08 << 16,
-	C_STICK_L = 0x10 << 16,
-	C_STICK_R = 0x20 << 16,
-	C_STICK_U = 0x40 << 16,
-	C_STICK_D = 0x80 << 16,
+	STICK_AS_ANALOG = 1, SUBSTICK_AS_ANALOG = 2,
 };
 
 static button_t buttons[] = {
-	{  0, ~0,                "None" },
-	{  1, PAD_BUTTON_UP,    "D-Up" },
-	{  2, PAD_BUTTON_LEFT,  "D-Left" },
-	{  3, PAD_BUTTON_RIGHT, "D-Right" },
-	{  4, PAD_BUTTON_DOWN,  "D-Down" },
-	{  5, PAD_TRIGGER_Z,    "Z" },
-	{  6, PAD_TRIGGER_L,    "L" },
-	{  7, PAD_TRIGGER_R,    "R" },
-	{  8, PAD_BUTTON_A,     "A" },
-	{  9, PAD_BUTTON_B,     "B" },
-	{ 10, PAD_BUTTON_X,     "X" },
-	{ 11, PAD_BUTTON_Y,     "Y" },
-	{ 12, PAD_BUTTON_START, "Start" },
-	{ 13, C_STICK_U,        "C-Up" },
-	{ 14, C_STICK_L,        "C-Left" },
-	{ 15, C_STICK_R,        "C-Right" },
-	{ 16, C_STICK_D,        "C-Down" },
-	{ 17, ANALOG_U,         "A-Up" },
-	{ 18, ANALOG_L,         "A-Left" },
-	{ 19, ANALOG_R,         "A-Right" },
-	{ 20, ANALOG_D,         "A-Down" },
+	{  0, ~0,                 "None" },
+	{  1, PAD_BUTTON_UP,      "D-Up" },
+	{  2, PAD_BUTTON_LEFT,    "D-Left" },
+	{  3, PAD_BUTTON_RIGHT,   "D-Right" },
+	{  4, PAD_BUTTON_DOWN,    "D-Down" },
+	{  5, PAD_TRIGGER_Z,      "Z" },
+	{  6, PAD_TRIGGER_L,      "L" },
+	{  7, PAD_TRIGGER_R,      "R" },
+	{  8, PAD_BUTTON_A,       "A" },
+	{  9, PAD_BUTTON_B,       "B" },
+	{ 10, PAD_BUTTON_X,       "X" },
+	{ 11, PAD_BUTTON_Y,       "Y" },
+	{ 12, PAD_BUTTON_START,   "Start" },
+	{ 13, PAD_SUBSTICK_UP,    "C-Up" },
+	{ 14, PAD_SUBSTICK_LEFT,  "C-Left" },
+	{ 15, PAD_SUBSTICK_RIGHT, "C-Right" },
+	{ 16, PAD_SUBSTICK_DOWN,  "C-Down" },
+	{ 17, PAD_STICK_UP,       "A-Up" },
+	{ 18, PAD_STICK_LEFT,     "A-Left" },
+	{ 19, PAD_STICK_RIGHT,    "A-Right" },
+	{ 20, PAD_STICK_DOWN,     "A-Down" },
 };
 
 static button_t analog_sources[] = {
-	{ 0, ANALOG_AS_ANALOG,  "Analog Stick" },
-	{ 1, C_STICK_AS_ANALOG, "C-Stick" },
+	{ 0, STICK_AS_ANALOG,  "Analog Stick" },
+	{ 1, SUBSTICK_AS_ANALOG, "C-Stick" },
 };
 
 static button_t menu_combos[] = {
@@ -78,30 +67,8 @@ static button_t menu_combos[] = {
 
 u32 gc_connected;
 
-static unsigned int getButtons(int Control)
-{
-	unsigned int b = PAD_ButtonsHeld(Control);
-	s8 stickX      = PAD_StickX(Control);
-	s8 stickY      = PAD_StickY(Control);
-	s8 substickX   = PAD_SubStickX(Control);
-	s8 substickY   = PAD_SubStickY(Control);
-	u8 triggerL    = PAD_TriggerL(Control);
-	u8 triggerR    = PAD_TriggerR(Control);
-	
-	if(stickX    < -48) b |= ANALOG_L;
-	if(stickX    >  48) b |= ANALOG_R;
-	if(stickY    >  48) b |= ANALOG_U;
-	if(stickY    < -48) b |= ANALOG_D;
-	
-	if(substickX < -48) b |= C_STICK_L;
-	if(substickX >  48) b |= C_STICK_R;
-	if(substickY >  48) b |= C_STICK_U;
-	if(substickY < -48) b |= C_STICK_D;
-	
-	if(triggerL & 0x80) b |= PAD_TRIGGER_L;
-	if(triggerR & 0x80) b |= PAD_TRIGGER_R;
-	
-	return b;
+static unsigned int getButtons(int Control){
+	return PAD_ButtonsHeld(Control);
 }
 
 static int _GetKeys(int Control, BUTTONS * Keys, controller_config_t* config)
@@ -136,10 +103,10 @@ static int _GetKeys(int Control, BUTTONS * Keys, controller_config_t* config)
 	c->D_CBUTTON    = isHeld(config->CD);
 	c->U_CBUTTON    = isHeld(config->CU);
 
-	if(config->analog->mask == ANALOG_AS_ANALOG){
+	if(config->analog->mask == STICK_AS_ANALOG){
 		c->X_AXIS = PAD_StickX(Control);
 		c->Y_AXIS = PAD_StickY(Control);
-	} else if(config->analog->mask == C_STICK_AS_ANALOG){
+	} else if(config->analog->mask == SUBSTICK_AS_ANALOG){
 		c->X_AXIS = PAD_SubStickX(Control);
 		c->Y_AXIS = PAD_SubStickY(Control);
 	}

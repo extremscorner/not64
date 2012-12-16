@@ -4,19 +4,13 @@ CC		=powerpc-eabi-gcc
 CXX		=powerpc-eabi-g++
 AS		=powerpc-eabi-as
 
-CFLAGS  = -g -Ofast -mrvl -Wall $(INCLUDE) \
-	  -fno-exceptions -flto=jobserver -Wno-unused-parameter -pipe \
+CFLAGS  = -pipe -g -Ofast -Wall -mrvl -flto=jobserver \
 	  -DUSE_GUI -DWII -DGLN64_GX -DUSE_EXPANSION \
 	  -DUSE_RECOMP_CACHE -DPPC_DYNAREC -DFASTMEM -DRELEASE -DMENU_V2
 
 LDFLAGS	=$(CFLAGS) -Wl,-Map,$(notdir $@).map -Wl,--cref
 
-INCLUDE = -I$(DEVKITPRO)/libogc/include
-LIBPATHS = -L$(DEVKITPRO)/libogc/lib/wii
-
-CXXFLAGS	=$(CFLAGS)
-
-#GL_PATH		=-I/usr/X11R6/include
+CXXFLAGS=$(CFLAGS)
 
 OBJ		=main/rom_gc.o \
 		main/main_gc-menu2.o \
@@ -159,7 +153,7 @@ HEADER		=main/rom.h \
 		r4300/recomp.h \
 		gc_memory/pif.h
 
-LIB		=	-laesnd -lwiiuse -lbte -ltinysmb -lfat -logc -lz -static
+LIB		=	-laesnd -lwiiuse -lbte -ltinysmb -lfat -lz -static
 
 ifeq ($(strip mupen64_GX_gfx/main.cpp),)
 	export LD	:=	$(CC)
@@ -278,7 +272,7 @@ glN64_GX/F3DCBFD.o:		glN64_GX/F3DCBFD.cpp
 				$(CXX) $(CFLAGS) -D__LINUX__ -D__GX__ -c -o $@ $<
 
 wii64-glN64.elf:	$(OBJ) $(OBJ_INPUT) $(OBJ_GLN64_GX) $(OBJ_AUDIO) $(OBJ_RSPHLE) $(OBJ_PPC)
-		$(LD) $^ $(LDFLAGS) $(LIBPATHS) $(LIB) -o $@
+		$(LD) $^ $(LDFLAGS) $(LIB) -o $@
 		elf2dol wii64-glN64.elf wii64-glN64.dol
 
 install:
