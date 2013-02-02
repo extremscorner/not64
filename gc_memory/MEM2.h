@@ -31,7 +31,7 @@
 #define KB (1024)
 
 // MEM2 begins at MEM2_LO, the Starlet's Dedicated Memory begins at MEM2_HI
-#define MEM2_LO   ((char*)0x90000800)
+#define MEM2_LO   ((char*)0x90000000)
 #define MEM2_HI   ((char*)0x933E0000)
 #define MEM2_SIZE (MEM2_HI - MEM2_LO)
 

@@ -35,6 +35,10 @@
 
 #define DYNAOFF_LR     12
 
+#define SDAREL(symbol) ({ short offset; \
+	__asm__("li %0," #symbol "@sdarel" : "=r" (offset)); \
+	offset; })
+
 extern long long int reg[34]; // game's registers
 extern float*  reg_cop1_simple[32]; // 32-bit fprs
 extern double* reg_cop1_double[32]; // 64-bit fprs

@@ -41,7 +41,6 @@
 
 #define PRINT GUI_print
 
-unsigned char* rom;
 int rom_length;
 int ROM_byte_swap;
 rom_header* ROM_HEADER = NULL;

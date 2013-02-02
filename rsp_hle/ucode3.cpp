@@ -701,10 +701,10 @@ static void INTERLEAVE3 (void) { // Needs accuracy verification...
         Right2=*(inSrcR++);
 
 #ifdef _BIG_ENDIAN
-        *(outbuff++)=Right;
         *(outbuff++)=Left;
-        *(outbuff++)=Right2;
+        *(outbuff++)=Right;
         *(outbuff++)=Left2;
+        *(outbuff++)=Right2;
 #else
         *(outbuff++)=Right2;
         *(outbuff++)=Left2;

@@ -101,7 +101,7 @@ OBJ_RSPHLE	=rsp_hle/main.o \
 		rsp_hle/ucode2.o \
 		rsp_hle/ucode1.o \
 		rsp_hle/ucode3mp3.o
-		
+
 OBJ_RSPHLEPPC	=rsp_hle-ppc/main.o \
 		rsp_hle-ppc/jpeg.o \
 		rsp_hle-ppc/ucode3.o \
@@ -165,19 +165,7 @@ all:	cube64-glN64.elf
 menu/MenuResources.o:	menu/MenuResources.s
 				$(CC) -x assembler-with-cpp $(CFLAGS) -c -o $@ $<
 
-r4300/interupt.o:	r4300/interupt.c
-			$(CC) $(CFLAGS) -c -o $@ $<
-
-main/main.o:	main/main.c
-		$(CC) $(CFLAGS) -c -o $@ $<
-
-gui/background_tex.o:		gui/background_tex.s
-				$(CC) $(CFLAGS) -c -o $@ $<
-
 gc_input/main.o:		gc_input/input.c
-				$(CC) $(CFLAGS) -c -o $@ $<
-
-rsp_hle-ppc/main.o:			rsp_hle-ppc/main.c
 				$(CC) $(CFLAGS) -c -o $@ $<
 
 gc_audio/main.o:		gc_audio/audio.c

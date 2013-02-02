@@ -58,10 +58,6 @@ float __floatdisf(long long);
 long long __fixdfdi(double);
 long long __fixsfdi(float);
 
-#define SDAREL(symbol) ({ short offset; \
-	__asm__("li %0," #symbol "@sdarel" : "=r" (offset)); \
-	offset; })
-
 #define CANT_COMPILE_DELAY() \
 	((get_src_pc()&0xFFF) == 0xFFC && \
 	 (get_src_pc() <  0x80000000 || \
@@ -1547,7 +1543,6 @@ static int LWC1(MIPS_instr mips){
 
 	int rd = mapRegisterTemp(); // r3 = rd
 	int base = mapRegister( MIPS_GET_RS(mips) ); // r4 = addr
-	int addr = mapRegisterTemp(); // r5 = fpr_addr
 
 	invalidateRegisters();
 
@@ -1581,14 +1576,11 @@ static int LWC1(MIPS_instr mips){
 	GEN_ADD(ppc, base, DYNAREG_RDRAM, base);
 	set_next_dst(ppc);
 	// Perform the actual load
-	GEN_LWZ(ppc, 3, MIPS_GET_IMMED(mips), base);
+	GEN_LFS(ppc, 1, MIPS_GET_IMMED(mips), base);
 	set_next_dst(ppc);
-	// addr = reg_cop1_simple[frt]
-	GEN_LWZ(ppc, addr, MIPS_GET_RT(mips)*4, DYNAREG_FPR_32);
-	set_next_dst(ppc);
-	// *addr = frs
-	GEN_STW(ppc, 3, 0, addr);
-	set_next_dst(ppc);
+	// Have the value in f1 stored to frt
+	mapFPRNew( MIPS_GET_RT(mips), 0 );
+	flushRegisters();
 	// Skip over else
 	int not_fastmem_id = add_jump_special(1);
 	GEN_B(ppc, not_fastmem_id, 0, 0);
@@ -1628,7 +1620,6 @@ static int LDC1(MIPS_instr mips){
 
 	int rd = mapRegisterTemp(); // r3 = rd
 	int base = mapRegister( MIPS_GET_RS(mips) ); // r4 = addr
-	int addr = mapRegisterTemp(); // r5 = fpr_addr
 
 	invalidateRegisters();
 
@@ -1662,18 +1653,11 @@ static int LDC1(MIPS_instr mips){
 	GEN_ADD(ppc, base, DYNAREG_RDRAM, base);
 	set_next_dst(ppc);
 	// Perform the actual load
-	GEN_LWZ(ppc, 3, MIPS_GET_IMMED(mips), base);
+	GEN_LFD(ppc, 1, MIPS_GET_IMMED(mips), base);
 	set_next_dst(ppc);
-	GEN_LWZ(ppc, 6, MIPS_GET_IMMED(mips)+4, base);
-	set_next_dst(ppc);
-	// addr = reg_cop1_double[frt]
-	GEN_LWZ(ppc, addr, MIPS_GET_RT(mips)*4, DYNAREG_FPR_64);
-	set_next_dst(ppc);
-	// *addr = frs
-	GEN_STW(ppc, 3, 0, addr);
-	set_next_dst(ppc);
-	GEN_STW(ppc, 6, 4, addr);
-	set_next_dst(ppc);
+	// Have the value in f1 stored to frt
+	mapFPRNew( MIPS_GET_RT(mips), 1 );
+	flushRegisters();
 	// Skip over else
 	int not_fastmem_id = add_jump_special(1);
 	GEN_B(ppc, not_fastmem_id, 0, 0);
@@ -2840,14 +2824,11 @@ static int ERET(MIPS_instr mips){
 	// Load Status
 	GEN_LWZ(ppc, 3, 12*4, DYNAREG_COP0);
 	set_next_dst(ppc);
-	// Load upper address of llbit
-	GEN_LIS(ppc, 4, extractUpper16(&llbit));
-	set_next_dst(ppc);
 	// Status & 0xFFFFFFFD
 	GEN_RLWINM(ppc, 3, 3, 0, 31, 29);
 	set_next_dst(ppc);
 	// llbit = 0
-	GEN_STW(ppc, DYNAREG_ZERO, extractLower16(&llbit), 4);
+	GEN_STW(ppc, DYNAREG_ZERO, SDAREL(llbit), 13);
 	set_next_dst(ppc);
 	// Store updated Status
 	GEN_STW(ppc, 3, 12*4, DYNAREG_COP0);

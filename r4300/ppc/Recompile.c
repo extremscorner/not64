@@ -554,13 +554,9 @@ static void genJumpPad(void){
 	PowerPC_instr ppc = NEW_PPC_INSTR();
 
 	// noCheckInterrupt = 1
-	GEN_LIS(ppc, 3, (unsigned int)(&noCheckInterrupt)>>16);
-	set_next_dst(ppc);
-	GEN_ORI(ppc, 3, 3, (unsigned int)(&noCheckInterrupt));
-	set_next_dst(ppc);
 	GEN_LI(ppc, 0, 0, 1);
 	set_next_dst(ppc);
-	GEN_STW(ppc, 0, 0, 3);
+	GEN_STW(ppc, 0, SDAREL(noCheckInterrupt), 13);
 	set_next_dst(ppc);
 
 	// Set the next address to the first address in the next block if

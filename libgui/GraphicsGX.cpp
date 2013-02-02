@@ -26,10 +26,6 @@
 #include "../gc_memory/MEM2.h"
 #endif
 
-#define DEFAULT_FIFO_SIZE		(256 * 1024)
-
-
-extern "C" unsigned int usleep(unsigned int us);
 void video_mode_init(GXRModeObj *rmode, unsigned int *fb1, unsigned int *fb2);
 
 namespace menu {
@@ -38,13 +34,9 @@ Graphics::Graphics(GXRModeObj *rmode)
 		: vmode(rmode),
 		  which_fb(0),
 		  first_frame(true),
-		  depth(1.0f),
+		  depth(-10.0f),
 		  transparency(1.0f)
 {
-//	printf("Graphics constructor\n");
-
-	setColor((GXColor) {0,0,0,0});
-
 	VIDEO_Init();
 	switch (videoMode)
 	{
@@ -89,7 +81,6 @@ Graphics::Graphics(GXRModeObj *rmode)
 	VIDEO_SetNextFramebuffer(xfb[which_fb]);
 	VIDEO_Flush();
 	VIDEO_WaitVSync();
-	if(vmode->viTVMode&VI_NON_INTERLACE) VIDEO_WaitVSync();
 	which_fb ^= 1;
 
 	//Pass vmode, xfb[0] and xfb[1] back to main program
@@ -97,7 +88,6 @@ Graphics::Graphics(GXRModeObj *rmode)
 
 	//Perform GX init stuff here?
 	//GX_init here or in main?
-	//GX_SetViewport( 0.0f, 0.0f, viewportWidth, viewportHeight );
 	init();
 }
 
@@ -107,44 +97,17 @@ Graphics::~Graphics()
 
 void Graphics::init()
 {
-
 	f32 yscale;
 	void *gpfifo = NULL;
-	GXColor background = {0, 0, 0, 0xff};
 
-	gpfifo = memalign(32,DEFAULT_FIFO_SIZE);
-	GX_Init(gpfifo,DEFAULT_FIFO_SIZE);
-	GX_SetCopyClear(background, GX_MAX_Z24);
+	gpfifo = memalign(32,GX_FIFO_MINSIZE);
+	GX_Init(gpfifo,GX_FIFO_MINSIZE);
 
-	GX_SetViewport(0,0,vmode->fbWidth,vmode->efbHeight,0,1);
 	yscale = GX_GetYScaleFactor(vmode->efbHeight,vmode->xfbHeight);
 	GX_SetDispCopyYScale(yscale);
-	GX_SetScissor(0,0,vmode->fbWidth,vmode->efbHeight);
 	GX_SetDispCopySrc(0,0,vmode->fbWidth,vmode->efbHeight);
 	GX_SetDispCopyDst(vmode->fbWidth,vmode->xfbHeight);
 	GX_SetCopyFilter(GX_FALSE,NULL,GX_TRUE,vmode->vfilter);
-
-	GX_SetCullMode(GX_CULL_NONE);
-
-	GX_InvVtxCache();
-	GX_InvalidateTexAll();
-
-	GX_SetVtxAttrFmt(GX_VTXFMT0, GX_VA_POS, GX_POS_XYZ, GX_F32, 0);
-	GX_SetVtxAttrFmt(GX_VTXFMT0, GX_VA_NRM, GX_NRM_XYZ, GX_F32, 0);
-	GX_SetVtxAttrFmt(GX_VTXFMT0, GX_VA_CLR0, GX_CLR_RGBA, GX_RGBA8, 0);
-	GX_SetVtxAttrFmt(GX_VTXFMT0, GX_VA_TEX0, GX_TEX_ST, GX_F32, 0);
-
-	GX_ClearVtxDesc();
-	GX_SetVtxDesc(GX_VA_PTNMTXIDX, GX_PNMTX0);
-	GX_SetVtxDesc(GX_VA_TEX0MTXIDX, GX_TEXMTX0);
-	GX_SetVtxDesc(GX_VA_POS, GX_DIRECT);
-	GX_SetVtxDesc(GX_VA_CLR0, GX_DIRECT);
-	GX_SetVtxDesc(GX_VA_TEX0, GX_DIRECT);
-
-	setTEV(GX_PASSCLR);
-	newModelView();
-	loadModelView();
-	loadOrthographic();
 }
 
 void Graphics::drawInit()
@@ -192,8 +155,6 @@ void Graphics::drawInit()
 
 void Graphics::swapBuffers()
 {
-//	printf("Graphics swapBuffers\n");
-//	if(which_fb==1) usleep(1000000);
 	GX_SetCopyClear((GXColor){0, 0, 0, 0xFF}, GX_MAX_Z24);
 	GX_CopyDisp(xfb[which_fb],GX_TRUE);
 	GX_Flush();
@@ -206,7 +167,6 @@ void Graphics::swapBuffers()
 	VIDEO_Flush();
  	VIDEO_WaitVSync();
 	which_fb ^= 1;
-//	printf("Graphics endSwapBuffers\n");
 }
 
 void Graphics::clearEFB(GXColor color, u32 zvalue)

@@ -25,6 +25,7 @@
 
 #include "wintypes.h"
 #include "hle.h"
+#include "../main/wii64config.h"
 
 /* global variables */
 RSP_INFO rsp;
@@ -123,11 +124,14 @@ static int audio_ucode(OSTask_t *task)
         return -1;
     }
 
-    for (i = 0; i < (task->data_size/4); i += 2)
+    if (audioEnabled)
     {
-        inst1 = p_alist[i];
-        inst2 = p_alist[i+1];
-        ABI[inst1 >> 24]();
+        for (i = 0; i < (task->data_size/4); i += 2)
+        {
+            inst1 = p_alist[i];
+            inst2 = p_alist[i+1];
+            ABI[inst1 >> 24]();
+        }
     }
 
     return 0;

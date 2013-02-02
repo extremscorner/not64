@@ -25,7 +25,7 @@
 
 int inflate_init(PKZIPHEADER* pkzip){
 	/*** Prepare the zip stream ***/
-	zipoffset = ( sizeof(PKZIPHEADER) + bswap16(pkzip->filenameLength) + bswap16(pkzip->extraDataLength ));
+	zipoffset = sizeof(PKZIPHEADER) + bswap16(pkzip->filenameLength) + bswap16(pkzip->extraDataLength);
 
 	memset(&zs, 0, sizeof(z_stream));
 	zs.zalloc = Z_NULL;
@@ -39,11 +39,10 @@ int inflate_init(PKZIPHEADER* pkzip){
 int inflate_chunk(void* dst, void* src, int length){
 	zs.avail_in = (length  - zipoffset);
 	zs.next_in = (src + zipoffset);
-	void* buf;
+	unsigned char buf[ZIPCHUNK];
 	int res;
 	int have, bufferoffset = 0;
 
-	buf = malloc(ZIPCHUNK);
 	/*** Now inflate until input buffer is exhausted ***/
 	do {
 		zs.avail_out = ZIPCHUNK;
@@ -66,8 +65,8 @@ int inflate_chunk(void* dst, void* src, int length){
 			memcpy(dst + bufferoffset, buf, have);
 			bufferoffset += have;
 		}
-        }while(zs.avail_out == 0);
-	free(buf);
+	}while(zs.avail_out == 0);
+
 	zipoffset = 0;
 	return bufferoffset;
 }
