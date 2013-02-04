@@ -102,10 +102,10 @@ void RDP_SetFillColor( u32 w0, u32 w1 )
 
 void RDP_FillRect( u32 w0, u32 w1 )
 {
-	gDPFillRectangle( _SHIFTR( w1, 14, 10 ),	// ulx
-					  _SHIFTR( w1,  2, 10 ),	// uly
-		              _SHIFTR( w0, 14, 10 ),	// lrx
-					  _SHIFTR( w0,  2, 10 ) );	// lry
+	gDPFillRectangle( _SHIFTR( w1, 14, 10 ),		// ulx
+					  _SHIFTR( w1,  2, 10 ),		// uly
+					  _SHIFTR( w0, 14, 10 ) + 1,	// lrx
+					  _SHIFTR( w0,  2, 10 ) + 1 );	// lry
 }
 
 void RDP_SetTile( u32 w0, u32 w1 )

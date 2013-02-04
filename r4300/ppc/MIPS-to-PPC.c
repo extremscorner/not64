@@ -4434,14 +4434,14 @@ static int CVT_FP_L(MIPS_instr mips, int dbl){
 	int lo = mapRegisterTemp(); // r4
 
 	// Get the long value into GPRs
-	// lo = fpr64[fs]
-	GEN_LWZ(ppc, lo, fs*4, DYNAREG_FPR_64);
+	// r2 = fpr64[fs]
+	GEN_LWZ(ppc, 2, fs*4, DYNAREG_FPR_64);
 	set_next_dst(ppc);
-	// hi = *lo (hi word)
-	GEN_LWZ(ppc, hi, 0, lo);
+	// hi = *r2 (hi word)
+	GEN_LWZ(ppc, hi, 0, 2);
 	set_next_dst(ppc);
-	// lo = *(lo+4) (lo word)
-	GEN_LWZ(ppc, lo, 4, lo);
+	// lo = *(r2+4) (lo word)
+	GEN_LWZ(ppc, lo, 4, 2);
 	set_next_dst(ppc);
 
 	// convert
@@ -4559,16 +4559,15 @@ static void genJumpTo(unsigned int loc, unsigned int type){
 		GEN_ORI(ppc, 0, 0, 0);
 		set_next_dst(ppc);
 		set_next_dst(ppc);
-
+		// Make this function the LRU
 		GEN_LWZ(ppc, 2, SDAREL(nextLRU), 13);
 		set_next_dst(ppc);
 		GEN_STW(ppc, 2, 3*4, DYNAREG_FUNC);
 		set_next_dst(ppc);
-		GEN_ADDI(ppc, 2, 2, 1);
+		GEN_ADDI(ppc, 0, 2, 1);
 		set_next_dst(ppc);
-		GEN_STW(ppc, 2, SDAREL(nextLRU), 13);
+		GEN_STW(ppc, 0, SDAREL(nextLRU), 13);
 		set_next_dst(ppc);
-
 		// Load the address as the return value
 		GEN_LIS(ppc, 3, loc >> 16);
 		set_next_dst(ppc);

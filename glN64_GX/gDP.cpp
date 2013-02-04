@@ -854,9 +854,6 @@ void gDPFillRectangle( s32 ulx, s32 uly, s32 lrx, s32 lry )
 		//if (gDP.fillColor.a == 0.0f)
 		//	return;
 
-		lrx++;
-		lry++;
-
 		if ((ulx == 0) && (uly == 0) && ((unsigned int)lrx == VI.width) && ((unsigned int)lry == VI.height))
 		{
 			OGL_ClearColorBuffer( &gDP.fillColor.r );

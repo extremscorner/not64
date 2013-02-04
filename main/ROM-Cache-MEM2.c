@@ -23,12 +23,10 @@
 **/
 
 #include <stdio.h>
-#include <stdint.h>
 #include <string.h>
-#include "../fileBrowser/fileBrowser.h"
 #include "../gc_memory/MEM2.h"
-#include "../r4300/r4300.h"
 #include "ROM-Cache.h"
+#include "rom.h"
 #include "gczip.h"
 #include "wii_vm.h"
 
