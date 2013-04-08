@@ -95,8 +95,9 @@ OBJ_INPUT	=gc_input/main.o \
 		gc_input/controller-GC.o
 
 OBJ_RSPHLE	=rsp_hle/main.o \
+		rsp_hle/alist.o \
+		rsp_hle/cicx105.o \
 		rsp_hle/jpeg.o \
-		rsp_hle/idct.o \
 		rsp_hle/ucode3.o \
 		rsp_hle/ucode2.o \
 		rsp_hle/ucode1.o \

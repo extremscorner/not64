@@ -25,13 +25,33 @@
 
 #include "wintypes.h"
 #include "hle.h"
-#include "../main/wii64config.h"
+#include "alist.h"
+#include "cicx105.h"
+#include "jpeg.h"
+
+#define min(a,b) (((a) < (b)) ? (a) : (b))
+
+/* some rsp status flags */
+#define RSP_STATUS_HALT             0x1
+#define RSP_STATUS_BROKE            0x2
+#define RSP_STATUS_INTR_ON_BREAK    0x40
+#define RSP_STATUS_TASKDONE         0x200
+
+/* some rdp status flags */
+#define DP_STATUS_FREEZE            0x2
+
+/* some mips interface interrupt flags */
+#define MI_INTR_SP                  0x1
+
+
+/* helper functions prototypes */
+static unsigned int sum_bytes(const unsigned char *bytes, unsigned int size);
 
 /* global variables */
 RSP_INFO rsp;
 
 /* local variables */
-static const int AudioHle = 0, GraphicsHle = 1;
+static const int FORWARD_AUDIO = 0, FORWARD_GFX = 1;
 
 /* local functions */
 
@@ -46,157 +66,179 @@ static const int AudioHle = 0, GraphicsHle = 1;
  *
  * Using ucode_boot_size should be more robust in this regard.
  **/
-static int is_run_through_task(OSTask_t* task)
+static int is_task()
 {
-    return (task->ucode_boot_size <= 0x1000
-        && task->ucode_boot_size >= 0);
+    return (get_task()->ucode_boot_size <= 0x1000);
 }
 
-
-/**
- * Simulate the effect of setting the TASKDONE bit (aliased to SIG2)
- * and executing a break instruction (setting HALT and BROKE bits).
- **/
-static void taskdone()
+static void rsp_break(unsigned int setbits)
 {
-    // On hardware writing to SP_STATUS_REG is an indirect way of changing its content.
-    // For instance, in order to set the TASKDONE bit (bit 9), one should write 0x4000
-    // to the SP_STATUS_REG : Read Access & Write Access don't have the same semantic.
-    //
-    // Here, this indirect way of changing the status register is bypassed :
-    // we modify the bits directly.
-    //
-    // 0x203 = TASKDONE | BROKE | HALT
-    *rsp.SP_STATUS_REG |= 0x203;
+    *rsp.SP_STATUS_REG |= setbits | RSP_STATUS_BROKE | RSP_STATUS_HALT;
 
-    // if INTERRUPT_ON_BREAK we generate the interrupt
-    if ((*rsp.SP_STATUS_REG & 0x40) != 0 )
+    if ((*rsp.SP_STATUS_REG & RSP_STATUS_INTR_ON_BREAK))
     {
-        *rsp.MI_INTR_REG |= 0x1;
+        *rsp.MI_INTR_REG |= MI_INTR_SP;
         rsp.CheckInterrupts();
     }
 }
 
-
-static int audio_ucode_detect(OSTask_t *task)
+static void forward_gfx_task()
 {
-    if (*(unsigned int*)(rsp.RDRAM + task->ucode_data + 0) != 0x1)
-    {
-        if (*(rsp.RDRAM + task->ucode_data + (0 ^ (3-S8))) == 0xF)
-            return 4;
-        else
-            return 3;
-    }
-    else
-    {
-        if (*(unsigned int*)(rsp.RDRAM + task->ucode_data + 0x30) == 0xF0000F00)
-            return 1;
-        else
-            return 2;
-    }
-}
-
-extern void (*ABI1[0x20])();
-extern void (*ABI2[0x20])();
-extern void (*ABI3[0x20])();
-
-static void (*ABI[0x20])();
-
-u32 inst1, inst2;
-
-static int audio_ucode(OSTask_t *task)
-{
-    unsigned int *p_alist = (unsigned int*)(rsp.RDRAM + task->data_ptr);
-    unsigned int i;
-
-    switch(audio_ucode_detect(task))
-    {
-    case 1: // mario ucode
-        memcpy( ABI, ABI1, sizeof(ABI[0])*0x20 );
-        break;
-    case 2: // banjo kazooie ucode
-        memcpy( ABI, ABI2, sizeof(ABI[0])*0x20 );
-        break;
-    case 3: // zelda ucode
-        memcpy( ABI, ABI3, sizeof(ABI[0])*0x20 );
-        break;
-    default:
-        return -1;
-    }
-
-    if (audioEnabled)
-    {
-        for (i = 0; i < (task->data_size/4); i += 2)
-        {
-            inst1 = p_alist[i];
-            inst2 = p_alist[i+1];
-            ABI[inst1 >> 24]();
-        }
-    }
-
-    return 0;
-}
-
-static int DoGFXTask(OSTask_t *task, int sum)
-{
-    if (GraphicsHle && rsp.ProcessDlistList != NULL)
+    if (rsp.ProcessDlistList != NULL)
     {
         rsp.ProcessDlistList();
-        taskdone();
-        *rsp.DPC_STATUS_REG &= ~0x0002;
-        return 1;
-    }
-    else
-    {
-        return 0;
+        *rsp.DPC_STATUS_REG &= ~DP_STATUS_FREEZE;
     }
 }
 
-static int DoAudioTask(OSTask_t *task, int sum)
+static void forward_audio_task()
 {
-    if (AudioHle && rsp.ProcessAlistList != NULL)
+    if (rsp.ProcessAlistList != NULL)
     {
         rsp.ProcessAlistList();
-        taskdone();
-        return 1;
+    }
+}
+
+static void show_cfb()
+{
+    if (rsp.ShowCFB != NULL)
+    {
+        rsp.ShowCFB();
+    }
+}
+
+static int try_fast_audio_dispatching()
+{
+    /* identify audio ucode by using the content of ucode_data */
+    const OSTask_t * const task = get_task();
+    const unsigned char * const udata_ptr = rsp.RDRAM + task->ucode_data;
+
+    if (*(unsigned int*)(udata_ptr + 0) == 0x00000001)
+    {
+        if (*(unsigned int*)(udata_ptr + 0x30) == 0xf0000f00)
+        {
+            /**
+            * Many games including:
+            * Super Mario 64, Diddy Kong Racing, BlastCorp, GoldenEye, ... (most common)
+            **/
+            alist_process_ABI1(); return 1;
+        }
+        else
+        {
+            /* use first ACMD offset to discriminate between ABIs */
+            u16 v = *(u16*)(udata_ptr + (0x10 ^ S16));
+
+            switch (v)
+            {
+            /* Mario Kart / Wave Race */
+            case 0x1118: alist_process_ABI2a(); return 1;
+
+            /* LylatWars */
+            case 0x1104: alist_process_ABI2b(); return 1;
+
+            /* FZeroX */
+            case 0x1cd0: alist_process_ABI2c(); return 1;
+
+            case 0x1f08: /* Yoshi Story */
+            case 0x1f38: /* 1080° Snowboarding */
+                alist_process_ABI2d(); return 1;
+
+            /* Zelda Ocarina of Time */
+            case 0x1f68: alist_process_ABI2e(); return 1;
+
+            /* Zelda Majoras Mask / Pokemon Stadium 2 */
+            case 0x1f80: alist_process_ABI2f(); return 1;
+
+            /* Animal Crossing */
+            case 0x1eac: alist_process_ABI2g(); return 1;
+            }
+        }
     }
     else
     {
-        if (audio_ucode(task) == 0)
+        if (*(unsigned int*)(udata_ptr + 0x10) == 0x00000001)
         {
-            taskdone();
+            /**
+             * Musyx ucode found in following games:
+             * RogueSquadron, ResidentEvil2, SnowCrossPolaris, TheWorldIsNotEnough,
+             * RugratsInParis, NBAShowTime, HydroThunder, Tarzan,
+             * GauntletLegend, Rush2049, IndianaJones, BattleForNaboo
+             * TODO: implement ucode
+             **/
             return 1;
+        }
+        else
+        {
+            /**
+             * Many games including:
+             * Pokemon Stadium, Banjo Kazooie, Donkey Kong, Banjo Tooie, Jet Force Gemini,
+             * Mickey SpeedWay USA, Perfect Dark, Conker Bad Fur Day ...
+             **/
+            alist_process_ABI3(); return 1;
         }
     }
 
     return 0;
 }
 
-static int DoJPEGTask(OSTask_t *task, int sum)
+static int try_fast_task_dispatching()
 {
-    switch(sum)
+    /* identify task ucode by its type */
+    const OSTask_t * const task = get_task();
+
+    switch (task->type)
     {
-    case 0x278: // Zelda OOT during boot
-      taskdone();
-      return 1;
-    case 0x2caa6: // Zelda OOT, Pokemon Stadium {1,2} jpg decompression
-        ps_jpg_uncompress(task);
-        taskdone();
-        return 1;
-    case 0x130de: // Ogre Battle background decompression
-        ob_jpg_uncompress(task);
-        taskdone();
-        return 1;
+        case 1: if (FORWARD_GFX) { forward_gfx_task(); return 1; } break;
+
+        case 2:
+            if (FORWARD_AUDIO) { forward_audio_task(); return 1; }
+            else if (try_fast_audio_dispatching()) { return 1; }
+            break;
+
+        case 7: show_cfb(); return 1;
     }
 
     return 0;
 }
 
-static int DoCFBTask(OSTask_t *task, int sum)
+static void normal_task_dispatching()
 {
-    rsp.ShowCFB();
-    taskdone();
-    return 1;
+    const OSTask_t * const task = get_task();
+    const unsigned int sum =
+        sum_bytes(rsp.RDRAM + task->ucode, min(task->ucode_size, 0xf80) >> 1);
+
+    switch (sum)
+    {
+        /* StoreVe12: found in Zelda Ocarina of Time [misleading task->type == 4] */
+        case 0x278: /* Nothing to emulate */ return;
+
+        /* GFX: Twintris [misleading task->type == 0] */                                         
+        case 0x212ee:
+            if (FORWARD_GFX) { forward_gfx_task(); return; }
+            break;
+
+        /* JPEG: found in Pokemon Stadium J */ 
+        case 0x2c85a: jpeg_decode_PS0(); return;
+
+        /* JPEG: found in Zelda Ocarina of Time, Pokemon Stadium 1, Pokemon Stadium 2 */
+        case 0x2caa6: jpeg_decode_PS(); return;
+
+        /* JPEG: found in Ogre Battle, Bottom of the 9th */
+        case 0x130de: jpeg_decode_OB(); return;
+    }
+}
+
+static void non_task_dispatching()
+{
+    const unsigned int sum = sum_bytes(rsp.IMEM, 0x1000 >> 1);
+
+    switch(sum)
+    {
+        /* CIC x105 ucode (used during boot of CIC x105 games) */
+        case 0x9e2: /* CIC 6105 */
+        case 0x9f2: /* CIC 7105 */
+            cicx105_ucode(); return;
+    }
 }
 
 
@@ -207,83 +249,15 @@ EXPORT void CALL CloseDLL(void)
 
 EXPORT unsigned int CALL DoRspCycles(unsigned int Cycles)
 {
-    OSTask_t *task = (OSTask_t*)(rsp.DMEM + 0xfc0);
-    int run_through_task = is_run_through_task(task);
-    unsigned int i, sum=0;
-
-    if (run_through_task)
+    if (is_task())
     {
-        // most ucode_boot procedure copy 0xf80 bytes of ucode whatever the ucode_size is.
-        // For practical purpose we use a ucode_size = min(0xf80, task->ucode_size)
-        unsigned int ucode_size = (task->ucode_size > 0xf80) ? 0xf80 : task->ucode_size;
-
-        for (i=0; i<ucode_size/2; i++)
-            sum += *(rsp.RDRAM + task->ucode + i);
-
-        switch(task->type)
-        {
-        case 0: // Not specified
-            {
-                switch(sum)
-                {
-                case 0x212ee: // Twintris (task type is in fact GFX)
-                    {
-                        if (DoGFXTask(task, sum)) return Cycles;
-                        break;
-                    }
-                }
-                break;
-            }
-        case 1: // GFX
-            {
-                if (DoGFXTask(task, sum)) return Cycles;
-                break;
-            }
-
-        case 2: // AUDIO
-            {
-                if (DoAudioTask(task, sum)) return Cycles;
-                break;
-            }
-
-        case 4: // JPEG
-            {
-                if (DoJPEGTask(task, sum)) return Cycles;
-                break;
-            }
-
-        case 7: // CFB
-            {
-                if (DoCFBTask(task, sum)) return Cycles;
-                break;
-            }
-        }
+        if (!try_fast_task_dispatching()) { normal_task_dispatching(); }
+        rsp_break(RSP_STATUS_TASKDONE);
     }
     else
     {
-        // For ucodes that are not run using the osSpTask* functions
-
-        // Try to identify the RSP code we should run
-        for (i=0; i<(0x1000/2); i++)
-            sum += *(rsp.IMEM + i);
-
-        switch(sum)
-        {
-        // CIC 6105 IPL3 run some code on the RSP
-        // We only emulate the part that modify RDRAM
-        //
-        // It is used for instance in Banjo Tooie, Zelda, Perfect Dark...
-        case 0x9e2: // banjo tooie (U)
-        case 0x9f2: // banjo tooie (E)
-            {
-            int i,j;
-            memcpy(rsp.IMEM + 0x120, rsp.RDRAM + 0x1e8, 0x1f0);
-            for (j=0; j<0xfc; j++)
-                for (i=0; i<8; i++)
-                    *(rsp.RDRAM+((0x2fb1f0+j*0xff0+i)^S8))=*(rsp.IMEM+((0x120+j*8+i)^S8));
-            return Cycles;
-            }
-        }
+        non_task_dispatching();
+        rsp_break(0);
     }
 
     return Cycles;
@@ -296,11 +270,20 @@ EXPORT void CALL InitiateRSP(RSP_INFO Rsp_Info, unsigned int *CycleCount)
 
 EXPORT void CALL RomClosed(void)
 {
-    int i;
-    for (i=0; i<0x1000; i++)
-        rsp.DMEM[i] = rsp.IMEM[i] = 0;
+    memset(rsp.DMEM, 0, 0x1000);
+    memset(rsp.IMEM, 0, 0x1000);
+}
 
-    //init_ucode1();
-    init_ucode2();
+
+/* local helper functions */
+static unsigned int sum_bytes(const unsigned char *bytes, unsigned int size)
+{
+    unsigned int sum = 0;
+    const unsigned char * const bytes_end = bytes + size;
+
+    while (bytes != bytes_end)
+        sum += *bytes++;
+
+    return sum;
 }
 
