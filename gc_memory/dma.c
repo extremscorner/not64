@@ -60,7 +60,7 @@
 
 #ifdef HW_RVL
 #include "MEM2.h"
-static unsigned char *sram = (unsigned char*)(SRAM_LO);
+static unsigned char *const sram = (unsigned char*)(SRAM_LO);
 #else //GC
 static unsigned char sram[0x8000] __attribute__((aligned(32)));
 #endif
@@ -192,63 +192,19 @@ void dma_pi_write()
 	return;
      }
 
+   ROMCache_read(rdramb + pi_register.pi_dram_addr_reg, (pi_register.pi_cart_addr_reg-0x10000000)&0x3FFFFFF, longueur);
+
    if(!interpcore)
      {
-     	// FIXME: This must be adjusted for GC
-     	ROMCache_read((unsigned int*)((char*)rdram + ((unsigned int)(pi_register.pi_dram_addr_reg)^S8)), ((pi_register.pi_cart_addr_reg-0x10000000)&0x3FFFFFF)^S8, longueur);
 	for (i=0; i<longueur; i++)
 	  {
 	     unsigned long rdram_address1 = pi_register.pi_dram_addr_reg+i+0x80000000;
 	     unsigned long rdram_address2 = pi_register.pi_dram_addr_reg+i+0xa0000000;
 
-	     //((unsigned char*)rdram)[(pi_register.pi_dram_addr_reg+i)^S8]=
-	     //  rom[(((pi_register.pi_cart_addr_reg-0x10000000)&0x3FFFFFF)+i)^S8];
-	     //ROMCache_read((char*)rdram + (pi_register.pi_dram_addr_reg+i)^S8, (((pi_register.pi_cart_addr_reg-0x10000000)&0x3FFFFFF)+i)^S8, 1);
-
-#if 0
-	     if(!invalid_code_get(rdram_address1>>12))
-    		 invalid_code_set(rdram_address1>>12, 1);
-
-	     if(!invalid_code_get(rdram_address2>>12))
-    		 invalid_code_set(rdram_address2>>12, 1);
-#else
-	     PowerPC_func* func;
-	     PowerPC_block* temp_block = blocks_get(rdram_address1>>12);
-	     if(temp_block){
-	     func = find_func(&temp_block->funcs, rdram_address1);
-         if(!invalid_code_get(rdram_address1>>12))
-	       //if(blocks[rdram_address1>>12]->code_addr[(rdram_address1&0xFFF)/4])
-        	 if(func) RecompCache_Free(func->start_addr);//invalid_code_set(rdram_address1>>12, 1);
-	     }
-
-	     temp_block = blocks_get(rdram_address2>>12);
-	     if(temp_block){
-         func = find_func(&temp_block->funcs, rdram_address2);
-	     if(!invalid_code_get(rdram_address2>>12))
-	       //if(blocks[rdram_address2>>12]->code_addr[(rdram_address2&0xFFF)/4])
-	    	 if(func) RecompCache_Free(func->start_addr);//invalid_code_set(rdram_address2>>12, 1);
-	     }
-#endif
+	     invalidate_func(rdram_address1);
+	     invalidate_func(rdram_address2);
 	  }
      }
-   else
-     {
-     	/*printf("DMA transfer from cart address: %08x\n"
-     	       "To RDRAM address: %08x of length %u\n",
-     	       ((pi_register.pi_cart_addr_reg-0x10000000)&0x3FFFFFF)^S8,
-     	       ((unsigned int)(pi_register.pi_dram_addr_reg)^S8),
-     	       longueur);*/
-	ROMCache_read((unsigned int*)((char*)rdram + ((unsigned int)(pi_register.pi_dram_addr_reg)^S8)),
-	              (((pi_register.pi_cart_addr_reg-0x10000000)&0x3FFFFFF))^S8, longueur);
-	/*for (i=0; i<longueur; i++)
-	  {
-	     ((unsigned char*)rdram)[(pi_register.pi_dram_addr_reg+i)^S8]=
-	       rom[(((pi_register.pi_cart_addr_reg-0x10000000)&0x3FFFFFF)+i)^S8];
-	  }*/
-     }
-
-   /*for (i=0; i<=((longueur+0x800)>>12); i++)
-     invalid_code[(((pi_register.pi_dram_addr_reg&0xFFFFFF)|0x80000000)>>12)+i] = 1;*/
 
    // Set the RDRAM memory size when copying main ROM code
    // (This is just a convenient way to run this code once at the beginning)

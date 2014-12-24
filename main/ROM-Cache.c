@@ -49,10 +49,6 @@ void LoadingBar_showBar(float percent, const char* string);
 static char GC_ROM_CACHE[ROMCACHE_SIZE] __attribute__((aligned(32)));
 static char *ROMCACHE_LO = &GC_ROM_CACHE[0];
 
-static u8 L1_ROM_BLOCK[4096] __attribute__((aligned(32)));
-static u8 *l1TempBlock = &L1_ROM_BLOCK[0];
-
-
 #define BLOCK_SIZE  (64*1024)
 #define BLOCK_MASK  (BLOCK_SIZE-1)
 #define OFFSET_MASK (0xFFFFFFFF-BLOCK_MASK)
@@ -67,7 +63,7 @@ static int   ROMBlocksLRU[NUM_BLOCKS];
 static fileBrowser_file* ROMFile;
 static char readBefore = 0;
 
-extern void showLoadProgress(float);
+extern void showLoadIcon(void);
 extern void pauseAudio(void);
 extern void resumeAudio(void);
 extern BOOL hasLoadedROM;
@@ -96,21 +92,18 @@ void ROMCache_deinit(){
 void* ROMCache_pointer(u32 rom_offset){
 	if(ROMTooBig){
 		u32 block = rom_offset >> BLOCK_SHIFT;
-
+		u32 block_offset = rom_offset & BLOCK_MASK;
+		
 		ensure_block(block);
-		if(((rom_offset+4096) >> BLOCK_SHIFT)!=block) {
-  			ensure_block(block+1);
-		}
-  		
-		ROMCache_read(l1TempBlock, rom_offset, 4096);
-		return &l1TempBlock[0];
+		
+		return ROMBlocks[block] + block_offset;
 	} else {
 		return ROMCACHE_LO + rom_offset;
 	}
 }
 
 static void ROMCache_load_block(char* dst, u32 rom_offset){
-  showLoadProgress( 1.0f );
+  showLoadIcon();
   romFile_seekFile(ROMFile, rom_offset, FILE_BROWSER_SEEK_SET);
 	u32 bytes_read = romFile_readFile(ROMFile, dst, rom_offset + BLOCK_SIZE > ROMSize ? ROMSize-rom_offset:BLOCK_SIZE);
 	byte_swap(dst, bytes_read);

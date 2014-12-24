@@ -7,18 +7,6 @@
    .globl BackgroundTexture_length
    BackgroundTexture_length:
    .long (BackgroundTexture_length - BackgroundTexture)
-   
-   .globl LogoTexture
-   .balign 32
-   LogoTexture:
-#ifdef HW_RVL
-   .incbin	"./menu/resources/wii64.tx"
-#else
-   .incbin	"./menu/resources/cube64.tx"
-#endif
-   .globl LogoTexture_length
-   LogoTexture_length:
-   .long (LogoTexture_length - LogoTexture)
 
    .globl LoadingTexture
    .balign 32

@@ -138,7 +138,7 @@ static char FRAME_STRINGS[41][23] =
 	  "Yes",
 	  "No",
 	  "VI",
-	  "FPS",
+	  "DL",
 	//Strings for Saves tab [38]
 	  "Auto Save Native Saves",
 	  "Copy Saves",
@@ -628,7 +628,7 @@ void Func_SaveSettingsSD()
 	int (*configFile_init)(fileBrowser_file*) = fileBrowser_libfat_init;
 	configFile_file = &saveDir_libfat_Default;
 	if(configFile_init(configFile_file)) {                //only if device initialized ok
-		FILE* f = fopen( "sd:/wii64/settings.cfg", "wb" );  //attempt to open file
+		FILE* f = fopen( "sd:/not64/settings.cfg", "wb" );  //attempt to open file
 		if(f) {
 			writeConfig(f);                                   //write out the config
 			fclose(f);
@@ -645,7 +645,7 @@ void Func_SaveSettingsUSB()
 	int (*configFile_init)(fileBrowser_file*) = fileBrowser_libfat_init;
 	configFile_file = &saveDir_libfat_USB;
 	if(configFile_init(configFile_file)) {                //only if device initialized ok
-		FILE* f = fopen( "usb:/wii64/settings.cfg", "wb" ); //attempt to open file
+		FILE* f = fopen( "usb:/not64/settings.cfg", "wb" ); //attempt to open file
 		if(f) {
 			writeConfig(f);                                   //write out the config
 			fclose(f);
@@ -698,6 +698,9 @@ void Func_ScreenMode4_3()
 	FRAME_BUTTONS[17].button->setSelected(true);
 	screenMode = SCREENMODE_4x3;
 	gfx_set_window( 0, 0, 640, rmode->efbHeight);
+#ifdef HW_RVL
+	VIDEO_SetAspectRatio(VI_DISPLAY_BOTH, VI_ASPECT_3_4);
+#endif
 }
 
 void Func_ScreenMode16_9()
@@ -707,6 +710,9 @@ void Func_ScreenMode16_9()
 	FRAME_BUTTONS[18].button->setSelected(true);
 	screenMode = SCREENMODE_16x9;
 	gfx_set_window( 0, 0, 640, rmode->efbHeight);
+#ifdef HW_RVL
+	VIDEO_SetAspectRatio(VI_DISPLAY_BOTH, VI_ASPECT_1_1);
+#endif
 }
 
 void Func_ScreenForce16_9()
@@ -716,6 +722,9 @@ void Func_ScreenForce16_9()
 	FRAME_BUTTONS[19].button->setSelected(true);
 	screenMode = SCREENMODE_16x9_PILLARBOX;
 	gfx_set_window( 80, 0, 480, rmode->efbHeight);
+#ifdef HW_RVL
+	VIDEO_SetAspectRatio(VI_DISPLAY_BOTH, VI_ASPECT_1_1);
+#endif
 }
 
 void Func_CpuFramebufferOn()
@@ -791,26 +800,26 @@ void Func_SaveButtonsSD()
 	int num_written = 0;
 	configFile_file = &saveDir_libfat_Default;
 	if(configFile_init(configFile_file)) {                //only if device initialized ok
-		FILE* f = fopen( "sd:/wii64/controlG.cfg", "wb" );  //attempt to open file
+		FILE* f = fopen( "sd:/not64/controlG.cfg", "wb" );  //attempt to open file
 		if(f) {
 			save_configurations(f, &controller_GC);					//write out GC controller mappings
 			fclose(f);
 			num_written++;
 		}
 #ifdef HW_RVL
-		f = fopen( "sd:/wii64/controlC.cfg", "wb" );  //attempt to open file
+		f = fopen( "sd:/not64/controlC.cfg", "wb" );  //attempt to open file
 		if(f) {
 			save_configurations(f, &controller_Classic);			//write out Classic controller mappings
 			fclose(f);
 			num_written++;
 		}
-		f = fopen( "sd:/wii64/controlN.cfg", "wb" );  //attempt to open file
+		f = fopen( "sd:/not64/controlN.cfg", "wb" );  //attempt to open file
 		if(f) {
 			save_configurations(f, &controller_WiimoteNunchuk);	//write out WM+NC controller mappings
 			fclose(f);
 			num_written++;
 		}
-		f = fopen( "sd:/wii64/controlW.cfg", "wb" );  //attempt to open file
+		f = fopen( "sd:/not64/controlW.cfg", "wb" );  //attempt to open file
 		if(f) {
 			save_configurations(f, &controller_Wiimote);			//write out Wiimote controller mappings
 			fclose(f);
@@ -831,26 +840,26 @@ void Func_SaveButtonsUSB()
 	int num_written = 0;
 	configFile_file = &saveDir_libfat_USB;
 	if(configFile_init(configFile_file)) {                //only if device initialized ok
-		FILE* f = fopen( "usb:/wii64/controlG.cfg", "wb" );  //attempt to open file
+		FILE* f = fopen( "usb:/not64/controlG.cfg", "wb" );  //attempt to open file
 		if(f) {
 			save_configurations(f, &controller_GC);					//write out GC controller mappings
 			fclose(f);
 			num_written++;
 		}
 #ifdef HW_RVL
-		f = fopen( "usb:/wii64/controlC.cfg", "wb" );  //attempt to open file
+		f = fopen( "usb:/not64/controlC.cfg", "wb" );  //attempt to open file
 		if(f) {
 			save_configurations(f, &controller_Classic);			//write out Classic controller mappings
 			fclose(f);
 			num_written++;
 		}
-		f = fopen( "usb:/wii64/controlN.cfg", "wb" );  //attempt to open file
+		f = fopen( "usb:/not64/controlN.cfg", "wb" );  //attempt to open file
 		if(f) {
 			save_configurations(f, &controller_WiimoteNunchuk);	//write out WM+NC controller mappings
 			fclose(f);
 			num_written++;
 		}
-		f = fopen( "usb:/wii64/controlW.cfg", "wb" );  //attempt to open file
+		f = fopen( "usb:/not64/controlW.cfg", "wb" );  //attempt to open file
 		if(f) {
 			save_configurations(f, &controller_Wiimote);			//write out Wiimote controller mappings
 			fclose(f);

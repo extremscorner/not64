@@ -110,7 +110,7 @@ void InputStatusBar::drawComponent(Graphics& gfx)
 		sprintf(buffer,"%s",ROM_SETTINGS.goodname);
 //		IplFont::getInstance().drawString((int) box_x + 15, (int) text_y, buffer, 0.8, false);
 		text_y += 20*IplFont::getInstance().drawStringWrap((int) box_x + 15, (int) text_y, buffer, 0.8, false, width - 2*15, 20);
-	    countrycodestring(ROM_HEADER->Country_code&0xFF, buffer);
+		countrycodestring(ROM_HEADER.Country_code&0xFF, buffer);
 		text_y += 13;
 		IplFont::getInstance().drawString((int) box_x + 15, (int) text_y, buffer, 0.7, false);
 		if (autoSave)
@@ -129,7 +129,9 @@ void InputStatusBar::drawComponent(Graphics& gfx)
 		switch (padType[i])
 		{
 		case PADTYPE_GAMECUBE:
-			controller_GC.available[(int)padAssign[i]] = (gc_connected & (1<<padAssign[i])) ? 1 : 0;
+			u32 type;
+			type = SI_GetType((int)padAssign[i]);
+			controller_GC.available[(int)padAssign[i]] = ((type & SI_TYPE_MASK) == SI_TYPE_GC && (type & SI_GC_STANDARD)) ? 1 : 0;
 			if (controller_GC.available[(int)padAssign[i]])
 			{
 //				gfx.setColor(activeColor);
@@ -147,7 +149,6 @@ void InputStatusBar::drawComponent(Graphics& gfx)
 			break;
 #ifdef HW_RVL
 		case PADTYPE_WII:
-			u32 type;
 			s32 err;
 			err = WPAD_Probe((int)padAssign[i], &type);
 			controller_Classic.available[(int)padAssign[i]] = (err == WPAD_ERR_NONE && type == WPAD_EXP_CLASSIC) ? 1 : 0;
@@ -221,17 +222,6 @@ void InputStatusBar::drawComponent(Graphics& gfx)
 		gfx.enableBlending(true);
 		gfx.drawImage(0, base_x, base_y, 48, 64, 0, 1, 0, 1);
 	}
-
-	//draw logo
-	Resources::getInstance().getImage(Resources::IMAGE_LOGO)->activateImage(GX_TEXMAP0);
-	gfx.setTEV(GX_REPLACE);
-	gfx.enableBlending(true);
-#ifdef HW_RVL
-	gfx.drawImage(0, 75, 380, 144, 52, 0, 1, 0, 1);
-#else
-	gfx.drawImage(0, 75, 380, 192, 52, 0, 1, 0, 1);
-#endif
-	gfx.setTEV(GX_PASSCLR);
 
 /*
 //	printf("Button drawComponent\n");

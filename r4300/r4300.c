@@ -62,7 +62,6 @@ long long int reg_cop1_fgr_64[32];
 long FCR0, FCR31;
 tlb tlb_e[32];
 unsigned long delay_slot, skip_jump = 0, dyna_interp = 0, last_addr;
-unsigned long long int debug_count = 0;
 unsigned int next_interupt, CIC_Chip;
 precomp_instr *PC;
 //char invalid_code[0x100000];
@@ -71,7 +70,7 @@ precomp_instr *PC;
 #include "ppc/Recompile.h"
 #ifdef HW_RVL
 #include "../gc_memory/MEM2.h"
-PowerPC_block **blocks = (PowerPC_block*)(BLOCKS_LO);
+PowerPC_block **const blocks = (PowerPC_block*)(BLOCKS_LO);
 #else
 #ifndef ARAM_BLOCKCACHE
 PowerPC_block *blocks[0x100000];
@@ -1414,16 +1413,10 @@ void NOTCOMPILED2()
 
 inline unsigned long update_invalid_addr(unsigned long addr)
 {
-   if (addr >= 0x80000000 && addr < 0xa0000000)
+   if (addr >= 0x80000000 && addr < 0xc0000000)
      {
-	if (invalid_code_get(addr>>12)) invalid_code_set((addr+0x20000000)>>12, 1);
-	if (invalid_code_get((addr+0x20000000)>>12)) invalid_code_set(addr>>12, 1);
-	return addr;
-     }
-   else if (addr >= 0xa0000000 && addr < 0xc0000000)
-     {
-	if (invalid_code_get(addr>>12)) invalid_code_set((addr-0x20000000)>>12, 1);
-	if (invalid_code_get((addr-0x20000000)>>12)) invalid_code_set(addr>>12, 1);
+	if (invalid_code_get(addr>>12)) invalid_code_set((addr^0x20000000)>>12, 1);
+	if (invalid_code_get((addr^0x20000000)>>12)) invalid_code_set(addr>>12, 1);
 	return addr;
      }
    else
@@ -1624,7 +1617,7 @@ void init_blocks()
    blocks[0xa4000000>>12]->start = 0xa4000000;
    blocks[0xa4000000>>12]->end = 0xa4001000;
 #else
-   PowerPC_block* temp_block = malloc(sizeof(PowerPC_block));
+   PowerPC_block* temp_block = calloc(1,sizeof(PowerPC_block));
    blocks_set(0xa4000000>>12, temp_block);
    //blocks[0xa4000000>>12]->code_addr = NULL;
    temp_block->funcs = NULL;
@@ -1733,16 +1726,12 @@ void go()
 #endif
 	//PC++;
      }
-   debug_count+= Count;
 }
 
 void cpu_init(void){
    long long CRC = 0;
-   unsigned int j;
 
-   j=0;
-   debug_count = 0;
-   ROMCache_read((char*)SP_DMEM+0x40, 0x40, 0xFBC);
+   ROMCache_read((char*)SP_DMEM+0x40, 0x40, 0xFC0);
    delay_slot=0;
    stop = 0;
    for (i=0;i<32;i++)
@@ -1806,6 +1795,7 @@ void cpu_init(void){
    reg[10]= 0x0000000000000040LL;
    reg[11]= 0xFFFFFFFFA4000040LL;
    reg[29]= 0xFFFFFFFFA4001FF0LL;
+   reg[31]= 0xFFFFFFFFA4001550LL;
 
    Random = 31;
    Status= 0x34000000;
@@ -1842,7 +1832,7 @@ void cpu_init(void){
       CIC_Chip = 2;
    }
 
-   switch(ROM_HEADER->Country_code&0xFF)
+   switch(ROM_HEADER.Country_code&0xFF)
      {
       case 0x44:
       case 0x46:
@@ -1862,7 +1852,6 @@ void cpu_init(void){
 	   reg[14]= 0x000000001AF99984LL;
 	   break;
 	 case 5:
-	   SP_IMEM[1] = 0xBDA807FC;
 	   reg[5] = 0xFFFFFFFFDECAAAD1LL;
 	   reg[14]= 0x000000000CF85C13LL;
 	   reg[24]= 0x0000000000000002LL;
@@ -1874,7 +1863,6 @@ void cpu_init(void){
 	   break;
 	}
 	reg[23]= 0x0000000000000006LL;
-	reg[31]= 0xFFFFFFFFA4001554LL;
 	break;
       case 0x37:
       case 0x41:
@@ -1891,7 +1879,6 @@ void cpu_init(void){
 	   reg[14]= 0x000000005BACA1DFLL;
 	   break;
 	 case 5:
-	   SP_IMEM[1] = 0x8DA807FC;
 	   reg[5] = 0x000000005493FB9ALL;
 	   reg[14]= 0xFFFFFFFFC2C20384LL;
 	   break;
@@ -1902,7 +1889,6 @@ void cpu_init(void){
 	}
 	reg[20]= 0x0000000000000001LL;
 	reg[24]= 0x0000000000000003LL;
-	reg[31]= 0xFFFFFFFFA4001550LL;
      }
    switch (CIC_Chip) {
     case 1:
@@ -1932,6 +1918,7 @@ void cpu_init(void){
       break;
     case 5:
       SP_IMEM[0] = 0x3C0DBFC0;
+      SP_IMEM[1] = 0x8DA807FC;
       SP_IMEM[2] = 0x25AD07C0;
       SP_IMEM[3] = 0x31080080;
       SP_IMEM[4] = 0x5500FFFC;

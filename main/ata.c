@@ -426,7 +426,7 @@ int _ataWriteSectors(int chn, u64 lba, u16 numsectors, u32 *Buffer)
 int ataReadSectors(int chn, u64 sector, unsigned int numSectors, unsigned char *dest) 
 {
 	int ret = 0;
-	int sectorchunks = ataDriveInfo.lba48Support ? 511 : 127;
+	int sectorchunks = 1;
 	while(numSectors > sectorchunks) {
 		if((ret=_ataReadSectors(chn,sector,sectorchunks,(u32*)dest))) {
 			return -1;

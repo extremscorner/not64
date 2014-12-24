@@ -42,8 +42,8 @@ void CRC_BuildTable()
 	{
         crc = Reflect( i, 8 ) << 24;
         for (int j = 0; j < 8; j++)
-            crc = (crc << 1) ^ (crc & (1 << 31) ? CRC32_POLYNOMIAL : 0);
-
+			crc = (crc << 1) ^ (crc & (1 << 31) ? CRC32_POLYNOMIAL : 0);
+        
         CRCTable[i] = Reflect( crc, 32 );
     }
 
@@ -51,13 +51,13 @@ void CRC_BuildTable()
     {
         for (int j = 0; j < 3; j++)
             CRCTable[256 * (j + 1) + i] = (CRCTable[256 * j + i] >> 8) ^ CRCTable[CRCTable[256 * j + i] & 0xFF];
-    }
+}
 }
 
 DWORD CRC_Calculate( DWORD crc, void *buffer, DWORD count )
 {
     BYTE *p;
-    DWORD orig = crc;
+	DWORD orig = crc;
 
     p = (BYTE*) buffer;
 
@@ -72,8 +72,8 @@ DWORD CRC_Calculate( DWORD crc, void *buffer, DWORD count )
         count -= 4;
     }
 
-    while (count--)
-        crc = (crc >> 8) ^ CRCTable[(crc & 0xFF) ^ *p++];
+	while (count--) 
+		crc = (crc >> 8) ^ CRCTable[(crc & 0xFF) ^ *p++];
 
     return crc ^ orig;
 }
@@ -81,16 +81,53 @@ DWORD CRC_Calculate( DWORD crc, void *buffer, DWORD count )
 DWORD CRC_CalculatePalette( DWORD crc, void *buffer, DWORD count )
 {
     BYTE *p;
-    DWORD orig = crc;
+	DWORD orig = crc;
 
     p = (BYTE*) buffer;
     while (count--)
-    {
-        crc = (crc >> 8) ^ CRCTable[(crc & 0xFF) ^ *p++];
-        crc = (crc >> 8) ^ CRCTable[(crc & 0xFF) ^ *p++];
+	{
+		crc = (crc >> 8) ^ CRCTable[(crc & 0xFF) ^ *p++];
+		crc = (crc >> 8) ^ CRCTable[(crc & 0xFF) ^ *p++];
 
-        p += 6;
-    }
+		p += 6;
+	}
 
     return crc ^ orig;
+}
+
+u32 Hash_Calculate(u32 hash, void *buffer, u32 count)
+{
+    unsigned int i;
+    u32 *data = (u32 *) buffer;
+
+    count /= 4;
+    for(i = 0; i < count; ++i) {
+        hash += data[i];
+        hash += (hash << 10);
+        hash ^= (hash >> 6);
+    }
+
+    hash += (hash << 3);
+    hash ^= (hash >> 11);
+    hash += (hash << 15);
+    return hash;
+}
+
+u32 Hash_CalculatePalette(u32 hash, void *buffer, u32 count)
+{
+    unsigned int i;
+    u16 *data = (u16 *) buffer;
+
+    count /= 16;
+    for(i = 0; i < count; ++i) {
+        hash += data[i * 8 + 0] << 16;
+        hash += data[i * 8 + 4];
+        hash += (hash << 10);
+        hash ^= (hash >> 6);
+    }
+
+    hash += (hash << 3);
+    hash ^= (hash >> 11);
+    hash += (hash << 15);
+    return hash;
 }

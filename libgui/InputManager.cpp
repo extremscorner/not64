@@ -23,28 +23,25 @@
 #include "CursorManager.h"
 #include "../gc_input/controller.h"
 
-
-void ShutdownWii();
-void ScanPADSandReset(u32 dummy);
-
-
+extern char shutdown;
+extern int stop;
 
 namespace menu {
-	
+
+void PowerCallback();
+void ResetCallback();
+
 Input::Input()
 {
+	SI_SetSamplingRate(1);
 	PAD_Init();
 #ifdef HW_RVL
-	CONF_Init();
 	WPAD_Init();
-	WPAD_SetIdleTimeout(120);
 	WPAD_SetVRes(WPAD_CHAN_ALL, 640, 480);
 	WPAD_SetDataFormat(WPAD_CHAN_ALL, WPAD_FMT_BTNS_ACC_IR); 
-	WPAD_SetPowerButtonCallback((WPADShutdownCallback)ShutdownWii);
-	SYS_SetPowerCallback(ShutdownWii);
-
+	SYS_SetPowerCallback(PowerCallback);
 #endif
-	VIDEO_SetPostRetraceCallback (ScanPADSandReset);
+	SYS_SetResetCallback(ResetCallback);
 }
 
 Input::~Input()
@@ -53,11 +50,9 @@ Input::~Input()
 
 void Input::refreshInput()
 {
-	if(padNeedScan){ gc_connected = PAD_ScanPads(); padNeedScan = 0; }
-	PAD_Read(gcPad);
-	PAD_Clamp(gcPad);
+	PAD_ScanPads();
 #ifdef HW_RVL
-	if(wpadNeedScan){ WPAD_ScanPads(); wpadNeedScan = 0; }
+	WPAD_ScanPads();
 	wiiPad = WPAD_Data(0);
 #endif
 }
@@ -78,6 +73,17 @@ void Input::clearInputData()
 {
 	Focus::getInstance().clearInputData();
 	Cursor::getInstance().clearInputData();
+}
+
+void PowerCallback()
+{
+	shutdown = 1;
+	stop = 1;
+}
+
+void ResetCallback()
+{
+	stop = 1;
 }
 
 } //namespace menu 

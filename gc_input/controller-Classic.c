@@ -28,13 +28,9 @@
 #include <wiiuse/wpad.h>
 #include "controller.h"
 
-#ifndef PI
-#define PI 3.14159f
-#endif
-
 enum { STICK_X, STICK_Y };
 static int getStickValue(joystick_t* j, int axis, int maxAbsValue){
-	double angle = PI * j->ang/180.0f;
+	double angle = M_PI * j->ang/180.0f;
 	double magnitude = (j->mag > 1.0f) ? 1.0f :
 	                    (j->mag < -1.0f) ? -1.0f : j->mag;
 	double value;
@@ -95,11 +91,12 @@ static button_t analog_sources[] = {
 static button_t menu_combos[] = {
 	{ 0, CLASSIC_CTRL_BUTTON_X|CLASSIC_CTRL_BUTTON_Y, "X+Y" },
 	{ 1, CLASSIC_CTRL_BUTTON_ZL|CLASSIC_CTRL_BUTTON_ZR, "ZL+ZR" },
+	{ 2, CLASSIC_CTRL_BUTTON_HOME, "Home" },
 };
 
 static unsigned int getButtons(classic_ctrl_t* controller)
 {
-	unsigned int b = (unsigned)controller->btns;
+	unsigned int b = (unsigned short)controller->btns;
 	s8 stickX      = getStickValue(&controller->ljs, STICK_X, 7);
 	s8 stickY      = getStickValue(&controller->ljs, STICK_Y, 7);
 	s8 substickX   = getStickValue(&controller->rjs, STICK_X, 7);
@@ -142,7 +139,6 @@ static int available(int Control) {
 
 static int _GetKeys(int Control, BUTTONS * Keys, controller_config_t* config)
 {
-	if(wpadNeedScan){ WPAD_ScanPads(); wpadNeedScan = 0; }
 	WPADData* wpad = WPAD_Data(Control);
 	BUTTONS* c = Keys;
 	memset(c, 0, sizeof(BUTTONS));
@@ -150,6 +146,8 @@ static int _GetKeys(int Control, BUTTONS * Keys, controller_config_t* config)
 	// Only use a connected classic controller
 	if(!available(Control))
 		return 0;
+
+	WPAD_ReadPending(Control, NULL);
 
 	unsigned int b = getButtons(&wpad->exp.classic);
 	inline int isHeld(button_tp button){
@@ -248,7 +246,6 @@ static void refreshAvailable(void){
 
 	int i, err;
 	u32 expType;
-	WPAD_ScanPads();
 	for(i=0; i<4; ++i){
 		err = WPAD_Probe(i, &expType);
 		if(err == WPAD_ERR_NONE &&

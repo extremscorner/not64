@@ -44,30 +44,29 @@ extern int rom_length;
 
 typedef struct _rom_header
 {
-   unsigned char init_PI_BSB_DOM1_LAT_REG;
-   unsigned char init_PI_BSB_DOM1_PGS_REG;
-   unsigned char init_PI_BSB_DOM1_PWD_REG;
-   unsigned char init_PI_BSB_DOM1_PGS_REG2;
-   unsigned long ClockRate;
-   unsigned long PC;
-   unsigned long Release;
-   unsigned long CRC1;
-   unsigned long CRC2;
-   unsigned long Unknown[2];
-   unsigned char nom[20];
-   unsigned long unknown;
-   unsigned long Manufacturer_ID;
-   unsigned short Cartridge_ID;
-   unsigned short Country_code;
-   unsigned long Boot_Code[1008];
+	unsigned char init_PI_BSB_DOM1_LAT_REG;
+	unsigned char init_PI_BSB_DOM1_PGS_REG;
+	unsigned char init_PI_BSB_DOM1_PWD_REG;
+	unsigned char init_PI_BSB_DOM1_PGS_REG2;
+	unsigned int ClockRate;
+	unsigned int PC;
+	unsigned int Release;
+	unsigned int CRC1;
+	unsigned int CRC2;
+	unsigned int Unknown[2];
+	unsigned char Name[20];
+	unsigned int unknown;
+	unsigned int Manufacturer_ID;
+	unsigned short Cartridge_ID;
+	unsigned short Country_code;
 } rom_header;
-extern rom_header *ROM_HEADER;
+extern rom_header ROM_HEADER;
 
 typedef struct _rom_settings
 {
    char goodname[256];
-   int eeprom_16kb;
-   char MD5[33];
+   char isEEPROM16k;
+   char isGoldenEye;
 } rom_settings;
 extern rom_settings ROM_SETTINGS;
 

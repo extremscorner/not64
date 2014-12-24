@@ -34,17 +34,17 @@
 #include "TLB-Cache.h"
 #ifdef USE_EXPANSION
 	#define MEMMASK 0x7FFFFF
-	#define TOPOFMEM 0x80800000
+	#define TOPOFMEM 0x800000
 #else
 	#define MEMMASK 0x3FFFFF
-	#define TOPOFMEM 0x80400000
+	#define TOPOFMEM 0x400000
 #endif
 
 
 #ifndef USE_TLB_CACHE
 #include "MEM2.h"
-unsigned long *tlb_LUT_r = (unsigned long*)(TLBLUT_LO);
-unsigned long *tlb_LUT_w = (unsigned long*)(TLBLUT_LO+0x400000);
+unsigned long *const tlb_LUT_r = (unsigned long*)(TLBLUT_LO);
+unsigned long *const tlb_LUT_w = (unsigned long*)(TLBLUT_LO+0x400000);
 #endif
 
 #ifndef USE_TLB_CACHE
@@ -62,14 +62,17 @@ void tlb_mem2_init()
 extern unsigned long interp_addr;
 unsigned long virtual_to_physical_address(unsigned long addresse, int w)
 {
-   if (addresse >= 0x7f000000 && addresse < 0x80000000) // golden eye hack
+   if (ROM_SETTINGS.isGoldenEye && addresse >= 0x7f000000 && addresse < 0x80000000)
      {
-	if (ROM_HEADER->CRC1 == sl(0xDCBC50D1)) // US
-	  return 0xb0034b30 + (addresse & MEMMASK);
-	if (ROM_HEADER->CRC1 == sl(0x0414CA61)) // E
-	  return 0xb00329f0 + (addresse & MEMMASK);
-	if (ROM_HEADER->CRC1 == sl(0xA24F4CF1)) // J
-	  return 0xb0034b70 + (addresse & MEMMASK);
+	switch(ROM_HEADER.Country_code&0xFF)
+	  {
+	   case 'J':
+	     return 0xb0034b70 + (addresse & MEMMASK);
+	   case 'P':
+	     return 0xb00329f0 + (addresse & MEMMASK);
+	   default:
+	     return 0xb0034b30 + (addresse & MEMMASK);
+	  }
      }
    if (w == 1)
      {
@@ -160,31 +163,5 @@ unsigned long virtual_to_physical_address(unsigned long addresse, int w)
 
 int probe_nop(unsigned long address)
 {
-   unsigned long a;
-   if (address < 0x80000000 || address > 0xc0000000)
-     {
-#ifdef USE_TLB_CACHE
-	unsigned long paddr = TLBCache_get_r(address>>12);
-	if(paddr) a = (paddr&0xFFFFF000)|(address&0xFFF);
-#else
-	if (tlb_LUT_r[address>>12])
-	  a = (tlb_LUT_r[address>>12]&0xFFFFF000)|(address&0xFFF);
-#endif
-	else
-	  return 0;
-     }
-   else
-     a = address;
-   
-   if (a >= 0xa4000000 && a < 0xa4001000)
-     {
-	if (!SP_DMEM[(a&0xFFF)/4]) return 1;
-	else return 0;
-     }
-   else if (a >= 0x80000000 && a < TOPOFMEM)
-     {
-	if (!rdram[(a&MEMMASK)/4]) return 1;
-	else return 0;
-     }
-   else return 0;
+   return *fast_mem_access(address) == 0;
 }

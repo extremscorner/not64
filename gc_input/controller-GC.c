@@ -24,6 +24,7 @@
 
 
 #include <string.h>
+#include <ogc/si.h>
 #include <ogc/pad.h>
 #include "controller.h"
 
@@ -65,20 +66,30 @@ static button_t menu_combos[] = {
 	{ 1, PAD_BUTTON_START|PAD_BUTTON_X, "Start+X" },
 };
 
-u32 gc_connected;
-
 static unsigned int getButtons(int Control){
 	return PAD_ButtonsHeld(Control);
 }
 
+static int available(int Control) {
+	u32 type;
+	type = SI_GetType(Control);
+	if ((type & SI_TYPE_MASK) == SI_TYPE_GC && (type & SI_GC_STANDARD)) {
+		controller_GC.available[Control] = 1;
+		return 1;
+	} else {
+		controller_GC.available[Control] = 0;
+		return 0;
+	}
+}
+
 static int _GetKeys(int Control, BUTTONS * Keys, controller_config_t* config)
 {
-	if(padNeedScan){ gc_connected = PAD_ScanPads(); padNeedScan = 0; }
 	BUTTONS* c = Keys;
 	memset(c, 0, sizeof(BUTTONS));
 
-	controller_GC.available[Control] = (gc_connected & (1<<Control)) ? 1 : 0;
-	if (!controller_GC.available[Control]) return 0;
+	PAD_ScanPads();
+	if(!available(Control))
+		return 0;
 
 	unsigned int b = getButtons(Control);
 	inline int isHeld(button_tp button){
@@ -174,10 +185,8 @@ controller_t controller_GC =
 	 };
 
 static void refreshAvailable(void){
-
-	if(padNeedScan){ gc_connected = PAD_ScanPads(); padNeedScan = 0; }
-
 	int i;
-	for(i=0; i<4; ++i)
-		controller_GC.available[i] = (gc_connected & (1<<i));
+	for(i=0; i<4; ++i){
+		available(i);
+	}
 }

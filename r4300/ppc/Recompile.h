@@ -106,7 +106,7 @@ void deinit_block(PowerPC_block* ppc_block);
 
 #ifdef HW_RVL
 #include "../../gc_memory/MEM2.h"
-extern PowerPC_block **blocks;
+extern PowerPC_block **const blocks;
 #else
 #ifndef ARAM_BLOCKCACHE
 extern PowerPC_block *blocks[0x100000];

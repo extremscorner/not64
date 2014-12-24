@@ -72,7 +72,7 @@ fileBrowser_file topLevel_libfat_Auto =
 	 };
 
 fileBrowser_file topLevel_libfat_Default =
-	{ "sd:/wii64/roms", // file name
+	{ "sd:/not64/roms", // file name
 	  0, // sector
 	  0, // offset
 	  0, // size
@@ -80,7 +80,7 @@ fileBrowser_file topLevel_libfat_Default =
 	 };
 	 
 fileBrowser_file topLevel_libfat_USB =
-	{ "usb:/wii64/roms", // file name
+	{ "usb:/not64/roms", // file name
 	  0, // sector
 	  0, // offset
 	  0, // size
@@ -88,7 +88,7 @@ fileBrowser_file topLevel_libfat_USB =
 	 };
 
 fileBrowser_file saveDir_libfat_Default =
-	{ "sd:/wii64/saves",
+	{ "sd:/not64/saves",
 	  0,
 	  0,
 	  0,
@@ -96,7 +96,7 @@ fileBrowser_file saveDir_libfat_Default =
 	 };
 	 
 fileBrowser_file saveDir_libfat_USB =
-	{ "usb:/wii64/saves",
+	{ "usb:/not64/saves",
 	  0,
 	  0,
 	  0,

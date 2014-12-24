@@ -38,7 +38,7 @@
 
 int rom_length;
 int rom_byte_swap;
-rom_header* ROM_HEADER = NULL;
+rom_header ROM_HEADER;
 rom_settings ROM_SETTINGS;
 
 int init_byte_swap(unsigned int magicWord)
@@ -123,8 +123,8 @@ bool isEEPROM16k()
 	
 	for (i = 0; i < TOTAL_NUM_16KBIT; i++)
 	{
-		if (ROM_HEADER->CRC1 == CRC_TABLE[i][0] &&
-			ROM_HEADER->CRC2 == CRC_TABLE[i][1])
+		if (ROM_HEADER.CRC1 == CRC_TABLE[i][0] &&
+			ROM_HEADER.CRC2 == CRC_TABLE[i][1])
 			return true;
 	}
 	
@@ -156,16 +156,13 @@ int rom_read(fileBrowser_file* file){
      ROMCache_deinit(file);
      return ret;
    }
-   if(!ROM_HEADER) ROM_HEADER = malloc(sizeof(rom_header));
-   ROMCache_read((u32*)ROM_HEADER, 0, sizeof(rom_header));
+   ROMCache_read(&ROM_HEADER, 0, sizeof(rom_header));
 
    // Swap country code back since I know the emulator relies on this being little endian.
-  char temp = ((char*)&ROM_HEADER->Country_code)[0];
-  ((char*)&ROM_HEADER->Country_code)[0] = ((char*)&ROM_HEADER->Country_code)[1];
-  ((char*)&ROM_HEADER->Country_code)[1] = temp;
+  ROM_HEADER.Country_code = bswap16(ROM_HEADER.Country_code);
   //Copy header name as Goodname (in the .ini we can use CRC to identify ROMS)
   memset((char*)buffer,0,1024);
-  strncpy(buffer, (char*)ROM_HEADER->nom,32);
+  strncpy(buffer, (char*)ROM_HEADER.Name,32);
   //Maximum ROM name is 32 bytes. Lets make sure we cut off trailing spaces
   for(i = strlen(buffer); i>0; i--)
   {
@@ -176,10 +173,8 @@ int rom_read(fileBrowser_file* file){
     }
   }
   // Fix save type for certain special sized (16kbit) eeprom games
-  if(isEEPROM16k())
-    ROM_SETTINGS.eeprom_16kb = 1;
-  else
-    ROM_SETTINGS.eeprom_16kb = 0;
+  ROM_SETTINGS.isEEPROM16k = isEEPROM16k();
+  ROM_SETTINGS.isGoldenEye = strcmp(ROM_SETTINGS.goodname, "GOLDENEYE") == 0;
 
   //Set VI limit based on ROM header
   InitTimer();
@@ -187,7 +182,6 @@ int rom_read(fileBrowser_file* file){
    return ret;
 }
 
-#define tr 
 void countrycodestring(unsigned short countrycode, char *string)
 {
     switch (countrycode)
@@ -245,7 +239,7 @@ void countrycodestring(unsigned short countrycode, char *string)
 
 char *saveregionstr()
 {
-    switch (ROM_HEADER->Country_code&0xFF)
+    switch (ROM_HEADER.Country_code&0xFF)
     {
     case 0:    /* Demo */
         return "(Demo)";

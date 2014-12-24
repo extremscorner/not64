@@ -19,7 +19,7 @@ void inline invalid_code_set(int block_num, int value){
 #else //Wii MEM2 1MB char array version
 #include "../gc_memory/MEM2.h"
 
-static unsigned char *invalid_code = (unsigned char *)(INVCODE_LO);
+static unsigned char *const invalid_code = (unsigned char*)(INVCODE_LO);
 
 int inline invalid_code_get(int block_num){
 	return invalid_code[block_num];

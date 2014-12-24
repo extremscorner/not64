@@ -43,16 +43,24 @@ Graphics::Graphics(GXRModeObj *rmode)
 	case VIDEOMODE_AUTO:
 		vmode = VIDEO_GetPreferredMode(&vmode_phys);
 		break;
-	case VIDEOMODE_NTSC:
-		vmode = &TVNtsc480IntDf;
+	case VIDEOMODE_PAL60:
+		vmode = &TVEurgb60Hz480IntDf;
+		memcpy( &vmode_phys, vmode, sizeof(GXRModeObj));
+		break;
+	case VIDEOMODE_240P:
+		vmode = &TVEurgb60Hz240DsAa;
+		memcpy( &vmode_phys, vmode, sizeof(GXRModeObj));
+		break;
+	case VIDEOMODE_480P:
+		vmode = &TVEurgb60Hz480Prog;
 		memcpy( &vmode_phys, vmode, sizeof(GXRModeObj));
 		break;
 	case VIDEOMODE_PAL:
 		vmode = &TVPal576IntDfScale;
 		memcpy( &vmode_phys, vmode, sizeof(GXRModeObj));
 		break;
-	case VIDEOMODE_480P:
-		vmode = &TVNtsc480Prog;
+	case VIDEOMODE_288P:
+		vmode = &TVPal288DsAaScale;
 		memcpy( &vmode_phys, vmode, sizeof(GXRModeObj));
 		break;
 	case VIDEOMODE_576P:
@@ -62,10 +70,11 @@ Graphics::Graphics(GXRModeObj *rmode)
 	}
 
 	vmode->viWidth = 720;
-	vmode->efbHeight = MIN(vmode->xfbHeight, 528);
 	vmode->viXOrigin = 0;
 #ifdef HW_RVL
 	VIDEO_SetTrapFilter(trapFilter);
+	if(screenMode)	VIDEO_SetAspectRatio(VI_DISPLAY_BOTH, VI_ASPECT_1_1);
+	else			VIDEO_SetAspectRatio(VI_DISPLAY_BOTH, VI_ASPECT_3_4);
 #endif
 
 	VIDEO_Configure(vmode);
@@ -107,7 +116,11 @@ void Graphics::init()
 	GX_SetDispCopyYScale(yscale);
 	GX_SetDispCopySrc(0,0,vmode->fbWidth,vmode->efbHeight);
 	GX_SetDispCopyDst(vmode->fbWidth,vmode->xfbHeight);
-	GX_SetCopyFilter(GX_FALSE,NULL,GX_TRUE,vmode->vfilter);
+	GX_SetCopyFilter(vmode->aa,vmode->sample_pattern,GX_TRUE,vmode->vfilter);
+	GX_SetFieldMode(GX_DISABLE,((vmode->viHeight==2*vmode->xfbHeight)?GX_ENABLE:GX_DISABLE));
+ 
+	if (vmode->aa)
+		GX_SetPixelFmt(GX_PF_RGB565_Z16, GX_ZC_LINEAR);
 }
 
 void Graphics::drawInit()
@@ -312,10 +325,6 @@ void Graphics::drawLine(int x1, int y1, int x2, int y2)
 	GX_End();
 }
 
-#ifndef PI
-#define PI 3.14159f
-#endif
-
 void Graphics::drawCircle(int x, int y, int radius, int numSegments)
 {
 	float angle, point_x, point_y;
@@ -324,7 +333,7 @@ void Graphics::drawCircle(int x, int y, int radius, int numSegments)
 
 	for (int i = 0; i<=numSegments; i++)
 	{
-		angle = 2*PI * i/numSegments;
+		angle = M_TWOPI * i/numSegments;
 		point_x = (float)x + (float)radius * cos( angle );
 		point_y = (float)y + (float)radius * sin( angle );
 

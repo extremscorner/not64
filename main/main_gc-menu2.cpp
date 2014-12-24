@@ -116,8 +116,6 @@ extern timers Timers;
 char menuActive;
        char saveEnabled;
        char creditsScrolling;
-       char padNeedScan;
-       char wpadNeedScan;
        char shutdown = 0;
 	   char nativeSaveDevice;
 	   char saveStateDevice;
@@ -239,7 +237,11 @@ int main(int argc, char* argv[]){
 	autoSave         = 1; // Auto Save Game
 	creditsScrolling = 0; // Normal menu for now
 	dynacore         = 1; // Dynarec
+#ifndef HW_RVL
 	screenMode		 = 0; // Stretch FB horizontally
+#else
+	screenMode		 = CONF_GetAspectRatio() == CONF_ASPECT_16_9 ? SCREENMODE_16x9_PILLARBOX : SCREENMODE_4x3;
+#endif
 	videoMode		 = VIDEOMODE_AUTO;
 	trapFilter		 = TRAPFILTER_DISABLE;
 	padAutoAssign	 = PADAUTOASSIGN_AUTOMATIC;
@@ -267,64 +269,31 @@ int main(int argc, char* argv[]){
 	//config stuff
 	fileBrowser_file* configFile_file;
 	int (*configFile_init)(fileBrowser_file*) = fileBrowser_libfat_init;
-#ifdef HW_RVL
 	if(argv[0][0] == 'u') {  //assume USB
 		configFile_file = &saveDir_libfat_USB;
 		if(configFile_init(configFile_file)) {                //only if device initialized ok
-			FILE* f = fopen( "usb:/wii64/settings.cfg", "r" );  //attempt to open file
+			FILE* f = fopen( "usb:/not64/settings.cfg", "r" );  //attempt to open file
 			if(f) {        //open ok, read it
 				readConfig(f);
 				fclose(f);
 			}
-			f = fopen( "usb:/wii64/controlG.cfg", "r" );  //attempt to open file
-			if(f) {
-				load_configurations(f, &controller_GC);					//write out GC controller mappings
-				fclose(f);
-			}
-			f = fopen( "usb:/wii64/controlC.cfg", "r" );  //attempt to open file
-			if(f) {
-				load_configurations(f, &controller_Classic);			//write out Classic controller mappings
-				fclose(f);
-			}
-			f = fopen( "usb:/wii64/controlN.cfg", "r" );  //attempt to open file
-			if(f) {
-				load_configurations(f, &controller_WiimoteNunchuk);	//write out WM+NC controller mappings
-				fclose(f);
-			}
-			f = fopen( "usb:/wii64/controlW.cfg", "r" );  //attempt to open file
-			if(f) {
-				load_configurations(f, &controller_Wiimote);			//write out Wiimote controller mappings
-				fclose(f);
-			}
-		}
-	}
-	else /*if((argv[0][0]=='s') || (argv[0][0]=='/'))*/
-#endif
-	{ //assume SD
-		configFile_file = &saveDir_libfat_Default;
-		if(configFile_init(configFile_file)) {                //only if device initialized ok
-			FILE* f = fopen( "sd:/wii64/settings.cfg", "r" );  //attempt to open file
-			if(f) {        //open ok, read it
-				readConfig(f);
-				fclose(f);
-			}
-			f = fopen( "sd:/wii64/controlG.cfg", "r" );  //attempt to open file
+			f = fopen( "usb:/not64/controlG.cfg", "r" );  //attempt to open file
 			if(f) {
 				load_configurations(f, &controller_GC);					//write out GC controller mappings
 				fclose(f);
 			}
 #ifdef HW_RVL
-			f = fopen( "sd:/wii64/controlC.cfg", "r" );  //attempt to open file
+			f = fopen( "usb:/not64/controlC.cfg", "r" );  //attempt to open file
 			if(f) {
 				load_configurations(f, &controller_Classic);			//write out Classic controller mappings
 				fclose(f);
 			}
-			f = fopen( "sd:/wii64/controlN.cfg", "r" );  //attempt to open file
+			f = fopen( "usb:/not64/controlN.cfg", "r" );  //attempt to open file
 			if(f) {
 				load_configurations(f, &controller_WiimoteNunchuk);	//write out WM+NC controller mappings
 				fclose(f);
 			}
-			f = fopen( "sd:/wii64/controlW.cfg", "r" );  //attempt to open file
+			f = fopen( "usb:/not64/controlW.cfg", "r" );  //attempt to open file
 			if(f) {
 				load_configurations(f, &controller_Wiimote);			//write out Wiimote controller mappings
 				fclose(f);
@@ -332,13 +301,44 @@ int main(int argc, char* argv[]){
 #endif //HW_RVL
 		}
 	}
+	else /*if((argv[0][0]=='s') || (argv[0][0]=='/'))*/
+	{ //assume SD
+		configFile_file = &saveDir_libfat_Default;
+		if(configFile_init(configFile_file)) {                //only if device initialized ok
+			FILE* f = fopen( "sd:/not64/settings.cfg", "r" );  //attempt to open file
+			if(f) {        //open ok, read it
+				readConfig(f);
+				fclose(f);
+			}
+			f = fopen( "sd:/not64/controlG.cfg", "r" );  //attempt to open file
+			if(f) {
+				load_configurations(f, &controller_GC);					//write out GC controller mappings
+				fclose(f);
+			}
 #ifdef HW_RVL
+			f = fopen( "sd:/not64/controlC.cfg", "r" );  //attempt to open file
+			if(f) {
+				load_configurations(f, &controller_Classic);			//write out Classic controller mappings
+				fclose(f);
+			}
+			f = fopen( "sd:/not64/controlN.cfg", "r" );  //attempt to open file
+			if(f) {
+				load_configurations(f, &controller_WiimoteNunchuk);	//write out WM+NC controller mappings
+				fclose(f);
+			}
+			f = fopen( "sd:/not64/controlW.cfg", "r" );  //attempt to open file
+			if(f) {
+				load_configurations(f, &controller_Wiimote);			//write out Wiimote controller mappings
+				fclose(f);
+			}
+#endif //HW_RVL
+		}
+	}
 	// Handle options passed in through arguments
 	int i;
 	for(i=1; i<argc; ++i){
 		handleConfigPair(argv[i]);
 	}
-#endif
 
 	MenuContext *menu = new MenuContext(vmode);
 
@@ -353,29 +353,6 @@ int main(int argc, char* argv[]){
 
 	return 0;
 }
-
-#if defined(WII)
-u16 readWPAD(void){
-	if(wpadNeedScan){ WPAD_ScanPads(); wpadNeedScan = 0; }
-	WPADData* wpad = WPAD_Data(0);
-
-	u16 b = 0;
-	if(wpad->err == WPAD_ERR_NONE &&
-	   wpad->exp.type == WPAD_EXP_CLASSIC){
-	   	u16 w = wpad->exp.classic.btns;
-	   	b |= (w & CLASSIC_CTRL_BUTTON_UP)    ? PAD_BUTTON_UP    : 0;
-	   	b |= (w & CLASSIC_CTRL_BUTTON_DOWN)  ? PAD_BUTTON_DOWN  : 0;
-	   	b |= (w & CLASSIC_CTRL_BUTTON_LEFT)  ? PAD_BUTTON_LEFT  : 0;
-	   	b |= (w & CLASSIC_CTRL_BUTTON_RIGHT) ? PAD_BUTTON_RIGHT : 0;
-	   	b |= (w & CLASSIC_CTRL_BUTTON_A) ? PAD_BUTTON_A : 0;
-	   	b |= (w & CLASSIC_CTRL_BUTTON_B) ? PAD_BUTTON_B : 0;
-	}
-
-	return b;
-}
-#else
-u16 readWPAD(void){ return 0; }
-#endif
 
 extern BOOL eepromWritten;
 extern BOOL mempakWritten;
@@ -506,7 +483,7 @@ int loadROM(fileBrowser_file* rom){
 
 static void gfx_info_init(void){
 	gfx_info.MemoryBswaped = TRUE;
-	gfx_info.HEADER = (BYTE*)ROM_HEADER;
+	gfx_info.HEADER = (BYTE*)&ROM_HEADER;
 	gfx_info.RDRAM = (BYTE*)rdram;
 	gfx_info.DMEM = (BYTE*)SP_DMEM;
 	gfx_info.IMEM = (BYTE*)SP_IMEM;
@@ -539,7 +516,7 @@ static void gfx_info_init(void){
 
 static void audio_info_init(void){
 	audio_info.MemoryBswaped = TRUE;
-	audio_info.HEADER = (BYTE*)ROM_HEADER;
+	audio_info.HEADER = (BYTE*)&ROM_HEADER;
 	audio_info.RDRAM = (BYTE*)rdram;
 	audio_info.DMEM = (BYTE*)SP_DMEM;
 	audio_info.IMEM = (BYTE*)SP_IMEM;
@@ -550,13 +527,13 @@ static void audio_info_init(void){
 	audio_info.AI_STATUS_REG = &(ai_register.ai_status); // FIXME: This was set to dummy
 	audio_info.AI_DACRATE_REG = &(ai_register.ai_dacrate);
 	audio_info.AI_BITRATE_REG = &(ai_register.ai_bitrate);
-	audio_info.CheckInterrupts = dummy_func;
+	audio_info.CheckInterrupts = check_interupt;
 	initiateAudio(audio_info);
 }
 
 void control_info_init(void){
 	control_info.MemoryBswaped = TRUE;
-	control_info.HEADER = (BYTE*)ROM_HEADER;
+	control_info.HEADER = (BYTE*)&ROM_HEADER;
 	control_info.Controls = Controls;
 	int i;
 	for (i=0; i<4; i++)
@@ -599,19 +576,6 @@ static void rsp_info_init(void){
 	rsp_info.ShowCFB = showCFB;
 	initiateRSP(rsp_info,(DWORD*)&cycle_count);
 }
-
-void ScanPADSandReset(u32 dummy) {
-	padNeedScan = wpadNeedScan = 1;
-	if(!((*(u32*)0xCC003000)>>16))
-		stop = 1;
-}
-
-#ifdef HW_RVL
-void ShutdownWii() {
-  shutdown = 1;
-  stop = 1;
-}
-#endif
 
 static void Initialise (void){
 

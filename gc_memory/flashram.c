@@ -61,7 +61,7 @@ static int mode;
 static unsigned long long status;
 #ifdef HW_RVL
 #include "MEM2.h"
-static unsigned char *flashram = (unsigned char*)(FLASHRAM_LO);
+static unsigned char *const flashram = (unsigned char*)(FLASHRAM_LO);
 #else //GC
 static unsigned char flashram[0x20000] __attribute__((aligned(32)));
 #endif
@@ -184,6 +184,7 @@ void flashram_command(unsigned long command)
 
 	       }
 	     break;
+	   case READ_MODE:
 	   case STATUS_MODE:
 	     break;
 	   default:

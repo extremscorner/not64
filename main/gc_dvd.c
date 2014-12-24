@@ -135,7 +135,7 @@ int dvd_read_id()
 	dvd[2] = 0xA8000040;
 	dvd[3] = 0;
 	dvd[4] = 0x20;
-	dvd[5] = 0x80000000;
+	dvd[5] = 0;
 	dvd[6] = 0x20;
 	dvd[7] = 3; // enable reading!
 	while (dvd[7] & 1);
@@ -185,7 +185,7 @@ int DVD_LowRead64(void* dst, unsigned int len, uint64_t offset)
 	dvd[2] = read_cmd;
 	dvd[3] = read_cmd == DVDR ? offset>>11 : offset >> 2;
 	dvd[4] = read_cmd == DVDR ? len>>11 : len;
-	dvd[5] = (unsigned long)dst;
+	dvd[5] = (unsigned long)dst & 0x1FFFFFFF;
 	dvd[6] = len;
 	dvd[7] = 3; // enable reading!
 	DCInvalidateRange(dst, len);

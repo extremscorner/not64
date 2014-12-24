@@ -61,7 +61,7 @@
 static unsigned char eeprom[0x800] __attribute__((aligned(32)));
 #ifdef HW_RVL
 #include "MEM2.h"
-static unsigned char (*mempack)[0x8000] = (unsigned char(*)[0x8000])MEMPACK_LO;
+static unsigned char (*const mempack)[0x8000] = (unsigned char(*)[])(MEMPACK_LO);
 #else //GC
 static unsigned char mempack[4][0x8000] __attribute__((aligned(32)));
 #endif
@@ -82,14 +82,14 @@ int loadEeprom(fileBrowser_file* savepath){
 	if(saveFile_readFile(&saveFile, &i, 4) == 4) {  //file exists
 		saveFile.offset = 0;
 		if(saveFile_readFile(&saveFile, eeprom, 0x800)!=0x800) { //error reading file
-  		for (i=0; i<0x800; i++) eeprom[i] = 0;
+  		for (i=0; i<0x800; i++) eeprom[i] = 0xff;
   		eepromWritten = FALSE;
   		return -1;
 		}
 		result = 1;
 		eepromWritten = 1;
 		return result;  //file read ok
-	} else for (i=0; i<0x800; i++) eeprom[i] = 0; //file doesn't exist
+	} else for (i=0; i<0x800; i++) eeprom[i] = 0xff; //file doesn't exist
 
 	eepromWritten = FALSE;
 
@@ -114,7 +114,7 @@ int saveEeprom(fileBrowser_file* savepath){
 
 void init_eeprom() {
   int i;
-  for (i=0; i<0x800; i++) eeprom[i] = 0;
+  for (i=0; i<0x800; i++) eeprom[i] = 0xff;
 }
 
 //#define DEBUG_PIF
@@ -149,14 +149,14 @@ void EepromCommand(BYTE *Command)
 	     if ((Command[1] & 3) > 0)
 	       Command[3] = 0;
 	     if ((Command[1] & 3) > 1)
-	       Command[4] = ROM_SETTINGS.eeprom_16kb == 0 ? 0x80 : 0xc0;
+	       Command[4] = ROM_SETTINGS.isEEPROM16k == 0 ? 0x80 : 0xc0;
 	     if ((Command[1] & 3) > 2)
 	       Command[5] = 0;
 	  }
 	else
 	  {
 	     Command[3] = 0;
-	     Command[4] = ROM_SETTINGS.eeprom_16kb == 0 ? 0x80 : 0xc0;
+	     Command[4] = ROM_SETTINGS.isEEPROM16k == 0 ? 0x80 : 0xc0;
 	     Command[5] = 0;
 	  }
 	break;
@@ -463,6 +463,8 @@ void update_pif_write()
 	     }
 	     // calculate the proper response for the given challenge (X-Scale's algorithm)
 	     n64_cic_nus_6105(challenge, response, CHL_LEN - 2);
+	     PIF_RAMb[46] = 0;
+	     PIF_RAMb[47] = 0;
 	     // re-format the 'response' into a byte stream
 	     for (i = 0; i < 15; i++)
 	     {

@@ -497,8 +497,6 @@ void TextureCache_Init()
 
 	TextureCache_ActivateDummy( 0 );
 	TextureCache_ActivateDummy( 1 );
-
-	CRC_BuildTable();
 }
 
 BOOL TextureCache_Verify()
@@ -1403,10 +1401,9 @@ void TextureCache_Load( CachedTexture *texInfo )
 u32 TextureCache_CalculateCRC( u32 t, u32 width, u32 height )
 {
 	u32 crc;
-	u32 y, n, bpl, lineBytes, line;
+	u32 y, /*i,*/ bpl, lineBytes, line;
 	u64 *src;
 
-	n = max( 1, height >> 3 );
 	bpl = width << gSP.textureTile[t]->size >> 1;
 	lineBytes = gSP.textureTile[t]->line << 3;
 
@@ -1415,18 +1412,18 @@ u32 TextureCache_CalculateCRC( u32 t, u32 width, u32 height )
 		line <<= 1;
 
 	crc = 0xFFFFFFFF;
- 	for (y = 0; y < height; y += n)
+ 	for (y = 0; y < height; y++)
 	{
 		src = (u64*)&TMEM[(gSP.textureTile[t]->tmem + line * y) & 0x1FF];
-		crc = CRC_Calculate( crc, src, bpl );
+		crc = Hash_Calculate( crc, src, bpl );
 	}
 
    	if (gSP.textureTile[t]->format == G_IM_FMT_CI)
 	{
 		if (gSP.textureTile[t]->size == G_IM_SIZ_4b)
-			crc = CRC_Calculate( crc, &gDP.paletteCRC16[gSP.textureTile[t]->palette], 4 );
+			crc = Hash_CalculatePalette( crc, &TMEM[0x100 + (gSP.textureTile[t]->palette << 4)], 128 );
 		else if (gSP.textureTile[t]->size == G_IM_SIZ_8b)
-			crc = CRC_Calculate( crc, &gDP.paletteCRC256, 4 );
+			crc = Hash_CalculatePalette( crc, &TMEM[0x100], 2048 );
 	}
 	return crc;
 }
@@ -1470,8 +1467,10 @@ void TextureCache_ActivateTexture( u32 t, CachedTexture *texture )
 			GX_InitTexObj(&texture->GXtex, texture->GXtexture, (u16) texture->realWidth, (u16) texture->realHeight, texture->GXtexfmt, 
 				texture->clampS ? GX_CLAMP : GX_REPEAT, 
 				texture->clampT ? GX_CLAMP : GX_REPEAT, GX_FALSE); 
-		if (OGL.GXuseMinMagNearest) GX_InitTexObjLOD(&texture->GXtex, GX_NEAR, GX_NEAR, 0.0f, 0.0f, 0.0f, GX_FALSE, GX_FALSE, GX_ANISO_1);
-		else GX_InitTexObjLOD(&texture->GXtex, GX_LINEAR, GX_LINEAR, 0.0f, 0.0f, 0.0f, GX_TRUE, GX_TRUE, GX_ANISO_4);
+		if (texture->frameBufferTexture || OGL.GXuseMinMagNearest)
+			GX_InitTexObjLOD(&texture->GXtex, GX_NEAR, GX_NEAR, 0.0f, 0.0f, 0.0f, GX_FALSE, GX_FALSE, GX_ANISO_1);
+		else
+			GX_InitTexObjLOD(&texture->GXtex, GX_LINEAR, GX_LINEAR, 0.0f, 0.0f, 0.0f, GX_TRUE, GX_TRUE, GX_ANISO_4);
 		GX_LoadTexObj(&texture->GXtex, t); // t = 0 is GX_TEXMAP0 and t = 1 is GX_TEXMAP1
 		OGL.GXuseMinMagNearest = false;
 #ifdef GLN64_SDLOG
@@ -1518,14 +1517,14 @@ void TextureCache_UpdateBackground()
 	u32 numBytes = gSP.bgImage.width * gSP.bgImage.height << gSP.bgImage.size >> 1;
 	u32 crc;
 
-	crc = CRC_Calculate( 0xFFFFFFFF, &RDRAM[gSP.bgImage.address], numBytes );
+	crc = Hash_Calculate( 0xFFFFFFFF, &RDRAM[gSP.bgImage.address], numBytes );
 
    	if (gSP.bgImage.format == G_IM_FMT_CI)
 	{
 		if (gSP.bgImage.size == G_IM_SIZ_4b)
-			crc = CRC_Calculate( crc, &gDP.paletteCRC16[gSP.bgImage.palette], 4 );
+			crc = Hash_CalculatePalette( crc, &TMEM[0x100 + (gSP.bgImage.palette << 4)], 128 );
 		else if (gSP.bgImage.size == G_IM_SIZ_8b)
-			crc = CRC_Calculate( crc, &gDP.paletteCRC256, 4 );
+			crc = Hash_CalculatePalette( crc, &TMEM[0x100], 2048 );
 	}
 
 	CachedTexture *current = cache.top;

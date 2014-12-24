@@ -52,15 +52,17 @@ enum { MEM_READ_WORD,  MEM_READ_BYTE,  MEM_READ_HALF,  MEM_READ_LONG,
 #define write_dword_in_memory() rwmem[address>>16][MEM_WRITE_LONG]()
 
 extern unsigned long SP_DMEM[0x1000/4*2];
-extern unsigned char *SP_DMEMb;
-extern unsigned long *SP_IMEM;
+extern unsigned char *const SP_DMEMb;
+extern unsigned long *const SP_IMEM;
+extern unsigned char *const SP_IMEMb;
 extern unsigned long PIF_RAM[0x40/4];
-extern unsigned char *PIF_RAMb;
+extern unsigned char *const PIF_RAMb;
 #ifdef USE_EXPANSION
 	extern unsigned long rdram[0x800000/4];
 #else
 	extern unsigned long rdram[0x800000/4/2];
 #endif
+extern unsigned char *const rdramb;
 extern unsigned long address, word;
 extern unsigned char byte;
 extern unsigned short hword;
@@ -429,5 +431,10 @@ void write_pifd();
 
 void update_SP();
 void update_DPC();
+
+/* Returns a pointer to a block of contiguous memory
+ * Can access RDRAM, SP_DMEM, SP_IMEM and ROM, using TLB if necessary
+ * Useful for getting fast access to a zone with executable code. */
+unsigned long *fast_mem_access(unsigned long address);
 
 #endif

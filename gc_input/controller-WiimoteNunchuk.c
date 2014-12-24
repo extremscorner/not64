@@ -28,13 +28,9 @@
 #include <wiiuse/wpad.h>
 #include "controller.h"
 
-#ifndef PI
-#define PI 3.14159f
-#endif
-
 enum { STICK_X, STICK_Y };
 static int getStickValue(joystick_t* j, int axis, int maxAbsValue){
-	double angle = PI * j->ang/180.0f;
+	double angle = M_PI * j->ang/180.0f;
 	double magnitude = (j->mag > 1.0f) ? 1.0f :
 	                    (j->mag < -1.0f) ? -1.0f : j->mag;
 	double value;
@@ -101,7 +97,6 @@ static int _GetKeys(int Control, BUTTONS * Keys, controller_config_t* config,
                     int (*available)(int),
                     unsigned int (*getButtons)(WPADData*))
 {
-	if(wpadNeedScan){ WPAD_ScanPads(); wpadNeedScan = 0; }
 	WPADData* wpad = WPAD_Data(Control);
 	BUTTONS* c = Keys;
 	memset(c, 0, sizeof(BUTTONS));
@@ -109,6 +104,8 @@ static int _GetKeys(int Control, BUTTONS * Keys, controller_config_t* config,
 	// Only use a connected nunchuck controller
 	if(!available(Control))
 		return 0;
+
+	WPAD_ReadPending(Control, NULL);
 
 	unsigned int b = getButtons(wpad);
 	inline int isHeld(button_tp button){
@@ -325,7 +322,6 @@ controller_t controller_WiimoteNunchuk =
 
 static void refreshAvailableWM(void){
 	int i;
-	WPAD_ScanPads();
 	for(i=0; i<4; ++i){
 		availableWM(i);
 	}
@@ -333,7 +329,6 @@ static void refreshAvailableWM(void){
 
 static void refreshAvailableWMN(void){
 	int i;
-	WPAD_ScanPads();
 	for(i=0; i<4; ++i){
 		availableWMN(i);
 	}

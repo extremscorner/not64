@@ -216,171 +216,213 @@ unsigned int dyna_check_cop1_unusable(unsigned int pc, int isDelaySlot){
 	return interp_addr;
 }
 
-static void invalidate_func(unsigned int addr){
-	PowerPC_block* block = blocks_get(addr>>12);
-	PowerPC_func* func = find_func(&block->funcs, addr);
-	if(func)
-		RecompCache_Free(func->start_addr);
+void invalidate_func(unsigned int addr){
+	if(!invalid_code_get(addr>>12)){
+		PowerPC_block* block = blocks_get(addr>>12);
+		PowerPC_func* func = find_func(&block->funcs, addr);
+		if(func)
+			RecompCache_Free(func->start_addr);
+	}
 }
 
-#define check_memory() \
-	if(!invalid_code_get(address>>12)/* && \
-	   blocks[address>>12]->code_addr[(address&0xfff)>>2]*/) \
-		invalidate_func(address);
-
-unsigned int dyna_mem(unsigned int value, unsigned int addr,
+unsigned int dyna_mem(unsigned int addr, unsigned int value,
                       memType type, unsigned int pc, int isDelaySlot){
-	static unsigned long long dyna_rdword;
-
-	address = addr;
-	rdword = &dyna_rdword;
 	PC->addr = interp_addr = pc;
 	delay_slot = isDelaySlot;
 
 	switch(type){
 		case MEM_LW:
+			address = addr;
 			read_word_in_memory();
-			reg[value] = (long long)((long)dyna_rdword);
+			reg[value] = (signed long)word;
 			break;
 		case MEM_LWU:
+			address = addr;
 			read_word_in_memory();
-			reg[value] = (unsigned long long)((long)dyna_rdword);
+			reg[value] = word;
 			break;
 		case MEM_LH:
+			address = addr;
 			read_hword_in_memory();
-			reg[value] = (long long)((short)dyna_rdword);
+			reg[value] = (signed short)hword;
 			break;
 		case MEM_LHU:
+			address = addr;
 			read_hword_in_memory();
-			reg[value] = (unsigned long long)((unsigned short)dyna_rdword);
+			reg[value] = hword;
 			break;
 		case MEM_LB:
+			address = addr;
 			read_byte_in_memory();
-			reg[value] = (long long)((signed char)dyna_rdword);
+			reg[value] = (signed char)byte;
 			break;
 		case MEM_LBU:
+			address = addr;
 			read_byte_in_memory();
-			reg[value] = (unsigned long long)((unsigned char)dyna_rdword);
+			reg[value] = byte;
 			break;
 		case MEM_LD:
+			address = addr;
 			read_dword_in_memory();
-			reg[value] = dyna_rdword;
+			reg[value] = dword;
 			break;
 		case MEM_LWC1:
+			address = addr;
 			read_word_in_memory();
-			*((long*)reg_cop1_simple[value]) = (long)dyna_rdword;
+			*((long*)reg_cop1_simple[value]) = word;
 			break;
 		case MEM_LDC1:
+			address = addr;
 			read_dword_in_memory();
-			*((long long*)reg_cop1_double[value]) = dyna_rdword;
+			*((long long*)reg_cop1_double[value]) = dword;
+			break;
+		case MEM_LL:
+			address = addr;
+			read_word_in_memory();
+			reg[value] = (signed long)word;
+			llbit = 1;
 			break;
 		case MEM_LWL:
 			address = addr & ~3;
 			read_word_in_memory();
-			switch(addr&3){
-				case 0:
-					reg[value] = dyna_rdword;
-					break;
-				case 1:
-					reg[value] = (reg[value]&0x000000FF) | (dyna_rdword<<8);
-					break;
-				case 2:
-					reg[value] = (reg[value]&0x0000FFFF) | (dyna_rdword<<16);
-					break;
-				case 3:
-					reg[value] = (reg[value]&0x00FFFFFF) | (dyna_rdword<<24);
-					break;
+			if((addr & 3) == 0){
+				reg[value] = (signed long)word;
+			} else {
+				u32 shift = (addr & 3) * 8;
+				u32 mask = 0xFFFFFFFF << shift;
+				reg[value] = (reg[value] & ~mask) | ((word << shift) & mask);
 			}
-			sign_extended(reg[value]);
 			break;
 		case MEM_LWR:
 			address = addr & ~3;
 			read_word_in_memory();
-			switch(addr&3){
-				case 0:
-					reg[value] = (reg[value]&0xFFFFFF00) | (dyna_rdword>>24);
-					break;
-				case 1:
-					reg[value] = (reg[value]&0xFFFF0000) | (dyna_rdword>>16);
-					break;
-				case 2:
-					reg[value] = (reg[value]&0xFF000000) | (dyna_rdword>>8);
-					break;
-				case 3:
-					reg[value] = dyna_rdword;
-					break;
+			if((~addr & 3) == 0){
+				reg[value] = (signed long)word;
+			} else {
+				u32 shift = (~addr & 3) * 8;
+				u32 mask = 0xFFFFFFFF >> shift;
+				reg[value] = (reg[value] & ~mask) | ((word >> shift) & mask);
 			}
-			sign_extended(reg[value]);
+			break;
+		case MEM_LDL:
+			address = addr & ~7;
+			read_dword_in_memory();
+			if((addr & 7) == 0){
+				reg[value] = dword;
+			} else {
+				u32 shift = (addr & 7) * 8;
+				u64 mask = 0xFFFFFFFFFFFFFFFFLL << shift;
+				reg[value] = (reg[value] & ~mask) | ((dword << shift) & mask);
+			}
+			break;
+		case MEM_LDR:
+			address = addr & ~7;
+			read_dword_in_memory();
+			if((~addr & 7) == 0){
+				reg[value] = dword;
+			} else {
+				u32 shift = (~addr & 7) * 8;
+				u64 mask = 0xFFFFFFFFFFFFFFFFLL >> shift;
+				reg[value] = (reg[value] & ~mask) | ((dword >> shift) & mask);
+			}
 			break;
 		case MEM_SW:
-			word = value;
+			address = addr;
+			word = reg[value];
 			write_word_in_memory();
-			check_memory();
+			invalidate_func(addr);
 			break;
 		case MEM_SH:
-			hword = value;
+			address = addr;
+			hword = reg[value];
 			write_hword_in_memory();
-			check_memory();
+			invalidate_func(addr);
 			break;
 		case MEM_SB:
-			byte = value;
+			address = addr;
+			byte = reg[value];
 			write_byte_in_memory();
-			check_memory();
+			invalidate_func(addr);
 			break;
 		case MEM_SD:
+			address = addr;
 			dword = reg[value];
 			write_dword_in_memory();
-			check_memory();
+			invalidate_func(addr);
 			break;
 		case MEM_SWC1:
+			address = addr;
 			word = *((long*)reg_cop1_simple[value]);
 			write_word_in_memory();
-			check_memory();
+			invalidate_func(addr);
 			break;
 		case MEM_SDC1:
-			dword = *((unsigned long long*)reg_cop1_double[value]);
+			address = addr;
+			dword = *((long long*)reg_cop1_double[value]);
 			write_dword_in_memory();
-			check_memory();
+			invalidate_func(addr);
+			break;
+		case MEM_SC:
+			if(llbit){
+				address = addr;
+				word = reg[value];
+				write_word_in_memory();
+				invalidate_func(addr);
+			}
+			reg[value] = llbit;
+			llbit = 0;
 			break;
 		case MEM_SWL:
 			address = addr & ~3;
 			read_word_in_memory();
-			switch(addr&3){
-				case 0:
-					word = value;
-					break;
-				case 1:
-					word = (value>>8) | (dyna_rdword&0xFF000000);
-					break;
-				case 2:
-					word = (value>>16) | (dyna_rdword&0xFFFF0000);
-					break;
-				case 3:
-					word = (value>>24) | (dyna_rdword&0xFFFFFF00);
-					break;
+			if((addr & 3) == 0){
+				word = reg[value];
+			} else {
+				u32 shift = (addr & 3) * 8;
+				u32 mask = 0xFFFFFFFF >> shift;
+				word = (word & ~mask) | ((reg[value] >> shift) & mask);
 			}
 			write_word_in_memory();
-			check_memory();
+			invalidate_func(addr);
 			break;
 		case MEM_SWR:
 			address = addr & ~3;
 			read_word_in_memory();
-			switch(addr&3){
-				case 0:
-					word = (value<<24) | (dyna_rdword&0x00FFFFFF);
-					break;
-				case 1:
-					word = (value<<16) | (dyna_rdword&0x0000FFFF);
-					break;
-				case 2:
-					word = (value<<8) | (dyna_rdword&0x000000FF);
-					break;
-				case 3:
-					word = value;
-					break;
+			if((~addr & 3) == 0){
+				word = reg[value];
+			} else {
+				u32 shift = (~addr & 3) * 8;
+				u32 mask = 0xFFFFFFFF << shift;
+				word = (word & ~mask) | ((reg[value] << shift) & mask);
 			}
 			write_word_in_memory();
-			check_memory();
+			invalidate_func(addr);
+			break;
+		case MEM_SDL:
+			address = addr & ~7;
+			read_dword_in_memory();
+			if((addr & 7) == 0){
+				dword = reg[value];
+			} else {
+				u32 shift = (addr & 7) * 8;
+				u64 mask = 0xFFFFFFFFFFFFFFFFLL >> shift;
+				dword = (dword & ~mask) | ((reg[value] >> shift) & mask);
+			}
+			write_dword_in_memory();
+			invalidate_func(addr);
+			break;
+		case MEM_SDR:
+			address = addr & ~7;
+			read_dword_in_memory();
+			if((~addr & 7) == 0){
+				dword = reg[value];
+			} else {
+				u32 shift = (~addr & 7) * 8;
+				u64 mask = 0xFFFFFFFFFFFFFFFFLL << shift;
+				dword = (dword & ~mask) | ((reg[value] << shift) & mask);
+			}
+			write_dword_in_memory();
+			invalidate_func(addr);
 			break;
 		default:
 			stop = 1;

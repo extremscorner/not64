@@ -47,9 +47,11 @@ extern int noCheckInterrupt;
 
 typedef enum { MEM_LW,   MEM_LH,   MEM_LB,   MEM_LD,
                MEM_LWU,  MEM_LHU,  MEM_LBU,
-               MEM_LWC1, MEM_LDC1, MEM_LWL,  MEM_LWR,
+               MEM_LWC1, MEM_LDC1, MEM_LL,
+               MEM_LWL,  MEM_LWR,  MEM_LDL,  MEM_LDR,
                MEM_SW,   MEM_SH,   MEM_SB,   MEM_SD,
-               MEM_SWC1, MEM_SDC1, MEM_SWL,  MEM_SWR } memType;
+               MEM_SWC1, MEM_SDC1, MEM_SC,
+               MEM_SWL,  MEM_SWR,  MEM_SDL,  MEM_SDR } memType;
 
 unsigned int decodeNInterpret(MIPS_instr, unsigned int, int);
 #ifdef COMPARE_CORE
@@ -58,7 +60,8 @@ int dyna_update_count(unsigned int pc, int isDelaySlot);
 int dyna_update_count(unsigned int pc);
 #endif
 unsigned int dyna_check_cop1_unusable(unsigned int pc, int isDelaySlot);
-unsigned int dyna_mem(unsigned int value, unsigned int addr,
+void invalidate_func(unsigned int addr);
+unsigned int dyna_mem(unsigned int addr, unsigned int value,
                       memType type, unsigned int pc, int isDelaySlot);
 
 //cop0 macros

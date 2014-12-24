@@ -12,11 +12,11 @@
 
 timers Timers = {0.0, 0.0, 0, 1, 0, 100};
 float VILimit = 60.0;
-static double VILimitMicroseconds = 1000000.0/60.0;
+double VILimitMicroseconds = 1000000.0/60.0;
 
 int GetVILimit(void)
 {
-	switch (ROM_HEADER->Country_code&0xFF)
+	switch (ROM_HEADER.Country_code&0xFF)
 	{
 		// PAL codes
 		case 0x44:
@@ -57,6 +57,7 @@ void InitTimer(void) {
 	Timers.frameDrawn = 0;
 }
 
+extern int stop;
 extern unsigned int usleep(unsigned int us);
 
 void new_frame(void) {
@@ -64,6 +65,12 @@ void new_frame(void) {
 	static DWORD LastFPSTime;
 	static DWORD CounterTime;
 	static int Fps_Counter=0;
+	
+	if (stop) {
+		CounterTime = ticks_to_microsecs(gettick());
+		Fps_Counter = 0;
+		return;
+	}
 	
 	//if (!Config.showFPS) return;
 	Fps_Counter++;
@@ -93,6 +100,12 @@ void new_vi(void) {
 	static int VI_Counter = 0;
 	static int VI_WaitCounter = 0;
 	long time;
+
+	if (stop) {
+		CounterTime = ticks_to_microsecs(gettick());
+		VI_Counter = 0;
+		return;
+	}
 
 	start_section(IDLE_SECTION);
 //	if ( (!Config.showVIS) && (!Config.limitFps) ) return;
@@ -133,6 +146,6 @@ void new_vi(void) {
 		VI_Counter = 0 ;
 	}
 
-	LastFPSTime = CurrentFPSTime;
+	LastFPSTime = CurrentFPSTime ;
     end_section(IDLE_SECTION);
 }

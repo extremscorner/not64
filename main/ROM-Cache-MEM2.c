@@ -56,7 +56,10 @@ void ROMCache_init(fileBrowser_file* file)
 
 void ROMCache_deinit()
 {
-	VM_InvalidateAll();
+	if (ROMTooBig) {
+		ROMBase = ROMCACHE_LO;
+		VM_Deinit();
+	}
 }
 
 void* ROMCache_pointer(u32 rom_offset)
@@ -76,7 +79,7 @@ int ROMCache_load(fileBrowser_file* file)
 	unsigned i = 0, loads_til_update = 0;
 	
 	if (ROMTooBig) {
-		void* VMBase = VM_Init(64*MB, ROMCACHE_SIZE);
+		void* VMBase = VM_Init(rom_length, ROMCACHE_SIZE);
 		if (VMBase == NULL)
 			return ROM_CACHE_ERROR_READ;
 		

@@ -208,10 +208,10 @@ ConfigureButtonsFrame::~ConfigureButtonsFrame()
 
 }
 
-static char controllerTypeStrings[5][17] =
-	{ "Gamecube",
+static char controllerTypeStrings[5][16] =
+	{ "GameCube",
 	  "Classic",
-	  "Wiimote+Nunchuck",
+	  "Wiimote+Nunchuk",
 	  "Wiimote",
 	  "NULL"};
 

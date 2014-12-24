@@ -316,36 +316,19 @@ void init_block(MIPS_instr* mips_code, PowerPC_block* ppc_block){
 		}
 
 	} else {
-		unsigned int start = ppc_block->start_address;
-		unsigned int end   = ppc_block->end_address;
-		temp_block = blocks_get((start+0x20000000)>>12);
-		if(start >= 0x80000000 && end < 0xa0000000 &&
-		   invalid_code_get((start+0x20000000)>>12)){
-			invalid_code_set((start+0x20000000)>>12, 0);
-			if(!temp_block){
-  			temp_block = malloc(sizeof(PowerPC_block));
-				blocks_set((start+0x20000000)>>12, temp_block);
-				//blocks[(start+0x20000000)>>12]->code_addr = ppc_block->code_addr;
-				temp_block->funcs = NULL;
-				temp_block->start_address = (start+0x20000000) & ~0xFFF;
-				temp_block->end_address		= ((start+0x20000000) & ~0xFFF) + 0x1000;
-				init_block(mips_code, temp_block);
-			}
-		}
-		if(start >= 0xa0000000 && end < 0xc0000000 &&
-		   invalid_code_get((start-0x20000000)>>12)){
-			invalid_code_set((start-0x20000000)>>12, 0);
-			temp_block = blocks_get((start-0x20000000)>>12);
-			if(!temp_block){
-  			temp_block = malloc(sizeof(PowerPC_block));
-				blocks_set((start-0x20000000)>>12, temp_block);
-				//blocks[(start-0x20000000)>>12]->code_addr = ppc_block->code_addr;
-				temp_block->funcs = NULL;
-				temp_block->start_address		= (start-0x20000000) & ~0xFFF;
-				temp_block->end_address			= ((start-0x20000000) & ~0xFFF) + 0x1000;
-				init_block(mips_code, temp_block);
-					
-			}
+		unsigned long paddr;
+
+		paddr = ppc_block->start_address ^ 0x20000000;
+		invalid_code_set(paddr>>12, 0);
+		temp_block = blocks_get(paddr>>12);
+		if(!temp_block){
+			temp_block = malloc(sizeof(PowerPC_block));
+			blocks_set(paddr>>12, temp_block);
+			//blocks[paddr>>12]->code_addr = ppc_block->code_addr;
+			temp_block->funcs = NULL;
+			temp_block->start_address = paddr & ~0xFFF;
+			temp_block->end_address = (paddr & ~0xFFF) + 0x1000;
+			init_block(mips_code, temp_block);
 		}
 	}
 	invalid_code_set(ppc_block->start_address>>12, 0);
@@ -380,17 +363,13 @@ void deinit_block(PowerPC_block* ppc_block){
 		}
 
 	} else {
-		unsigned int start = ppc_block->start_address;
-		unsigned int end   = ppc_block->end_address;
-		temp_block = blocks_get((start+0x20000000)>>12);
-		if(start >= 0x80000000 && end < 0xa0000000 && temp_block){
-			//blocks[(start+0x20000000)>>12]->code_addr = NULL;
-			invalid_code_set((start+0x20000000)>>12, 1);
-		}
-		temp_block = blocks_get((start-0x20000000)>>12);
-		if(start >= 0xa0000000 && end < 0xc0000000 && temp_block){
-			//blocks[(start-0x20000000)>>12]->code_addr = NULL;
-			invalid_code_set((start-0x20000000)>>12, 1);
+		unsigned long paddr;
+
+		paddr = ppc_block->start_address ^ 0x20000000;
+		temp_block = blocks_get(paddr>>12);
+		if(temp_block){
+			//blocks[paddr>>12]->code_addr = NULL;
+			invalid_code_set(paddr>>12, 1);
 		}
 	}
 }
@@ -477,11 +456,10 @@ static int pass0(PowerPC_block* ppc_block){
 	// If the function continues into the next block, we'll need to use
 	//   a jump pad at the end of the block.
 	unsigned int pc = addr_first >> 2;
-	int i;
 	// Set this to the end address of the block for is_j_out
 	addr_last = ppc_block->end_address;
 	// Zero out the jump destinations table
-	for(i=0; i<1024; ++i) isJmpDst[i] = 0;
+	memset(isJmpDst, 0, 1024);
 	// Go through each instruction and map every branch instruction's destination
 	for(src = src_first; (pc < addr_last >> 2); ++src, ++pc){
 		int opcode = MIPS_GET_OPCODE(*src);
@@ -508,9 +486,8 @@ static int pass0(PowerPC_block* ppc_block){
 		          opcode == MIPS_OPCODE_B     ||
 		          (opcode == MIPS_OPCODE_COP1 &&
 		           MIPS_GET_RS(*src) == MIPS_FRMT_BC)){
-			int bd = MIPS_GET_IMMED(*src);
+			short bd = MIPS_GET_IMMED(*src);
 			src+=2; ++pc;
-			bd |= (bd & 0x8000) ? 0xFFFF0000 : 0; // sign extend
 			if(!is_j_out(bd, 0)){
 				assert( index + 1 + bd >= 0 && index + 1 + bd < 1024 );
 				isJmpDst[ index + 1 + bd ] = 1;
@@ -554,20 +531,20 @@ static void genJumpPad(void){
 	PowerPC_instr ppc = NEW_PPC_INSTR();
 
 	// noCheckInterrupt = 1
-	GEN_LI(ppc, 0, 0, 1);
+	GEN_LI(ppc, R0, 1);
 	set_next_dst(ppc);
-	GEN_STW(ppc, 0, SDAREL(noCheckInterrupt), 13);
+	GEN_STW(ppc, R0, SDAREL(noCheckInterrupt), R13);
 	set_next_dst(ppc);
 
 	// Set the next address to the first address in the next block if
 	//   we've really reached the end of the block, not jumped to the pad
-	GEN_LIS(ppc, 3, (get_src_pc()+4)>>16);
+	GEN_LIS(ppc, R3, (get_src_pc()+4)>>16);
 	set_next_dst(ppc);
-	GEN_ORI(ppc, 3, 3, get_src_pc()+4);
+	GEN_ORI(ppc, R3, R3, get_src_pc()+4);
 	set_next_dst(ppc);
 
 	// return destination
-	GEN_BLR(ppc,0);
+	GEN_BLR(ppc, 0);
 	set_next_dst(ppc);
 }
 

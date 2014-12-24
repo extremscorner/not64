@@ -43,6 +43,8 @@ unsigned int decodeNInterpret();
 #define INTERPRET_LD
 #define INTERPRET_LWL
 #define INTERPRET_LWR
+#define INTERPRET_LDL
+#define INTERPRET_LDR
 #endif
 
 #if 0
@@ -52,13 +54,9 @@ unsigned int decodeNInterpret();
 #define INTERPRET_SD
 #define INTERPRET_SWL
 #define INTERPRET_SWR
-#endif
-
-#define INTERPRET_LDL
-#define INTERPRET_LDR
-
 #define INTERPRET_SDL
 #define INTERPRET_SDR
+#endif
 
 #if 0
 #define INTERPRET_LWC1
@@ -87,7 +85,7 @@ unsigned int decodeNInterpret();
 #define INTERPRET_DMULT
 #define INTERPRET_DMULTU
 #define INTERPRET_DDIV
-#define INTERPRET_DDIVU
+//#define INTERPRET_DDIVU
 
 //#define INTERPRET_HILO
 
@@ -116,8 +114,8 @@ unsigned int decodeNInterpret();
 #define INTERPRET_BREAK
 #define INTERPRET_TRAPS
 
-#define INTERPRET_LL
-#define INTERPRET_SC
+//#define INTERPRET_LL
+//#define INTERPRET_SC
 
 //#define INTERPRET_COP0
 //#define INTERPRET_MFC0

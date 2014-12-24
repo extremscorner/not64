@@ -5,8 +5,8 @@ CXX		=powerpc-eabi-g++
 AS		=powerpc-eabi-as
 
 CFLAGS  = -pipe -g -Ofast -Wall -mrvl -flto=jobserver \
-	  -DUSE_GUI -DWII -DGLN64_GX -DUSE_EXPANSION \
-	  -DUSE_RECOMP_CACHE -DPPC_DYNAREC -DFASTMEM -DRELEASE -DMENU_V2
+	  -DWII -DRELEASE -DMENU_V2 -DGLN64_GX -DUSE_EXPANSION \
+	  -DPPC_DYNAREC -DUSE_RECOMP_CACHE -DFASTMEM -DNDEBUG
 
 LDFLAGS	=$(CFLAGS) -Wl,-Map,$(notdir $@).map -Wl,--cref
 
@@ -97,14 +97,18 @@ OBJ_INPUT	=gc_input/main.o \
 		gc_input/controller-Classic.o \
 		gc_input/controller-WiimoteNunchuk.o
 
-OBJ_RSPHLE	=rsp_hle/main.o \
-		rsp_hle/alist.o \
+OBJ_RSPHLE	=rsp_hle/alist.o \
+		rsp_hle/alist_audio.o \
+		rsp_hle/alist_naudio.o \
+		rsp_hle/alist_nead.o \
+		rsp_hle/audio.o \
 		rsp_hle/cicx105.o \
+		rsp_hle/hle.o \
 		rsp_hle/jpeg.o \
-		rsp_hle/ucode3.o \
-		rsp_hle/ucode2.o \
-		rsp_hle/ucode1.o \
-		rsp_hle/ucode3mp3.o
+		rsp_hle/memory.o \
+		rsp_hle/mp3.o \
+		rsp_hle/musyx.o \
+		rsp_hle/plugin.o
 
 OBJ_RSPHLEPPC	=rsp_hle-ppc/main.o \
 		rsp_hle-ppc/jpeg.o \

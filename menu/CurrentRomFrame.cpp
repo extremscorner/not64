@@ -135,10 +135,10 @@ void Func_ShowRomInfo()
 	strcat(RomInfo,buffer);
 	sprintf(buffer,"Rom size: %d Mb\n",rom_length/1024/1024);
 	strcat(RomInfo,buffer);
-	if(ROM_HEADER->Manufacturer_ID == 'N') sprintf(buffer,"Manufacturer: Nintendo\n");
-	else sprintf(buffer,"Manufacturer: %x\n", (unsigned int)(ROM_HEADER->Manufacturer_ID));
+	if(ROM_HEADER.Manufacturer_ID == 'N') sprintf(buffer,"Manufacturer: Nintendo\n");
+	else sprintf(buffer,"Manufacturer: %x\n", ROM_HEADER.Manufacturer_ID);
 	strcat(RomInfo,buffer);
-    countrycodestring(ROM_HEADER->Country_code&0xFF, buffer2);
+	countrycodestring(ROM_HEADER.Country_code&0xFF, buffer2);
 	sprintf(buffer,"Country: %s\n",buffer2);
 	strcat(RomInfo,buffer);
 

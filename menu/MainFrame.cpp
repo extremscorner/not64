@@ -40,6 +40,7 @@ extern "C" {
 #include "../gc_memory/memory.h"
 #include "../gc_memory/Saves.h"
 #include "../main/plugin.h"
+#include "../main/guifuncs.h"
 #include "../main/savestates.h"
 #include "../fileBrowser/fileBrowser.h"
 #include "../fileBrowser/fileBrowser-libfat.h"
@@ -245,6 +246,8 @@ void Func_PlayGame()
 #ifdef DEBUGON
 	_break();
 #endif
+	new_frame();
+	new_vi();
 	go();
 #ifdef DEBUGON
 	_break();

@@ -8,6 +8,8 @@
 #include "F3DEX.h"
 #include "F3DEX2.h"
 #include "F3DCBFD.h"
+#include "S2DEX.h"
+#include "S2DEX2.h"
 #include "N64.h"
 #include "RSP.h"
 #include "RDP.h"
@@ -101,8 +103,10 @@ void F3DCBFD_Init()
 //	GBI_SetGBI( G_LINE3D,				F3DEX2_LINE3D,				F3DEX2_Line3D );
 
 	for (int i = 0x10; i <= 0x1F; i++)
-	{
-		GBI_SetGBI(G_TRI4, i, F3DCBFD_Tri4);
-	}
+		GBI.cmd[i] = F3DCBFD_Tri4;
+
+	GBI_SetGBI( G_BG_1CYC,				S2DEX2_BG_1CYC,				S2DEX_BG_1Cyc );
+	GBI_SetGBI( G_BG_COPY,				S2DEX2_BG_COPY,				S2DEX_BG_Copy );
+	GBI_SetGBI( G_OBJ_RENDERMODE,		S2DEX2_OBJ_RENDERMODE,		S2DEX_Obj_RenderMode );
 }
 

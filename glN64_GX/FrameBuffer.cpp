@@ -220,7 +220,7 @@ void FrameBuffer_SaveBuffer( u32 address, u16 size, u16 width, u16 height )
 			GX_SetCopyFilter(GX_FALSE, NULL, GX_FALSE, NULL);
 			if (current->texture->GXtexture) GX_CopyTex(current->texture->GXtexture, GX_FALSE);
 			GX_PixModeSync();
-			GX_SetCopyFilter(GX_FALSE, NULL, GX_TRUE, rmode->vfilter);
+			GX_SetCopyFilter(rmode->aa, rmode->sample_pattern, GX_TRUE, rmode->vfilter);
 #endif // __GX__
 
 			*(u32*)&RDRAM[current->startAddress] = current->startAddress;
@@ -333,7 +333,7 @@ void FrameBuffer_SaveBuffer( u32 address, u16 size, u16 width, u16 height )
 	GX_SetCopyFilter(GX_FALSE, NULL, GX_FALSE, NULL);
 	if (current->texture->GXtexture) GX_CopyTex(current->texture->GXtexture, GX_FALSE);
 	GX_PixModeSync();
-	GX_SetCopyFilter(GX_FALSE, NULL, GX_TRUE, rmode->vfilter);
+	GX_SetCopyFilter(rmode->aa, rmode->sample_pattern, GX_TRUE, rmode->vfilter);
 #endif // __GX__
 
 	*(u32*)&RDRAM[current->startAddress] = current->startAddress;

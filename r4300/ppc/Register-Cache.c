@@ -55,10 +55,10 @@ static void _flushRegister(int reg){
 		set_next_dst(ppc);
 	} else {
 		// Sign extend to 64-bits
-		GEN_SRAWI(ppc, 0, regMap[reg].map.lo, 31);
+		GEN_SRAWI(ppc, R0, regMap[reg].map.lo, 31);
 		set_next_dst(ppc);
 		// Store the MSW
-		GEN_STW(ppc, 0, reg*8, DYNAREG_REG);
+		GEN_STW(ppc, R0, reg*8, DYNAREG_REG);
 		set_next_dst(ppc);
 	}
 	// Store the LSW
@@ -141,8 +141,8 @@ RegMapping mapRegister64New(int reg){
 	}
 	
 	// Try to find any already available registers
-	regMap[reg].map.lo = getAvailableHWReg();
 	regMap[reg].map.hi = getAvailableHWReg();
+	regMap[reg].map.lo = getAvailableHWReg();
 	// If there weren't enough registers, we'll have to flush
 	if(regMap[reg].map.lo < 0){
 		// We didn't find any available registers, so flush one
@@ -216,8 +216,8 @@ RegMapping mapRegister64(int reg){
 	regMap[reg].dirty = 0; // If it hasn't previously been mapped, its clean
 	
 	// Try to find any already available registers
-	regMap[reg].map.lo = getAvailableHWReg();
 	regMap[reg].map.hi = getAvailableHWReg();
+	regMap[reg].map.lo = getAvailableHWReg();
 	// If there weren't enough registers, we'll have to flush
 	if(regMap[reg].map.lo < 0){
 		// We didn't find any available registers, so flush one
@@ -290,14 +290,14 @@ static void _flushFPR(int reg){
 	PowerPC_instr ppc;
 	// Store the register to memory (indirectly)
 	if(fprMap[reg].dbl){
-		GEN_LWZ(ppc, 2, reg*4, DYNAREG_FPR_64);
+		GEN_LWZ(ppc, R2, reg*4, DYNAREG_FPR_64);
 		set_next_dst(ppc);
-		GEN_STFD(ppc, fprMap[reg].map, 0, 2);
+		GEN_STFD(ppc, fprMap[reg].map, 0, R2);
 		set_next_dst(ppc);
 	} else {
-		GEN_LWZ(ppc, 2, reg*4, DYNAREG_FPR_32);
+		GEN_LWZ(ppc, R2, reg*4, DYNAREG_FPR_32);
 		set_next_dst(ppc);
-		GEN_STFS(ppc, fprMap[reg].map, 0, 2);
+		GEN_STFS(ppc, fprMap[reg].map, 0, R2);
 		set_next_dst(ppc);
 	}
 }
@@ -364,14 +364,14 @@ int mapFPR(int fpr, int dbl){
 	
 	// Load the register from memory (indirectly)
 	if(dbl){
-		GEN_LWZ(ppc, 2, fpr*4, DYNAREG_FPR_64);
+		GEN_LWZ(ppc, R2, fpr*4, DYNAREG_FPR_64);
 		set_next_dst(ppc);
-		GEN_LFD(ppc, fprMap[fpr].map, 0, 2);
+		GEN_LFD(ppc, fprMap[fpr].map, 0, R2);
 		set_next_dst(ppc);
 	} else {
-		GEN_LWZ(ppc, 2, fpr*4, DYNAREG_FPR_32);
+		GEN_LWZ(ppc, R2, fpr*4, DYNAREG_FPR_32);
 		set_next_dst(ppc);
-		GEN_LFS(ppc, fprMap[fpr].map, 0, 2);
+		GEN_LFS(ppc, fprMap[fpr].map, 0, R2);
 		set_next_dst(ppc);
 	}
 	

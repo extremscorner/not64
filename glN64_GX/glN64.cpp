@@ -62,8 +62,8 @@ void gfx_set_fb(unsigned int* fb1, unsigned int* fb2){
 	VI_GX_setFB(fb1, fb2);
 }
 
-void showLoadProgress(float percent){
-	VI_GX_showLoadProg(percent);
+void showLoadIcon(void){
+	VI.enableLoadIcon = true;
 }
 
 void gfx_set_window(int x, int y, int width, int height){
@@ -324,15 +324,6 @@ EXPORT void CALL ProcessDList(void)
 	sprintf(txtbuffer,"\nPROCESS D LIST!!\n\n");
 	DEBUG_print(txtbuffer,DBG_SDGECKOPRINT);
 #endif // GLN64_SDLOG
-	if (VI.enableLoadIcon && !OGL.frameBufferTextures)
-	{
-		float color[4] = {0.0f,0.0f,0.0f,0.0f};
-		OGL_ClearColorBuffer( color );
-		OGL_ClearDepthBuffer();
-		OGL_GXclearEFB();
-//		VI_GX_clearEFB();
-	}
-	VI.enableLoadIcon = false;
 #endif // __GX__
 	RSP_ProcessDList();
 #endif
@@ -346,7 +337,6 @@ EXPORT void CALL ProcessDList(void)
 	sprintf(txtbuffer,"RSP: VtxMP = %d; pDcnt = %d; Zprim = %d; noZprim = %d", OGL.GXnumVtxMP, cache.GXprimDepthCnt, cache.GXZTexPrimCnt, cache.GXnoZTexPrimCnt);
 	DEBUG_print(txtbuffer,DBG_RSPINFO);
 #endif
-	VI_GX_updateDEBUG();
 #endif // __GX__
 }
 
@@ -457,7 +447,6 @@ EXPORT void CALL RomOpen (void)
 #endif
 
 #ifdef __GX__
-	VI_GX_init();
 	VIDEO_SetPreRetraceCallback(VI_GX_PreRetraceCallback);
 #endif // __GX__
 }

@@ -40,7 +40,7 @@ extern precomp_instr *PC;
 #ifdef PPC_DYNAREC
 #include "ppc/Recompile.h"
 #ifdef HW_RVL
-extern PowerPC_block **blocks; 
+extern PowerPC_block **const blocks; 
 #else
 extern PowerPC_block *blocks[0x100000];
 #endif
@@ -62,7 +62,6 @@ extern long long int reg_cop1_fgr_64[32];
 extern long FCR0, FCR31;
 extern tlb tlb_e[32];
 extern unsigned long delay_slot, skip_jump, dyna_interp;
-extern unsigned long long int debug_count;
 extern unsigned long dynacore;
 extern unsigned long interpcore;
 extern unsigned int next_interupt, CIC_Chip;

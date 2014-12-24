@@ -88,7 +88,7 @@ typedef struct {
 
 #ifdef __GX__
 void gfx_set_fb(unsigned int*, unsigned int*);
-void showLoadProgress(float);
+void showLoadIcon(void);
 #endif // __GX__
 /******************************************************************
   Function: CaptureScreen

@@ -223,6 +223,7 @@ void* VM_Init(size_t VMSize, size_t MEMSize)
 {
 	u32 i;
 	u16 index, v_index;
+	STACK_ALIGN(fstats,st,1,32);
 
 	if (vm_initialized)
 	{
@@ -278,8 +279,9 @@ void* VM_Init(size_t VMSize, size_t MEMSize)
 	 * plus we need to be able to quickly seek to any page
 	 * within the file.
 	 */
-	ISFS_Seek(pagefile_fd, 0, SEEK_SET);
-	for (i=0; i<VMSize;)
+	ISFS_Seek(pagefile_fd, 0, SEEK_END);
+	ISFS_GetFileStats(pagefile_fd, st);
+	for (i=st->file_length; i<VMSize;)
 	{
 		u32 to_write = VMSize - i;
 		if (to_write > MEMSize)
@@ -288,8 +290,6 @@ void* VM_Init(size_t VMSize, size_t MEMSize)
 		LoadingBar_showBar((float)i/VMSize, "Growing NAND pagefile");
 		if (ISFS_Write(pagefile_fd, MEM_Base, to_write) != to_write)
 		{
-			free(MEM_Base);
-			ISFS_Close(pagefile_fd);
 			errno = ENOSPC;
 			return NULL;
 		}
@@ -336,8 +336,6 @@ void* VM_Init(size_t VMSize, size_t MEMSize)
 	// hook DSI
 	__exception_sethandler(EX_DSI, dsi_exceptionhandler);
 
-	atexit(VM_Deinit);
-
 	vm_initialized = 1;
 
 	return VM_Base;
@@ -363,7 +361,6 @@ void VM_Deinit(void)
 	{
 		ISFS_Close(pagefile_fd);
 		pagefile_fd = -1;
-		ISFS_Delete(VM_FILENAME);
 	}
 }
 

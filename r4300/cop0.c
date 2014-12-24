@@ -81,10 +81,8 @@ void MTC0()
       case 9:    // Count
 	update_count();
 	if (next_interupt <= Count) gen_interupt();
-	debug_count += Count;
 	translate_event_queue(rrt & 0xFFFFFFFF);
 	Count = rrt & 0xFFFFFFFF;
-	debug_count -= Count;
 	break;
       case 10:   // EntryHi
 	EntryHi = rrt & 0xFFFFE0FF;
@@ -103,8 +101,8 @@ void MTC0()
 	     set_fpr_pointers(rrt);
 	  }
 	Status = rrt;
-	PC++;
 	update_count();
+	PC++;
 	check_interupt();
 	if (next_interupt <= Count) gen_interupt();
 	PC--;

@@ -46,7 +46,7 @@
 #include "../fileBrowser/fileBrowser-libfat.h"
 #include "wii64config.h"
 
-char* statespath = "/wii64/saves/";
+char* statespath = "/not64/saves/";
 
 extern unsigned long interp_addr;
 extern int *autoinc_save_slot;
@@ -69,12 +69,8 @@ int savestates_exists(int mode)
   gzFile f;
 	char *filename;
   filename = malloc(1024);
-#ifdef HW_RVL
   sprintf(filename, "%s%s%s%s.st%d",(saveStateDevice==SAVESTATEDEVICE_USB)?"usb:":"sd:",
                            statespath, ROM_SETTINGS.goodname, saveregionstr(),savestates_slot);
-#else
-  sprintf(filename, "sd:%s%s%s.st%d", statespath, ROM_SETTINGS.goodname, saveregionstr(),savestates_slot);
-#endif
 
 	f = gzopen(filename, (mode == SAVESTATE) ? "wb" : "rb");
   free(filename);
@@ -94,13 +90,8 @@ void savestates_save()
 	
   /* fix the filename to %s.st%d format */
   filename = malloc(1024);
-#ifdef HW_RVL
   sprintf(filename, "%s%s%s%s.st%d",(saveStateDevice==SAVESTATEDEVICE_USB)?"usb:":"sd:",
                            statespath, ROM_SETTINGS.goodname, saveregionstr(),savestates_slot);
-#else
-  sprintf(filename, "sd:%s%s%s.st%d", statespath, ROM_SETTINGS.goodname, saveregionstr(),savestates_slot);
-#endif
-
 
 	f = gzopen(filename, "wb");
   free(filename);
@@ -191,12 +182,8 @@ void savestates_load()
 		
 	/* fix the filename to %s.st%d format */
   filename = malloc(1024);
-#ifdef HW_RVL
   sprintf(filename, "%s%s%s%s.st%d",(saveStateDevice==SAVESTATEDEVICE_USB)?"usb:":"sd:",
                            statespath, ROM_SETTINGS.goodname, saveregionstr(),savestates_slot);
-#else
-  sprintf(filename, "sd:%s%s%s.st%d", statespath, ROM_SETTINGS.goodname, saveregionstr(),savestates_slot);
-#endif
 	
 	f = gzopen(filename, "rb");
 	free(filename);

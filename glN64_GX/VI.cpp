@@ -127,16 +127,16 @@ void VI_UpdateScreen()
 	if (renderCpuFramebuffer || (RSP.DList == 0))
 	{
 		//Only render N64 framebuffer in RDRAM and not EFB
-		VI_GX_renderCpuFramebuffer();
 		VI_GX_cleanUp();
+		VI_GX_renderCpuFramebuffer();
+		VI_GX_showLoadIcon();
 		VI_GX_showFPS();
 		VI_GX_showDEBUG();
 		GX_SetCopyClear ((GXColor){0,0,0,255}, 0xFFFFFF);
-		if (VI.copy_fb)	GX_CopyDisp (VI.xfb[VI.which_fb^1]+GX_xfb_offset, GX_FALSE);
-		else			GX_CopyDisp (VI.xfb[VI.which_fb]+GX_xfb_offset, GX_FALSE);
+		if (VI.copy_fb)	GX_CopyDisp (VI.xfb[VI.which_fb^1]+GX_xfb_offset, GX_TRUE);
+		else			GX_CopyDisp (VI.xfb[VI.which_fb]+GX_xfb_offset, GX_TRUE);
 		GX_DrawDone(); //Wait until EFB->XFB copy is complete
-		VI.enableLoadIcon = true;
-		VI.EFBcleared = false;
+		VI.enableLoadIcon = false;
 		VI.copy_fb = true;
 	}
 	else if (OGL.frameBufferTextures)
@@ -156,15 +156,15 @@ void VI_UpdateScreen()
 
 			//Draw DEBUG to screen
 			VI_GX_cleanUp();
+			VI_GX_showLoadIcon();
 			VI_GX_showFPS();
 			VI_GX_showDEBUG();
 			GX_SetCopyClear ((GXColor){0,0,0,255}, 0xFFFFFF);
 			//Copy EFB->XFB
-			if (VI.copy_fb)	GX_CopyDisp (VI.xfb[VI.which_fb^1]+GX_xfb_offset, GX_FALSE);
-			else			GX_CopyDisp (VI.xfb[VI.which_fb]+GX_xfb_offset, GX_FALSE);
+			if (VI.copy_fb)	GX_CopyDisp (VI.xfb[VI.which_fb^1]+GX_xfb_offset, GX_TRUE);
+			else			GX_CopyDisp (VI.xfb[VI.which_fb]+GX_xfb_offset, GX_TRUE);
 			GX_DrawDone(); //Wait until EFB->XFB copy is complete
-			VI.updateOSD = false;
-			VI.enableLoadIcon = true;
+			VI.enableLoadIcon = false;
 			VI.copy_fb = true;
 
 			//Restore current EFB
@@ -176,23 +176,17 @@ void VI_UpdateScreen()
 	}
 	else
 	{
-/*		if (gSP.changed & CHANGED_COLORBUFFER)
-		{
-			OGL_SwapBuffers();
-			gSP.changed &= ~CHANGED_COLORBUFFER;
-		}*/
-		if(VI.updateOSD && (gSP.changed & CHANGED_COLORBUFFER))
+		if (gSP.changed & CHANGED_COLORBUFFER)
 		{
 			VI_GX_cleanUp();
+			VI_GX_showLoadIcon();
 			VI_GX_showFPS();
 			VI_GX_showDEBUG();
 			GX_SetCopyClear ((GXColor){0,0,0,255}, 0xFFFFFF);
-			if (VI.copy_fb)	GX_CopyDisp (VI.xfb[VI.which_fb^1]+GX_xfb_offset, GX_FALSE);
-			else			GX_CopyDisp (VI.xfb[VI.which_fb]+GX_xfb_offset, GX_FALSE);
+			if (VI.copy_fb)	GX_CopyDisp (VI.xfb[VI.which_fb^1]+GX_xfb_offset, GX_TRUE);
+			else			GX_CopyDisp (VI.xfb[VI.which_fb]+GX_xfb_offset, GX_TRUE);
 			GX_DrawDone(); //Wait until EFB->XFB copy is complete
-			VI.updateOSD = false;
-			VI.enableLoadIcon = true;
-			VI.EFBcleared = false;
+			VI.enableLoadIcon = false;
 			VI.copy_fb = true;
 			gSP.changed &= ~CHANGED_COLORBUFFER;
 		}
@@ -239,17 +233,17 @@ extern float VILimit;
 void VI_GX_showFPS(){
 	char caption[50];
 
-	sprintf(caption, "%.1f VI/s (%.1fx), %.1f FPS",Timers.vis,Timers.vis/VILimit,Timers.fps);
+	sprintf(caption, "%.1f VI/s (%.1fx), %.1f DL/s",Timers.vis,Timers.vis/VILimit,Timers.fps);
 	
 	GXColor fontColor = {150,255,150,255};
 #ifndef MENU_V2
 	write_font_init_GX(fontColor);
 	if(showFPSonScreen)
-		write_font(10,35,caption, 1.0);
+		write_font(15,35,caption, 1.0);
 #else
 	menu::IplFont::getInstance().drawInit(fontColor);
 	if(showFPSonScreen)
-		menu::IplFont::getInstance().drawString(10,35,caption, 1.0, false);
+		menu::IplFont::getInstance().drawString(15,35,caption, 1.0, false);
 #endif
 
 	//reset swap table from GUI/DEBUG
@@ -257,7 +251,7 @@ void VI_GX_showFPS(){
 	GX_SetTevSwapMode(GX_TEVSTAGE0, GX_TEV_SWAP0, GX_TEV_SWAP0);
 }
 
-void VI_GX_showLoadProg(float percent)
+void VI_GX_showLoadIcon()
 {
 	if (!VI.enableLoadIcon)
 		return;
@@ -379,34 +373,6 @@ void VI_GX_showLoadProg(float percent)
 	GX_End();
 
 #endif //MENU_V2
-
-	if (OGL.frameBufferTextures)
-	{
-		//Draw DEBUG to screen
-		VI_GX_cleanUp();
-		VI_GX_showFPS();
-		VI_GX_showDEBUG();
-		GX_SetCopyClear ((GXColor){0,0,0,255}, 0xFFFFFF);
-		//Copy EFB->XFB
-		if (VI.copy_fb)	GX_CopyDisp (VI.xfb[VI.which_fb^1]+GX_xfb_offset, GX_FALSE);
-		else			GX_CopyDisp (VI.xfb[VI.which_fb]+GX_xfb_offset, GX_FALSE);
-		GX_DrawDone(); //Wait until EFB->XFB copy is complete
-		VI.updateOSD = false;
-		VI.enableLoadIcon = true;
-		VI.copy_fb = true;
-
-		//Restore current EFB
-		FrameBuffer_RestoreBuffer( gDP.colorImage.address, gDP.colorImage.size, gDP.colorImage.width );
-	}
-	else
-	{
-		if (VI.copy_fb)	GX_CopyDisp (VI.xfb[VI.which_fb^1]+GX_xfb_offset, GX_FALSE);
-		else			GX_CopyDisp (VI.xfb[VI.which_fb]+GX_xfb_offset, GX_FALSE);
-		GX_Flush();
-		VI.copy_fb = true;
-	}
-//    GX_DrawDone();
-//	VI.copy_fb = true;
 }
 
 void VI_GX_updateDEBUG()
@@ -469,10 +435,10 @@ void VI_GX_cleanUp()
 	GX_SetTevOp(GX_TEVSTAGE0,GX_MODULATE);
 
 	GX_SetFog(GX_FOG_NONE,0,1,0,1,(GXColor){0,0,0,255});
-	GX_SetViewport(0,0,rmode->fbWidth,rmode->efbHeight,0,1);
+	GX_SetViewport((f32) OGL.GXorigX,(f32) OGL.GXorigY,(f32) OGL.GXwidth,(f32) OGL.GXheight, 0.0f, 1.0f);
 	GX_SetCoPlanar(GX_DISABLE);
 	GX_SetClipMode(GX_CLIP_ENABLE);
-	GX_SetScissor(0,0,rmode->fbWidth,rmode->efbHeight);
+	GX_SetScissor((u32) 0,(u32) 0,(u32) OGL.width,(u32) OGL.height);
 	GX_SetAlphaCompare(GX_ALWAYS,0,GX_AOP_AND,GX_ALWAYS,0);
 	GX_SetZCompLoc(GX_TRUE);	// Do Z-compare before texturing.
 }
@@ -512,11 +478,11 @@ void VI_GX_renderCpuFramebuffer()
 		__lwp_heap_init(GXtexCache, memalign(32,GX_TEXTURE_CACHE_SIZE),GX_TEXTURE_CACHE_SIZE, 32);
 #endif //!HW_RVL
 	}
-	u16* FBtex = (u16*) __lwp_heap_allocate(GXtexCache,FBtexW*FBtexH*2+32);
+	u16* FBtex = (u16*) __lwp_heap_allocate(GXtexCache,FBtexW*FBtexH*2);
 	while(!FBtex)
 	{
 		TextureCache_FreeNextTexture();
-		FBtex = (u16*) __lwp_heap_allocate(GXtexCache,FBtexW*FBtexH*2+32);
+		FBtex = (u16*) __lwp_heap_allocate(GXtexCache,FBtexW*FBtexH*2);
 	}
 	GXTexObj	FBtexObj;
 
@@ -539,37 +505,47 @@ void VI_GX_renderCpuFramebuffer()
 
 	while (rows--) {
 		int tiles = FBtexW >> 2;
+
 		do {
 			__asm__ volatile(
-				"lwzu    5,  8(%0) \n"
-				"lwz     6,  4(%0) \n"
-				"lwzu    7,  8(%1) \n"
-				"lwz     8,  4(%1) \n"
-				"lwzu    9,  8(%2) \n"
-				"lwz     10, 4(%2) \n"
-				"lwzu    11, 8(%3) \n"
-				"lwz     12, 4(%3) \n"
+				"lwzu    2, 8(%0) \n"
+				"lwz     3, 4(%0) \n"
+				"lwzu    4, 8(%1) \n"
+				"lwz     5, 4(%1) \n"
+				"lwzu    6, 8(%2) \n"
+				"lwz     7, 4(%2) \n"
+				"lwzu    8, 8(%3) \n"
+				"lwz     9, 4(%3) \n"
 
-				"rotrwi  5,  5,  1 \n"
-				"rotrwi  6,  6,  1 \n"
-				"rotrwi  7,  7,  1 \n"
-				"rotrwi  8,  8,  1 \n"
-				"rotrwi  9,  9,  1 \n"
-				"rotrwi  10, 10, 1 \n"
-				"rotrwi  11, 11, 1 \n"
-				"rotrwi  12, 12, 1 \n"
+				"rotrwi  2, 2, 1 \n"
+				"rotrwi  3, 3, 1 \n"
+				"rotrwi  4, 4, 1 \n"
+				"rotrwi  5, 5, 1 \n"
+				"rotrwi  6, 6, 1 \n"
+				"rotrwi  7, 7, 1 \n"
+				"rotrwi  8, 8, 1 \n"
+				"rotrwi  9, 9, 1 \n"
 
-				"stw     5,  0(%4) \n"
-				"stw     6,  0(%4) \n"
-				"stw     7,  0(%4) \n"
-				"stw     8,  0(%4) \n"
-				"stw     9,  0(%4) \n"
-				"stw     10, 0(%4) \n"
-				"stw     11, 0(%4) \n"
-				"stw     12, 0(%4) \n"
+				"or  2, 2, %4 \n"
+				"or  3, 3, %4 \n"
+				"or  4, 4, %4 \n"
+				"or  5, 5, %4 \n"
+				"or  6, 6, %4 \n"
+				"or  7, 7, %4 \n"
+				"or  8, 8, %4 \n"
+				"or  9, 9, %4 \n"
+
+				"stw     2, 0(%5) \n"
+				"stw     3, 0(%5) \n"
+				"stw     4, 0(%5) \n"
+				"stw     5, 0(%5) \n"
+				"stw     6, 0(%5) \n"
+				"stw     7, 0(%5) \n"
+				"stw     8, 0(%5) \n"
+				"stw     9, 0(%5) \n"
 				: "+b" (src1), "+b" (src2), "+b" (src3), "+b" (src4)
-				: "b" (wgPipe)
-				: "r5", "r6", "r7", "r8", "r9", "r10", "r11", "r12",
+				: "r"(0x80008000), "b" (wgPipe)
+				: "r2", "r3", "r4", "r5", "r6", "r7", "r8", "r9",
 				  "memory");
 		} while (--tiles);
 
