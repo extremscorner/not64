@@ -25,10 +25,6 @@
 
 #include "Recompile.h"
 
-#define DYNAREG_REG    25
-#define DYNAREG_COP0   26
-#define DYNAREG_FPR_32 27
-#define DYNAREG_FPR_64 28
 #define DYNAREG_RDRAM  29
 #define DYNAREG_FUNC   30
 #define DYNAREG_ZERO   31
@@ -36,12 +32,13 @@
 #define DYNAOFF_LR     12
 
 #define SDAREL(symbol) ({ short offset; \
-	__asm__("li %0," #symbol "@sdarel" : "=r" (offset)); \
+	__asm__("li %0,%1@sdarel" : "=r" (offset) : "U" (&symbol)); \
 	offset; })
 
-extern long long int reg[34]; // game's registers
-extern float*  reg_cop1_simple[32]; // 32-bit fprs
-extern double* reg_cop1_double[32]; // 64-bit fprs
+extern long long int reg[34] __attribute__((section(".sbss")));
+extern unsigned long reg_cop0[32] __attribute__((section(".sbss")));
+extern float*  reg_cop1_simple[32] __attribute__((section(".sbss")));
+extern double* reg_cop1_double[32] __attribute__((section(".sbss")));
 
 extern int noCheckInterrupt;
 
@@ -61,7 +58,7 @@ int dyna_update_count(unsigned int pc);
 #endif
 unsigned int dyna_check_cop1_unusable(unsigned int pc, int isDelaySlot);
 void invalidate_func(unsigned int addr);
-unsigned int dyna_mem(unsigned int addr, unsigned int value,
+unsigned int dyna_mem(unsigned int addr, unsigned int value, int count,
                       memType type, unsigned int pc, int isDelaySlot);
 
 //cop0 macros

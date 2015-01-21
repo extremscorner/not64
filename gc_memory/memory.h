@@ -60,7 +60,7 @@ extern unsigned char *const PIF_RAMb;
 #ifdef USE_EXPANSION
 	extern unsigned long rdram[0x800000/4];
 #else
-	extern unsigned long rdram[0x800000/4/2];
+	extern unsigned long rdram[0x400000/4];
 #endif
 extern unsigned char *const rdramb;
 extern unsigned long address, word;

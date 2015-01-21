@@ -164,7 +164,7 @@ void Func_Settings()
 void Func_Credits()
 {
 	char CreditsInfo[512] = "";
-	strcat(CreditsInfo,"Not64 Beta 1.1 'Honey'\n");
+	strcat(CreditsInfo,"Not64 Build: " __DATE__ " " __TIME__ "\n");
 	strcat(CreditsInfo,"Modified by Extrems' Corner.org\n");
 	strcat(CreditsInfo,"\n");
 	strcat(CreditsInfo,"Wii64 Team: www.emulatemii.com\n");
@@ -174,10 +174,10 @@ void Func_Credits()
 	strcat(CreditsInfo,"\n");
 	strcat(CreditsInfo,"Special Thanks To:\n");
 	strcat(CreditsInfo,"drmr - for menu graphics\n");
-	strcat(CreditsInfo,"Hacktarux - for Mupen64\n");
 #ifdef HW_RVL
 	strcat(CreditsInfo,"Team Twiizers - for Wii homebrew\n");
 #endif
+	strcat(CreditsInfo,"Mupen64Plus contributors\n");
 
 	menu::MessageBox::getInstance().setMessage(CreditsInfo);
 }

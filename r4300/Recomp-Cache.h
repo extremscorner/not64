@@ -30,6 +30,8 @@
 #define RECOMP_CACHE_SIZE (7*1024*1024)
 #endif
 
+extern unsigned int nextLRU;
+
 // Allocate and free memory to be used for recompiled code
 //   Any memory allocated this way can be freed at any time
 //   you must check invalid_code before you can access it

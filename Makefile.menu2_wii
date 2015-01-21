@@ -4,7 +4,7 @@ CC		=powerpc-eabi-gcc
 CXX		=powerpc-eabi-g++
 AS		=powerpc-eabi-as
 
-CFLAGS  = -pipe -g -Ofast -Wall -mrvl -flto=jobserver \
+CFLAGS  = -pipe -Ofast -Wall -mrvl -flto=jobserver \
 	  -DWII -DRELEASE -DMENU_V2 -DGLN64_GX -DUSE_EXPANSION \
 	  -DPPC_DYNAREC -DUSE_RECOMP_CACHE -DFASTMEM -DNDEBUG
 

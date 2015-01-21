@@ -257,7 +257,7 @@ int fileBrowser_libfat_init(fileBrowser_file* f){
     if(!sdMounted) {           //if there's nothing currently mounted
       pauseRemovalThread();
       if(sdNeedsUnmount==FRONTSD) {
-        fatUnmount("sd");
+        fatUnmount("sd:");
         frontsd->shutdown();
         sdNeedsUnmount = 0;
       }
@@ -283,7 +283,7 @@ int fileBrowser_libfat_init(fileBrowser_file* f){
    	if(!usbMounted) {
      	pauseRemovalThread();
      	if(usbNeedsUnmount==USBMSD) {
-     	  fatUnmount("usb");
+     	  fatUnmount("usb:");
      	  usbmsd->shutdown();
      	  usbNeedsUnmount=0;
       }

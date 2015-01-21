@@ -29,16 +29,15 @@
 #include "controller.h"
 
 enum { STICK_X, STICK_Y };
-static int getStickValue(joystick_t* j, int axis, int maxAbsValue){
-	double angle = M_PI * j->ang/180.0f;
-	double magnitude = (j->mag > 1.0f) ? 1.0f :
-	                    (j->mag < -1.0f) ? -1.0f : j->mag;
-	double value;
+static float getStickValue(joystick_t* j, int axis, float maxAbsValue){
+	float angle = M_PI * j->ang / 180.0f;
+	float magnitude = j->mag * maxAbsValue;
+	float value;
 	if(axis == STICK_X)
-		value = magnitude * sin( angle );
+		value = magnitude * sinf( angle );
 	else
-		value = magnitude * cos( angle );
-	return (int)(value * maxAbsValue);
+		value = magnitude * cosf( angle );
+	return value;
 }
 
 enum {
@@ -91,6 +90,7 @@ static button_t analog_sources_wm[] = {
 static button_t menu_combos[] = {
 	{ 0, WPAD_BUTTON_1|WPAD_BUTTON_2, "1+2" },
 	{ 1, WPAD_BUTTON_PLUS|WPAD_BUTTON_MINUS, "+&-" },
+	{ 2, WPAD_BUTTON_HOME, "Home" },
 };
 
 static int _GetKeys(int Control, BUTTONS * Keys, controller_config_t* config,
@@ -131,8 +131,8 @@ static int _GetKeys(int Control, BUTTONS * Keys, controller_config_t* config,
 	c->U_CBUTTON    = isHeld(config->CU);
 
 	if(config->analog->mask == NUNCHUK_AS_ANALOG){
-		c->X_AXIS = getStickValue(&wpad->exp.nunchuk.js, STICK_X, 127);
-		c->Y_AXIS = getStickValue(&wpad->exp.nunchuk.js, STICK_Y, 127);
+		c->X_AXIS = getStickValue(&wpad->exp.nunchuk.js, STICK_X, 128);
+		c->Y_AXIS = getStickValue(&wpad->exp.nunchuk.js, STICK_Y, 128);
 	} else if(config->analog->mask == IR_AS_ANALOG){
 		if(wpad->ir.smooth_valid){
 			c->X_AXIS = ((short)(wpad->ir.sx - 512)) >> 2;
@@ -201,14 +201,15 @@ static unsigned int getButtonsWM(WPADData* controller){
 
 static unsigned int getButtonsWMN(WPADData* controller){
 	unsigned int b = controller->btns_h;
-	s8 stickX      = getStickValue(&controller->exp.nunchuk.js, STICK_X, 7);
-	s8 stickY      = getStickValue(&controller->exp.nunchuk.js, STICK_Y, 7);
-	
-	if(stickX    < -3) b |= NUNCHUK_L;
-	if(stickX    >  3) b |= NUNCHUK_R;
-	if(stickY    >  3) b |= NUNCHUK_U;
-	if(stickY    < -3) b |= NUNCHUK_D;
-	
+
+	float stickX    = getStickValue(&controller->exp.nunchuk.js, STICK_X, 1);
+	float stickY    = getStickValue(&controller->exp.nunchuk.js, STICK_Y, 1);
+
+	if(stickX    < -.5) b |= NUNCHUK_L;
+	if(stickX    >  .5) b |= NUNCHUK_R;
+	if(stickY    >  .5) b |= NUNCHUK_U;
+	if(stickY    < -.5) b |= NUNCHUK_D;
+
 	return b;
 }
 

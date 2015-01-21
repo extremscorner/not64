@@ -48,6 +48,7 @@ void reset_code_addr(void);
    This data should be used to fill in addresses in pass two. */
 extern int  add_jump(int old_address, int is_li, int is_aa);
 extern int  is_j_out(int branch, int is_aa);
+extern int  is_j_dst(void);
 // Use these for jumps that won't be known until later in compile time
 extern int  add_jump_special(int is_j);
 extern void set_jump_special(int which, int new_jump);

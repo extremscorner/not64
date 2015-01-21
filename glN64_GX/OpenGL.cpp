@@ -499,7 +499,7 @@ bool OGL_Start()
 #endif // __LINUX__
 #else // !__GX__
 	//Set 'window height' to efb dimensions
-	OGL.width = 640;
+	OGL.width = rmode->fbWidth;
 	OGL.height = rmode->efbHeight;
 
 	//Reset gDP and combiner colors between ROMs. This fixes fillColor when changing ROMs.

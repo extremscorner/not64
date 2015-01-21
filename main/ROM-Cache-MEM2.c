@@ -110,6 +110,7 @@ int ROMCache_load(fileBrowser_file* file)
 		if (init_byte_swap(*(u32*)ROMBase) == BYTE_SWAP_BAD)
 			return ROM_CACHE_INVALID_ROM;
 		
+		LoadingBar_showBar(0.0, "Byteswapping ROM");
 		byte_swap(ROMBase, rom_length);
 	} else {
 		do {

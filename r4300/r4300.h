@@ -49,22 +49,22 @@ extern PowerPC_block *actual;
 extern precomp_block *blocks[0x100000], *actual;
 #endif
 extern int stop, llbit;
-extern long long int reg[34];
+extern long long int reg[34] __attribute__((section(".sbss")));
 #define hi (reg[32])
 #define lo (reg[33])
 extern long long int local_rs, local_rt;
-extern unsigned long reg_cop0[32];
+extern unsigned long reg_cop0[32] __attribute__((section(".sbss")));
 extern long local_rs32, local_rt32;
 extern unsigned long jump_target;
-extern double *reg_cop1_double[32];
-extern float *reg_cop1_simple[32];
-extern long long int reg_cop1_fgr_64[32];
-extern long FCR0, FCR31;
+extern double *reg_cop1_double[32] __attribute__((section(".sbss")));
+extern float *reg_cop1_simple[32] __attribute__((section(".sbss")));
+extern long long int reg_cop1_fgr_64[32] __attribute__((section(".sbss")));
+extern unsigned long FCR0, FCR31;
 extern tlb tlb_e[32];
 extern unsigned long delay_slot, skip_jump, dyna_interp;
 extern unsigned long dynacore;
 extern unsigned long interpcore;
-extern unsigned int next_interupt, CIC_Chip;
+extern unsigned long next_interupt, CIC_Chip;
 extern int rounding_mode, trunc_mode, round_mode, ceil_mode, floor_mode;
 extern unsigned long last_addr, interp_addr;
 //extern char invalid_code[0x100000];

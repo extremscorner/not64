@@ -84,7 +84,7 @@ unsigned int decodeNInterpret();
 
 #define INTERPRET_DMULT
 #define INTERPRET_DMULTU
-#define INTERPRET_DDIV
+//#define INTERPRET_DDIV
 //#define INTERPRET_DDIVU
 
 //#define INTERPRET_HILO

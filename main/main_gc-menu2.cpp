@@ -231,11 +231,7 @@ int main(int argc, char* argv[]){
 	printToScreen    = 1; // Show DEBUG text on screen
 	printToSD        = 0; // Disable SD logging
 	Timers.limitVIs  = 1;
-	saveEnabled      = 0; // Don't save game
-	nativeSaveDevice = 0; // SD
-	saveStateDevice	 = 0; // SD
 	autoSave         = 1; // Auto Save Game
-	creditsScrolling = 0; // Normal menu for now
 	dynacore         = 1; // Dynarec
 #ifndef HW_RVL
 	screenMode		 = 0; // Stretch FB horizontally
@@ -269,7 +265,10 @@ int main(int argc, char* argv[]){
 	//config stuff
 	fileBrowser_file* configFile_file;
 	int (*configFile_init)(fileBrowser_file*) = fileBrowser_libfat_init;
-	if(argv[0][0] == 'u') {  //assume USB
+#ifdef HW_RVL
+	if(argc > 0 && argv[0][0] == 'u') {  //assume USB
+		nativeSaveDevice = NATIVESAVEDEVICE_USB;
+		saveStateDevice = SAVESTATEDEVICE_USB;
 		configFile_file = &saveDir_libfat_USB;
 		if(configFile_init(configFile_file)) {                //only if device initialized ok
 			FILE* f = fopen( "usb:/not64/settings.cfg", "r" );  //attempt to open file
@@ -302,7 +301,10 @@ int main(int argc, char* argv[]){
 		}
 	}
 	else /*if((argv[0][0]=='s') || (argv[0][0]=='/'))*/
+#endif
 	{ //assume SD
+		nativeSaveDevice = NATIVESAVEDEVICE_SD;
+		saveStateDevice = SAVESTATEDEVICE_SD;
 		configFile_file = &saveDir_libfat_Default;
 		if(configFile_init(configFile_file)) {                //only if device initialized ok
 			FILE* f = fopen( "sd:/not64/settings.cfg", "r" );  //attempt to open file

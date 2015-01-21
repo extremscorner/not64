@@ -30,8 +30,11 @@
 static struct {
 	// Holds the value of the physical reg or -1 (hi, lo)
 	RegMapping map;
+	int sign;
 	int dirty; // Nonzero means the register must be flushed to memory
 	int lru;   // LRU value for flushing; higher is newer
+	int constant; // Nonzero means there is a constant value mapped
+	unsigned int value; // Value if this mapping holds a constant
 } regMap[34];
 
 static unsigned int nextLRUVal;
@@ -47,23 +50,27 @@ static int availableRegsDefault[32] = {
 static int availableRegs[32];
 
 // Actually perform the store for a dirty register mapping
-static void _flushRegister(int reg){
+static void _flushRegister(int gpr){
 	PowerPC_instr ppc;
-	if(regMap[reg].map.hi >= 0){
+	// Store the LSW
+	GEN_STW(ppc, regMap[gpr].map.lo, SDAREL(reg) + gpr*8+4, R13);
+	set_next_dst(ppc);
+	
+	if(regMap[gpr].map.hi >= 0){
 		// Simply store the mapped MSW
-		GEN_STW(ppc, regMap[reg].map.hi, reg*8, DYNAREG_REG);
+		GEN_STW(ppc, regMap[gpr].map.hi, SDAREL(reg) + gpr*8, R13);
 		set_next_dst(ppc);
-	} else {
+	} else if(regMap[gpr].sign){
 		// Sign extend to 64-bits
-		GEN_SRAWI(ppc, R0, regMap[reg].map.lo, 31);
+		GEN_SRAWI(ppc, R0, regMap[gpr].map.lo, 31);
 		set_next_dst(ppc);
 		// Store the MSW
-		GEN_STW(ppc, R0, reg*8, DYNAREG_REG);
+		GEN_STW(ppc, R0, SDAREL(reg) + gpr*8, R13);
+		set_next_dst(ppc);
+	} else {
+		GEN_STW(ppc, DYNAREG_ZERO, SDAREL(reg) + gpr*8, R13);
 		set_next_dst(ppc);
 	}
-	// Store the LSW
-	GEN_STW(ppc, regMap[reg].map.lo, reg*8+4, DYNAREG_REG);
-	set_next_dst(ppc);
 }
 // Find an available HW reg or -1 for none
 static int getAvailableHWReg(void){
@@ -93,178 +100,211 @@ static RegMapping flushLRURegister(void){
 	return map;
 }
 
-int mapRegisterNew(int reg){
-	if(!reg) return 0; // Discard any writes to r0
-	regMap[reg].lru = nextLRUVal++;
-	regMap[reg].dirty = 1; // Since we're writing to this reg, its dirty
+int mapRegisterNew(int gpr, int sign){
+	if(!gpr) return 0; // Discard any writes to r0
+	regMap[gpr].lru = nextLRUVal++;
+	regMap[gpr].sign = sign;
+	regMap[gpr].dirty = 1; // Since we're writing to this reg, its dirty
+	regMap[gpr].constant = 0; // This is a dynamic or unknowable value
 	
 	// If its already been mapped, just return that value
-	if(regMap[reg].map.lo >= 0){
+	if(regMap[gpr].map.lo >= 0){
 		// If the hi value is mapped, free the mapping
-		if(regMap[reg].map.hi >= 0){
-			availableRegs[regMap[reg].map.hi] = 1;
-			regMap[reg].map.hi = -1;
+		if(regMap[gpr].map.hi >= 0){
+			availableRegs[regMap[gpr].map.hi] = 1;
+			regMap[gpr].map.hi = -1;
 		}
-		return regMap[reg].map.lo;
+		return regMap[gpr].map.lo;
 	}
 	
 	// Try to find any already available register
 	int available = getAvailableHWReg();
-	if(available >= 0) return regMap[reg].map.lo = available;
+	if(available >= 0) return regMap[gpr].map.lo = available;
 	// We didn't find an available register, so flush one
 	RegMapping lru = flushLRURegister();
 	if(lru.hi >= 0) availableRegs[lru.hi] = 1;
 	
-	return regMap[reg].map.lo = lru.lo;
+	return regMap[gpr].map.lo = lru.lo;
 }
 
-RegMapping mapRegister64New(int reg){
-	if(!reg) return (RegMapping){ 0, 0 };
-	regMap[reg].lru = nextLRUVal++;
-	regMap[reg].dirty = 1; // Since we're writing to this reg, its dirty
+RegMapping mapRegister64New(int gpr){
+	if(!gpr) return (RegMapping){ 0, 0 };
+	regMap[gpr].lru = nextLRUVal++;
+	regMap[gpr].sign = 1;
+	regMap[gpr].dirty = 1; // Since we're writing to this reg, its dirty
+	regMap[gpr].constant = 0; // This is a dynamic or unknowable value
+	
 	// If its already been mapped, just return that value
-	if(regMap[reg].map.lo >= 0){
+	if(regMap[gpr].map.lo >= 0){
 		// If the hi value is not mapped, find a mapping
-		if(regMap[reg].map.hi < 0){
+		if(regMap[gpr].map.hi < 0){
 			// Try to find any already available register
 			int available = getAvailableHWReg();
-			if(available >= 0) regMap[reg].map.hi = available;
+			if(available >= 0) regMap[gpr].map.hi = available;
 			else {
 				// We didn't find an available register, so flush one
 				RegMapping lru = flushLRURegister();
 				if(lru.hi >= 0) availableRegs[lru.hi] = 1;
-				regMap[reg].map.hi = lru.lo;
+				regMap[gpr].map.hi = lru.lo;
 			}
 		}
 		// Return the mapping
-		return regMap[reg].map;
+		return regMap[gpr].map;
 	}
 	
 	// Try to find any already available registers
-	regMap[reg].map.hi = getAvailableHWReg();
-	regMap[reg].map.lo = getAvailableHWReg();
+	regMap[gpr].map.hi = getAvailableHWReg();
+	regMap[gpr].map.lo = getAvailableHWReg();
 	// If there weren't enough registers, we'll have to flush
-	if(regMap[reg].map.lo < 0){
+	if(regMap[gpr].map.lo < 0){
 		// We didn't find any available registers, so flush one
 		RegMapping lru = flushLRURegister();
-		if(lru.hi >= 0) regMap[reg].map.hi = lru.hi;
-		regMap[reg].map.lo = lru.lo;
+		if(lru.hi >= 0) regMap[gpr].map.hi = lru.hi;
+		regMap[gpr].map.lo = lru.lo;
 	}
-	if(regMap[reg].map.hi < 0){
+	if(regMap[gpr].map.hi < 0){
 		// We didn't find an available register, so flush one
 		RegMapping lru = flushLRURegister();
 		if(lru.hi >= 0) availableRegs[lru.hi] = 1;
-		regMap[reg].map.hi = lru.lo;
+		regMap[gpr].map.hi = lru.lo;
 	}
 	// Return the mapping
-	return regMap[reg].map;
+	return regMap[gpr].map;
 }
 
-int mapRegister(int reg){
+int mapRegister(int gpr){
 	PowerPC_instr ppc;
-	if(!reg) return DYNAREG_ZERO; // Return r0 mapped to r14
-	regMap[reg].lru = nextLRUVal++;
+	if(!gpr) return DYNAREG_ZERO; // Return r0 mapped to r31
+	regMap[gpr].lru = nextLRUVal++;
 	// If its already been mapped, just return that value
-	if(regMap[reg].map.lo >= 0){
+	if(regMap[gpr].map.lo >= 0){
 		// Note: We don't want to free any 64-bit mapping that may exist
 		//       because this may be a read-after-64-bit-write
-		return regMap[reg].map.lo;
+		return regMap[gpr].map.lo;
 	}
-	regMap[reg].dirty = 0; // If it hasn't previously been mapped, its clean
+	regMap[gpr].dirty = 0; // If it hasn't previously been mapped, its clean
 	// Iterate over the HW registers and find one that's available
 	int available = getAvailableHWReg();
 	if(available >= 0){
-		GEN_LWZ(ppc, available, reg*8+4, DYNAREG_REG);
+		GEN_LWZ(ppc, available, SDAREL(reg) + gpr*8+4, R13);
 		set_next_dst(ppc);
 		
-		return regMap[reg].map.lo = available;
+		return regMap[gpr].map.lo = available;
 	}
 	// We didn't find an available register, so flush one
 	RegMapping lru = flushLRURegister();
 	if(lru.hi >= 0) availableRegs[lru.hi] = 1;
 	// And load the registers value to the register we flushed
-	GEN_LWZ(ppc, lru.lo, reg*8+4, DYNAREG_REG);
+	GEN_LWZ(ppc, lru.lo, SDAREL(reg) + gpr*8+4, R13);
 	set_next_dst(ppc);
 	
-	return regMap[reg].map.lo = lru.lo;
+	return regMap[gpr].map.lo = lru.lo;
 }
 
-RegMapping mapRegister64(int reg){
+RegMapping mapRegister64(int gpr){
 	PowerPC_instr ppc;
-	if(!reg) return (RegMapping){ DYNAREG_ZERO, DYNAREG_ZERO };
-	regMap[reg].lru = nextLRUVal++;
+	if(!gpr) return (RegMapping){ DYNAREG_ZERO, DYNAREG_ZERO };
+	regMap[gpr].lru = nextLRUVal++;
 	// If its already been mapped, just return that value
-	if(regMap[reg].map.lo >= 0){
+	if(regMap[gpr].map.lo >= 0){
 		// If the hi value is not mapped, find a mapping
-		if(regMap[reg].map.hi < 0){
+		if(regMap[gpr].map.hi < 0){
 			// Try to find any already available register
 			int available = getAvailableHWReg();
-			if(available >= 0) regMap[reg].map.hi = available;
-			else {
+			if(available >= 0){
+				regMap[gpr].map.hi = available;
+			} else {
 				// We didn't find an available register, so flush one
 				RegMapping lru = flushLRURegister();
 				if(lru.hi >= 0) availableRegs[lru.hi] = 1;
-				regMap[reg].map.hi = lru.lo;
+				regMap[gpr].map.hi = lru.lo;
 			}
-			// Sign extend to 64-bits
-			GEN_SRAWI(ppc, regMap[reg].map.hi, regMap[reg].map.lo, 31);
-			set_next_dst(ppc);
+			if(regMap[gpr].sign){
+				// Sign extend to 64-bits
+				GEN_SRAWI(ppc, regMap[gpr].map.hi, regMap[gpr].map.lo, 31);
+				set_next_dst(ppc);
+			} else {
+				GEN_LI(ppc, regMap[gpr].map.hi, 0);
+				set_next_dst(ppc);
+			}
 		}
 		// Return the mapping
-		return regMap[reg].map;
+		return regMap[gpr].map;
 	}
-	regMap[reg].dirty = 0; // If it hasn't previously been mapped, its clean
+	regMap[gpr].dirty = 0; // If it hasn't previously been mapped, its clean
 	
 	// Try to find any already available registers
-	regMap[reg].map.hi = getAvailableHWReg();
-	regMap[reg].map.lo = getAvailableHWReg();
+	regMap[gpr].map.hi = getAvailableHWReg();
+	regMap[gpr].map.lo = getAvailableHWReg();
 	// If there weren't enough registers, we'll have to flush
-	if(regMap[reg].map.lo < 0){
+	if(regMap[gpr].map.lo < 0){
 		// We didn't find any available registers, so flush one
 		RegMapping lru = flushLRURegister();
-		if(lru.hi >= 0) regMap[reg].map.hi = lru.hi;
-		regMap[reg].map.lo = lru.lo;
+		if(lru.hi >= 0) regMap[gpr].map.hi = lru.hi;
+		regMap[gpr].map.lo = lru.lo;
 	}
-	if(regMap[reg].map.hi < 0){
+	if(regMap[gpr].map.hi < 0){
 		// We didn't find an available register, so flush one
 		RegMapping lru = flushLRURegister();
 		if(lru.hi >= 0) availableRegs[lru.hi] = 1;
-		regMap[reg].map.hi = lru.lo;
+		regMap[gpr].map.hi = lru.lo;
 	}
 	// Load the values into the registers
-	GEN_LWZ(ppc, regMap[reg].map.hi, reg*8, DYNAREG_REG);
+	GEN_LWZ(ppc, regMap[gpr].map.hi, SDAREL(reg) + gpr*8, R13);
 	set_next_dst(ppc);
-	GEN_LWZ(ppc, regMap[reg].map.lo, reg*8+4, DYNAREG_REG);
+	GEN_LWZ(ppc, regMap[gpr].map.lo, SDAREL(reg) + gpr*8+4, R13);
 	set_next_dst(ppc);
 	// Return the mapping
-	return regMap[reg].map;
+	return regMap[gpr].map;
 }
 
-void invalidateRegister(int reg){
-	if(regMap[reg].map.hi >= 0)
-		availableRegs[ regMap[reg].map.hi ] = 1;
-	if(regMap[reg].map.lo >= 0)
-		availableRegs[ regMap[reg].map.lo ] = 1;
-	regMap[reg].map.hi = regMap[reg].map.lo = -1;
+void invalidateRegister(int gpr){
+	if(regMap[gpr].map.hi >= 0)
+		availableRegs[ regMap[gpr].map.hi ] = 1;
+	if(regMap[gpr].map.lo >= 0)
+		availableRegs[ regMap[gpr].map.lo ] = 1;
+	regMap[gpr].map.hi = regMap[gpr].map.lo = -1;
+	regMap[gpr].constant = 0;
 }
 
-void flushRegister(int reg){
-	if(regMap[reg].map.lo >= 0){
-		if(regMap[reg].dirty) _flushRegister(reg);
-		if(regMap[reg].map.hi >= 0)
-			availableRegs[ regMap[reg].map.hi ] = 1;
-		availableRegs[ regMap[reg].map.lo ] = 1;
+void flushRegister(int gpr){
+	if(regMap[gpr].map.lo >= 0){
+		if(regMap[gpr].dirty) _flushRegister(gpr);
+		if(regMap[gpr].map.hi >= 0)
+			availableRegs[ regMap[gpr].map.hi ] = 1;
+		availableRegs[ regMap[gpr].map.lo ] = 1;
 	}
-	regMap[reg].map.hi = regMap[reg].map.lo = -1;
+	regMap[gpr].map.hi = regMap[gpr].map.lo = -1;
+	regMap[gpr].constant = 0;
 }
 
-RegMappingType getRegisterMapping(int reg){
-	if(regMap[reg].map.hi >= 0)
+RegMappingType getRegisterMapping(int gpr){
+	if(regMap[gpr].map.hi >= 0)
 		return MAPPING_64;
-	else if(regMap[reg].map.lo >= 0)
+	else if(regMap[gpr].map.lo >= 0)
 		return MAPPING_32;
 	else
 		return MAPPING_NONE;
+}
+
+int mapConstantNew(int gpr, int constant){
+	int mapping = mapRegisterNew(gpr, 1); // Get the normal mapping
+	regMap[gpr].constant = constant; // Set the constant field
+	return mapping;
+}
+
+int isRegisterConstant(int gpr){
+	// Always constant for r0
+	return gpr ? regMap[gpr].constant : 1;
+}
+
+unsigned int getRegisterConstant(int gpr){
+	// Always return 0 for r0 
+	return gpr ? regMap[gpr].value : 0;
+}
+
+void setRegisterConstant(int gpr, unsigned int value){
+	regMap[gpr].value = value;
 }
 
 // -- FPR mappings --
@@ -286,18 +326,18 @@ static int availableFPRsDefault[32] = {
 static int availableFPRs[32];
 
 // Actually perform the store for a dirty register mapping
-static void _flushFPR(int reg){
+static void _flushFPR(int fpr){
 	PowerPC_instr ppc;
 	// Store the register to memory (indirectly)
-	if(fprMap[reg].dbl){
-		GEN_LWZ(ppc, R2, reg*4, DYNAREG_FPR_64);
+	if(fprMap[fpr].dbl){
+		GEN_LWZ(ppc, R0, SDAREL(reg_cop1_double) + fpr*4, R13);
 		set_next_dst(ppc);
-		GEN_STFD(ppc, fprMap[reg].map, 0, R2);
+		GEN_STFDX(ppc, fprMap[fpr].map, 0, R0);
 		set_next_dst(ppc);
 	} else {
-		GEN_LWZ(ppc, R2, reg*4, DYNAREG_FPR_32);
+		GEN_LWZ(ppc, R0, SDAREL(reg_cop1_simple) + fpr*4, R13);
 		set_next_dst(ppc);
-		GEN_STFS(ppc, fprMap[reg].map, 0, R2);
+		GEN_STFSX(ppc, fprMap[fpr].map, 0, R0);
 		set_next_dst(ppc);
 	}
 }
@@ -364,14 +404,14 @@ int mapFPR(int fpr, int dbl){
 	
 	// Load the register from memory (indirectly)
 	if(dbl){
-		GEN_LWZ(ppc, R2, fpr*4, DYNAREG_FPR_64);
+		GEN_LWZ(ppc, R0, SDAREL(reg_cop1_double) + fpr*4, R13);
 		set_next_dst(ppc);
-		GEN_LFD(ppc, fprMap[fpr].map, 0, R2);
+		GEN_LFDX(ppc, fprMap[fpr].map, 0, R0);
 		set_next_dst(ppc);
 	} else {
-		GEN_LWZ(ppc, R2, fpr*4, DYNAREG_FPR_32);
+		GEN_LWZ(ppc, R0, SDAREL(reg_cop1_simple) + fpr*4, R13);
 		set_next_dst(ppc);
-		GEN_LFS(ppc, fprMap[fpr].map, 0, R2);
+		GEN_LFSX(ppc, fprMap[fpr].map, 0, R0);
 		set_next_dst(ppc);
 	}
 	
@@ -382,6 +422,7 @@ void invalidateFPR(int fpr){
 	if(fprMap[fpr].map >= 0)
 		availableFPRs[ fprMap[fpr].map ] = 1;
 	fprMap[fpr].map = -1;
+	if(fprMap[fpr ^ 1].dbl) flushFPR(fpr ^ 1);
 }
 
 void flushFPR(int fpr){
@@ -394,32 +435,16 @@ void flushFPR(int fpr){
 
 
 // Unmapping registers
-int flushRegisters(void){
-	int i, flushed = 0;
+void flushRegisters(void){
+	int i;
 	// Flush GPRs
-	for(i=1; i<34; ++i){
-		if(regMap[i].map.lo >= 0 && regMap[i].dirty){
-			_flushRegister(i);
-			++flushed;
-		}
-		// Mark unmapped
-		regMap[i].map.hi = regMap[i].map.lo = -1;
-	}
+	for(i=1; i<34; ++i) flushRegister(i);
 	memcpy(availableRegs, availableRegsDefault, 32*sizeof(int));
 	nextLRUVal = 0;
 	// Flush FPRs
-	for(i=0; i<32; ++i){
-		if(fprMap[i].map >= 0 && fprMap[i].dirty){
-			_flushFPR(i);
-			++flushed;
-		}
-		// Mark unmapped
-		fprMap[i].map = -1;
-	}
+	for(i=0; i<32; ++i) flushFPR(i);
 	memcpy(availableFPRs, availableFPRsDefault, 32*sizeof(int));
 	nextLRUValFPR = 0;
-	
-	return flushed;
 }
 
 void invalidateRegisters(void){
@@ -444,8 +469,8 @@ int mapRegisterTemp(void){
 	return lru.lo;
 }
 
-void unmapRegisterTemp(int reg){
-	availableRegs[reg] = 1;
+void unmapRegisterTemp(int gpr){
+	availableRegs[gpr] = 1;
 }
 
 int mapFPRTemp(void){

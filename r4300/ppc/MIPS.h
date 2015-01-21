@@ -119,6 +119,7 @@ typedef unsigned int MIPS_instr;
 #define MIPS_OPCODE_LBU     36
 #define MIPS_OPCODE_LHU     37
 #define MIPS_OPCODE_LWR     38
+#define MIPS_OPCODE_LWU     39
 
 #define MIPS_OPCODE_LD      55
 #define MIPS_OPCODE_LDL     26

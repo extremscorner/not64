@@ -544,7 +544,7 @@ void VI_GX_renderCpuFramebuffer()
 				"stw     8, 0(%5) \n"
 				"stw     9, 0(%5) \n"
 				: "+b" (src1), "+b" (src2), "+b" (src3), "+b" (src4)
-				: "r"(0x80008000), "b" (wgPipe)
+				: "r" (0x80008000), "b" (wgPipe)
 				: "r2", "r3", "r4", "r5", "r6", "r7", "r8", "r9",
 				  "memory");
 		} while (--tiles);

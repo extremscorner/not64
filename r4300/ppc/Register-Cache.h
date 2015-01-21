@@ -26,25 +26,35 @@
 // -- GPRs --
 typedef struct { int hi, lo; } RegMapping;
 typedef enum { MAPPING_NONE, MAPPING_32, MAPPING_64 } RegMappingType;
-// Create a mapping for a 32-bit register (reg) to a HW register (returned)
+// Create a mapping for a 32-bit register (gpr) to a HW register (returned)
 // Loading the register's value if the mapping doesn't already exist
-int mapRegister(int reg);
-// Create a mapping for a 32-bit register (reg) to a HW register (returned)
+int mapRegister(int gpr);
+// Create a mapping for a 32-bit register (gpr) to a HW register (returned)
 // Marking the mapping dirty so that it is stored when flushed
-int mapRegisterNew(int reg);
-// Create a mapping for a 64-bit register (reg) to 2 HW registers (returned)
+int mapRegisterNew(int gpr, int sign);
+// Create a mapping for a 64-bit register (gpr) to 2 HW registers (returned)
 // Loading the register's value if the mapping doesn't already exist
-RegMapping mapRegister64(int reg);
-// Create a mapping for a 64-bit register (reg) to 2 HW registers (returned)
+RegMapping mapRegister64(int gpr);
+// Create a mapping for a 64-bit register (gpr) to 2 HW registers (returned)
 // Marking the mapping dirty so that it is stored when flushed
-RegMapping mapRegister64New(int reg);
-// Unmap a register (reg) without storing, even if its marked dirty
-void invalidateRegister(int reg);
-// Unmap a register (reg), storing if dirty
-void flushRegister(int reg);
-// Return the type of mapping for a register (reg)
+RegMapping mapRegister64New(int gpr);
+// Unmap a register (gpr) without storing, even if its marked dirty
+void invalidateRegister(int gpr);
+// Unmap a register (gpr), storing if dirty
+void flushRegister(int gpr);
+// Return the type of mapping for a register (gpr)
 // Does not alter mappings in any way
-RegMappingType getRegisterMapping(int reg);
+RegMappingType getRegisterMapping(int gpr);
+// Constant Propagation
+// Create a mapping for a 32-bit register (gpr) to a HW register (returned)
+// The value mapped may have a constant value (constant) to be set later
+int mapConstantNew(int gpr, int constant);
+// Return whether a register (gpr) has a constant value mapped to it
+int isRegisterConstant(int gpr);
+// Get the constant value held by a register (gpr)
+unsigned int getRegisterConstant(int gpr);
+// Set the constant value (constant) held by a register (gpr)
+void setRegisterConstant(int gpr, unsigned int constant);
 
 
 // -- FPRs --
@@ -61,7 +71,7 @@ void flushFPR(int fpr);
 
 
 // Unmap all registers, storing any dirty registers
-int flushRegisters(void);
+void flushRegisters(void);
 // Unmap all registers without storing any
 void invalidateRegisters(void);
 // Reserve a HW register to be used but not associated with any registers

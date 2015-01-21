@@ -29,16 +29,15 @@
 #include "controller.h"
 
 enum { STICK_X, STICK_Y };
-static int getStickValue(joystick_t* j, int axis, int maxAbsValue){
-	double angle = M_PI * j->ang/180.0f;
-	double magnitude = (j->mag > 1.0f) ? 1.0f :
-	                    (j->mag < -1.0f) ? -1.0f : j->mag;
-	double value;
+static float getStickValue(joystick_t* j, int axis, float maxAbsValue){
+	float angle = M_PI * j->ang / 180.0f;
+	float magnitude = j->mag * maxAbsValue;
+	float value;
 	if(axis == STICK_X)
-		value = magnitude * sin( angle );
+		value = magnitude * sinf( angle );
 	else
-		value = magnitude * cos( angle );
-	return (int)(value * maxAbsValue);
+		value = magnitude * cosf( angle );
+	return value;
 }
 
 enum {
@@ -96,22 +95,23 @@ static button_t menu_combos[] = {
 
 static unsigned int getButtons(classic_ctrl_t* controller)
 {
-	unsigned int b = (unsigned short)controller->btns;
-	s8 stickX      = getStickValue(&controller->ljs, STICK_X, 7);
-	s8 stickY      = getStickValue(&controller->ljs, STICK_Y, 7);
-	s8 substickX   = getStickValue(&controller->rjs, STICK_X, 7);
-	s8 substickY   = getStickValue(&controller->rjs, STICK_Y, 7);
-	
-	if(stickX    < -3) b |= L_STICK_L;
-	if(stickX    >  3) b |= L_STICK_R;
-	if(stickY    >  3) b |= L_STICK_U;
-	if(stickY    < -3) b |= L_STICK_D;
-	
-	if(substickX < -3) b |= R_STICK_L;
-	if(substickX >  3) b |= R_STICK_R;
-	if(substickY >  3) b |= R_STICK_U;
-	if(substickY < -3) b |= R_STICK_D;
-	
+	unsigned int b = controller->btns;
+
+	float stickX    = getStickValue(&controller->ljs, STICK_X, 1);
+	float stickY    = getStickValue(&controller->ljs, STICK_Y, 1);
+	float substickX = getStickValue(&controller->rjs, STICK_X, 1);
+	float substickY = getStickValue(&controller->rjs, STICK_Y, 1);
+
+	if(stickX    < -.5) b |= L_STICK_L;
+	if(stickX    >  .5) b |= L_STICK_R;
+	if(stickY    >  .5) b |= L_STICK_U;
+	if(stickY    < -.5) b |= L_STICK_D;
+
+	if(substickX < -.5) b |= R_STICK_L;
+	if(substickX >  .5) b |= R_STICK_R;
+	if(substickY >  .5) b |= R_STICK_U;
+	if(substickY < -.5) b |= R_STICK_D;
+
 	return b;
 }
 
@@ -173,11 +173,11 @@ static int _GetKeys(int Control, BUTTONS * Keys, controller_config_t* config)
 	c->U_CBUTTON    = isHeld(config->CU);
 
 	if(config->analog->mask == L_STICK_AS_ANALOG){
-		c->X_AXIS = getStickValue(&wpad->exp.classic.ljs, STICK_X, 127);
-		c->Y_AXIS = getStickValue(&wpad->exp.classic.ljs, STICK_Y, 127);
+		c->X_AXIS = getStickValue(&wpad->exp.classic.ljs, STICK_X, 128);
+		c->Y_AXIS = getStickValue(&wpad->exp.classic.ljs, STICK_Y, 128);
 	} else if(config->analog->mask == R_STICK_AS_ANALOG){
-		c->X_AXIS = getStickValue(&wpad->exp.classic.rjs, STICK_X, 127);
-		c->Y_AXIS = getStickValue(&wpad->exp.classic.rjs, STICK_Y, 127);
+		c->X_AXIS = getStickValue(&wpad->exp.classic.rjs, STICK_X, 128);
+		c->Y_AXIS = getStickValue(&wpad->exp.classic.rjs, STICK_Y, 128);
 	}
 	if(config->invertedY) c->Y_AXIS = -c->Y_AXIS;
 
@@ -226,8 +226,8 @@ controller_t controller_Classic =
 	    .DL        = &buttons[2],  // D-Pad Left
 	    .DR        = &buttons[3],  // D-Pad Right
 	    .DD        = &buttons[4],  // D-Pad Down
-	    .Z         = &buttons[7],  // Left Z
-	    .L         = &buttons[5],  // Left Trigger
+	    .Z         = &buttons[5],  // Left Trigger
+	    .L         = &buttons[8],  // Right Z
 	    .R         = &buttons[6],  // Right Trigger
 	    .A         = &buttons[9],  // A
 	    .B         = &buttons[10], // B
@@ -237,7 +237,7 @@ controller_t controller_Classic =
 	    .CR        = &buttons[18], // Right Stick Right
 	    .CD        = &buttons[19], // Right Stick Down
 	    .analog    = &analog_sources[0],
-	    .exit      = &menu_combos[0],
+	    .exit      = &menu_combos[2],
 	    .invertedY = 0,
 	  }
 	 };
