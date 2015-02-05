@@ -62,18 +62,6 @@ void tlb_mem2_init()
 extern unsigned long interp_addr;
 unsigned long virtual_to_physical_address(unsigned long addresse, int w)
 {
-   if (ROM_SETTINGS.isGoldenEye && addresse >= 0x7f000000 && addresse < 0x80000000)
-     {
-	switch(ROM_HEADER.Country_code&0xFF)
-	  {
-	   case 'J':
-	     return 0xb0034b70 + (addresse & MEMMASK);
-	   case 'P':
-	     return 0xb00329f0 + (addresse & MEMMASK);
-	   default:
-	     return 0xb0034b30 + (addresse & MEMMASK);
-	  }
-     }
    if (w == 1)
      {
 #ifdef USE_TLB_CACHE

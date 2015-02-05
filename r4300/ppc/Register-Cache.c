@@ -41,11 +41,12 @@ static unsigned int nextLRUVal;
 static int availableRegsDefault[32] = {
 	0, /* r0 is mostly used for saving/restoring lr: used as a temp */
 	0, /* sp: leave alone! */
-	0, /* gp: leave alone! */
+	0, /* r2: used as a temp */
 	1,1,1,1,1,1,1,1, /* Volatile argument registers */
 	1,1, /* Volatile registers */
+	0, /* r13 is small data area: leave alone! */
 	/* Non-volatile registers: using might be too costly */
-	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+	0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 	};
 static int availableRegs[32];
 

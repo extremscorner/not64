@@ -66,7 +66,6 @@ typedef struct _rom_settings
 {
    char goodname[256];
    char isEEPROM16k;
-   char isGoldenEye;
 } rom_settings;
 extern rom_settings ROM_SETTINGS;
 

@@ -174,7 +174,6 @@ int rom_read(fileBrowser_file* file){
   }
   // Fix save type for certain special sized (16kbit) eeprom games
   ROM_SETTINGS.isEEPROM16k = isEEPROM16k();
-  ROM_SETTINGS.isGoldenEye = strcmp(ROM_SETTINGS.goodname, "GOLDENEYE") == 0;
 
   //Set VI limit based on ROM header
   InitTimer();

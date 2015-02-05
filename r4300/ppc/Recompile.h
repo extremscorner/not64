@@ -101,7 +101,7 @@ void clear_freed_funcs(void);
    memory. Deinit frees a block with the same preconditions.
  */
 PowerPC_func* recompile_block(PowerPC_block* ppc_block, unsigned int addr);
-void init_block  (MIPS_instr* mips_code, PowerPC_block* ppc_block);
+void init_block  (PowerPC_block* ppc_block);
 void deinit_block(PowerPC_block* ppc_block);
 
 #ifdef HW_RVL

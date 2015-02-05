@@ -53,6 +53,7 @@ static int inline mips_is_jump(MIPS_instr);
 void jump_to(unsigned int);
 void check_interupt();
 extern int llbit;
+extern long local_rs32, local_rt32;
 extern unsigned long FCR0, FCR31;
 extern unsigned long next_interupt, last_addr;
 
@@ -316,7 +317,7 @@ static int branch(short offset, condition cond, int link, int likely){
 	// Unless the delay slot is in the next block, in which case there's nothing to skip
 	//   Testing is_j_out with an offset of 0 checks whether the delay slot is out
 	if(delaySlot){
-		if(is_j_dst() && !is_j_out(0, 0)){
+		if(is_j_dst(0) && !is_j_out(0, 0)){
 			// Step over the already executed delay slot if the branch isn't taken
 			// b delaySlot+1
 			GEN_B(ppc, delaySlot+1, 0, 0);
@@ -407,7 +408,7 @@ static int J(MIPS_instr mips){
 #endif
 
 	// Let's still recompile the delay slot in place in case its branched to
-	if(delaySlot){ if(is_j_dst()){ unget_last_src(); delaySlotNext = 2; } }
+	if(delaySlot){ if(is_j_dst(0)){ unget_last_src(); delaySlotNext = 2; } }
 	else nop_ignored();
 
 #ifdef INTERPRET_J
@@ -479,7 +480,7 @@ static int JAL(MIPS_instr mips){
 #endif
 
 	// Let's still recompile the delay slot in place in case its branched to
-	if(delaySlot){ if(is_j_dst()){ unget_last_src(); delaySlotNext = 2; } }
+	if(delaySlot){ if(is_j_dst(0)){ unget_last_src(); delaySlotNext = 2; } }
 	else nop_ignored();
 
 #ifdef INTERPRET_JAL
@@ -771,13 +772,13 @@ static int LB(MIPS_instr mips){
 	short immed = MIPS_GET_IMMED(mips);
 
 #ifdef FASTMEM
-	if(!isDelaySlot && !is_j_dst()){
+	if(!isDelaySlot && !is_j_dst(1)){
 		MIPS_instr peek = peek_next_src();
 		if(MIPS_GET_OPCODE(peek) == MIPS_OPCODE_LB && MIPS_GET_RS(peek) == _rs && MIPS_GET_RS(peek) != _rt){
 			if(MIPS_GET_RT(peek) == _rt + 1 && MIPS_GET_IMMED(peek) == immed + 1){
 				mips = get_next_src();
 				count++;
-				while(has_next_src() && !is_j_dst()){
+				while(has_next_src() && !is_j_dst(1)){
 					peek = peek_next_src();
 					if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_LB)
 						break;
@@ -795,7 +796,7 @@ static int LB(MIPS_instr mips){
 			} else if(MIPS_GET_RT(peek) == _rt - 1 && MIPS_GET_IMMED(peek) == immed - 1){
 				mips = get_next_src();
 				count++;
-				while(has_next_src() && !is_j_dst()){
+				while(has_next_src() && !is_j_dst(1)){
 					peek = peek_next_src();
 					if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_LB)
 						break;
@@ -833,13 +834,13 @@ static int LH(MIPS_instr mips){
 	short immed = MIPS_GET_IMMED(mips);
 
 #ifdef FASTMEM
-	if(!isDelaySlot && !is_j_dst()){
+	if(!isDelaySlot && !is_j_dst(1)){
 		MIPS_instr peek = peek_next_src();
 		if(MIPS_GET_OPCODE(peek) == MIPS_OPCODE_LH && MIPS_GET_RS(peek) == _rs && MIPS_GET_RS(peek) != _rt){
 			if(MIPS_GET_RT(peek) == _rt + 1 && MIPS_GET_IMMED(peek) == immed + 2){
 				mips = get_next_src();
 				count++;
-				while(has_next_src() && !is_j_dst()){
+				while(has_next_src() && !is_j_dst(1)){
 					peek = peek_next_src();
 					if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_LH)
 						break;
@@ -857,7 +858,7 @@ static int LH(MIPS_instr mips){
 			} else if(MIPS_GET_RT(peek) == _rt - 1 && MIPS_GET_IMMED(peek) == immed - 2){
 				mips = get_next_src();
 				count++;
-				while(has_next_src() && !is_j_dst()){
+				while(has_next_src() && !is_j_dst(1)){
 					peek = peek_next_src();
 					if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_LH)
 						break;
@@ -906,13 +907,13 @@ static int LW(MIPS_instr mips){
 	short immed = MIPS_GET_IMMED(mips);
 
 #ifdef FASTMEM
-	if(!isDelaySlot && !is_j_dst()){
+	if(!isDelaySlot && !is_j_dst(1)){
 		MIPS_instr peek = peek_next_src();
 		if(MIPS_GET_OPCODE(peek) == MIPS_OPCODE_LW && MIPS_GET_RS(peek) == _rs && MIPS_GET_RS(peek) != _rt){
 			if(MIPS_GET_RT(peek) == _rt + 1 && MIPS_GET_IMMED(peek) == immed + 4){
 				mips = get_next_src();
 				count++;
-				while(has_next_src() && !is_j_dst()){
+				while(has_next_src() && !is_j_dst(1)){
 					peek = peek_next_src();
 					if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_LW)
 						break;
@@ -930,7 +931,7 @@ static int LW(MIPS_instr mips){
 			} else if(MIPS_GET_RT(peek) == _rt - 1 && MIPS_GET_IMMED(peek) == immed - 4){
 				mips = get_next_src();
 				count++;
-				while(has_next_src() && !is_j_dst()){
+				while(has_next_src() && !is_j_dst(1)){
 					peek = peek_next_src();
 					if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_LW)
 						break;
@@ -968,13 +969,13 @@ static int LBU(MIPS_instr mips){
 	short immed = MIPS_GET_IMMED(mips);
 
 #ifdef FASTMEM
-	if(!isDelaySlot && !is_j_dst()){
+	if(!isDelaySlot && !is_j_dst(1)){
 		MIPS_instr peek = peek_next_src();
 		if(MIPS_GET_OPCODE(peek) == MIPS_OPCODE_LBU && MIPS_GET_RS(peek) == _rs && MIPS_GET_RS(peek) != _rt){
 			if(MIPS_GET_RT(peek) == _rt + 1 && MIPS_GET_IMMED(peek) == immed + 1){
 				mips = get_next_src();
 				count++;
-				while(has_next_src() && !is_j_dst()){
+				while(has_next_src() && !is_j_dst(1)){
 					peek = peek_next_src();
 					if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_LBU)
 						break;
@@ -992,7 +993,7 @@ static int LBU(MIPS_instr mips){
 			} else if(MIPS_GET_RT(peek) == _rt - 1 && MIPS_GET_IMMED(peek) == immed - 1){
 				mips = get_next_src();
 				count++;
-				while(has_next_src() && !is_j_dst()){
+				while(has_next_src() && !is_j_dst(1)){
 					peek = peek_next_src();
 					if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_LBU)
 						break;
@@ -1030,13 +1031,13 @@ static int LHU(MIPS_instr mips){
 	short immed = MIPS_GET_IMMED(mips);
 
 #ifdef FASTMEM
-	if(!isDelaySlot && !is_j_dst()){
+	if(!isDelaySlot && !is_j_dst(1)){
 		MIPS_instr peek = peek_next_src();
 		if(MIPS_GET_OPCODE(peek) == MIPS_OPCODE_LHU && MIPS_GET_RS(peek) == _rs && MIPS_GET_RS(peek) != _rt){
 			if(MIPS_GET_RT(peek) == _rt + 1 && MIPS_GET_IMMED(peek) == immed + 2){
 				mips = get_next_src();
 				count++;
-				while(has_next_src() && !is_j_dst()){
+				while(has_next_src() && !is_j_dst(1)){
 					peek = peek_next_src();
 					if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_LHU)
 						break;
@@ -1054,7 +1055,7 @@ static int LHU(MIPS_instr mips){
 			} else if(MIPS_GET_RT(peek) == _rt - 1 && MIPS_GET_IMMED(peek) == immed - 2){
 				mips = get_next_src();
 				count++;
-				while(has_next_src() && !is_j_dst()){
+				while(has_next_src() && !is_j_dst(1)){
 					peek = peek_next_src();
 					if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_LHU)
 						break;
@@ -1103,13 +1104,13 @@ static int LWU(MIPS_instr mips){
 	short immed = MIPS_GET_IMMED(mips);
 
 #ifdef FASTMEM
-	if(!isDelaySlot && !is_j_dst()){
+	if(!isDelaySlot && !is_j_dst(1)){
 		MIPS_instr peek = peek_next_src();
 		if(MIPS_GET_OPCODE(peek) == MIPS_OPCODE_LWU && MIPS_GET_RS(peek) == _rs && MIPS_GET_RS(peek) != _rt){
 			if(MIPS_GET_RT(peek) == _rt + 1 && MIPS_GET_IMMED(peek) == immed + 4){
 				mips = get_next_src();
 				count++;
-				while(has_next_src() && !is_j_dst()){
+				while(has_next_src() && !is_j_dst(1)){
 					peek = peek_next_src();
 					if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_LWU)
 						break;
@@ -1127,7 +1128,7 @@ static int LWU(MIPS_instr mips){
 			} else if(MIPS_GET_RT(peek) == _rt - 1 && MIPS_GET_IMMED(peek) == immed - 4){
 				mips = get_next_src();
 				count++;
-				while(has_next_src() && !is_j_dst()){
+				while(has_next_src() && !is_j_dst(1)){
 					peek = peek_next_src();
 					if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_LWU)
 						break;
@@ -1165,13 +1166,13 @@ static int SB(MIPS_instr mips){
 	short immed = MIPS_GET_IMMED(mips);
 
 #ifdef FASTMEM
-	if(!isDelaySlot && !is_j_dst()){
+	if(!isDelaySlot && !is_j_dst(1)){
 		MIPS_instr peek = peek_next_src();
 		if(MIPS_GET_OPCODE(peek) == MIPS_OPCODE_SB && MIPS_GET_RS(peek) == _rs){
 			if(MIPS_GET_RT(peek) == _rt + 1 && MIPS_GET_IMMED(peek) == immed + 1){
 				mips = get_next_src();
 				count++;
-				while(has_next_src() && !is_j_dst()){
+				while(has_next_src() && !is_j_dst(1)){
 					peek = peek_next_src();
 					if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_SB)
 						break;
@@ -1187,7 +1188,7 @@ static int SB(MIPS_instr mips){
 			} else if(MIPS_GET_RT(peek) == _rt - 1 && MIPS_GET_IMMED(peek) == immed - 1){
 				mips = get_next_src();
 				count++;
-				while(has_next_src() && !is_j_dst()){
+				while(has_next_src() && !is_j_dst(1)){
 					peek = peek_next_src();
 					if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_SB)
 						break;
@@ -1223,13 +1224,13 @@ static int SH(MIPS_instr mips){
 	short immed = MIPS_GET_IMMED(mips);
 
 #ifdef FASTMEM
-	if(!isDelaySlot && !is_j_dst()){
+	if(!isDelaySlot && !is_j_dst(1)){
 		MIPS_instr peek = peek_next_src();
 		if(MIPS_GET_OPCODE(peek) == MIPS_OPCODE_SH && MIPS_GET_RS(peek) == _rs){
 			if(MIPS_GET_RT(peek) == _rt + 1 && MIPS_GET_IMMED(peek) == immed + 2){
 				mips = get_next_src();
 				count++;
-				while(has_next_src() && !is_j_dst()){
+				while(has_next_src() && !is_j_dst(1)){
 					peek = peek_next_src();
 					if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_SH)
 						break;
@@ -1245,7 +1246,7 @@ static int SH(MIPS_instr mips){
 			} else if(MIPS_GET_RT(peek) == _rt - 1 && MIPS_GET_IMMED(peek) == immed - 2){
 				mips = get_next_src();
 				count++;
-				while(has_next_src() && !is_j_dst()){
+				while(has_next_src() && !is_j_dst(1)){
 					peek = peek_next_src();
 					if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_SH)
 						break;
@@ -1292,13 +1293,13 @@ static int SW(MIPS_instr mips){
 	short immed = MIPS_GET_IMMED(mips);
 
 #ifdef FASTMEM
-	if(!isDelaySlot && !is_j_dst()){
+	if(!isDelaySlot && !is_j_dst(1)){
 		MIPS_instr peek = peek_next_src();
 		if(MIPS_GET_OPCODE(peek) == MIPS_OPCODE_SW && MIPS_GET_RS(peek) == _rs){
 			if(MIPS_GET_RT(peek) == _rt + 1 && MIPS_GET_IMMED(peek) == immed + 4){
 				mips = get_next_src();
 				count++;
-				while(has_next_src() && !is_j_dst()){
+				while(has_next_src() && !is_j_dst(1)){
 					peek = peek_next_src();
 					if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_SW)
 						break;
@@ -1314,7 +1315,7 @@ static int SW(MIPS_instr mips){
 			} else if(MIPS_GET_RT(peek) == _rt - 1 && MIPS_GET_IMMED(peek) == immed - 4){
 				mips = get_next_src();
 				count++;
-				while(has_next_src() && !is_j_dst()){
+				while(has_next_src() && !is_j_dst(1)){
 					peek = peek_next_src();
 					if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_SW)
 						break;
@@ -1383,13 +1384,13 @@ static int LD(MIPS_instr mips){
 	short immed = MIPS_GET_IMMED(mips);
 
 #ifdef FASTMEM
-	if(!isDelaySlot && !is_j_dst()){
+	if(!isDelaySlot && !is_j_dst(1)){
 		MIPS_instr peek = peek_next_src();
 		if(MIPS_GET_OPCODE(peek) == MIPS_OPCODE_LD && MIPS_GET_RS(peek) == _rs && MIPS_GET_RS(peek) != _rt){
 			if(MIPS_GET_RT(peek) == _rt + 1 && MIPS_GET_IMMED(peek) == immed + 8){
 				mips = get_next_src();
 				count++;
-				while(has_next_src() && !is_j_dst()){
+				while(has_next_src() && !is_j_dst(1)){
 					peek = peek_next_src();
 					if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_LD)
 						break;
@@ -1407,7 +1408,7 @@ static int LD(MIPS_instr mips){
 			} else if(MIPS_GET_RT(peek) == _rt - 1 && MIPS_GET_IMMED(peek) == immed - 8){
 				mips = get_next_src();
 				count++;
-				while(has_next_src() && !is_j_dst()){
+				while(has_next_src() && !is_j_dst(1)){
 					peek = peek_next_src();
 					if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_LD)
 						break;
@@ -1445,13 +1446,13 @@ static int SD(MIPS_instr mips){
 	short immed = MIPS_GET_IMMED(mips);
 
 #ifdef FASTMEM
-	if(!isDelaySlot && !is_j_dst()){
+	if(!isDelaySlot && !is_j_dst(1)){
 		MIPS_instr peek = peek_next_src();
 		if(MIPS_GET_OPCODE(peek) == MIPS_OPCODE_SD && MIPS_GET_RS(peek) == _rs){
 			if(MIPS_GET_RT(peek) == _rt + 1 && MIPS_GET_IMMED(peek) == immed + 8){
 				mips = get_next_src();
 				count++;
-				while(has_next_src() && !is_j_dst()){
+				while(has_next_src() && !is_j_dst(1)){
 					peek = peek_next_src();
 					if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_SD)
 						break;
@@ -1467,7 +1468,7 @@ static int SD(MIPS_instr mips){
 			} else if(MIPS_GET_RT(peek) == _rt - 1 && MIPS_GET_IMMED(peek) == immed - 8){
 				mips = get_next_src();
 				count++;
-				while(has_next_src() && !is_j_dst()){
+				while(has_next_src() && !is_j_dst(1)){
 					peek = peek_next_src();
 					if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_SD)
 						break;
@@ -1503,13 +1504,13 @@ static int LWC1(MIPS_instr mips){
 	short immed = MIPS_GET_IMMED(mips);
 
 #ifdef FASTMEM
-	if(!isDelaySlot && !is_j_dst()){
+	if(!isDelaySlot && !is_j_dst(1)){
 		MIPS_instr peek = peek_next_src();
 		if(MIPS_GET_OPCODE(peek) == MIPS_OPCODE_LWC1 && MIPS_GET_RS(peek) == _rs){
 			if(MIPS_GET_RT(peek) == _rt + 2 && MIPS_GET_IMMED(peek) == immed + 4){
 				mips = get_next_src();
 				count++;
-				while(has_next_src() && !is_j_dst()){
+				while(has_next_src() && !is_j_dst(1)){
 					peek = peek_next_src();
 					if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_LWC1)
 						break;
@@ -1525,7 +1526,7 @@ static int LWC1(MIPS_instr mips){
 			} else if(MIPS_GET_RT(peek) == _rt - 2 && MIPS_GET_IMMED(peek) == immed - 4){
 				mips = get_next_src();
 				count++;
-				while(has_next_src() && !is_j_dst()){
+				while(has_next_src() && !is_j_dst(1)){
 					peek = peek_next_src();
 					if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_LWC1)
 						break;
@@ -1561,13 +1562,13 @@ static int LDC1(MIPS_instr mips){
 	short immed = MIPS_GET_IMMED(mips);
 
 #ifdef FASTMEM
-	if(!isDelaySlot && !is_j_dst()){
+	if(!isDelaySlot && !is_j_dst(1)){
 		MIPS_instr peek = peek_next_src();
 		if(MIPS_GET_OPCODE(peek) == MIPS_OPCODE_LDC1 && MIPS_GET_RS(peek) == _rs){
 			if(MIPS_GET_RT(peek) == _rt + 2 && MIPS_GET_IMMED(peek) == immed + 8){
 				mips = get_next_src();
 				count++;
-				while(has_next_src() && !is_j_dst()){
+				while(has_next_src() && !is_j_dst(1)){
 					peek = peek_next_src();
 					if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_LDC1)
 						break;
@@ -1583,7 +1584,7 @@ static int LDC1(MIPS_instr mips){
 			} else if(MIPS_GET_RT(peek) == _rt - 2 && MIPS_GET_IMMED(peek) == immed - 8){
 				mips = get_next_src();
 				count++;
-				while(has_next_src() && !is_j_dst()){
+				while(has_next_src() && !is_j_dst(1)){
 					peek = peek_next_src();
 					if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_LDC1)
 						break;
@@ -1619,13 +1620,13 @@ static int SWC1(MIPS_instr mips){
 	short immed = MIPS_GET_IMMED(mips);
 
 #ifdef FASTMEM
-	if(!isDelaySlot && !is_j_dst()){
+	if(!isDelaySlot && !is_j_dst(1)){
 		MIPS_instr peek = peek_next_src();
 		if(MIPS_GET_OPCODE(peek) == MIPS_OPCODE_SWC1 && MIPS_GET_RS(peek) == _rs){
 			if(MIPS_GET_RT(peek) == _rt + 2 && MIPS_GET_IMMED(peek) == immed + 4){
 				mips = get_next_src();
 				count++;
-				while(has_next_src() && !is_j_dst()){
+				while(has_next_src() && !is_j_dst(1)){
 					peek = peek_next_src();
 					if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_SWC1)
 						break;
@@ -1641,7 +1642,7 @@ static int SWC1(MIPS_instr mips){
 			} else if(MIPS_GET_RT(peek) == _rt - 2 && MIPS_GET_IMMED(peek) == immed - 4){
 				mips = get_next_src();
 				count++;
-				while(has_next_src() && !is_j_dst()){
+				while(has_next_src() && !is_j_dst(1)){
 					peek = peek_next_src();
 					if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_SWC1)
 						break;
@@ -1677,13 +1678,13 @@ static int SDC1(MIPS_instr mips){
 	short immed = MIPS_GET_IMMED(mips);
 
 #ifdef FASTMEM
-	if(!isDelaySlot && !is_j_dst()){
+	if(!isDelaySlot && !is_j_dst(1)){
 		MIPS_instr peek = peek_next_src();
 		if(MIPS_GET_OPCODE(peek) == MIPS_OPCODE_SDC1 && MIPS_GET_RS(peek) == _rs){
 			if(MIPS_GET_RT(peek) == _rt + 2 && MIPS_GET_IMMED(peek) == immed + 8){
 				mips = get_next_src();
 				count++;
-				while(has_next_src() && !is_j_dst()){
+				while(has_next_src() && !is_j_dst(1)){
 					peek = peek_next_src();
 					if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_SDC1)
 						break;
@@ -1699,7 +1700,7 @@ static int SDC1(MIPS_instr mips){
 			} else if(MIPS_GET_RT(peek) == _rt - 2 && MIPS_GET_IMMED(peek) == immed - 8){
 				mips = get_next_src();
 				count++;
-				while(has_next_src() && !is_j_dst()){
+				while(has_next_src() && !is_j_dst(1)){
 					peek = peek_next_src();
 					if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_SDC1)
 						break;
@@ -1841,6 +1842,9 @@ static int JR(MIPS_instr mips){
 	flushRegisters();
 	reset_code_addr();
 
+	GEN_STW(ppc, mapRegister(MIPS_GET_RS(mips)), SDAREL(local_rs32), R13);
+	set_next_dst(ppc);
+
 	// Check the delay slot, and note how big it is
 	PowerPC_instr* preDelay = get_curr_dst();
 	check_delaySlot();
@@ -1852,14 +1856,16 @@ static int JR(MIPS_instr mips){
 #endif
 	genUpdateCount(0);
 
+	invalidateRegisters();
+
 #ifdef INTERPRET_JR
-	genJumpTo(MIPS_GET_RS(mips), JUMPTO_REG);
+	genJumpTo(SDAREL(local_rs32), JUMPTO_REG);
 #else // INTERPRET_JR
 	// TODO: jr
 #endif
 
 	// Let's still recompile the delay slot in place in case its branched to
-	if(delaySlot){ if(is_j_dst()){ unget_last_src(); delaySlotNext = 2; } }
+	if(delaySlot){ if(is_j_dst(0)){ unget_last_src(); delaySlotNext = 2; } }
 	else nop_ignored();
 
 #ifdef INTERPRET_JR
@@ -1879,6 +1885,9 @@ static int JALR(MIPS_instr mips){
 
 	flushRegisters();
 	reset_code_addr();
+
+	GEN_STW(ppc, mapRegister(MIPS_GET_RS(mips)), SDAREL(local_rs32), R13);
+	set_next_dst(ppc);
 
 	// Check the delay slot, and note how big it is
 	PowerPC_instr* preDelay = get_curr_dst();
@@ -1903,13 +1912,13 @@ static int JALR(MIPS_instr mips){
 	flushRegisters();
 
 #ifdef INTERPRET_JALR
-	genJumpTo(MIPS_GET_RS(mips), JUMPTO_REG);
+	genJumpTo(SDAREL(local_rs32), JUMPTO_REG);
 #else // INTERPRET_JALR
 	// TODO: jalr
 #endif
 
 	// Let's still recompile the delay slot in place in case its branched to
-	if(delaySlot){ if(is_j_dst()){ unget_last_src(); delaySlotNext = 2; } }
+	if(delaySlot){ if(is_j_dst(0)){ unget_last_src(); delaySlotNext = 2; } }
 	else nop_ignored();
 
 #ifdef INTERPRET_JALR
@@ -4435,7 +4444,7 @@ static void genJumpTo(unsigned int loc, unsigned int type){
 
 	if(type == JUMPTO_REG){
 		// Load the register as the return value
-		GEN_LWZ(ppc, R3, SDAREL(reg) + loc*8+4, R13);
+		GEN_LWZ(ppc, R3, loc, R13);
 		set_next_dst(ppc);
 		GEN_BLR(ppc, 0);
 		set_next_dst(ppc);
@@ -4591,10 +4600,11 @@ static void genCallDynaMem(memType type, int count, int _rs, int _rt, short imme
 	PowerPC_instr ppc;
 	int isPhysical = 1, isVirtual = 1;
 	int isConstant = isRegisterConstant(_rs);
+	int constant = getRegisterConstant(_rs) + immed;
 	int i;
 
+#ifdef FASTMEM
 	if(isConstant){
-		int constant = getRegisterConstant(_rs) + immed;
 	#ifdef USE_EXPANSION
 		if(constant >= 0x80000000 && constant < 0x80800000)
 			isVirtual = 0;
@@ -4609,6 +4619,7 @@ static void genCallDynaMem(memType type, int count, int _rs, int _rt, short imme
 		else
 			isPhysical = 0;
 	}
+#endif
 
 	if(type == MEM_LDL || type == MEM_LDR || type == MEM_SDL || type == MEM_SDR){
 		isPhysical = 0;
