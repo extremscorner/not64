@@ -156,7 +156,7 @@ void disasm(FILE *f, unsigned int t[0x1000/4])
 		  fprintf(f,"invalid opcode\n");
 		  break;
 		default:
-		  fprintf(f,"opcode special inconnu: %d\n", t[i] & 0x3F);
+		  fprintf(f,"opcode special inconnu: %u\n", t[i] & 0x3F);
 		  return;
 	       }
 	     break;
@@ -531,7 +531,7 @@ void disasm(FILE *f, unsigned int t[0x1000/4])
 		       fprintf(f,"unknown opcode\n");
 		       break;
 		     default:
-		       fprintf(f,"opcode vect inconnu: %d\n", t[i] & 0x3F);
+		       fprintf(f,"opcode vect inconnu: %u\n", t[i] & 0x3F);
 		       return;
 		    }
 		  break;

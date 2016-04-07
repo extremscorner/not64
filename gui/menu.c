@@ -803,12 +803,14 @@ static inline void menuStack_push(menu_item*);
 		return NULL;
 	}
 	
+#ifdef GLN64_GX
 	static char* toggleViLimit_func(void){
 		Timers.limitVIs = (Timers.limitVIs+1) % 3;
 		devFeatures_submenu[2].caption = &toggleViLimit_strings[Timers.limitVIs][0];
 		return NULL;
 	}
 
+#ifdef SDPRINT
 	static char* toggleSDDebug_func(void){
 		printToSD ^= 1;
 		if(printToSD)
@@ -818,6 +820,7 @@ static inline void menuStack_push(menu_item*);
 		devFeatures_submenu[5].caption = &toggleSDDebug_strings[printToSD][0];
 		return NULL;
 	}
+#endif
 
 	static char* toggleGlN64useFbTex_func(void){
 		glN64_useFrameBufferTextures ^= 1;
@@ -830,6 +833,7 @@ static inline void menuStack_push(menu_item*);
 		devFeatures_submenu[4].caption = &toggleGlN64use2xSaiTex_strings[glN64_use2xSaiTextures][0];
 		return NULL;
 	}
+#endif
 
 #define DEV_FEATURES_INDEX MAIN_MENU_SIZE-6
 #define DEV_FEATURES_ITEM \

@@ -314,10 +314,10 @@ CachedCombiner *Combiner_Compile( u64 mux )
 	u32 mux2 = (mux & 0xFFFFFFFF);
 //	if (mux2 == 0xfffff9fc) 
 //	{
-		sprintf(txtbuffer,"Combiner Compile: mux1 = %x, mux2 = %x\n", mux1, mux2);
+		sprintf(txtbuffer,"Combiner Compile: mux1 = %lx, mux2 = %lx\n", mux1, mux2);
 //		DEBUG_print(txtbuffer,9);
 		DEBUG_print(txtbuffer,DBG_SDGECKOPRINT);
-		sprintf(txtbuffer," combine.muxs0 = %x, combine.muxs1 = %x\n", combine.muxs0, combine.muxs1);
+		sprintf(txtbuffer," combine.muxs0 = %lx, combine.muxs1 = %lx\n", combine.muxs0, combine.muxs1);
 		DEBUG_print(txtbuffer,DBG_SDGECKOPRINT);
 		sprintf(txtbuffer," cc[0]: sa %d, sb %d, m %d, a %d; cc[1]: sa %d, sb %d, m %d, a %d\n", cc[0].sa, cc[0].sb, cc[0].m, cc[0].a, cc[1].sa, cc[1].sb, cc[1].m, cc[1].a);
 		DEBUG_print(txtbuffer,DBG_SDGECKOPRINT);
@@ -482,7 +482,7 @@ void Combiner_SelectCombine( u64 mux )
 #ifdef GLN64_SDLOG
 	u32 mux1 = ((mux >> 32) & 0xFFFFFFFF);
 	u32 mux2 = (mux & 0xFFFFFFFF);
-	sprintf(txtbuffer,"Combiner Select Combine: mux1 = %x, mux2 = %x\n", mux1, mux2);
+	sprintf(txtbuffer,"Combiner Select Combine: mux1 = %lx, mux2 = %lx\n", mux1, mux2);
 //	DEBUG_print(txtbuffer,17);
 	DEBUG_print(txtbuffer,DBG_SDGECKOPRINT);
 #endif // GLN64_SDLOG

@@ -109,6 +109,8 @@ void init_GPR()
 
 //	gtk_signal_connect( GTK_OBJECT(clGPR), "button_press_event",
 //				GTK_SIGNAL_FUNC(on_click), clGPR);
+	//Free labGPR
+	free(labGPR);
 	//Initialisation des registres fantomes.
 	for( i=0; i<32; i++)
 	{

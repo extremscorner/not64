@@ -182,7 +182,7 @@ void update_nextint()
 	if( gui_fantom_nextint != next_interupt )
 	{
 		gui_fantom_nextint = next_interupt;
-		sprintf( txt, "0%.16X", next_interupt );
+		sprintf( txt, "0%.16lX", next_interupt );
 		gtk_entry_set_text( GTK_ENTRY(enNextInt), txt );
 	}
 }

@@ -258,8 +258,8 @@ int main(){
 			rom_sizeDVD = 0;
 			rom_offsetDVD = 0;
 		}
-		free(romfile);
-		romfile = NULL;
+		//free(romfile);
+		//romfile = NULL;
 	
 		free(ROM_HEADER);
 		ROM_HEADER = NULL;

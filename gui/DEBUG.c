@@ -119,7 +119,7 @@ void DEBUG_stats(int stats_id, char *info, unsigned int stats_type, unsigned int
 	unsigned int value = stats_buffer[stats_id];
 	if(stats_type == STAT_TYPE_AVGE) value /= avge_counter[stats_id];
 	
-	sprintf(txtbuffer,"%s [ %i ]", info, value);
+	sprintf(txtbuffer,"%s [ %u ]", info, value);
 	DEBUG_print(txtbuffer,DBG_STATSBASE+stats_id);
 	#endif
 }

@@ -72,7 +72,7 @@ char* textFileBrowser(char* directory){
 			if(i == currentSelection)
 				sprintf(buffer, "*");
 			else    sprintf(buffer, " ");
-			sprintf(buffer, "%s\t%-32s\t%s\n", buffer,
+			sprintf(buffer+strlen(buffer), "\t%-32s\t%s\n",
 			        sddir[i].fname, (sddir[i].fattr&SDCARD_ATTR_DIR) ? "DIR" : "");
 			PRINT(buffer);
 		}
@@ -85,7 +85,7 @@ char* textFileBrowser(char* directory){
 			if(sddir[currentSelection].fattr & SDCARD_ATTR_DIR){
 				char newDir[SDCARD_MAX_PATH_LEN];
 				sprintf(newDir, "%s\\%s", directory, sddir[currentSelection].fname);		
-				if(sddir) free(sddir);
+				free(sddir);
 				CLEAR();
 				sprintf(buffer,"MOVING TO %s.\nPress B to continue.\n",newDir);
 				PRINT(buffer);
@@ -94,7 +94,7 @@ char* textFileBrowser(char* directory){
 			} else {
 				char* newDir = malloc(SDCARD_MAX_PATH_LEN);
 				sprintf(newDir, "%s\\%s", directory, sddir[currentSelection].fname);
-				if(sddir) free(sddir);
+				free(sddir);
 				CLEAR();
 				sprintf(buffer,"SELECTING %s.\nPress B to continue.\n",newDir);
 				PRINT(buffer);
@@ -215,7 +215,7 @@ char *textFileBrowserDVD(){
 			if(i == currentSelection)
 				sprintf(buffer, "->");
 			else    sprintf(buffer, "  ");
-			sprintf(buffer, "%s\t%-32s\t%s\n", buffer,
+			sprintf(buffer+strlen(buffer), "\t%-32s\t%s\n",
 			        file[i].name,(file[i].flags & 2) ? "DIR" : "");
 			PRINT(buffer);
 		}

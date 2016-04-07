@@ -69,7 +69,7 @@ int savestates_exists(int mode)
   gzFile f;
 	char *filename;
   filename = malloc(1024);
-  sprintf(filename, "%s%s%s%s.st%d",(saveStateDevice==SAVESTATEDEVICE_USB)?"usb:":"sd:",
+  sprintf(filename, "%s%s%s%s.st%u",(saveStateDevice==SAVESTATEDEVICE_USB)?"usb:":"sd:",
                            statespath, ROM_SETTINGS.goodname, saveregionstr(),savestates_slot);
 
 	f = gzopen(filename, (mode == SAVESTATE) ? "wb" : "rb");
@@ -90,7 +90,7 @@ void savestates_save()
 	
   /* fix the filename to %s.st%d format */
   filename = malloc(1024);
-  sprintf(filename, "%s%s%s%s.st%d",(saveStateDevice==SAVESTATEDEVICE_USB)?"usb:":"sd:",
+  sprintf(filename, "%s%s%s%s.st%u",(saveStateDevice==SAVESTATEDEVICE_USB)?"usb:":"sd:",
                            statespath, ROM_SETTINGS.goodname, saveregionstr(),savestates_slot);
 
 	f = gzopen(filename, "wb");
@@ -182,7 +182,7 @@ void savestates_load()
 		
 	/* fix the filename to %s.st%d format */
   filename = malloc(1024);
-  sprintf(filename, "%s%s%s%s.st%d",(saveStateDevice==SAVESTATEDEVICE_USB)?"usb:":"sd:",
+  sprintf(filename, "%s%s%s%s.st%u",(saveStateDevice==SAVESTATEDEVICE_USB)?"usb:":"sd:",
                            statespath, ROM_SETTINGS.goodname, saveregionstr(),savestates_slot);
 	
 	f = gzopen(filename, "rb");

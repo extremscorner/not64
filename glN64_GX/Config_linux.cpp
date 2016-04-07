@@ -159,8 +159,8 @@ static void okButton_clicked( GtkWidget *widget, void *data )
 /*	fprintf( f, "fullscreen width=%d\n",      OGL.fullscreenWidth );
 	fprintf( f, "fullscreen height=%d\n",     OGL.fullscreenHeight );
 	fprintf( f, "fullscreen depth=%d\n",      OGL.fullscreenBits );*/
-	fprintf( f, "width=%d\n",        OGL.windowedWidth );
-	fprintf( f, "height=%d\n",       OGL.windowedHeight );
+	fprintf( f, "width=%lu\n",        OGL.windowedWidth );
+	fprintf( f, "height=%lu\n",       OGL.windowedHeight );
 //	fprintf( f, "windowed depth=%d\n",        OGL.windowedBits );*/
 /*	fprintf( f, "width=%d\n",                 OGL.width );
 	fprintf( f, "height=%d\n",                OGL.height );*/

@@ -173,7 +173,7 @@ static void BREAK(){
 #ifdef DEBUGON
 	_break(); return;
 #endif
-	printf("-- BREAK @ %08x: DUMPING N64 REGISTERS --\n", interp_addr);
+	printf("-- BREAK @ %08lx: DUMPING N64 REGISTERS --\n", interp_addr);
 	int i;
 	for(i=0; i<32; i+=4)
 		printf("r%2d: %08x  r%2d: %08x  r%2d: %08x  r%2d: %08x\n",
