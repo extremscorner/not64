@@ -132,8 +132,9 @@ void MessageBox::setMessage(const char* string)
 	Cursor::getInstance().setCurrentFrame(this);
 	currentFocusFrame = Focus::getInstance().getCurrentFrame();
 	Focus::getInstance().setCurrentFrame(this);
-	memset(messageBoxText, 0, MESSAGEBOX_TEXT_WIDTH);
+	//memset(messageBoxText, 0, MESSAGEBOX_TEXT_WIDTH);
 	strncpy(messageBoxText, string, MESSAGEBOX_TEXT_WIDTH);
+	messageBoxText[MESSAGEBOX_TEXT_WIDTH - 1] = '\0';
 
 	while (messageBoxActive)
 		menu::Gui::getInstance().draw();
@@ -156,8 +157,9 @@ int MessageBox::askMessage(const char* string)
 	Cursor::getInstance().setCurrentFrame(this);
 	currentFocusFrame = Focus::getInstance().getCurrentFrame();
 	Focus::getInstance().setCurrentFrame(this);
-	memset(messageBoxText, 0, MESSAGEBOX_TEXT_WIDTH);
+	//memset(messageBoxText, 0, MESSAGEBOX_TEXT_WIDTH);
 	strncpy(messageBoxText, string, MESSAGEBOX_TEXT_WIDTH);
+	messageBoxText[MESSAGEBOX_TEXT_WIDTH - 1] = '\0';
 
 	setReturnValue(0);
 	while (messageBoxActive)
@@ -181,8 +183,9 @@ void MessageBox::fadeMessage(const char* string)
 //	Cursor::getInstance().setCurrentFrame(this);
 //	currentFocusFrame = Focus::getInstance().getCurrentFrame();
 //	Focus::getInstance().setCurrentFrame(this);
-	memset(messageBoxText, 0, MESSAGEBOX_TEXT_WIDTH);
+	//memset(messageBoxText, 0, MESSAGEBOX_TEXT_WIDTH);
 	strncpy(messageBoxText, string, MESSAGEBOX_TEXT_WIDTH);
+	messageBoxText[MESSAGEBOX_TEXT_WIDTH - 1] = '\0';
 
 	messageFade = 1.0f;
 

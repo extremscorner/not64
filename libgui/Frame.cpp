@@ -53,7 +53,7 @@ void Frame::updateTime(float deltaTime)
 		updateFrame(deltaTime);
 
 		ComponentList::const_iterator iteration;
-		for (iteration = componentList.begin(); iteration != componentList.end(); iteration++)
+		for (iteration = componentList.begin(); iteration != componentList.end(); ++iteration)
 		{
 			(*iteration)->updateTime(deltaTime);
 		}
@@ -66,7 +66,7 @@ void Frame::drawChildren(Graphics &gfx)
 	{
 //		printf("Frame drawChildren\n");
 		ComponentList::const_iterator iteration;
-		for (iteration = componentList.begin(); iteration != componentList.end(); iteration++)
+		for (iteration = componentList.begin(); iteration != componentList.end(); ++iteration)
 		{
 //			printf("Frame calling component::draw\n");
 			(*iteration)->draw(gfx);

@@ -76,7 +76,6 @@ int fileBrowser_CARD_seekFile(fileBrowser_file* file, unsigned int where, unsign
 }
 
 int fileBrowser_CARD_readFile(fileBrowser_file* file, void* buffer, unsigned int length){
-	char *tbuffer;
 	card_file CardFile;
 	int slot = file->discoffset;
 	unsigned int SectorSize = 0;
@@ -84,7 +83,7 @@ int fileBrowser_CARD_readFile(fileBrowser_file* file, void* buffer, unsigned int
     
 	if(CARD_Open(slot, (const char*)file->name, &CardFile) != CARD_ERROR_NOFILE){
 	  /* Allocate a temporary buffer */
-  	tbuffer = memalign(32,CardFile.len);
+		char *tbuffer = memalign(32,CardFile.len);
 	  /* Read the file */
 		if(CARD_Read(&CardFile,tbuffer, CardFile.len, 0) == 0){
 			file->offset += length;
@@ -139,11 +138,15 @@ int fileBrowser_CARD_writeFile(fileBrowser_file* file, void* buffer, unsigned in
 	  CardStat.banner_fmt = 0;
 	  CardStat.icon_addr = 0x40;
 	  tmpBuffer = memalign(32,newLength);
-	  memset(tmpBuffer,0,sizeof(tmpBuffer));
+	  //memset(tmpBuffer,0,newLength);
 	  strcpy(tmpBuffer,ctime (&gc_time));
 	  strcpy(tmpBuffer+0x20,file->name);
 	  memcpy(tmpBuffer+0x40,CARDIcon,sizeof(CARDIcon));       // copy icon
 	  memcpy(tmpBuffer+0x40+sizeof(CARDIcon),buffer,length);  // copy file data
+	  //if space remaining, set to zero
+	  unsigned int endoffset = 0x40+sizeof(CARDIcon)+length;
+	  if(newLength > endoffset)
+	    memset(tmpBuffer+endoffset,0,newLength-endoffset);
 	  status = CARD_SetStatus(slot,CardFile.filenum,&CardStat);
   }
   		
@@ -155,8 +158,6 @@ int fileBrowser_CARD_writeFile(fileBrowser_file* file, void* buffer, unsigned in
 			  free(tmpBuffer);
 			return length;
 		}
-		if(tmpBuffer)
-		  free(tmpBuffer);
 	}
 	if(tmpBuffer)
 		free(tmpBuffer);

@@ -244,10 +244,10 @@ controller_t controller_Classic =
 
 static void refreshAvailable(void){
 
-	int i, err;
+	int i;
 	u32 expType;
 	for(i=0; i<4; ++i){
-		err = WPAD_Probe(i, &expType);
+		int err = WPAD_Probe(i, &expType);
 		if(err == WPAD_ERR_NONE &&
 		   expType == WPAD_EXP_CLASSIC){
 			controller_Classic.available[i] = 1;

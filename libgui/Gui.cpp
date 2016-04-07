@@ -82,7 +82,7 @@ void Gui::draw()
 	gfx->drawInit();
 	drawBackground();
 	FrameList::const_iterator iteration;
-	for (iteration = frameList.begin(); iteration != frameList.end(); iteration++)
+	for (iteration = frameList.begin(); iteration != frameList.end(); ++iteration)
 	{
 		(*iteration)->drawChildren(*gfx);
 	}
