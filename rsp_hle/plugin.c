@@ -27,6 +27,7 @@
 #include "wintypes.h"
 #include "common.h"
 #include "hle.h"
+#include "hle_internal.h"
 
 #include "RSPPlugin.h"
 #include "Rsp_#1.1.h"

@@ -5,6 +5,36 @@
 dsi_exceptionhandler:
 	stw		r11,GPR1_OFFSET(sp)
 	stmw	r13,GPR13_OFFSET(sp)
+	psq_st	fr0,PSR0_OFFSET(sp),0,0
+	stfd	fr0,FPR0_OFFSET(sp)
+	psq_st	fr1,PSR1_OFFSET(sp),0,0
+	stfd	fr1,FPR1_OFFSET(sp)
+	psq_st	fr2,PSR2_OFFSET(sp),0,0
+	stfd	fr2,FPR2_OFFSET(sp)
+	psq_st	fr3,PSR3_OFFSET(sp),0,0
+	stfd	fr3,FPR3_OFFSET(sp)
+	psq_st	fr4,PSR4_OFFSET(sp),0,0
+	stfd	fr4,FPR4_OFFSET(sp)
+	psq_st	fr5,PSR5_OFFSET(sp),0,0
+	stfd	fr5,FPR5_OFFSET(sp)
+	psq_st	fr6,PSR6_OFFSET(sp),0,0
+	stfd	fr6,FPR6_OFFSET(sp)
+	psq_st	fr7,PSR7_OFFSET(sp),0,0
+	stfd	fr7,FPR7_OFFSET(sp)
+	psq_st	fr8,PSR8_OFFSET(sp),0,0
+	stfd	fr8,FPR8_OFFSET(sp)
+	psq_st	fr9,PSR9_OFFSET(sp),0,0
+	stfd	fr9,FPR9_OFFSET(sp)
+	psq_st	fr10,PSR10_OFFSET(sp),0,0
+	stfd	fr10,FPR10_OFFSET(sp)
+	psq_st	fr11,PSR11_OFFSET(sp),0,0
+	stfd	fr11,FPR11_OFFSET(sp)
+	psq_st	fr12,PSR12_OFFSET(sp),0,0
+	stfd	fr12,FPR12_OFFSET(sp)
+	psq_st	fr13,PSR13_OFFSET(sp),0,0
+	stfd	fr13,FPR13_OFFSET(sp)
+	mffs	fr0
+	stfd	fr0,FPSCR_OFFSET(sp)
 
 	mfdsisr	r3
 	mfdar	r4
@@ -15,7 +45,37 @@ dsi_exceptionhandler:
 	mr		r3,sp
 	b		c_default_exceptionhandler
 
-1:	lwz		r0,CR_OFFSET(sp)
+1:	lfd		fr0,FPSCR_OFFSET(sp)
+	mtfsf	0xFF,fr0
+	psq_l	fr13,PSR13_OFFSET(sp),0,0
+	lfd		fr13,FPR13_OFFSET(sp)
+	psq_l	fr12,PSR12_OFFSET(sp),0,0
+	lfd		fr12,FPR12_OFFSET(sp)
+	psq_l	fr11,PSR11_OFFSET(sp),0,0
+	lfd		fr11,FPR11_OFFSET(sp)
+	psq_l	fr10,PSR10_OFFSET(sp),0,0
+	lfd		fr10,FPR10_OFFSET(sp)
+	psq_l	fr9,PSR9_OFFSET(sp),0,0
+	lfd		fr9,FPR9_OFFSET(sp)
+	psq_l	fr8,PSR8_OFFSET(sp),0,0
+	lfd		fr8,FPR8_OFFSET(sp)
+	psq_l	fr7,PSR7_OFFSET(sp),0,0
+	lfd		fr7,FPR7_OFFSET(sp)
+	psq_l	fr6,PSR6_OFFSET(sp),0,0
+	lfd		fr6,FPR6_OFFSET(sp)
+	psq_l	fr5,PSR5_OFFSET(sp),0,0
+	lfd		fr5,FPR5_OFFSET(sp)
+	psq_l	fr4,PSR4_OFFSET(sp),0,0
+	lfd		fr4,FPR4_OFFSET(sp)
+	psq_l	fr3,PSR3_OFFSET(sp),0,0
+	lfd		fr3,FPR3_OFFSET(sp)
+	psq_l	fr2,PSR2_OFFSET(sp),0,0
+	lfd		fr2,FPR2_OFFSET(sp)
+	psq_l	fr1,PSR1_OFFSET(sp),0,0
+	lfd		fr1,FPR1_OFFSET(sp)
+	psq_l	fr0,PSR0_OFFSET(sp),0,0
+	lfd		fr0,FPR0_OFFSET(sp)
+	lwz		r0,CR_OFFSET(sp)
 	mtcr	r0
 	lwz		r0,LR_OFFSET(sp)
 	mtlr	r0
@@ -26,7 +86,6 @@ dsi_exceptionhandler:
 	lwz		r0,SRR0_OFFSET(sp)
 	mtsrr0	r0
 	lwz		r0,SRR1_OFFSET(sp)
-	rlwinm	r0,r0,0,19,17
 	mtsrr1	r0
 	lwz		r12,GPR12_OFFSET(sp)
 	lwz		r11,GPR11_OFFSET(sp)

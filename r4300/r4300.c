@@ -1825,6 +1825,10 @@ void cpu_init(void){
     case 0x000000D6D5BE5580LL:
       CIC_Chip = 6;
       break;
+    case 0x000001053BC19870LL:
+    case 0x000001053B8A9870LL:
+      CIC_Chip = 7;
+      break;
     default:
       CIC_Chip = 2;
    }
@@ -1940,6 +1944,9 @@ void cpu_init(void){
       reg[15]= 0x000000007A3C07F4LL;
       reg[22]= 0x0000000000000085LL;
       reg[25]= 0x00000000465E3F72LL;
+      break;
+    case 7:
+      reg[22]= 0x00000000000000DDLL;
       break;
    }
 

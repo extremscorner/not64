@@ -23,8 +23,8 @@
 #define ALIST_INTERNAL_H
 
 #include <stdbool.h>
-#include <stdint.h>
 #include <stddef.h>
+#include <stdint.h>
 
 struct hle_t;
 
@@ -140,6 +140,16 @@ void alist_polef(
         uint16_t gain,
         int16_t* table,
         uint32_t address);
+
+void alist_iirf(
+        struct hle_t* hle,
+        bool init,
+        uint16_t dmemo,
+        uint16_t dmemi,
+        uint16_t count,
+        int16_t* table,
+        uint32_t address);
+
 /*
  * Audio flags
  */

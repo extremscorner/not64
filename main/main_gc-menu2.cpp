@@ -122,6 +122,7 @@ char menuActive;
        char autoSave;
        char screenMode = 0;
        char videoMode = 0;
+       char pixelClock;
 	   char trapFilter;
 	   char padAutoAssign;
 	   char padType[4];
@@ -150,6 +151,7 @@ static struct {
   { "2xSaI", &glN64_use2xSaiTextures, GLN64_2XSAI_DISABLE, GLN64_2XSAI_ENABLE },
   { "ScreenMode", &screenMode, SCREENMODE_4x3, SCREENMODE_16x9_PILLARBOX },
   { "VideoMode", &videoMode, VIDEOMODE_AUTO, VIDEOMODE_576P },
+  { "PixelClock", &pixelClock, PIXELCLOCK_AUTO, PIXELCLOCK_54MHZ },
   { "TrapFilter", &trapFilter, TRAPFILTER_DISABLE, TRAPFILTER_ENABLE },
   { "Core", ((char*)&dynacore)+3, DYNACORE_INTERPRETER, DYNACORE_PURE_INTERP },
   { "NativeDevice", &nativeSaveDevice, NATIVESAVEDEVICE_SD, NATIVESAVEDEVICE_CARDB },

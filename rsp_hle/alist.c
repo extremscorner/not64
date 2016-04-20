@@ -21,6 +21,7 @@
  *   51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.          *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
+#include <assert.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <string.h>
@@ -119,7 +120,7 @@ void alist_process(struct hle_t* hle, const acmd_callback_t abi[], unsigned int 
 
 uint32_t alist_get_address(struct hle_t* hle, uint32_t so, const uint32_t *segments, size_t n)
 {
-    uint8_t  segment = (so >> 24);
+    uint8_t  segment = (so >> 24) & 0x3f;
     uint32_t offset  = (so & 0xffffff);
 
     if (segment >= n) {
@@ -132,7 +133,7 @@ uint32_t alist_get_address(struct hle_t* hle, uint32_t so, const uint32_t *segme
 
 void alist_set_address(struct hle_t* hle, uint32_t so, uint32_t *segments, size_t n)
 {
-    uint8_t  segment = (so >> 24);
+    uint8_t  segment = (so >> 24) & 0x3f;
     uint32_t offset  = (so & 0xffffff);
 
     if (segment >= n) {
@@ -962,3 +963,62 @@ void alist_polef(
 
     dram_store_u16(hle, (uint16_t*)(dst - 4), address, 4);
 }
+
+void alist_iirf(
+        struct hle_t* hle,
+        bool init,
+        uint16_t dmemo,
+        uint16_t dmemi,
+        uint16_t count,
+        int16_t* table,
+        uint32_t address)
+{
+    int16_t *dst = (int16_t*)(hle->alist_buffer + dmemo);
+    int32_t i, prev;
+    int16_t frame[8];
+    int16_t ibuf[4];
+    uint16_t index = 7;
+
+
+    count = align(count, 16);
+
+    if(init)
+    {
+        for(i = 0; i < 8; ++i)
+            frame[i] = 0;
+        ibuf[1] = 0;
+        ibuf[2] = 0;
+    }
+    else
+    {
+        frame[6] = *dram_u16(hle, address + 4);
+        frame[7] = *dram_u16(hle, address + 6);
+        ibuf[1] = (int16_t)*dram_u16(hle, address + 8);
+        ibuf[2] = (int16_t)*dram_u16(hle, address + 10);
+    }
+
+    prev = vmulf(table[9], frame[6]) * 2;
+    do
+    {
+        for(i = 0; i < 8; ++i)
+        {
+            int32_t accu;
+            ibuf[index&3] = *alist_s16(hle, dmemi);
+
+            accu = prev + vmulf(table[0], ibuf[index&3]) + vmulf(table[1], ibuf[(index-1)&3]) + vmulf(table[0], ibuf[(index-2)&3]);
+            accu += vmulf(table[8], frame[index]) * 2;
+            prev = vmulf(table[9], frame[index]) * 2;
+            dst[i^S] = frame[i] = accu;
+
+            index=(index+1)&7;
+            dmemi += 2;
+        }
+        dst += 8;
+        count -= 0x10;
+    } while (count > 0);
+
+    dram_store_u16(hle, (uint16_t*)&frame[6], address + 4, 4);
+    dram_store_u16(hle, (uint16_t*)&ibuf[(index-2)&3], address+8, 2);
+    dram_store_u16(hle, (uint16_t*)&ibuf[(index-1)&3], address+10, 2);
+}
+

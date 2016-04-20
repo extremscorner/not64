@@ -12,23 +12,21 @@
 #define TEV_COMBINER_H
 
 //TEV input sources
-#define TEV_PRIM		0	//Constant
-#define TEV_ENV			1	//Constant
-#define TEV_CENTER		2	//Constant
-#define TEV_SCALE		3	//Constant
-#define TEV_LODFRAC		4	//Constant
-#define TEV_PRIMLODFRAC	5	//Constant
-#define TEV_K4			6	//Constant
-#define TEV_K5			7	//Constant
+#define TEV_CENTER		0	//Constant
+#define TEV_SCALE		1	//Constant
+#define TEV_PRIMLODFRAC	2	//Constant
+#define TEV_K4			3	//Constant
+#define TEV_K5			4	//Constant
+#define TEV_CMB			6	//TEVprev
+#define TEV_TEX			7	//Texture
+#define TEV_PRIM		8	//TEVreg1
 #define TEV_SHADE		9	//Raster Color
-#define TEV_ONE			10	//Static
-#define TEV_ZERO		11	//Static
-#define TEV_CMB			12	//TEVreg0
-#define TEV_TEX0		13	//Texture
-#define TEV_TEX1		14	//Texture
-#define TEV_TEX			15	//Texture (type)
+#define TEV_ENV			10	//TEVreg2
+#define TEV_LODFRAC		11	//Static
+#define TEV_ONE			12	//Static
+#define TEV_ZERO		13	//Static
 
-#define TEV_MAX_CONST	8
+#define TEV_MAX_CONST	5
 #define TEV_MAX_STAGES	16
 
 struct TEVconstantRegs

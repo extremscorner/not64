@@ -31,7 +31,6 @@
 #include "hle_external.h"
 #include "hle_internal.h"
 #include "memory.h"
-
 #include "ucodes.h"
 
 #include "../main/wii64config.h"

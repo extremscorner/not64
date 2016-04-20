@@ -47,6 +47,10 @@ Graphics::Graphics(GXRModeObj *rmode)
 		vmode = &TVEurgb60Hz480IntDf;
 		memcpy( &vmode_phys, vmode, sizeof(GXRModeObj));
 		break;
+	case VIDEOMODE_480SF:
+		vmode = &TVEurgb60Hz480Int;
+		memcpy( &vmode_phys, vmode, sizeof(GXRModeObj));
+		break;
 	case VIDEOMODE_240P:
 		vmode = &TVEurgb60Hz240DsAa;
 		memcpy( &vmode_phys, vmode, sizeof(GXRModeObj));
@@ -59,6 +63,10 @@ Graphics::Graphics(GXRModeObj *rmode)
 		vmode = &TVPal576IntDfScale;
 		memcpy( &vmode_phys, vmode, sizeof(GXRModeObj));
 		break;
+	case VIDEOMODE_576SF:
+		vmode = &TVPal576IntScale;
+		memcpy( &vmode_phys, vmode, sizeof(GXRModeObj));
+		break;
 	case VIDEOMODE_288P:
 		vmode = &TVPal288DsAaScale;
 		memcpy( &vmode_phys, vmode, sizeof(GXRModeObj));
@@ -68,6 +76,9 @@ Graphics::Graphics(GXRModeObj *rmode)
 		memcpy( &vmode_phys, vmode, sizeof(GXRModeObj));
 		break;
 	}
+
+	if(pixelClock == PIXELCLOCK_27MHZ)		vmode->viTVMode &= ~VI_CLOCK_54MHZ;
+	else if(pixelClock == PIXELCLOCK_54MHZ)	vmode->viTVMode |=  VI_CLOCK_54MHZ;
 
 	vmode->viWidth = 720;
 	vmode->viXOrigin = 0;
@@ -120,7 +131,7 @@ void Graphics::init()
 	GX_SetFieldMode(GX_DISABLE,((vmode->viHeight==2*vmode->xfbHeight)?GX_ENABLE:GX_DISABLE));
  
 	if (vmode->aa)
-		GX_SetPixelFmt(GX_PF_RGB565_Z16, GX_ZC_LINEAR);
+		GX_SetPixelFmt(GX_PF_RGB565_Z16, GX_ZC_MID);
 }
 
 void Graphics::drawInit()
