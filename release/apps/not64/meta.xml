@@ -6,7 +6,7 @@
    <release_date>201502050000</release_date>
    <short_description>N64 Emulator for Wii</short_description>
    <long_description>
-Developed by Extrems, and patched by Mystro256.
+Developed by Extrems
 This is based off of Wii64, which was developed by the Wii64 Team.
 
 Wii64 Team is:
@@ -20,6 +20,8 @@ Not64 is a Experimental modification of Wii64/Mupen64GC
 It currently runs most games at full speed or close to it, there are some known graphical and/or core issues.
 
 Special Thanks to:
+mystro256 - Minor fixes
+MelonSpeedruns - Logo
 drmr - Graphics
 marshallh - Wii64 Demo ROM
 wiibrew - wiki &amp; forums
