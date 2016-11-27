@@ -50,11 +50,6 @@ IplFont::~IplFont()
 
 void IplFont::initFont()
 {
-	#ifndef WII
-	//lowlevel Qoob Modchip disable for cube
-	setIplConfig(6);
-	#endif
-
 	void* fontArea = memalign(32,FONT_SIZE_ANSI);
 	memset(fontArea,0,FONT_SIZE_ANSI);
 	void* packed_data = (void*)(((u32)fontArea+119072)&~31);
@@ -86,26 +81,6 @@ void IplFont::initFont()
 	fontChars.fheight = fontData->cell_height;
 
 	free(fontArea);
-}
-
-void IplFont::setIplConfig(unsigned char c)
-{
-	//lowlevel Qoob Modchip disable
-	volatile unsigned long* exi = (volatile unsigned long*)0xCC006800;
-	unsigned long val,addr;
-	addr=0xc0000000;
-	val = c << 24;
-	exi[0] = ((((exi[0]) & 0x405) | 256) | 48);	//select IPL
-	//write addr of IPL
-	exi[0 * 5 + 4] = addr;
-	exi[0 * 5 + 3] = ((4 - 1) << 4) | (1 << 2) | 1;
-	while (exi[0 * 5 + 3] & 1);
-	//write the ipl we want to send
-	exi[0 * 5 + 4] = val;
-	exi[0 * 5 + 3] = ((4 - 1) << 4) | (1 << 2) | 1;
-	while (exi[0 * 5 + 3] & 1);
-
-	exi[0] &= 0x405;	//deselect IPL
 }
 
 typedef struct _yay0header {

@@ -107,8 +107,10 @@ int ROMCache_load(fileBrowser_file* file)
 			}
 		} while (bytes_read > 0);
 		
-		if (init_byte_swap(*(u32*)ROMBase) == BYTE_SWAP_BAD)
+		if (init_byte_swap(*(u32*)ROMBase) == BYTE_SWAP_BAD) {
+			romFile_deinit(file);
 			return ROM_CACHE_INVALID_ROM;
+		}
 		
 		LoadingBar_showBar(0.0, "Byteswapping ROM");
 		byte_swap(ROMBase, rom_length);
@@ -118,8 +120,10 @@ int ROMCache_load(fileBrowser_file* file)
 			if (bytes_read < 0)
 				return ROM_CACHE_ERROR_READ;
 			
-			if (i == 0 && init_byte_swap(*(u32*)ROMBase) == BYTE_SWAP_BAD)
+			if (i == 0 && init_byte_swap(*(u32*)ROMBase) == BYTE_SWAP_BAD) {
+				romFile_deinit(file);
 				return ROM_CACHE_INVALID_ROM;
+			}
 			
 			byte_swap(ROMBase + i, bytes_read);
 			i += bytes_read;
@@ -131,6 +135,5 @@ int ROMCache_load(fileBrowser_file* file)
 		} while (bytes_read > 0);
 	}
 	
-	romFile_deinit(file);
 	return 0;
 }

@@ -143,6 +143,23 @@ enum trapFilter
 	TRAPFILTER_ENABLE
 };
 
+extern char pollRate;
+enum pollRate
+{
+	POLLRATE_VSYNC=0,
+	POLLRATE_1MS,
+	POLLRATE_2MS,
+	POLLRATE_3MS,
+	POLLRATE_4MS,
+	POLLRATE_5MS,
+	POLLRATE_6MS,
+	POLLRATE_7MS,
+	POLLRATE_8MS,
+	POLLRATE_9MS,
+	POLLRATE_10MS,
+	POLLRATE_11MS
+};
+
 extern char padAutoAssign;
 enum padAutoAssign
 {

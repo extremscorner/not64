@@ -29,7 +29,7 @@
 #include "controller.h"
 
 enum {
-	STICK_AS_ANALOG = 1, SUBSTICK_AS_ANALOG = 2,
+	STICK_AS_ANALOG = 1, SUBSTICK_AS_ANALOG = 2, BUTTON_AS_ANALOG = 3,
 };
 
 static button_t buttons[] = {
@@ -57,13 +57,16 @@ static button_t buttons[] = {
 };
 
 static button_t analog_sources[] = {
-	{ 0, STICK_AS_ANALOG,  "Analog Stick" },
+	{ 0, STICK_AS_ANALOG,    "Analog Stick" },
 	{ 1, SUBSTICK_AS_ANALOG, "C-Stick" },
+	{ 2, BUTTON_AS_ANALOG,   "D-Pad" },
 };
 
 static button_t menu_combos[] = {
-	{ 0, PAD_BUTTON_X|PAD_BUTTON_Y, "X+Y" },
-	{ 1, PAD_BUTTON_START|PAD_BUTTON_X, "Start+X" },
+	{ 0, PAD_BUTTON_X|PAD_BUTTON_Y,      "X+Y" },
+	{ 1, PAD_BUTTON_START|PAD_BUTTON_X,  "Start+X" },
+	{ 2, PAD_BUTTON_START|PAD_BUTTON_Y,  "Start+Y" },
+	{ 3, PAD_BUTTON_START|PAD_TRIGGER_Z, "Start+Z" },
 };
 
 static unsigned int getButtons(int Control){
@@ -120,6 +123,20 @@ static int _GetKeys(int Control, BUTTONS * Keys, controller_config_t* config)
 	} else if(config->analog->mask == SUBSTICK_AS_ANALOG){
 		c->X_AXIS = PAD_SubStickX(Control);
 		c->Y_AXIS = PAD_SubStickY(Control);
+	} else if(config->analog->mask == BUTTON_AS_ANALOG){
+		if(b & PAD_BUTTON_RIGHT)
+			c->X_AXIS = +80;
+		else if(b & PAD_BUTTON_LEFT)
+			c->X_AXIS = -80;
+		else
+			c->X_AXIS = 0;
+
+		if(b & PAD_BUTTON_UP)
+			c->Y_AXIS = +80;
+		else if(b & PAD_BUTTON_DOWN)
+			c->Y_AXIS = -80;
+		else
+			c->Y_AXIS = 0;
 	}
 	if(config->invertedY) c->Y_AXIS = -c->Y_AXIS;
 

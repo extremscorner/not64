@@ -124,6 +124,7 @@ char menuActive;
        char videoMode = 0;
        char pixelClock;
 	   char trapFilter;
+	   char pollRate;
 	   char padAutoAssign;
 	   char padType[4];
 	   char padAssign[4];
@@ -158,6 +159,7 @@ static struct {
   { "StatesDevice", &saveStateDevice, SAVESTATEDEVICE_SD, SAVESTATEDEVICE_USB },
   { "AutoSave", &autoSave, AUTOSAVE_DISABLE, AUTOSAVE_ENABLE },
   { "LimitVIs", &Timers.limitVIs, LIMITVIS_NONE, LIMITVIS_WAIT_FOR_FRAME },
+  { "PollRate", &pollRate, POLLRATE_VSYNC, POLLRATE_11MS },
 /*  { "PadType1", &padType[0], PADTYPE_NONE, PADTYPE_WII },
   { "PadType2", &padType[1], PADTYPE_NONE, PADTYPE_WII },
   { "PadType3", &padType[2], PADTYPE_NONE, PADTYPE_WII },
@@ -242,6 +244,7 @@ int main(int argc, char* argv[]){
 #endif
 	videoMode		 = VIDEOMODE_AUTO;
 	trapFilter		 = TRAPFILTER_DISABLE;
+	pollRate		 = POLLRATE_VSYNC;
 	padAutoAssign	 = PADAUTOASSIGN_AUTOMATIC;
 	padType[0]		 = PADTYPE_NONE;
 	padType[1]		 = PADTYPE_NONE;

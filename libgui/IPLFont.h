@@ -47,7 +47,6 @@ private:
 	IplFont();
 	~IplFont();
 	void initFont();
-	void setIplConfig(unsigned char c);
 	void decodeYay0(void *src, void *dst);
 	void convertI2toI4(void *dst, void *src, int xres, int yres);
 

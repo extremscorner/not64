@@ -80,8 +80,8 @@ Graphics::Graphics(GXRModeObj *rmode)
 	if(pixelClock == PIXELCLOCK_27MHZ)		vmode->viTVMode &= ~VI_CLOCK_54MHZ;
 	else if(pixelClock == PIXELCLOCK_54MHZ)	vmode->viTVMode |=  VI_CLOCK_54MHZ;
 
-	vmode->viWidth = 720;
-	vmode->viXOrigin = 0;
+	vmode->viWidth = 704;
+	vmode->viXOrigin = 8;
 #ifdef HW_RVL
 	VIDEO_SetTrapFilter(trapFilter);
 	if(screenMode)	VIDEO_SetAspectRatio(VI_DISPLAY_BOTH, VI_ASPECT_1_1);

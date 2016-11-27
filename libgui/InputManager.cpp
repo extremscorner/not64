@@ -21,7 +21,7 @@
 #include "InputManager.h"
 #include "FocusManager.h"
 #include "CursorManager.h"
-#include "../gc_input/controller.h"
+#include "../main/wii64config.h"
 
 extern char shutdown;
 extern int stop;
@@ -33,7 +33,7 @@ void ResetCallback();
 
 Input::Input()
 {
-	SI_SetSamplingRate(1);
+	SI_SetSamplingRate(pollRate);
 	PAD_Init();
 #ifdef HW_RVL
 	WPAD_Init();
@@ -84,6 +84,7 @@ void PowerCallback()
 void ResetCallback()
 {
 	stop = 1;
+	PAD_Recalibrate(PAD_CHAN0_BIT | PAD_CHAN1_BIT | PAD_CHAN2_BIT | PAD_CHAN3_BIT);
 }
 
 } //namespace menu 

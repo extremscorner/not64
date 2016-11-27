@@ -131,8 +131,8 @@ static int _GetKeys(int Control, BUTTONS * Keys, controller_config_t* config,
 	c->U_CBUTTON    = isHeld(config->CU);
 
 	if(config->analog->mask == NUNCHUK_AS_ANALOG){
-		c->X_AXIS = getStickValue(&wpad->exp.nunchuk.js, STICK_X, 128);
-		c->Y_AXIS = getStickValue(&wpad->exp.nunchuk.js, STICK_Y, 128);
+		c->X_AXIS = getStickValue(&wpad->exp.nunchuk.js, STICK_X, 80);
+		c->Y_AXIS = getStickValue(&wpad->exp.nunchuk.js, STICK_Y, 80);
 	} else if(config->analog->mask == IR_AS_ANALOG){
 		if(wpad->ir.smooth_valid){
 			c->X_AXIS = ((short)(wpad->ir.sx - 512)) >> 2;
