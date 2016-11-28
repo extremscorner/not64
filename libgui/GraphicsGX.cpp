@@ -390,12 +390,12 @@ void Graphics::drawLine(int x1, int y1, int x2, int y2)
 
 void Graphics::drawCircle(int x, int y, int radius, int numSegments)
 {
-	float angle, point_x, point_y;
 
 	GX_Begin(GX_LINESTRIP, GX_VTXFMT0, numSegments+1);
 
 	for (int i = 0; i<=numSegments; i++)
 	{
+		float angle, point_x, point_y;
 		angle = M_TWOPI * i/numSegments;
 		point_x = (float)x + (float)radius * cos( angle );
 		point_y = (float)y + (float)radius * sin( angle );

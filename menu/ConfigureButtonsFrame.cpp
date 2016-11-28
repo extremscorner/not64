@@ -236,7 +236,6 @@ int activePadAssigned=ACTIVEPADASSIGNED_TRUE;
 
 void ConfigureButtonsFrame::activateSubmenu(int submenu)
 {
-	controller_config_t* currentConfig;
 
 	if (submenu != SUBMENU_N64_PADNONE)
 	{
@@ -280,7 +279,7 @@ void ConfigureButtonsFrame::activateSubmenu(int submenu)
 	{
 		sprintf(TITLE_STRING, "N64 Pad %d: %s Pad %d Mapping", activePad+1, controllerTypeStrings[activePadType], virtualControllers[activePad].number+1 );
 	
-		currentConfig = virtualControllers[activePad].config;
+		controller_config_t* currentConfig = virtualControllers[activePad].config;
 
 		if (activePadAssigned == ACTIVEPADASSIGNED_FALSE) //Reset to "Next Pad" button
 		{
@@ -373,7 +372,7 @@ void ConfigureButtonsFrame::drawChildren(menu::Graphics &gfx)
 
 		//Draw buttons
 		menu::ComponentList::const_iterator iteration;
-		for (iteration = componentList.begin(); iteration != componentList.end(); iteration++)
+		for (iteration = componentList.begin(); iteration != componentList.end(); ++iteration)
 		{
 			(*iteration)->draw(gfx);
 		}
@@ -421,7 +420,7 @@ void Func_SaveConfig()
 
 	//todo: save button configuration to file here
 
-	sprintf(buffer,"Saved current button mapping to slot %d.",which_slot+1);
+	sprintf(buffer,"Saved current button mapping to slot %u.",which_slot+1);
 	menu::MessageBox::getInstance().fadeMessage(buffer);
 //	menu::MessageBox::getInstance().setMessage(buffer);
 }

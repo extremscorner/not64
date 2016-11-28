@@ -21,8 +21,8 @@
  *
  * You should have received a copy of the GNU General Public
  * Licence along with this program; if not, write to the Free
- * Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139,
- * USA.
+ * Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ * Boston, MA 02110-1301 USA
  *
 **/
 
@@ -109,6 +109,8 @@ void init_GPR()
 
 //	gtk_signal_connect( GTK_OBJECT(clGPR), "button_press_event",
 //				GTK_SIGNAL_FUNC(on_click), clGPR);
+	//Free labGPR
+	free(labGPR);
 	//Initialisation des registres fantomes.
 	for( i=0; i<32; i++)
 	{

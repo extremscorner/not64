@@ -43,11 +43,11 @@ int getTitle(void** tik, unsigned int* tikSize, void** tmd, unsigned int* tmdSiz
         u32 i;
 		char txt[128];
 	GUI_clear();
-	ret = WiiDVD_Init();
+	/*ret = */WiiDVD_Init();
 
 	WiiDVD_Reset();
 
-	ret = WiiDVD_ReadID(g_diskID);
+	/*ret = */WiiDVD_ReadID(g_diskID);
 
 	__dvd_gameToc = (struct _toc*)_gameTocBuffer;
 	ret = WiiDVDReadUnEncrypted(_gameTocBuffer,0x20,0x000040000);

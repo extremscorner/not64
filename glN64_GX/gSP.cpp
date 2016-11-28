@@ -222,7 +222,7 @@ void gSPProcessVertex( u32 v )
 		}
 
 #ifdef GLN64_SDLOG
-		sprintf(txtbuffer,"gSPProcVert%d: Vert RGBA = %.2f, %.2f, %.2f, %.2f, Vert N_XYZ = %.2f, %.2f, %.2f, lighting RGB = %.2f, %.2f, %.2f, numLghts = %d\n", v, gSP.vertices[v].r, gSP.vertices[v].g, gSP.vertices[v].b, gSP.vertices[v].a, r, g, b, gSP.numLights);
+		sprintf(txtbuffer,"gSPProcVert%lu: Vert RGBA = %.2f, %.2f, %.2f, %.2f, lighting RGB = %.2f, %.2f, %.2f, numLghts = %ld\n", v, gSP.vertices[v].r, gSP.vertices[v].g, gSP.vertices[v].b, gSP.vertices[v].a, r, g, b, gSP.numLights);
 		DEBUG_print(txtbuffer,DBG_SDGECKOPRINT);
 #endif // GLN64_SDLOG
 

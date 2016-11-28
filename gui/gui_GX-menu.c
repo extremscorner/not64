@@ -741,7 +741,7 @@ void GUI_drawLoadProg()
 void GUI_creditScreen()
 {
 	GXColor fontColor = {255, 255, 255, 255};
-	char* string = "";
+	char* string[512] = "";
 	guVector	pos   = {0.0F, 0.0F, 0.0F},
 			axis1 = {1.0F, 0.0F, 0.0F}, 
 			axis2 = {1.0F, 0.0F, 0.0F},

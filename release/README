@@ -1,5 +1,5 @@
-README : Wii64 / Cube64
-Beta 1.1
+README : Not64
+Beta 1.2 UNRELEASED, TODO: WORK IN PROGRESS
 
 LICENSE:
     This software is licensed under the GNU General Public License v2
@@ -70,17 +70,24 @@ COMPATIBILITY LIST:
  Report any issues to http://code.google.com/p/mupen64gc/issues/list
 
 CREDITS:
+ * Not64 Coding: Extrems
  * Core Coder: tehpola
  * Graphics & Menu Coder: sepp256
  * General Coder: emu_kidid
  * Original mupen64: Hactarux
  * Artwork: drmr
  * Wii64 Demo ROM: marshallh
- * Compiled using devKitPro r19 and libOGC
+ * Minor Fixes: Mystro256
+ * Compiled using devKitPro and libOGC
      ( http://sourceforge.net/projects/devkitpro )
  * Visit us on www.emulatemii.com and http://code.google.com/p/mupen64gc
 
 CHANGE LOG:
+Beta 1.2:
+   * Better Game Compatibility
+   * Crash fixes
+   * Wii Pro Controller Support (TODO: NOT COMPLETE YET)
+   * UStealth Support (TODO: NEEDS A REBUILD)
 Beta 1.1:
    * Dynarec improvements
      + Function linking

@@ -21,8 +21,8 @@
  *
  * You should have received a copy of the GNU General Public
  * Licence along with this program; if not, write to the Free
- * Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139,
- * USA.
+ * Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ * Boston, MA 02110-1301 USA
  *
 **/
 
@@ -182,7 +182,7 @@ void update_nextint()
 	if( gui_fantom_nextint != next_interupt )
 	{
 		gui_fantom_nextint = next_interupt;
-		sprintf( txt, "0%.16X", next_interupt );
+		sprintf( txt, "0%.16lX", next_interupt );
 		gtk_entry_set_text( GTK_ENTRY(enNextInt), txt );
 	}
 }

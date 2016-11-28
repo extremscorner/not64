@@ -335,6 +335,7 @@ u8 logo_colors[] ATTRIBUTE_ALIGN (32) =
 Logo::Logo()
 		: x(0),
 		  y(0),
+		  z(0),
 		  size(1),
 		  rotateAuto(0),
 		  rotateX(0),

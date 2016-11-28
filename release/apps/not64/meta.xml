@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+ <app version="1.2">
+   <name>Not64</name>
+   <coder>Extrems, Mystro256, Wii64 Team</coder>
+   <version>Beta 1.2</version>
+   <release_date>201502050000</release_date>
+   <short_description>N64 Emulator for Wii</short_description>
+   <long_description>
+Developed by Extrems
+This is based off of Wii64, which was developed by the Wii64 Team.
+
+Wii64 Team is:
+Core Coder - tehpola  
+Graphics &amp; Menu Coding - sepp256  
+General Coding - emu_kidid
+
+Wii64 is a port of Mupen64 to the Wii
+Not64 is a Experimental modification of Wii64/Mupen64GC
+
+It currently runs most games at full speed or close to it, there are some known graphical and/or core issues.
+
+Special Thanks to:
+mystro256 - Minor fixes
+MelonSpeedruns - Logo
+drmr - Graphics
+marshallh - Wii64 Demo ROM
+wiibrew - wiki &amp; forums
+shagkur/WinterMute - libogc/devkitPPC
+Team Twiizers for Wii homebrew
+   </long_description>
+ </app>

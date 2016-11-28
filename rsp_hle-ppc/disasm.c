@@ -22,8 +22,8 @@
  *
  * You should have received a copy of the GNU General Public
  * Licence along with this program; if not, write to the Free
- * Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139,
- * USA.
+ * Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ * Boston, MA 02110-1301 USA
  *
 **/
 
@@ -158,7 +158,7 @@ void disasm(FILE *f, unsigned long t[0x1000/4])
 		  fprintf(f,"invalid opcode\n");
 		  break;
 		default:
-		  fprintf(f,"opcode special inconnu: %d\n", t[i] & 0x3F);
+		  fprintf(f,"opcode special inconnu: %lu\n", t[i] & 0x3F);
 		  return;
 	       }
 	     break;
@@ -533,7 +533,7 @@ void disasm(FILE *f, unsigned long t[0x1000/4])
 		       fprintf(f,"unknown opcode\n");
 		       break;
 		     default:
-		       fprintf(f,"opcode vect inconnu: %d\n", t[i] & 0x3F);
+		       fprintf(f,"opcode vect inconnu: %lu\n", t[i] & 0x3F);
 		       return;
 		    }
 		  break;

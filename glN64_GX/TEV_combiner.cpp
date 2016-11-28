@@ -790,7 +790,7 @@ void Set_TEV_combine( TEVCombiner *TEVcombiner )	//Called from OGL_UpdateStates(
 
 #ifdef DBGCOMBINE
 #ifdef GLN64_SDLOG
-	sprintf(txtbuffer,"TEV:%d stages, %d tex, %d chans\n", TEVcombiner->numTevStages, TEVcombiner->numTexGens, TEVcombiner->numColChans);
+	sprintf(txtbuffer,"TEV:%d stages, %lu tex, %d chans\n", TEVcombiner->numTevStages, TEVcombiner->numTexGens, TEVcombiner->numColChans);
 //	DEBUG_print(txtbuffer,18);
 	DEBUG_print(txtbuffer,DBG_SDGECKOPRINT);
 #endif // GLN64_SDLOG

@@ -522,7 +522,7 @@ void SettingsFrame::drawChildren(menu::Graphics &gfx)
 
 		//Draw buttons
 		menu::ComponentList::const_iterator iteration;
-		for (iteration = componentList.begin(); iteration != componentList.end(); iteration++)
+		for (iteration = componentList.begin(); iteration != componentList.end(); ++iteration)
 		{
 			(*iteration)->draw(gfx);
 		}

@@ -22,8 +22,8 @@
  *
  * You should have received a copy of the GNU General Public
  * Licence along with this program; if not, write to the Free
- * Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139,
- * USA.
+ * Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ * Boston, MA 02110-1301 USA
  *
 **/
 
@@ -1576,7 +1576,7 @@ void update_count()
      	//sprintf(txtbuffer, "trace: addr = 0x%08x\n", interp_addr);
 #ifdef SHOW_DEBUG
      	if(interp_addr < last_addr){
-     		sprintf(txtbuffer, "interp_addr (%08x) < last_addr (%08x)\n");
+     		sprintf(txtbuffer, "interp_addr (%08lx) < last_addr (%08lx)\n", interp_addr, last_addr);
      		DEBUG_print(txtbuffer, DBG_USBGECKO);
      	}
 #endif
