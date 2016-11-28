@@ -43,23 +43,75 @@ Graphics::Graphics(GXRModeObj *rmode)
 	case VIDEOMODE_AUTO:
 		vmode = VIDEO_GetPreferredMode(&vmode_phys);
 		break;
-	case VIDEOMODE_PAL60:
-		vmode = &TVEurgb60Hz480IntDf;
-		memcpy( &vmode_phys, vmode, sizeof(GXRModeObj));
+	case VIDEOMODE_480I:
+		switch (videoFormat)
+		{
+		case VIDEOFORMAT_NTSC:
+			vmode = &TVNtsc480IntDf;
+			memcpy( &vmode_phys, vmode, sizeof(GXRModeObj));
+			break;
+		case VIDEOFORMAT_PAL:
+			vmode = &TVEurgb60Hz480IntDf;
+			memcpy( &vmode_phys, vmode, sizeof(GXRModeObj));
+			break;
+		case VIDEOFORMAT_MPAL:
+			vmode = &TVMpal480IntDf;
+			memcpy( &vmode_phys, vmode, sizeof(GXRModeObj));
+			break;
+		}
 		break;
 	case VIDEOMODE_480SF:
-		vmode = &TVEurgb60Hz480Int;
-		memcpy( &vmode_phys, vmode, sizeof(GXRModeObj));
+		switch (videoFormat)
+		{
+		case VIDEOFORMAT_NTSC:
+			vmode = &TVNtsc480Int;
+			memcpy( &vmode_phys, vmode, sizeof(GXRModeObj));
+			break;
+		case VIDEOFORMAT_PAL:
+			vmode = &TVEurgb60Hz480Int;
+			memcpy( &vmode_phys, vmode, sizeof(GXRModeObj));
+			break;
+		case VIDEOFORMAT_MPAL:
+			vmode = &TVMpal480Int;
+			memcpy( &vmode_phys, vmode, sizeof(GXRModeObj));
+			break;
+		}
 		break;
 	case VIDEOMODE_240P:
-		vmode = &TVEurgb60Hz240DsAa;
-		memcpy( &vmode_phys, vmode, sizeof(GXRModeObj));
+		switch (videoFormat)
+		{
+		case VIDEOFORMAT_NTSC:
+			vmode = &TVNtsc240DsAa;
+			memcpy( &vmode_phys, vmode, sizeof(GXRModeObj));
+			break;
+		case VIDEOFORMAT_PAL:
+			vmode = &TVEurgb60Hz240DsAa;
+			memcpy( &vmode_phys, vmode, sizeof(GXRModeObj));
+			break;
+		case VIDEOFORMAT_MPAL:
+			vmode = &TVMpal240DsAa;
+			memcpy( &vmode_phys, vmode, sizeof(GXRModeObj));
+			break;
+		}
 		break;
 	case VIDEOMODE_480P:
-		vmode = &TVEurgb60Hz480Prog;
-		memcpy( &vmode_phys, vmode, sizeof(GXRModeObj));
+		switch (videoFormat)
+		{
+		case VIDEOFORMAT_NTSC:
+			vmode = &TVNtsc480Prog;
+			memcpy( &vmode_phys, vmode, sizeof(GXRModeObj));
+			break;
+		case VIDEOFORMAT_PAL:
+			vmode = &TVEurgb60Hz480Prog;
+			memcpy( &vmode_phys, vmode, sizeof(GXRModeObj));
+			break;
+		case VIDEOFORMAT_MPAL:
+			vmode = &TVMpal480Prog;
+			memcpy( &vmode_phys, vmode, sizeof(GXRModeObj));
+			break;
+		}
 		break;
-	case VIDEOMODE_PAL:
+	case VIDEOMODE_576I:
 		vmode = &TVPal576IntDfScale;
 		memcpy( &vmode_phys, vmode, sizeof(GXRModeObj));
 		break;

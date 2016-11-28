@@ -121,6 +121,7 @@ char menuActive;
 	   char saveStateDevice;
        char autoSave;
        char screenMode = 0;
+       char videoFormat;
        char videoMode = 0;
        char pixelClock;
 	   char trapFilter;
@@ -151,6 +152,7 @@ static struct {
   { "FBTex", &glN64_useFrameBufferTextures, GLN64_FBTEX_DISABLE, GLN64_FBTEX_ENABLE },
   { "2xSaI", &glN64_use2xSaiTextures, GLN64_2XSAI_DISABLE, GLN64_2XSAI_ENABLE },
   { "ScreenMode", &screenMode, SCREENMODE_4x3, SCREENMODE_16x9_PILLARBOX },
+  { "VideoFormat", &videoFormat, VIDEOFORMAT_NTSC, VIDEOFORMAT_MPAL },
   { "VideoMode", &videoMode, VIDEOMODE_AUTO, VIDEOMODE_576P },
   { "PixelClock", &pixelClock, PIXELCLOCK_AUTO, PIXELCLOCK_54MHZ },
   { "TrapFilter", &trapFilter, TRAPFILTER_DISABLE, TRAPFILTER_ENABLE },
@@ -239,8 +241,10 @@ int main(int argc, char* argv[]){
 	dynacore         = 1; // Dynarec
 #ifndef HW_RVL
 	screenMode		 = 0; // Stretch FB horizontally
+	videoFormat		 = SYS_GetVideoMode();
 #else
 	screenMode		 = CONF_GetAspectRatio() == CONF_ASPECT_16_9 ? SCREENMODE_16x9_PILLARBOX : SCREENMODE_4x3;
+	videoFormat		 = CONF_GetVideo();
 #endif
 	videoMode		 = VIDEOMODE_AUTO;
 	trapFilter		 = TRAPFILTER_DISABLE;
