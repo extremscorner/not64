@@ -291,6 +291,11 @@ int main(int argc, char* argv[]){
 				fclose(f);
 			}
 #ifdef HW_RVL
+			f = fopen( "usb:/not64/controlP.cfg", "r" );  //attempt to open file
+			if(f) {
+				load_configurations(f, &controller_WiiUPro);			//write out WiiU Pro controller mappings
+				fclose(f);
+			}
 			f = fopen( "usb:/not64/controlC.cfg", "r" );  //attempt to open file
 			if(f) {
 				load_configurations(f, &controller_Classic);			//write out Classic controller mappings
@@ -327,6 +332,11 @@ int main(int argc, char* argv[]){
 				fclose(f);
 			}
 #ifdef HW_RVL
+			f = fopen( "sd:/not64/controlP.cfg", "r" );  //attempt to open file
+			if(f) {
+				load_configurations(f, &controller_WiiUPro);			//write out WiiU Pro controller mappings
+				fclose(f);
+			}
 			f = fopen( "sd:/not64/controlC.cfg", "r" );  //attempt to open file
 			if(f) {
 				load_configurations(f, &controller_Classic);			//write out Classic controller mappings

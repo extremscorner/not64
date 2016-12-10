@@ -24,13 +24,21 @@
    ControlEmptyTexture_length:
    .long (ControlEmptyTexture_length - ControlEmptyTexture)
 
-   .globl ControlGamecubeTexture
+   .globl ControlGameCubeTexture
    .balign 32
-   ControlGamecubeTexture:
+   ControlGameCubeTexture:
    .incbin	"./menu/resources/cntrlGC.tx"
-   .globl ControlGamecubeTexture_length
-   ControlGamecubeTexture_length:
-   .long (ControlGamecubeTexture_length - ControlGamecubeTexture)
+   .globl ControlGameCubeTexture_length
+   ControlGameCubeTexture_length:
+   .long (ControlGameCubeTexture_length - ControlGameCubeTexture)
+
+   .globl ControlWiiUProTexture
+   .balign 32
+   ControlWiiUProTexture:
+   .incbin	"./menu/resources/cntrlWUPro.tx"
+   .globl ControlWiiUProTexture_length
+   ControlWiiUProTexture_length:
+   .long (ControlWiiUProTexture_length - ControlWiiUProTexture)
 
    .globl ControlClassicTexture
    .balign 32

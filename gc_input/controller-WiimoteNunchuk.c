@@ -172,6 +172,9 @@ static int checkType(int Control, int type){
 	case WPAD_EXP_CLASSIC:
 		controller_Classic.available[Control] = 1;
 		break;
+	case WPAD_EXP_WIIUPRO:
+		controller_WiiUPro.available[Control] = 1;
+		break;
 	}
 	
 	return expType;
@@ -232,14 +235,7 @@ static void rumble(int Control, int rumble){
 }
 
 static void configure(int Control, controller_config_t* config){
-	static s32 analog_fmts[] = {
-		WPAD_DATA_EXPANSION, // Nunchuk
-		WPAD_DATA_IR,        // IR
-		WPAD_DATA_ACCEL,     // Tilt
-		WPAD_DATA_ACCEL,     // Wheel
-		WPAD_DATA_BUTTONS,   // None
-	};
-	WPAD_SetDataFormat(Control, analog_fmts[config->analog->mask]);
+	// Don't know how this should be integrated
 }
 
 static void assign(int p, int v){

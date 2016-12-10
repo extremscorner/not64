@@ -42,7 +42,9 @@ virtualControllers_t virtualControllers[4];
 
 controller_t* controller_ts[num_controller_t] =
 #if defined(WII) && !defined(NO_BT)
-	{ &controller_GC, &controller_Classic,
+	{ &controller_GC,
+	  &controller_WiiUPro,
+	  &controller_Classic,
 	  &controller_WiimoteNunchuk,
 	  &controller_Wiimote,
 	 };

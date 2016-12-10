@@ -186,9 +186,9 @@ void FileBrowserFrame::drawChildren(menu::Graphics &gfx)
 			{
 				u32 currentButtonsDownWii = (wiiPad[i].btns_h ^ previousButtonsWii[i]) & wiiPad[i].btns_h;
 				previousButtonsWii[i] = wiiPad[i].btns_h;
-				if (wiiPad[i].exp.type == WPAD_EXP_CLASSIC)
+				if (wiiPad[i].exp.type == WPAD_EXP_CLASSIC || wiiPad[i].exp.type == WPAD_EXP_WIIUPRO)
 				{
-					if (currentButtonsDownWii & WPAD_CLASSIC_BUTTON_FULL_R)
+					if (currentButtonsDownWii & (WPAD_CLASSIC_BUTTON_FULL_R | WPAD_CLASSIC_BUTTON_ZR))
 					{
 						//move to next set & return
 						current_page = (current_page + 1) % max_page;
@@ -196,7 +196,7 @@ void FileBrowserFrame::drawChildren(menu::Graphics &gfx)
 						menu::Focus::getInstance().clearPrimaryFocus();
 						break;
 					}
-					else if (currentButtonsDownWii & WPAD_CLASSIC_BUTTON_FULL_L)
+					else if (currentButtonsDownWii & (WPAD_CLASSIC_BUTTON_FULL_L | WPAD_CLASSIC_BUTTON_ZL))
 					{
 						//move to the previous set & return
 						current_page = (max_page + current_page - 1) % max_page;

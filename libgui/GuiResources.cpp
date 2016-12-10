@@ -44,7 +44,8 @@ Resources::Resources()
 //	menuBackgroundImage = new Image(BackgroundTexture, 848, 480, GX_TF_I8, GX_CLAMP, GX_CLAMP, GX_FALSE);
 	menuBackgroundImage = new Image(BackgroundTexture, 424, 240, GX_TF_I8, GX_CLAMP, GX_CLAMP, GX_FALSE);
 	controllerEmptyImage = new Image(ControlEmptyTexture, 48, 64, GX_TF_I4, GX_CLAMP, GX_CLAMP, GX_FALSE);
-	controllerGamecubeImage = new Image(ControlGamecubeTexture, 48, 64, GX_TF_I4, GX_CLAMP, GX_CLAMP, GX_FALSE);
+	controllerGameCubeImage = new Image(ControlGameCubeTexture, 48, 64, GX_TF_I4, GX_CLAMP, GX_CLAMP, GX_FALSE);
+	controllerWiiUProImage = new Image(ControlWiiUProTexture, 48, 64, GX_TF_I4, GX_CLAMP, GX_CLAMP, GX_FALSE);
 	controllerClassicImage = new Image(ControlClassicTexture, 48, 64, GX_TF_I4, GX_CLAMP, GX_CLAMP, GX_FALSE);
 	controllerWiimoteNunchuckImage = new Image(ControlWiimoteNunchuckTexture, 48, 64, GX_TF_I4, GX_CLAMP, GX_CLAMP, GX_FALSE);
 	controllerWiimoteImage = new Image(ControlWiimoteTexture, 48, 64, GX_TF_I4, GX_CLAMP, GX_CLAMP, GX_FALSE);
@@ -64,7 +65,8 @@ Resources::~Resources()
 	delete styleAButtonSelectOnFocusImage;
 	delete menuBackgroundImage;
 	delete controllerEmptyImage;
-	delete controllerGamecubeImage;
+	delete controllerGameCubeImage;
+	delete controllerWiiUProImage;
 	delete controllerClassicImage;
 	delete controllerWiimoteNunchuckImage;
 	delete controllerWiimoteImage;
@@ -107,7 +109,10 @@ Image* Resources::getImage(int image)
 		returnImage = controllerEmptyImage;
 		break;
 	case IMAGE_CONTROLLER_GAMECUBE:
-		returnImage = controllerGamecubeImage;
+		returnImage = controllerGameCubeImage;
+		break;
+	case IMAGE_CONTROLLER_WIIUPRO:
+		returnImage = controllerWiiUProImage;
 		break;
 	case IMAGE_CONTROLLER_CLASSIC:
 		returnImage = controllerClassicImage;

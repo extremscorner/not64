@@ -48,6 +48,7 @@ public:
 		IMAGE_MENU_BACKGROUND,
 		IMAGE_CONTROLLER_EMPTY,
 		IMAGE_CONTROLLER_GAMECUBE,
+		IMAGE_CONTROLLER_WIIUPRO,
 		IMAGE_CONTROLLER_CLASSIC,
 		IMAGE_CONTROLLER_WIIMOTENUNCHUCK,
 		IMAGE_CONTROLLER_WIIMOTE,
@@ -62,9 +63,9 @@ private:
 	Image *styleAButtonSelectOffImage, *styleAButtonSelectOffFocusImage;
 	Image *styleAButtonSelectOnImage, *styleAButtonSelectOnFocusImage;
 	Image *menuBackgroundImage;
-	Image *controllerEmptyImage, *controllerGamecubeImage;
-	Image *controllerClassicImage, *controllerWiimoteNunchuckImage;
-	Image *controllerWiimoteImage;
+	Image *controllerEmptyImage, *controllerGameCubeImage;
+	Image *controllerWiiUProImage, *controllerClassicImage;
+	Image *controllerWiimoteNunchuckImage, *controllerWiimoteImage;
 	Image *n64ControllerImage;
 
 };

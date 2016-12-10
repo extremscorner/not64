@@ -470,9 +470,9 @@ void SettingsFrame::drawChildren(menu::Graphics &gfx)
 			{
 				u32 currentButtonsDownWii = (wiiPad[i].btns_h ^ previousButtonsWii[i]) & wiiPad[i].btns_h;
 				previousButtonsWii[i] = wiiPad[i].btns_h;
-				if (wiiPad[i].exp.type == WPAD_EXP_CLASSIC)
+				if (wiiPad[i].exp.type == WPAD_EXP_CLASSIC || wiiPad[i].exp.type == WPAD_EXP_WIIUPRO)
 				{
-					if (currentButtonsDownWii & WPAD_CLASSIC_BUTTON_FULL_R)
+					if (currentButtonsDownWii & (WPAD_CLASSIC_BUTTON_FULL_R | WPAD_CLASSIC_BUTTON_ZR))
 					{
 						//move to next tab
 						if(activeSubmenu < SUBMENU_SAVES) 
@@ -482,7 +482,7 @@ void SettingsFrame::drawChildren(menu::Graphics &gfx)
 						}
 						break;
 					}
-					else if (currentButtonsDownWii & WPAD_CLASSIC_BUTTON_FULL_L)
+					else if (currentButtonsDownWii & (WPAD_CLASSIC_BUTTON_FULL_L | WPAD_CLASSIC_BUTTON_ZL))
 					{
 						//move to the previous tab
 						if(activeSubmenu > SUBMENU_GENERAL) 
@@ -807,6 +807,12 @@ void Func_SaveButtonsSD()
 			num_written++;
 		}
 #ifdef HW_RVL
+		f = fopen( "sd:/not64/controlP.cfg", "wb" );  //attempt to open file
+		if(f) {
+			save_configurations(f, &controller_WiiUPro);			//write out WiiU Pro controller mappings
+			fclose(f);
+			num_written++;
+		}
 		f = fopen( "sd:/not64/controlC.cfg", "wb" );  //attempt to open file
 		if(f) {
 			save_configurations(f, &controller_Classic);			//write out Classic controller mappings
@@ -847,6 +853,12 @@ void Func_SaveButtonsUSB()
 			num_written++;
 		}
 #ifdef HW_RVL
+		f = fopen( "usb:/not64/controlP.cfg", "wb" );  //attempt to open file
+		if(f) {
+			save_configurations(f, &controller_WiiUPro);			//write out WiiU Pro controller mappings
+			fclose(f);
+			num_written++;
+		}
 		f = fopen( "usb:/not64/controlC.cfg", "wb" );  //attempt to open file
 		if(f) {
 			save_configurations(f, &controller_Classic);			//write out Classic controller mappings

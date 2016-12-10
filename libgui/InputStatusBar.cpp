@@ -151,10 +151,21 @@ void InputStatusBar::drawComponent(Graphics& gfx)
 		case PADTYPE_WII:
 			s32 err;
 			err = WPAD_Probe((int)padAssign[i], &type);
+			controller_WiiUPro.available[(int)padAssign[i]] = (err == WPAD_ERR_NONE && type == WPAD_EXP_WIIUPRO) ? 1 : 0;
 			controller_Classic.available[(int)padAssign[i]] = (err == WPAD_ERR_NONE && type == WPAD_EXP_CLASSIC) ? 1 : 0;
 			controller_WiimoteNunchuk.available[(int)padAssign[i]] = (err == WPAD_ERR_NONE && type == WPAD_EXP_NUNCHUK) ? 1 : 0;
 			controller_Wiimote.available[(int)padAssign[i]] = (err == WPAD_ERR_NONE && type == WPAD_EXP_NONE) ? 1 : 0;
-			if (controller_Classic.available[(int)padAssign[i]])
+			if (controller_WiiUPro.available[(int)padAssign[i]])
+			{
+				assign_controller(i, &controller_WiiUPro, (int)padAssign[i]);
+//				gfx.setColor(activeColor);
+//				IplFont::getInstance().drawInit(activeColor);
+				gfx.setColor(controllerColors[i]);
+				IplFont::getInstance().drawInit(controllerColors[i]);
+				statusIcon = Resources::getInstance().getImage(Resources::IMAGE_CONTROLLER_WIIUPRO);
+//				sprintf (statusText, "Pad%d: WUP%d", i+1, padAssign[i]+1);
+			}
+			else if (controller_Classic.available[(int)padAssign[i]])
 			{
 				assign_controller(i, &controller_Classic, (int)padAssign[i]);
 //				gfx.setColor(activeColor);
