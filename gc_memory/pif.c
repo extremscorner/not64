@@ -39,6 +39,8 @@
 #endif
 
 #include <ogc/card.h>
+#include <ogc/si.h>
+#include <ogc/machine/processor.h>
 
 #ifdef USE_GUI
 #include "../gui/GUI.h"
@@ -55,6 +57,7 @@
 #include "../main/plugin.h"
 #include "../main/guifuncs.h"
 #include "../main/rom.h"
+#include "../main/wii64config.h"
 #include "../fileBrowser/fileBrowser.h"
 #include "Saves.h"
 
@@ -300,6 +303,23 @@ int saveMempak(fileBrowser_file* savepath){
 	return 1;
 }
 
+void native_ReadController(int Control, BYTE *Command)
+{
+	u32 level;
+	_CPU_ISR_Disable(level);
+	while (SI_Busy())
+		_CPU_ISR_Flash(level);
+	if (!(Command[1] & 0xC0) && SI_Transfer(Control, &Command[2], Command[0] & 0x3F, &Command[2 + (Command[0] & 0x3F)], Command[1] & 0x3F, NULL, 0))
+	{
+		u32 status = SI_Sync();
+		if (status & SI_ERROR_NO_RESPONSE)
+			Command[1] |= 0x80;
+		if (status & (SI_ERROR_UNDER_RUN | SI_ERROR_OVER_RUN | SI_ERROR_COLLISION))
+			Command[1] |= 0x40;
+	}
+	_CPU_ISR_Restore(level);
+}
+
 void internal_ReadController(int Control, BYTE *Command)
 {
    switch (Command[2])
@@ -500,7 +520,7 @@ void update_pif_write()
 		       if (Controls[channel].Present &&
 			   Controls[channel].RawData)
 			 controllerCommand(channel, &PIF_RAMb[i]);
-		       else
+		       else if (padType[channel])
 			 internal_ControllerCommand(channel, &PIF_RAMb[i]);
 		    }
 		  else if (channel == 4)
@@ -554,8 +574,10 @@ void update_pif_read()
 		       if (Controls[channel].Present &&
 			   Controls[channel].RawData)
 			 readController(channel, &PIF_RAMb[i]);
-		       else
+		       else if (padType[channel])
 			 internal_ReadController(channel, &PIF_RAMb[i]);
+		       else
+			 native_ReadController(padAssign[channel], &PIF_RAMb[i]);
 		    }
 		  i += PIF_RAMb[i] + (PIF_RAMb[(i+1)] & 0x3F) + 1;
 		  channel++;

@@ -444,7 +444,7 @@ void SettingsFrame::drawChildren(menu::Graphics &gfx)
 			{
 				u16 currentButtonsDownGC = (currentButtonsGC ^ previousButtonsGC[i]) & currentButtonsGC;
 				previousButtonsGC[i] = currentButtonsGC;
-				if (currentButtonsDownGC & PAD_TRIGGER_R)
+				if (currentButtonsDownGC & PAD_BUTTON_R)
 				{
 					//move to next tab
 					if(activeSubmenu < SUBMENU_SAVES) 
@@ -452,9 +452,8 @@ void SettingsFrame::drawChildren(menu::Graphics &gfx)
 						activateSubmenu(activeSubmenu+1);
 						menu::Focus::getInstance().clearPrimaryFocus();
 					}
-					break;
 				}
-				else if (currentButtonsDownGC & PAD_TRIGGER_L)
+				else if (currentButtonsDownGC & PAD_BUTTON_L)
 				{
 					//move to the previous tab
 					if(activeSubmenu > SUBMENU_GENERAL) 
@@ -462,16 +461,18 @@ void SettingsFrame::drawChildren(menu::Graphics &gfx)
 						activateSubmenu(activeSubmenu-1);
 						menu::Focus::getInstance().clearPrimaryFocus();
 					}
-					break;
 				}
+				break;
 			}
 #ifdef HW_RVL
 			else if (wiiPad[i].btns_h ^ previousButtonsWii[i])
 			{
 				u32 currentButtonsDownWii = (wiiPad[i].btns_h ^ previousButtonsWii[i]) & wiiPad[i].btns_h;
 				previousButtonsWii[i] = wiiPad[i].btns_h;
-				if (wiiPad[i].exp.type == WPAD_EXP_CLASSIC || wiiPad[i].exp.type == WPAD_EXP_WIIUPRO)
+				switch (wiiPad[i].exp.type)
 				{
+				case WPAD_EXP_CLASSIC:
+				case WPAD_EXP_WIIUPRO:
 					if (currentButtonsDownWii & (WPAD_CLASSIC_BUTTON_FULL_R | WPAD_CLASSIC_BUTTON_ZR))
 					{
 						//move to next tab
@@ -480,7 +481,6 @@ void SettingsFrame::drawChildren(menu::Graphics &gfx)
 							activateSubmenu(activeSubmenu+1);
 							menu::Focus::getInstance().clearPrimaryFocus();
 						}
-						break;
 					}
 					else if (currentButtonsDownWii & (WPAD_CLASSIC_BUTTON_FULL_L | WPAD_CLASSIC_BUTTON_ZL))
 					{
@@ -490,11 +490,51 @@ void SettingsFrame::drawChildren(menu::Graphics &gfx)
 							activateSubmenu(activeSubmenu-1);
 							menu::Focus::getInstance().clearPrimaryFocus();
 						}
-						break;
 					}
-				}
-				else
-				{
+					break;
+				case WPAD_EXP_NES:
+				case WPAD_EXP_SNES:
+				case WPAD_EXP_N64:
+					if (currentButtonsDownWii & WPAD_SNES_BUTTON_R)
+					{
+						//move to next tab
+						if(activeSubmenu < SUBMENU_SAVES) 
+						{
+							activateSubmenu(activeSubmenu+1);
+							menu::Focus::getInstance().clearPrimaryFocus();
+						}
+					}
+					else if (currentButtonsDownWii & WPAD_SNES_BUTTON_L)
+					{
+						//move to the previous tab
+						if(activeSubmenu > SUBMENU_GENERAL) 
+						{
+							activateSubmenu(activeSubmenu-1);
+							menu::Focus::getInstance().clearPrimaryFocus();
+						}
+					}
+					break;
+				case WPAD_EXP_GC:
+					if (currentButtonsDownWii & WPAD_GC_BUTTON_R)
+					{
+						//move to next tab
+						if(activeSubmenu < SUBMENU_SAVES) 
+						{
+							activateSubmenu(activeSubmenu+1);
+							menu::Focus::getInstance().clearPrimaryFocus();
+						}
+					}
+					else if (currentButtonsDownWii & WPAD_GC_BUTTON_L)
+					{
+						//move to the previous tab
+						if(activeSubmenu > SUBMENU_GENERAL) 
+						{
+							activateSubmenu(activeSubmenu-1);
+							menu::Focus::getInstance().clearPrimaryFocus();
+						}
+					}
+					break;
+				default:
 					if (currentButtonsDownWii & WPAD_BUTTON_PLUS)
 					{
 						//move to next tab
@@ -503,7 +543,6 @@ void SettingsFrame::drawChildren(menu::Graphics &gfx)
 							activateSubmenu(activeSubmenu+1);
 							menu::Focus::getInstance().clearPrimaryFocus();
 						}
-						break;
 					}
 					else if (currentButtonsDownWii & WPAD_BUTTON_MINUS)
 					{
@@ -513,9 +552,10 @@ void SettingsFrame::drawChildren(menu::Graphics &gfx)
 							activateSubmenu(activeSubmenu-1);
 							menu::Focus::getInstance().clearPrimaryFocus();
 						}
-						break;
 					}
+					break;
 				}
+				break;
 			}
 #endif //HW_RVL
 		}
@@ -807,6 +847,30 @@ void Func_SaveButtonsSD()
 			num_written++;
 		}
 #ifdef HW_RVL
+		f = fopen( "sd:/not64/controlD.cfg", "wb" );  //attempt to open file
+		if(f) {
+			save_configurations(f, &controller_ExtenmoteGC);		//write out GC controller mappings
+			fclose(f);
+			num_written++;
+		}
+		f = fopen( "sd:/not64/controlU.cfg", "wb" );  //attempt to open file
+		if(f) {
+			save_configurations(f, &controller_ExtenmoteN64);		//write out N64 controller mappings
+			fclose(f);
+			num_written++;
+		}
+		f = fopen( "sd:/not64/controlS.cfg", "wb" );  //attempt to open file
+		if(f) {
+			save_configurations(f, &controller_ExtenmoteSNES);		//write out SNES controller mappings
+			fclose(f);
+			num_written++;
+		}
+		f = fopen( "sd:/not64/controlF.cfg", "wb" );  //attempt to open file
+		if(f) {
+			save_configurations(f, &controller_ExtenmoteNES);		//write out NES controller mappings
+			fclose(f);
+			num_written++;
+		}
 		f = fopen( "sd:/not64/controlP.cfg", "wb" );  //attempt to open file
 		if(f) {
 			save_configurations(f, &controller_WiiUPro);			//write out WiiU Pro controller mappings
@@ -853,6 +917,30 @@ void Func_SaveButtonsUSB()
 			num_written++;
 		}
 #ifdef HW_RVL
+		f = fopen( "usb:/not64/controlD.cfg", "wb" );  //attempt to open file
+		if(f) {
+			save_configurations(f, &controller_ExtenmoteGC);		//write out GC controller mappings
+			fclose(f);
+			num_written++;
+		}
+		f = fopen( "usb:/not64/controlU.cfg", "wb" );  //attempt to open file
+		if(f) {
+			save_configurations(f, &controller_ExtenmoteN64);		//write out N64 controller mappings
+			fclose(f);
+			num_written++;
+		}
+		f = fopen( "usb:/not64/controlS.cfg", "wb" );  //attempt to open file
+		if(f) {
+			save_configurations(f, &controller_ExtenmoteSNES);		//write out SNES controller mappings
+			fclose(f);
+			num_written++;
+		}
+		f = fopen( "usb:/not64/controlF.cfg", "wb" );  //attempt to open file
+		if(f) {
+			save_configurations(f, &controller_ExtenmoteNES);		//write out NES controller mappings
+			fclose(f);
+			num_written++;
+		}
 		f = fopen( "usb:/not64/controlP.cfg", "wb" );  //attempt to open file
 		if(f) {
 			save_configurations(f, &controller_WiiUPro);			//write out WiiU Pro controller mappings

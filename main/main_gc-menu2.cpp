@@ -114,6 +114,7 @@ char renderCpuFramebuffer;
 #endif //!GLN64_GX
 extern timers Timers;
 char menuActive;
+char skipMenu;
        char saveEnabled;
        char creditsScrolling;
        char shutdown = 0;
@@ -145,7 +146,8 @@ static struct {
 	char* value; // Not a string, but a char pointer
 	char  min, max;
 } OPTIONS[] =
-{ { "Audio", &audioEnabled, AUDIO_DISABLE, AUDIO_ENABLE },
+{ { "SkipMenu", &skipMenu, SKIPMENU_DISABLE, SKIPMENU_ENABLE },
+  { "Audio", &audioEnabled, AUDIO_DISABLE, AUDIO_ENABLE },
   { "ScalePitch", &scalePitch, SCALEPITCH_DISABLE, SCALEPITCH_ENABLE },
   { "FPS", &showFPSonScreen, FPS_HIDE, FPS_SHOW },
 //  { "Debug", &printToScreen, DEBUG_HIDE, DEBUG_SHOW },
@@ -227,6 +229,7 @@ int main(int argc, char* argv[]){
 #endif
 
 	// Default Settings
+	skipMenu         = SKIPMENU_DISABLE;
 	audioEnabled     = 1; // Audio
 	scalePitch       = 1;
 #ifdef RELEASE
@@ -250,10 +253,10 @@ int main(int argc, char* argv[]){
 	trapFilter		 = TRAPFILTER_DISABLE;
 	pollRate		 = POLLRATE_VSYNC;
 	padAutoAssign	 = PADAUTOASSIGN_AUTOMATIC;
-	padType[0]		 = PADTYPE_NONE;
-	padType[1]		 = PADTYPE_NONE;
-	padType[2]		 = PADTYPE_NONE;
-	padType[3]		 = PADTYPE_NONE;
+	padType[0]		 = PADTYPE_N64;
+	padType[1]		 = PADTYPE_N64;
+	padType[2]		 = PADTYPE_N64;
+	padType[3]		 = PADTYPE_N64;
 	padAssign[0]	 = PADASSIGN_INPUT0;
 	padAssign[1]	 = PADASSIGN_INPUT1;
 	padAssign[2]	 = PADASSIGN_INPUT2;
@@ -291,6 +294,26 @@ int main(int argc, char* argv[]){
 				fclose(f);
 			}
 #ifdef HW_RVL
+			f = fopen( "usb:/not64/controlD.cfg", "r" );  //attempt to open file
+			if(f) {
+				load_configurations(f, &controller_ExtenmoteGC);		//write out GC controller mappings
+				fclose(f);
+			}
+			f = fopen( "usb:/not64/controlU.cfg", "r" );  //attempt to open file
+			if(f) {
+				load_configurations(f, &controller_ExtenmoteN64);		//write out N64 controller mappings
+				fclose(f);
+			}
+			f = fopen( "usb:/not64/controlS.cfg", "r" );  //attempt to open file
+			if(f) {
+				load_configurations(f, &controller_ExtenmoteSNES);		//write out SNES controller mappings
+				fclose(f);
+			}
+			f = fopen( "usb:/not64/controlF.cfg", "r" );  //attempt to open file
+			if(f) {
+				load_configurations(f, &controller_ExtenmoteNES);		//write out NES controller mappings
+				fclose(f);
+			}
 			f = fopen( "usb:/not64/controlP.cfg", "r" );  //attempt to open file
 			if(f) {
 				load_configurations(f, &controller_WiiUPro);			//write out WiiU Pro controller mappings
@@ -332,6 +355,26 @@ int main(int argc, char* argv[]){
 				fclose(f);
 			}
 #ifdef HW_RVL
+			f = fopen( "sd:/not64/controlD.cfg", "r" );  //attempt to open file
+			if(f) {
+				load_configurations(f, &controller_ExtenmoteGC);		//write out GC controller mappings
+				fclose(f);
+			}
+			f = fopen( "sd:/not64/controlU.cfg", "r" );  //attempt to open file
+			if(f) {
+				load_configurations(f, &controller_ExtenmoteN64);		//write out N64 controller mappings
+				fclose(f);
+			}
+			f = fopen( "sd:/not64/controlS.cfg", "r" );  //attempt to open file
+			if(f) {
+				load_configurations(f, &controller_ExtenmoteSNES);		//write out SNES controller mappings
+				fclose(f);
+			}
+			f = fopen( "sd:/not64/controlF.cfg", "r" );  //attempt to open file
+			if(f) {
+				load_configurations(f, &controller_ExtenmoteNES);		//write out NES controller mappings
+				fclose(f);
+			}
 			f = fopen( "sd:/not64/controlP.cfg", "r" );  //attempt to open file
 			if(f) {
 				load_configurations(f, &controller_WiiUPro);			//write out WiiU Pro controller mappings

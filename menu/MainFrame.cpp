@@ -227,10 +227,10 @@ void Func_PlayGame()
 		menu::Gui::getInstance().draw();
 		for (int i=0; i<4; i++)
 		{
-			if(PAD_ButtonsHeld(i) & PAD_BUTTON_A) buttonHeld++;
+			if((u16)PAD_ButtonsHeld(i)) buttonHeld++;
 #ifdef HW_RVL
 			WPADData* wiiPad = WPAD_Data(i);
-			if(wiiPad->err == WPAD_ERR_NONE && wiiPad->btns_h & (WPAD_BUTTON_A | WPAD_CLASSIC_BUTTON_A)) buttonHeld++;
+			if(wiiPad->err == WPAD_ERR_NONE && wiiPad->btns_h) buttonHeld++;
 #endif
 		}
 	}

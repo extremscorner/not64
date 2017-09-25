@@ -43,6 +43,10 @@ virtualControllers_t virtualControllers[4];
 controller_t* controller_ts[num_controller_t] =
 #if defined(WII) && !defined(NO_BT)
 	{ &controller_GC,
+	  &controller_ExtenmoteGC,
+	  &controller_ExtenmoteN64,
+	  &controller_ExtenmoteSNES,
+	  &controller_ExtenmoteNES,
 	  &controller_WiiUPro,
 	  &controller_Classic,
 	  &controller_WiimoteNunchuk,
@@ -322,14 +326,22 @@ EXPORT void CALL WM_KeyUp( WPARAM wParam, LPARAM lParam )
 }
 void pauseInput(void){
 	int i;
-	for(i=0; i<4; ++i)
-		if(virtualControllers[i].inUse) DO_CONTROL(i, pause);
+	for(i=0; i<4; ++i){
+		if(virtualControllers[i].inUse){
+			DO_CONTROL(i, assign, virtualControllers[i].number);
+			DO_CONTROL(i, pause);
+		}
+	}
 }
 
 void resumeInput(void){
 	int i;
-	for(i=0; i<4; ++i)
-		if(virtualControllers[i].inUse) DO_CONTROL(i, resume);
+	for(i=0; i<4; ++i){
+		if(virtualControllers[i].inUse){
+			DO_CONTROL(i, assign, i);
+			DO_CONTROL(i, resume);
+		}
+	}
 }
 
 void init_controller_ts(void){
@@ -353,8 +365,6 @@ void assign_controller(int wv, controller_t* type, int wp){
 	virtualControllers[wv].inUse   = 1;
 	virtualControllers[wv].number  = wp;
 	virtualControllers[wv].config  = &type->config[wv];
-
-	type->assign(wp,wv);
 
 	control_info.Controls[wv].Present = 1;
 	if (pakMode[wv] == PAKMODE_MEMPAK)	control_info.Controls[wv].Plugin  = PLUGIN_MEMPAK;
@@ -404,7 +414,8 @@ void auto_assign_controllers(void){
 	// 'Initialize' the unmapped virtual controllers
 	for(; i<4; ++i){
 		unassign_controller(i);
-		padType[i] = PADTYPE_NONE;
+		padType[i] = PADTYPE_N64;
+		padAssign[i] = i;
 	}
 }
 

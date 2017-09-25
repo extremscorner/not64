@@ -139,7 +139,7 @@ struct ButtonInfo
 	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[18],	395.0,	395.0,	 80.0,	40.0,	17,	 3,	19,	21,	Func_ToggleButtonA,		Func_ReturnFromConfigureButtonsFrame }, // Toggle Button A
 	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[19],	200.0,	395.0,	160.0,	40.0,	16,	 2,	20,	18,	Func_ToggleAnalogStick,	Func_ReturnFromConfigureButtonsFrame }, // Toggle Analog Stick
 	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[20],	 60.0,	395.0,	130.0,	40.0,	16,	 0,	21,	19,	Func_ToggleInvertY,		Func_ReturnFromConfigureButtonsFrame }, // Toggle Analog Invert Y
-	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[21],	495.0,	395.0,	100.0,	40.0,	17,	 4,	18,	20,	Func_ToggleButtonExit,	Func_ReturnFromConfigureButtonsFrame }, // Toggle Button Exit
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[21],	485.0,	395.0,	115.0,	40.0,	17,	 4,	18,	20,	Func_ToggleButtonExit,	Func_ReturnFromConfigureButtonsFrame }, // Toggle Button Exit
 };
 
 struct TextBoxInfo
@@ -208,8 +208,12 @@ ConfigureButtonsFrame::~ConfigureButtonsFrame()
 
 }
 
-static char controllerTypeStrings[6][16] =
+static char controllerTypeStrings[10][16] =
 	{ "GameCube",
+	  "Extenmote GC",
+	  "Extenmote N64",
+	  "Extenmote SNES",
+	  "Extenmote NES",
 	  "WiiU Pro",
 	  "Classic",
 	  "Wiimote+Nunchuk",
@@ -219,6 +223,10 @@ static char controllerTypeStrings[6][16] =
 enum ActivePadType
 {
 	ACTIVEPADTYPE_GAMECUBE=0,
+	ACTIVEPADTYPE_EXTENMOTEGC,
+	ACTIVEPADTYPE_EXTENMOTEN64,
+	ACTIVEPADTYPE_EXTENMOTESNES,
+	ACTIVEPADTYPE_EXTENMOTENES,
 	ACTIVEPADTYPE_WIIUPRO,
 	ACTIVEPADTYPE_CLASSIC,
 	ACTIVEPADTYPE_WIIMOTENUNCHUCK,
@@ -250,6 +258,14 @@ void ConfigureButtonsFrame::activateSubmenu(int submenu)
 	if (virtualControllers[activePad].control == &controller_GC)
 		activePadType = ACTIVEPADTYPE_GAMECUBE;
 #ifdef HW_RVL
+	else if (virtualControllers[activePad].control == &controller_ExtenmoteGC)
+		activePadType = ACTIVEPADTYPE_EXTENMOTEGC;
+	else if (virtualControllers[activePad].control == &controller_ExtenmoteN64)
+		activePadType = ACTIVEPADTYPE_EXTENMOTEN64;
+	else if (virtualControllers[activePad].control == &controller_ExtenmoteSNES)
+		activePadType = ACTIVEPADTYPE_EXTENMOTESNES;
+	else if (virtualControllers[activePad].control == &controller_ExtenmoteNES)
+		activePadType = ACTIVEPADTYPE_EXTENMOTENES;
 	else if (virtualControllers[activePad].control == &controller_WiiUPro)
 		activePadType = ACTIVEPADTYPE_WIIUPRO;
 	else if (virtualControllers[activePad].control == &controller_Classic)

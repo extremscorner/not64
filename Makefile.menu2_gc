@@ -106,6 +106,7 @@ OBJ_RSPHLE	=rsp_hle/alist.o \
 		rsp_hle/memory.o \
 		rsp_hle/mp3.o \
 		rsp_hle/musyx.o \
+		rsp_hle/re2.o \
 		rsp_hle/plugin.o
 
 OBJ_RSPHLEPPC	=rsp_hle-ppc/main.o \

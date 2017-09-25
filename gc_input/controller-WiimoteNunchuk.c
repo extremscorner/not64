@@ -175,6 +175,18 @@ static int checkType(int Control, int type){
 	case WPAD_EXP_WIIUPRO:
 		controller_WiiUPro.available[Control] = 1;
 		break;
+	case WPAD_EXP_NES:
+		controller_ExtenmoteNES.available[Control] = 1;
+		break;
+	case WPAD_EXP_SNES:
+		controller_ExtenmoteSNES.available[Control] = 1;
+		break;
+	case WPAD_EXP_N64:
+		controller_ExtenmoteN64.available[Control] = 1;
+		break;
+	case WPAD_EXP_GC:
+		controller_ExtenmoteGC.available[Control] = 1;
+		break;
 	}
 	
 	return expType;
@@ -228,7 +240,9 @@ static void pause(int Control){
 	WPAD_Rumble(Control, 0);
 }
 
-static void resume(int Control){ }
+static void resume(int Control){
+	WPAD_SetDataFormat(Control, WPAD_FMT_BTNS_ACC_IR);
+}
 
 static void rumble(int Control, int rumble){
 	WPAD_Rumble(Control, rumble ? 1 : 0);
@@ -239,7 +253,7 @@ static void configure(int Control, controller_config_t* config){
 }
 
 static void assign(int p, int v){
-	// TODO: Light up the LEDs appropriately
+	WPAD_ControlLed(p, WPAD_LED_1 << v);
 }
 
 static void refreshAvailableWM(void);

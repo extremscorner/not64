@@ -164,37 +164,37 @@ void FileBrowserFrame::drawChildren(menu::Graphics &gfx)
 			{
 				u16 currentButtonsDownGC = (currentButtonsGC ^ previousButtonsGC[i]) & currentButtonsGC;
 				previousButtonsGC[i] = currentButtonsGC;
-				if (currentButtonsDownGC & PAD_TRIGGER_R)
+				if (currentButtonsDownGC & PAD_BUTTON_R)
 				{
 					//move to next set & return
 					current_page = (current_page + 1) % max_page;
 					fileBrowserFrame_FillPage();
 					menu::Focus::getInstance().clearPrimaryFocus();
-					break;
 				}
-				else if (currentButtonsDownGC & PAD_TRIGGER_L)
+				else if (currentButtonsDownGC & PAD_BUTTON_L)
 				{
 					//move to the previous set & return
 					current_page = (max_page + current_page - 1) % max_page;
 					fileBrowserFrame_FillPage();
 					menu::Focus::getInstance().clearPrimaryFocus();
-					break;
 				}
+				break;
 			}
 #ifdef HW_RVL
 			else if (wiiPad[i].btns_h ^ previousButtonsWii[i])
 			{
 				u32 currentButtonsDownWii = (wiiPad[i].btns_h ^ previousButtonsWii[i]) & wiiPad[i].btns_h;
 				previousButtonsWii[i] = wiiPad[i].btns_h;
-				if (wiiPad[i].exp.type == WPAD_EXP_CLASSIC || wiiPad[i].exp.type == WPAD_EXP_WIIUPRO)
+				switch (wiiPad[i].exp.type)
 				{
+				case WPAD_EXP_CLASSIC:
+				case WPAD_EXP_WIIUPRO:
 					if (currentButtonsDownWii & (WPAD_CLASSIC_BUTTON_FULL_R | WPAD_CLASSIC_BUTTON_ZR))
 					{
 						//move to next set & return
 						current_page = (current_page + 1) % max_page;
 						fileBrowserFrame_FillPage();
 						menu::Focus::getInstance().clearPrimaryFocus();
-						break;
 					}
 					else if (currentButtonsDownWii & (WPAD_CLASSIC_BUTTON_FULL_L | WPAD_CLASSIC_BUTTON_ZL))
 					{
@@ -202,18 +202,49 @@ void FileBrowserFrame::drawChildren(menu::Graphics &gfx)
 						current_page = (max_page + current_page - 1) % max_page;
 						fileBrowserFrame_FillPage();
 						menu::Focus::getInstance().clearPrimaryFocus();
-						break;
 					}
-				}
-				else
-				{
+					break;
+				case WPAD_EXP_NES:
+				case WPAD_EXP_SNES:
+				case WPAD_EXP_N64:
+					if (currentButtonsDownWii & WPAD_SNES_BUTTON_R)
+					{
+						//move to next set & return
+						current_page = (current_page + 1) % max_page;
+						fileBrowserFrame_FillPage();
+						menu::Focus::getInstance().clearPrimaryFocus();
+					}
+					else if (currentButtonsDownWii & WPAD_SNES_BUTTON_L)
+					{
+						//move to the previous set & return
+						current_page = (max_page + current_page - 1) % max_page;
+						fileBrowserFrame_FillPage();
+						menu::Focus::getInstance().clearPrimaryFocus();
+					}
+					break;
+				case WPAD_EXP_GC:
+					if (currentButtonsDownWii & WPAD_GC_BUTTON_R)
+					{
+						//move to next set & return
+						current_page = (current_page + 1) % max_page;
+						fileBrowserFrame_FillPage();
+						menu::Focus::getInstance().clearPrimaryFocus();
+					}
+					else if (currentButtonsDownWii & WPAD_GC_BUTTON_L)
+					{
+						//move to the previous set & return
+						current_page = (max_page + current_page - 1) % max_page;
+						fileBrowserFrame_FillPage();
+						menu::Focus::getInstance().clearPrimaryFocus();
+					}
+					break;
+				default:
 					if (currentButtonsDownWii & WPAD_BUTTON_PLUS)
 					{
 						//move to next set & return
 						current_page = (current_page + 1) % max_page;
 						fileBrowserFrame_FillPage();
 						menu::Focus::getInstance().clearPrimaryFocus();
-						break;
 					}
 					else if (currentButtonsDownWii & WPAD_BUTTON_MINUS)
 					{
@@ -221,9 +252,10 @@ void FileBrowserFrame::drawChildren(menu::Graphics &gfx)
 						current_page = (max_page + current_page - 1) % max_page;
 						fileBrowserFrame_FillPage();
 						menu::Focus::getInstance().clearPrimaryFocus();
-						break;
 					}
+					break;
 				}
+				break;
 			}
 #endif //HW_RVL
 		}
@@ -415,6 +447,7 @@ void fileBrowserFrame_FillPage()
 extern BOOL hasLoadedROM;
 extern int rom_length;
 extern int autoSaveLoaded;
+void Func_PlayGame();
 void Func_SetPlayGame();
 
 void fileBrowserFrame_LoadFile(int i)
@@ -433,6 +466,13 @@ void fileBrowserFrame_LoadFile(int i)
 		int ret = loadROM( &dir_entries[i] );
 		
 		if(!ret){	// If the read succeeded.
+			if(skipMenu){
+				pMenuContext->setActiveFrame(MenuContext::FRAME_MAIN);
+				Func_SetPlayGame();
+				Func_PlayGame();
+				return;
+			}
+
 			strcpy(feedback_string, "Loaded ");
 			strncat(feedback_string, filenameFromAbsPath(dir_entries[i].name), 36-7);
 

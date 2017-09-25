@@ -38,9 +38,9 @@ static button_t buttons[] = {
 	{  2, PAD_BUTTON_LEFT,    "D-Left" },
 	{  3, PAD_BUTTON_RIGHT,   "D-Right" },
 	{  4, PAD_BUTTON_DOWN,    "D-Down" },
-	{  5, PAD_TRIGGER_Z,      "Z" },
-	{  6, PAD_TRIGGER_L,      "L" },
-	{  7, PAD_TRIGGER_R,      "R" },
+	{  5, PAD_BUTTON_Z,       "Z" },
+	{  6, PAD_BUTTON_L,       "L" },
+	{  7, PAD_BUTTON_R,       "R" },
 	{  8, PAD_BUTTON_A,       "A" },
 	{  9, PAD_BUTTON_B,       "B" },
 	{ 10, PAD_BUTTON_X,       "X" },
@@ -54,6 +54,8 @@ static button_t buttons[] = {
 	{ 18, PAD_STICK_LEFT,     "A-Left" },
 	{ 19, PAD_STICK_RIGHT,    "A-Right" },
 	{ 20, PAD_STICK_DOWN,     "A-Down" },
+	{ 21, PAD_TRIGGER_L,      "L-Mid" },
+	{ 22, PAD_TRIGGER_R,      "R-Mid" },
 };
 
 static button_t analog_sources[] = {
@@ -63,10 +65,10 @@ static button_t analog_sources[] = {
 };
 
 static button_t menu_combos[] = {
-	{ 0, PAD_BUTTON_X|PAD_BUTTON_Y,      "X+Y" },
-	{ 1, PAD_BUTTON_START|PAD_BUTTON_X,  "Start+X" },
-	{ 2, PAD_BUTTON_START|PAD_BUTTON_Y,  "Start+Y" },
-	{ 3, PAD_BUTTON_START|PAD_TRIGGER_Z, "Start+Z" },
+	{ 0, PAD_BUTTON_X|PAD_BUTTON_Y,     "X+Y" },
+	{ 1, PAD_BUTTON_START|PAD_BUTTON_X, "Start+X" },
+	{ 2, PAD_BUTTON_START|PAD_BUTTON_Y, "Start+Y" },
+	{ 3, PAD_BUTTON_START|PAD_BUTTON_Z, "Start+Z" },
 };
 
 static unsigned int getButtons(int Control){
@@ -75,8 +77,8 @@ static unsigned int getButtons(int Control){
 
 static int available(int Control) {
 	u32 type;
-	type = SI_GetType(Control);
-	if ((type & SI_TYPE_MASK) == SI_TYPE_GC && (type & SI_GC_STANDARD)) {
+	type = SI_Probe(Control);
+	if(type == SI_GC_CONTROLLER || type == SI_GC_WAVEBIRD){
 		controller_GC.available[Control] = 1;
 		return 1;
 	} else {
@@ -90,9 +92,10 @@ static int _GetKeys(int Control, BUTTONS * Keys, controller_config_t* config)
 	BUTTONS* c = Keys;
 	memset(c, 0, sizeof(BUTTONS));
 
-	PAD_ScanPads();
 	if(!available(Control))
 		return 0;
+
+	PAD_ScanPads();
 
 	unsigned int b = getButtons(Control);
 	inline int isHeld(button_tp button){
@@ -128,15 +131,10 @@ static int _GetKeys(int Control, BUTTONS * Keys, controller_config_t* config)
 			c->X_AXIS = +80;
 		else if(b & PAD_BUTTON_LEFT)
 			c->X_AXIS = -80;
-		else
-			c->X_AXIS = 0;
-
 		if(b & PAD_BUTTON_UP)
 			c->Y_AXIS = +80;
 		else if(b & PAD_BUTTON_DOWN)
 			c->Y_AXIS = -80;
-		else
-			c->Y_AXIS = 0;
 	}
 	if(config->invertedY) c->Y_AXIS = -c->Y_AXIS;
 
@@ -162,7 +160,6 @@ static void assign(int p, int v){
 	// Nothing to do here
 }
 
-static void init(void);
 static void refreshAvailable(void);
 
 controller_t controller_GC =
@@ -185,9 +182,9 @@ controller_t controller_GC =
 	    .DL        = &buttons[2],  // D-Pad Left
 	    .DR        = &buttons[3],  // D-Pad Right
 	    .DD        = &buttons[4],  // D-Pad Down
-	    .Z         = &buttons[6],  // Z
-	    .L         = &buttons[5],  // Left Trigger
-	    .R         = &buttons[7],  // Right Trigger
+	    .Z         = &buttons[21], // Left Trigger
+	    .L         = &buttons[5],  // Z
+	    .R         = &buttons[22], // Right Trigger
 	    .A         = &buttons[8],  // A
 	    .B         = &buttons[9],  // B
 	    .START     = &buttons[12], // Start

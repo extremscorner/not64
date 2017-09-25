@@ -70,6 +70,14 @@ PowerPC_instr Instruction(int opcode, ...);
 #define PPC_CR_SHIFT     0
 #define PPC_SET_CR(instr,cr)         instr |= (cr&PPC_CR_MASK)         << PPC_CR_SHIFT
 
+#define PPC_QRI_MASK     0x7
+#define PPC_QRI_SHIFT    12
+#define PPC_SET_QRI(instr,qri)       instr |= (qri&PPC_QRI_MASK)       << PPC_QRI_SHIFT
+
+#define PPC_IMM12_MASK   0xFFF
+#define PPC_IMM12_SHIFT  0
+#define PPC_SET_IMM12(instr,imm12)   instr |= (imm12&PPC_IMM12_MASK)   << PPC_IMM12_SHIFT
+
 #define PPC_IMMED_MASK   0xFFFF
 #define PPC_IMMED_SHIFT  0
 #define PPC_SET_IMMED(instr,immed)   instr |= (immed&PPC_IMMED_MASK)   << PPC_IMMED_SHIFT
@@ -150,6 +158,7 @@ PowerPC_instr Instruction(int opcode, ...);
 #define PPC_OPCODE_STFSU       53
 #define PPC_OPCODE_STFD        54
 #define PPC_OPCODE_STFDU       55
+#define PPC_OPCODE_PSQ_L       56
 
 #define PPC_OPCODE_FPD         63
 #define PPC_OPCODE_FPS         59
@@ -479,6 +488,15 @@ PowerPC_instr Instruction(int opcode, ...);
 #define F29 29
 #define F30 30
 #define F31 31
+
+#define QR0 0
+#define QR1 1
+#define QR2 2
+#define QR3 3
+#define QR4 4
+#define QR5 5
+#define QR6 6
+#define QR7 7
 
 #define PPC_NOP (0x60000000)
 
@@ -1308,6 +1326,15 @@ PowerPC_instr Instruction(int opcode, ...);
 	  PPC_SET_RD (ppc, (rd)); \
 	  PPC_SET_RA (ppc, (ra)); \
 	  PPC_SET_RB (ppc, (rb)); }
+
+#define GEN_PSQ_L(ppc,fd,imm12,ra,qri) \
+	{ ppc = NEW_PPC_INSTR(); \
+	  PPC_SET_OPCODE(ppc, PPC_OPCODE_PSQ_L); \
+	  PPC_SET_RD    (ppc, (fd)); \
+	  PPC_SET_RA    (ppc, (ra)); \
+	  ppc |= 0x8000; \
+	  PPC_SET_QRI   (ppc, (qri)); \
+	  PPC_SET_IMM12 (ppc, (imm12)); }
 
 #define GEN_FADD(ppc,fd,fa,fb,dbl) \
 	{ ppc = NEW_PPC_INSTR(); \

@@ -46,6 +46,7 @@ void VI_GX_showStats();
 void VI_GX_cleanUp();
 void VI_GX_renderCpuFramebuffer();
 void VI_GX_PreRetraceCallback(u32 retraceCnt);
+void VI_GX_DrawSyncCallback(u16 token);
 
 #endif // __GX__
 

@@ -33,7 +33,7 @@ void ResetCallback();
 
 Input::Input()
 {
-	SI_SetSamplingRate(pollRate);
+	PAD_SetSamplingRate(pollRate);
 	PAD_Init();
 #ifdef HW_RVL
 	WPAD_Init();

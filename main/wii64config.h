@@ -27,6 +27,13 @@
 #include "timers.h"
 
 
+extern char skipMenu;
+enum skipMenu
+{
+	SKIPMENU_DISABLE=0,
+	SKIPMENU_ENABLE
+};
+
 extern char audioEnabled;
 enum audioEnabled
 {
@@ -178,7 +185,7 @@ enum padAutoAssign
 extern char padType[4];
 enum padType
 {
-	PADTYPE_NONE=0,
+	PADTYPE_N64=0,
 	PADTYPE_GAMECUBE,
 	PADTYPE_WII
 };

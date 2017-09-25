@@ -37,23 +37,14 @@
 
 #define min(a,b) (((a) < (b)) ? (a) : (b))
 
-/* some rsp status flags */
-#define SP_STATUS_HALT             0x1
-#define SP_STATUS_BROKE            0x2
-#define SP_STATUS_INTR_ON_BREAK    0x40
-#define SP_STATUS_TASKDONE         0x200
-
 /* some rdp status flags */
 #define DP_STATUS_FREEZE            0x2
 
-/* some mips interface interrupt flags */
-#define MI_INTR_SP                  0x1
 
 
 /* helper functions prototypes */
 static unsigned int sum_bytes(const unsigned char *bytes, unsigned int size);
 static bool is_task(struct hle_t* hle);
-static void rsp_break(struct hle_t* hle, unsigned int setbits);
 static void forward_gfx_task(struct hle_t* hle);
 static bool try_fast_audio_dispatching(struct hle_t* hle);
 static bool try_fast_task_dispatching(struct hle_t* hle);
@@ -125,10 +116,8 @@ void hle_execute(struct hle_t* hle)
     if (is_task(hle)) {
         if (!try_fast_task_dispatching(hle))
             normal_task_dispatching(hle);
-        rsp_break(hle, SP_STATUS_TASKDONE);
     } else {
         non_task_dispatching(hle);
-        rsp_break(hle, 0);
     }
 }
 
@@ -159,7 +148,7 @@ static bool is_task(struct hle_t* hle)
     return (*dmem_u32(hle, TASK_UCODE_BOOT_SIZE) <= 0x1000);
 }
 
-static void rsp_break(struct hle_t* hle, unsigned int setbits)
+void rsp_break(struct hle_t* hle, unsigned int setbits)
 {
     *hle->sp_status |= setbits | SP_STATUS_BROKE | SP_STATUS_HALT;
 
@@ -173,6 +162,7 @@ static void forward_gfx_task(struct hle_t* hle)
 {
     HleProcessDlistList(hle->user_defined);
     *hle->dpc_status &= ~DP_STATUS_FREEZE;
+    rsp_break(hle, SP_STATUS_TASKDONE);
 }
 
 static bool try_fast_audio_dispatching(struct hle_t* hle)
@@ -261,6 +251,10 @@ static bool try_fast_task_dispatching(struct hle_t* hle)
     /* identify task ucode by its type */
     switch (*dmem_u32(hle, TASK_TYPE)) {
     case 1:
+        /* Resident evil 2 */
+        if (*dmem_u32(hle, TASK_DATA_PTR) == 0)
+            return false;
+
         if (FORWARD_GFX) {
             forward_gfx_task(hle);
             return true;
@@ -273,6 +267,7 @@ static bool try_fast_task_dispatching(struct hle_t* hle)
 
         if (FORWARD_AUDIO) {
             HleProcessAlistList(hle->user_defined);
+            rsp_break(hle, SP_STATUS_TASKDONE);
             return true;
         } else if (try_fast_audio_dispatching(hle))
             return true;
@@ -280,6 +275,7 @@ static bool try_fast_task_dispatching(struct hle_t* hle)
 
     case 7:
         HleShowCFB(hle->user_defined);
+        rsp_break(hle, SP_STATUS_TASKDONE);
         return true;
     }
 
@@ -295,6 +291,7 @@ static void normal_task_dispatching(struct hle_t* hle)
     /* StoreVe12: found in Zelda Ocarina of Time [misleading task->type == 4] */
     case 0x278:
         /* Nothing to emulate */
+        rsp_break(hle, SP_STATUS_TASKDONE);
         return;
 
     /* GFX: Twintris [misleading task->type == 0] */
@@ -320,7 +317,18 @@ static void normal_task_dispatching(struct hle_t* hle)
     case 0x278b0:
         jpeg_decode_OB(hle);
         return;
+
+    /* Resident evil 2 */
+    case 0x29a20: /* USA */
+    case 0x298c5: /* Europe */
+    case 0x298b8: /* USA Rev A */
+    case 0x296d9: /* J */
+        resize_bilinear_task(hle);
+        return;
     }
+
+    /* Send task_done signal for unknown ucodes to allow further processings */
+    rsp_break(hle, SP_STATUS_TASKDONE);
 
     HleWarnMessage(hle->user_defined, "unknown OSTask: sum: %x PC:%x", sum, *hle->sp_pc);
 #ifdef ENABLE_TASK_DUMP

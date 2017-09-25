@@ -398,7 +398,7 @@ EXPORT void CALL RomClosed (void)
 #endif
 
 #ifdef __GX__
-	VIDEO_SetPreRetraceCallback(NULL);
+	GX_SetDrawSyncCallback(NULL);
 #endif // __GX__
 
 #ifdef DEBUG
@@ -447,7 +447,7 @@ EXPORT void CALL RomOpen (void)
 #endif
 
 #ifdef __GX__
-	VIDEO_SetPreRetraceCallback(VI_GX_PreRetraceCallback);
+	GX_SetDrawSyncCallback(VI_GX_DrawSyncCallback);
 #endif // __GX__
 }
 

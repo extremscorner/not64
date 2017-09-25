@@ -80,7 +80,6 @@ void compare_core();
 inline void jump_to_func();
 void update_count();
 int check_cop1_unusable();
-void shuffle_fpr_data(int oldStatus, int newStatus);
 void set_fpr_pointers(int newStatus);
 
 #ifndef PPC_DYNAREC

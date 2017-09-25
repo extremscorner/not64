@@ -50,17 +50,17 @@ static void swap(int16_t **a, int16_t **b)
 
 static int16_t* sample(struct hle_t* hle, unsigned pos)
 {
-    return (int16_t*)hle->alist_buffer + (pos ^ S);
+    return (int16_t*)hle->alist_buffer + ((pos ^ S) & 0xfff);
 }
 
 static uint8_t* alist_u8(struct hle_t* hle, uint16_t dmem)
 {
-    return u8(hle->alist_buffer, dmem);
+    return (uint8_t*)(hle->alist_buffer + ((dmem ^ S8) & 0xfff));
 }
 
 static int16_t* alist_s16(struct hle_t* hle, uint16_t dmem)
 {
-    return (int16_t*)u16(hle->alist_buffer, dmem);
+    return (int16_t*)(hle->alist_buffer + ((dmem ^ S16) & 0xfff));
 }
 
 
@@ -282,6 +282,7 @@ void alist_envmix_exp(
     int x, y;
     short save_buffer[40];
 
+    memcpy((uint8_t *)save_buffer, (hle->dram + address), sizeof(save_buffer));
     if (init) {
         ramps[0].value  = (vol[0] << 16);
         ramps[1].value  = (vol[1] << 16);
@@ -292,7 +293,6 @@ void alist_envmix_exp(
         exp_seq[0]      = (vol[0] * rate[0]);
         exp_seq[1]      = (vol[1] * rate[1]);
     } else {
-        memcpy((uint8_t *)save_buffer, (hle->dram + address), 80);
         wet             = *(int16_t *)(save_buffer +  0); /* 0-1 */
         dry             = *(int16_t *)(save_buffer +  2); /* 2-3 */
         ramps[0].target = *(int32_t *)(save_buffer +  4); /* 4-5 */
@@ -354,7 +354,7 @@ void alist_envmix_exp(
     *(int32_t *)(save_buffer + 14) = exp_seq[1];        /* 14-15 */
     *(int32_t *)(save_buffer + 16) = (int32_t)ramps[0].value;    /* 12-13 */
     *(int32_t *)(save_buffer + 18) = (int32_t)ramps[1].value;    /* 14-15 */
-    memcpy(hle->dram + address, (uint8_t *)save_buffer, 80);
+    memcpy(hle->dram + address, (uint8_t *)save_buffer, sizeof(save_buffer));
 }
 
 void alist_envmix_ge(
@@ -382,6 +382,7 @@ void alist_envmix_ge(
     struct ramp_t ramps[2];
     short save_buffer[40];
 
+    memcpy((uint8_t *)save_buffer, (hle->dram + address), 80);
     if (init) {
         ramps[0].value  = (vol[0] << 16);
         ramps[1].value  = (vol[1] << 16);
@@ -390,7 +391,6 @@ void alist_envmix_ge(
         ramps[0].step   = rate[0] / 8;
         ramps[1].step   = rate[1] / 8;
     } else {
-        memcpy((uint8_t *)save_buffer, (hle->dram + address), 80);
         wet             = *(int16_t *)(save_buffer +  0);   /* 0-1 */
         dry             = *(int16_t *)(save_buffer +  2);   /* 2-3 */
         ramps[0].target = *(int32_t *)(save_buffer +  4);   /* 4-5 */
@@ -458,6 +458,7 @@ void alist_envmix_lin(
     int16_t* const wl = (int16_t*)(hle->alist_buffer + dmem_wl);
     int16_t* const wr = (int16_t*)(hle->alist_buffer + dmem_wr);
 
+    memcpy((uint8_t *)save_buffer, hle->dram + address, 80);
     if (init) {
         ramps[0].step   = rate[0] / 8;
         ramps[0].value  = (vol[0] << 16);
@@ -467,7 +468,6 @@ void alist_envmix_lin(
         ramps[1].target = (target[1] << 16);
     }
     else {
-        memcpy((uint8_t *)save_buffer, hle->dram + address, 80);
         wet             = *(int16_t *)(save_buffer +  0); /* 0-1 */
         dry             = *(int16_t *)(save_buffer +  2); /* 2-3 */
         ramps[0].target = *(int16_t *)(save_buffer +  4) << 16; /* 4-5 */

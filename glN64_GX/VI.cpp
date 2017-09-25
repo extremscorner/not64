@@ -132,11 +132,8 @@ void VI_UpdateScreen()
 		VI_GX_showLoadIcon();
 		VI_GX_showFPS();
 		VI_GX_showDEBUG();
-		GX_SetCopyClear ((GXColor){0,0,0,255}, 0xFFFFFF);
-		GX_CopyDisp (VI.xfb[VI.which_fb]+GX_xfb_offset, GX_TRUE);
-		GX_DrawDone(); //Wait until EFB->XFB copy is complete
-		VI.enableLoadIcon = false;
-		VI.copy_fb = true;
+		GX_CopyDisp(VI.xfb[VI.which_fb], GX_TRUE);
+		GX_SetDrawSync(VI.which_fb);
 	}
 	else if (OGL.frameBufferTextures)
 	{
@@ -158,12 +155,9 @@ void VI_UpdateScreen()
 			VI_GX_showLoadIcon();
 			VI_GX_showFPS();
 			VI_GX_showDEBUG();
-			GX_SetCopyClear ((GXColor){0,0,0,255}, 0xFFFFFF);
 			//Copy EFB->XFB
-			GX_CopyDisp (VI.xfb[VI.which_fb]+GX_xfb_offset, GX_TRUE);
-			GX_DrawDone(); //Wait until EFB->XFB copy is complete
-			VI.enableLoadIcon = false;
-			VI.copy_fb = true;
+			GX_CopyDisp(VI.xfb[VI.which_fb], GX_TRUE);
+			GX_SetDrawSync(VI.which_fb);
 
 			//Restore current EFB
 			FrameBuffer_RestoreBuffer( gDP.colorImage.address, gDP.colorImage.size, gDP.colorImage.width );
@@ -180,11 +174,8 @@ void VI_UpdateScreen()
 			VI_GX_showLoadIcon();
 			VI_GX_showFPS();
 			VI_GX_showDEBUG();
-			GX_SetCopyClear ((GXColor){0,0,0,255}, 0xFFFFFF);
-			GX_CopyDisp (VI.xfb[VI.which_fb]+GX_xfb_offset, GX_TRUE);
-			GX_DrawDone(); //Wait until EFB->XFB copy is complete
-			VI.enableLoadIcon = false;
-			VI.copy_fb = true;
+			GX_CopyDisp(VI.xfb[VI.which_fb], GX_TRUE);
+			GX_SetDrawSync(VI.which_fb);
 			gSP.changed &= ~CHANGED_COLORBUFFER;
 		}
 	}
@@ -252,6 +243,7 @@ void VI_GX_showLoadIcon()
 {
 	if (!VI.enableLoadIcon)
 		return;
+	VI.enableLoadIcon = false;
 
 #ifndef MENU_V2
 	GXColor GXcol1 = {0,128,255,255};
@@ -614,12 +606,14 @@ void VI_GX_renderCpuFramebuffer()
 
 void VI_GX_PreRetraceCallback(u32 retraceCnt)
 {
-	if(VI.copy_fb)
-	{
-		VIDEO_SetNextFramebuffer(VI.xfb[VI.which_fb]);
-		VIDEO_Flush();
-		VI.which_fb ^= 1;
-		VI.copy_fb = false;
-	}
+	VI.which_fb ^= 1;
+	VIDEO_SetPreRetraceCallback(NULL);
+}
+
+void VI_GX_DrawSyncCallback(u16 token)
+{
+	VIDEO_SetNextFramebuffer(VI.xfb[token & 1]);
+	VIDEO_Flush();
+	VIDEO_SetPreRetraceCallback(VI_GX_PreRetraceCallback);
 }
 #endif // __GX__

@@ -81,8 +81,8 @@ static button_t buttons[] = {
 	{ 21, LSTICK_L,                   "LS-Left" },
 	{ 22, LSTICK_R,                   "LS-Right" },
 	{ 23, LSTICK_D,                   "LS-Down" },
-	{ 24, WIIU_PRO_CTRL_BUTTON_L3,    "L3" },
-	{ 25, WIIU_PRO_CTRL_BUTTON_R3,    "R3" },
+	{ 24, WIIU_PRO_CTRL_BUTTON_LS,    "LS" },
+	{ 25, WIIU_PRO_CTRL_BUTTON_RS,    "RS" },
 };
 
 static button_t analog_sources[] = {
@@ -117,6 +117,18 @@ static int checkType(int Control, int type){
 		break;
 	case WPAD_EXP_WIIUPRO:
 		controller_WiiUPro.available[Control] = 1;
+		break;
+	case WPAD_EXP_NES:
+		controller_ExtenmoteNES.available[Control] = 1;
+		break;
+	case WPAD_EXP_SNES:
+		controller_ExtenmoteSNES.available[Control] = 1;
+		break;
+	case WPAD_EXP_N64:
+		controller_ExtenmoteN64.available[Control] = 1;
+		break;
+	case WPAD_EXP_GC:
+		controller_ExtenmoteGC.available[Control] = 1;
 		break;
 	}
 
@@ -200,15 +212,10 @@ static int GetKeysCC(int Control, BUTTONS * Keys, controller_config_t* config)
 			c->X_AXIS = +80;
 		else if(b & CLASSIC_CTRL_BUTTON_LEFT)
 			c->X_AXIS = -80;
-		else
-			c->X_AXIS = 0;
-
 		if(b & CLASSIC_CTRL_BUTTON_UP)
 			c->Y_AXIS = +80;
 		else if(b & CLASSIC_CTRL_BUTTON_DOWN)
 			c->Y_AXIS = -80;
-		else
-			c->Y_AXIS = 0;
 	}
 	if(config->invertedY) c->Y_AXIS = -c->Y_AXIS;
 
@@ -293,15 +300,10 @@ static int GetKeysWUP(int Control, BUTTONS * Keys, controller_config_t* config)
 			c->X_AXIS = +80;
 		else if(b & WIIU_PRO_CTRL_BUTTON_LEFT)
 			c->X_AXIS = -80;
-		else
-			c->X_AXIS = 0;
-
 		if(b & WIIU_PRO_CTRL_BUTTON_UP)
 			c->Y_AXIS = +80;
 		else if(b & WIIU_PRO_CTRL_BUTTON_DOWN)
 			c->Y_AXIS = -80;
-		else
-			c->Y_AXIS = 0;
 	}
 	if(config->invertedY) c->Y_AXIS = -c->Y_AXIS;
 
@@ -313,7 +315,9 @@ static void pause(int Control){
 	WPAD_Rumble(Control, 0);
 }
 
-static void resume(int Control){ }
+static void resume(int Control){
+	WPAD_SetDataFormat(Control, WPAD_FMT_BTNS_IR);
+}
 
 static void rumble(int Control, int rumble){
 	WPAD_Rumble(Control, rumble ? 1 : 0);
@@ -324,7 +328,7 @@ static void configure(int Control, controller_config_t* config){
 }
 
 static void assign(int p, int v){
-	// TODO: Light up the LEDs appropriately
+	WPAD_ControlLed(p, WPAD_LED_1 << v);
 }
 
 static void refreshAvailableCC(void);

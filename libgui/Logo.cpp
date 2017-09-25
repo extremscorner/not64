@@ -386,7 +386,7 @@ void Logo::drawComponent(Graphics& gfx)
 	rotateAuto++;
 
 	u16 pad0 = PAD_ButtonsDown(0);
-	if (pad0 & PAD_TRIGGER_Z) logoMode = (logoMode+1) % 3;
+	if (pad0 & PAD_BUTTON_Z) logoMode = (logoMode+1) % 3;
 
 	//libOGC was changed such that sticks are now clamped and don't have to be by us
 	stickX = PAD_SubStickX(0);

@@ -64,9 +64,9 @@ static char FRAME_STRINGS[16][15] =
 
 	  "Automatic",
 	  "Manual",
-	  "None",
+	  "N64 Pad",
 	  "GameCube Pad",
-	  "Wiimote Pad",
+	  "Wii Pad",
 	  "Auto Assign",
 	  "",
 	  "1",

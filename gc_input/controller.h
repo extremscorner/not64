@@ -106,8 +106,12 @@ extern virtualControllers_t virtualControllers[4];
 // List of all the defined controller_t's
 #if defined(WII) && !defined(NO_BT)
 
-#define num_controller_t 5
+#define num_controller_t 9
 extern controller_t controller_GC;
+extern controller_t controller_ExtenmoteGC;
+extern controller_t controller_ExtenmoteN64;
+extern controller_t controller_ExtenmoteSNES;
+extern controller_t controller_ExtenmoteNES;
 extern controller_t controller_WiiUPro;
 extern controller_t controller_Classic;
 extern controller_t controller_WiimoteNunchuk;
