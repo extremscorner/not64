@@ -128,12 +128,43 @@ Graphics::Graphics(GXRModeObj *rmode)
 		memcpy( &vmode_phys, vmode, sizeof(GXRModeObj));
 		break;
 	}
+	switch (videoWidth)
+	{
+	case VIDEOWIDTH_640:
+		vmode->viTVMode &= ~VI_STEREO;
+		vmode->viWidth   = 640;
+		vmode->viXOrigin = 40;
+		break;
+	case VIDEOWIDTH_704:
+		vmode->viTVMode &= ~VI_STEREO;
+		vmode->viWidth   = 704;
+		vmode->viXOrigin = 8;
+		break;
+	case VIDEOWIDTH_720:
+		vmode->viTVMode &= ~VI_STEREO;
+		vmode->viWidth   = 720;
+		vmode->viXOrigin = 0;
+		break;
+	case VIDEOWIDTH_1280:
+		vmode->viTVMode |= VI_STEREO;
+		vmode->viWidth   = 1280;
+		vmode->viXOrigin = 80;
+		break;
+	case VIDEOWIDTH_1408:
+		vmode->viTVMode |= VI_STEREO;
+		vmode->viWidth   = 1408;
+		vmode->viXOrigin = 16;
+		break;
+	case VIDEOWIDTH_1440:
+		vmode->viTVMode |= VI_STEREO;
+		vmode->viWidth   = 1440;
+		vmode->viXOrigin = 0;
+		break;
+	}
 
 	if(pixelClock == PIXELCLOCK_27MHZ)		vmode->viTVMode &= ~VI_CLOCK_54MHZ;
 	else if(pixelClock == PIXELCLOCK_54MHZ)	vmode->viTVMode |=  VI_CLOCK_54MHZ;
 
-	vmode->viWidth = 704;
-	vmode->viXOrigin = 8;
 #ifdef HW_RVL
 	VIDEO_SetTrapFilter(trapFilter);
 	if(screenMode)	VIDEO_SetAspectRatio(VI_DISPLAY_BOTH, VI_ASPECT_1_1);

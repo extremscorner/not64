@@ -56,6 +56,8 @@ static button_t buttons[] = {
 	{ 20, PAD_STICK_DOWN,     "A-Down" },
 	{ 21, PAD_TRIGGER_L,      "L-Mid" },
 	{ 22, PAD_TRIGGER_R,      "R-Mid" },
+	{ 23, PAD_ANALOG_A,       "A-Mid" },
+	{ 24, PAD_ANALOG_B,       "B-Mid" },
 };
 
 static button_t analog_sources[] = {
@@ -78,7 +80,7 @@ static unsigned int getButtons(int Control){
 static int available(int Control) {
 	u32 type;
 	type = SI_Probe(Control);
-	if(type == SI_GC_CONTROLLER || type == SI_GC_WAVEBIRD){
+	if(type == SI_GC_CONTROLLER || type == SI_GC_WAVEBIRD || type == SI_GC_STEERING){
 		controller_GC.available[Control] = 1;
 		return 1;
 	} else {
@@ -89,13 +91,12 @@ static int available(int Control) {
 
 static int _GetKeys(int Control, BUTTONS * Keys, controller_config_t* config)
 {
+	u32 connected = PAD_ScanPads();
 	BUTTONS* c = Keys;
 	memset(c, 0, sizeof(BUTTONS));
 
-	if(!available(Control))
+	if(!(connected & (PAD_CHAN0_BIT >> Control)))
 		return 0;
-
-	PAD_ScanPads();
 
 	unsigned int b = getButtons(Control);
 	inline int isHeld(button_tp button){
@@ -146,7 +147,9 @@ static void pause(int Control){
 	PAD_ControlMotor(Control, PAD_MOTOR_STOP);
 }
 
-static void resume(int Control){ }
+static void resume(int Control){
+	PAD_SetAnalogMode(0);
+}
 
 static void rumble(int Control, int rumble){
 	PAD_ControlMotor(Control, rumble ? PAD_MOTOR_RUMBLE : PAD_MOTOR_STOP);

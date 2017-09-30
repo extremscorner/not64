@@ -131,9 +131,10 @@ void InputStatusBar::drawComponent(Graphics& gfx)
 		case PADTYPE_GAMECUBE:
 			u32 type;
 			type = SI_Probe((int)padAssign[i]);
-			controller_GC.available[(int)padAssign[i]] = (type == SI_GC_CONTROLLER || type == SI_GC_WAVEBIRD) ? 1 : 0;
+			controller_GC.available[(int)padAssign[i]] = (type == SI_GC_CONTROLLER || type == SI_GC_WAVEBIRD || type == SI_GC_STEERING) ? 1 : 0;
 			if (controller_GC.available[(int)padAssign[i]])
 			{
+				assign_controller(i, &controller_GC, (int)padAssign[i]);
 //				gfx.setColor(activeColor);
 //				IplFont::getInstance().drawInit(activeColor);
 				gfx.setColor(controllerColors[i]);
@@ -145,7 +146,7 @@ void InputStatusBar::drawComponent(Graphics& gfx)
 			{
 				gfx.setColor(inactiveColor);
 				IplFont::getInstance().drawInit(inactiveColor);
-				statusIcon = Resources::getInstance().getImage(Resources::IMAGE_CONTROLLER_EMPTY);
+				statusIcon = Resources::getInstance().getImage(Resources::IMAGE_CONTROLLER_GAMECUBE);
 //				sprintf (statusText, "Pad%d: None", i+1);
 			}
 			break;
@@ -245,7 +246,7 @@ void InputStatusBar::drawComponent(Graphics& gfx)
 			{
 				gfx.setColor(inactiveColor);
 				IplFont::getInstance().drawInit(inactiveColor);
-				statusIcon = Resources::getInstance().getImage(Resources::IMAGE_CONTROLLER_EMPTY);
+				statusIcon = Resources::getInstance().getImage(Resources::IMAGE_CONTROLLER_WIIMOTE);
 //				sprintf (statusText, "Pad%d: None", i+1);
 			}
 			break;

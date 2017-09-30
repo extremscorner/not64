@@ -117,7 +117,7 @@ void dma_pi_read()
 
 	     sramWritten = TRUE;
 
-	     for (i=0; i<(pi_register.pi_rd_len_reg & 0xFFFFFF)+1; i++)
+	     for (i=0; i<(pi_register.pi_rd_len_reg & 0xFFFFFE)+2; i++)
 	       sram[((pi_register.pi_cart_addr_reg-0x08000000)+i)^S8]=
 	       ((unsigned char*)rdram)[(pi_register.pi_dram_addr_reg+i)^S8];
 
@@ -147,7 +147,7 @@ void dma_pi_write()
 	     if (use_flashram != 1)
 	       {
 
-		  for (i=0; i<(pi_register.pi_wr_len_reg & 0xFFFFFF)+1; i++)
+		  for (i=0; i<(pi_register.pi_wr_len_reg & 0xFFFFFE)+2; i++)
 		    ((unsigned char*)rdram)[(pi_register.pi_dram_addr_reg+i)^S8]=
 		    sram[(((pi_register.pi_cart_addr_reg-0x08000000)&0xFFFF)+i)^S8];
 		  use_flashram = -1;
@@ -177,7 +177,7 @@ void dma_pi_write()
 	return;
      }
 
-   longueur = (pi_register.pi_wr_len_reg & 0xFFFFFF)+1;
+   longueur = (pi_register.pi_wr_len_reg & 0xFFFFFE)+2;
    i = (pi_register.pi_cart_addr_reg-0x10000000)&0x3FFFFFF;
    longueur = (i + longueur) > rom_length ?
      (rom_length - i) : longueur;

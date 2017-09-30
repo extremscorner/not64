@@ -124,6 +124,7 @@ char skipMenu;
        char screenMode = 0;
        char videoFormat;
        char videoMode = 0;
+       char videoWidth;
        char pixelClock;
 	   char trapFilter;
 	   char pollRate;
@@ -156,22 +157,25 @@ static struct {
   { "ScreenMode", &screenMode, SCREENMODE_4x3, SCREENMODE_16x9_PILLARBOX },
   { "VideoFormat", &videoFormat, VIDEOFORMAT_NTSC, VIDEOFORMAT_MPAL },
   { "VideoMode", &videoMode, VIDEOMODE_AUTO, VIDEOMODE_576P },
+  { "VideoWidth", &videoWidth, VIDEOWIDTH_640, VIDEOWIDTH_1440 },
   { "PixelClock", &pixelClock, PIXELCLOCK_AUTO, PIXELCLOCK_54MHZ },
   { "TrapFilter", &trapFilter, TRAPFILTER_DISABLE, TRAPFILTER_ENABLE },
   { "Core", ((char*)&dynacore)+3, DYNACORE_INTERPRETER, DYNACORE_PURE_INTERP },
+  { "CountPerOp", ((char*)&count_per_op)+3, COUNT_PER_OP_1, COUNT_PER_OP_3 },
   { "NativeDevice", &nativeSaveDevice, NATIVESAVEDEVICE_SD, NATIVESAVEDEVICE_CARDB },
   { "StatesDevice", &saveStateDevice, SAVESTATEDEVICE_SD, SAVESTATEDEVICE_USB },
   { "AutoSave", &autoSave, AUTOSAVE_DISABLE, AUTOSAVE_ENABLE },
   { "LimitVIs", &Timers.limitVIs, LIMITVIS_NONE, LIMITVIS_WAIT_FOR_FRAME },
   { "PollRate", &pollRate, POLLRATE_VSYNC, POLLRATE_11MS },
-/*  { "PadType1", &padType[0], PADTYPE_NONE, PADTYPE_WII },
-  { "PadType2", &padType[1], PADTYPE_NONE, PADTYPE_WII },
-  { "PadType3", &padType[2], PADTYPE_NONE, PADTYPE_WII },
-  { "PadType4", &padType[3], PADTYPE_NONE, PADTYPE_WII },
+  { "PadAutoAssign", &padAutoAssign, PADAUTOASSIGN_MANUAL, PADAUTOASSIGN_AUTOMATIC },
+  { "PadType1", &padType[0], PADTYPE_N64, PADTYPE_WII },
+  { "PadType2", &padType[1], PADTYPE_N64, PADTYPE_WII },
+  { "PadType3", &padType[2], PADTYPE_N64, PADTYPE_WII },
+  { "PadType4", &padType[3], PADTYPE_N64, PADTYPE_WII },
   { "PadAssign1", &padAssign[0], PADASSIGN_INPUT0, PADASSIGN_INPUT3 },
   { "PadAssign2", &padAssign[1], PADASSIGN_INPUT0, PADASSIGN_INPUT3 },
   { "PadAssign3", &padAssign[2], PADASSIGN_INPUT0, PADASSIGN_INPUT3 },
-  { "PadAssign4", &padAssign[3], PADASSIGN_INPUT0, PADASSIGN_INPUT3 },*/
+  { "PadAssign4", &padAssign[3], PADASSIGN_INPUT0, PADASSIGN_INPUT3 },
   { "Pak1", &pakMode[0], PAKMODE_MEMPAK, PAKMODE_RUMBLEPAK },
   { "Pak2", &pakMode[1], PAKMODE_MEMPAK, PAKMODE_RUMBLEPAK },
   { "Pak3", &pakMode[2], PAKMODE_MEMPAK, PAKMODE_RUMBLEPAK },
@@ -243,13 +247,16 @@ int main(int argc, char* argv[]){
 	autoSave         = 1; // Auto Save Game
 	dynacore         = 1; // Dynarec
 #ifndef HW_RVL
-	screenMode		 = 0; // Stretch FB horizontally
+	count_per_op	 = COUNT_PER_OP_3;
+	screenMode		 = SCREENMODE_4x3;
 	videoFormat		 = SYS_GetVideoMode();
 #else
+	count_per_op	 = COUNT_PER_OP_2;
 	screenMode		 = CONF_GetAspectRatio() == CONF_ASPECT_16_9 ? SCREENMODE_16x9_PILLARBOX : SCREENMODE_4x3;
 	videoFormat		 = CONF_GetVideo();
 #endif
 	videoMode		 = VIDEOMODE_AUTO;
+	videoWidth		 = VIDEOWIDTH_704;
 	trapFilter		 = TRAPFILTER_DISABLE;
 	pollRate		 = POLLRATE_VSYNC;
 	padAutoAssign	 = PADAUTOASSIGN_AUTOMATIC;

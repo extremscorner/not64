@@ -56,6 +56,7 @@ extern int llbit;
 extern long local_rs32, local_rt32;
 extern unsigned long FCR0, FCR31;
 extern unsigned long next_interupt, last_addr;
+extern unsigned long count_per_op;
 
 unsigned long long __udivmoddi4(unsigned long long, unsigned long long, unsigned long long*);
 double __ieee754_sqrt(double);
@@ -2992,6 +2993,7 @@ static int MTC0(MIPS_instr mips){
 	case 16: // Config
 	case 18: // WatchLo
 	case 19: // WatchHi
+	case 30: // ErrorEPC
 		rrt = mapRegister(rt);
 		// reg_cop0[rd] = rt
 		GEN_STW(ppc, rrt, SDAREL(reg_cop0) + rd*4, R13);
@@ -4493,8 +4495,11 @@ static void genUpdateCount(int checkCount){
 	// lwz    r2,  9*4(reg_cop0)     // r2 = Count
 	GEN_LWZ(ppc, R2, SDAREL(Count), R13);
 	set_next_dst(ppc);
-	// srwi r0, r0, 1                // r0 = (pc - last_addr)/2
-	GEN_SRWI(ppc, R0, R0, 1);
+	// srwi r0, r0, 2                // r0 = (pc - last_addr) >> 2
+	GEN_SRWI(ppc, R0, R0, 2);
+	set_next_dst(ppc);
+	// mulli r0, r0, count_per_op    // r0 *= count_per_op
+	GEN_MULLI(ppc, R0, R0, count_per_op);
 	set_next_dst(ppc);
 	// add    r0,  r0,  r2           // r0 += Count
 	GEN_ADD(ppc, R0, R0, R2);

@@ -173,10 +173,6 @@ void Func_ResetROM()
 		menu::MessageBox::getInstance().setMessage("Game restarted");
 		Func_SetPlayGame();
 	}
-	else	
-	{
-		menu::MessageBox::getInstance().setMessage("Please load a ROM first");
-	}
 }
 
 extern BOOL sramWritten;

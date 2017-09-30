@@ -50,6 +50,7 @@ extern void update_debugger();
 unsigned long i, dynacore = 0, interpcore = 0;
 int no_audio_delay = 0;
 int no_compiled_jump = 0;
+unsigned long count_per_op = 2;
 int stop, llbit;
 long long int reg[34] __attribute__((section(".sbss")));
 long long int local_rs, local_rt;
@@ -1524,7 +1525,7 @@ void update_count()
      		DEBUG_print(txtbuffer, DBG_USBGECKO);
      	}
 #endif
-	Count = Count + (interp_addr - last_addr)/2;
+	Count += ((interp_addr - last_addr) >> 2) * count_per_op;
 	last_addr = interp_addr;
      }
    else
@@ -1533,7 +1534,7 @@ void update_count()
 	  {
 	     printf("PC->addr < last_addr\n");
 	  }
-	Count = Count + (PC->addr - last_addr)/2;
+	Count += ((PC->addr - last_addr) >> 2) * count_per_op;
 	last_addr = PC->addr;
      }
 #ifdef COMPARE_CORE

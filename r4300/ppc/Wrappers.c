@@ -177,7 +177,7 @@ int dyna_update_count(unsigned int pc, int isDelaySlot){
 #else
 int dyna_update_count(unsigned int pc){
 #endif
-	Count += (pc - last_addr)/2;
+	Count += ((pc - last_addr) >> 2) * count_per_op;
 	last_addr = pc;
 
 #ifdef COMPARE_CORE

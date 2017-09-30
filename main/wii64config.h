@@ -113,6 +113,14 @@ enum dynacore
 	DYNACORE_PURE_INTERP
 };
 
+extern unsigned long count_per_op;
+enum count_per_op
+{
+	COUNT_PER_OP_1=1,
+	COUNT_PER_OP_2,
+	COUNT_PER_OP_3
+};
+
 extern char screenMode;
 enum screenMode
 {
@@ -141,6 +149,17 @@ enum videoMode
 	VIDEOMODE_576SF,
 	VIDEOMODE_288P,
 	VIDEOMODE_576P
+};
+
+extern char videoWidth;
+enum videoWidth
+{
+	VIDEOWIDTH_640=0,
+	VIDEOWIDTH_704,
+	VIDEOWIDTH_720,
+	VIDEOWIDTH_1280,
+	VIDEOWIDTH_1408,
+	VIDEOWIDTH_1440
 };
 
 extern char pixelClock;
