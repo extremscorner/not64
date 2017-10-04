@@ -168,10 +168,10 @@ static struct {
   { "LimitVIs", &Timers.limitVIs, LIMITVIS_NONE, LIMITVIS_WAIT_FOR_FRAME },
   { "PollRate", &pollRate, POLLRATE_VSYNC, POLLRATE_11MS },
   { "PadAutoAssign", &padAutoAssign, PADAUTOASSIGN_MANUAL, PADAUTOASSIGN_AUTOMATIC },
-  { "PadType1", &padType[0], PADTYPE_N64, PADTYPE_WII },
-  { "PadType2", &padType[1], PADTYPE_N64, PADTYPE_WII },
-  { "PadType3", &padType[2], PADTYPE_N64, PADTYPE_WII },
-  { "PadType4", &padType[3], PADTYPE_N64, PADTYPE_WII },
+  { "PadType1", &padType[0], PADTYPE_NONE, PADTYPE_WII },
+  { "PadType2", &padType[1], PADTYPE_NONE, PADTYPE_WII },
+  { "PadType3", &padType[2], PADTYPE_NONE, PADTYPE_WII },
+  { "PadType4", &padType[3], PADTYPE_NONE, PADTYPE_WII },
   { "PadAssign1", &padAssign[0], PADASSIGN_INPUT0, PADASSIGN_INPUT3 },
   { "PadAssign2", &padAssign[1], PADASSIGN_INPUT0, PADASSIGN_INPUT3 },
   { "PadAssign3", &padAssign[2], PADASSIGN_INPUT0, PADASSIGN_INPUT3 },
@@ -260,10 +260,10 @@ int main(int argc, char* argv[]){
 	trapFilter		 = TRAPFILTER_DISABLE;
 	pollRate		 = POLLRATE_VSYNC;
 	padAutoAssign	 = PADAUTOASSIGN_AUTOMATIC;
-	padType[0]		 = PADTYPE_N64;
-	padType[1]		 = PADTYPE_N64;
-	padType[2]		 = PADTYPE_N64;
-	padType[3]		 = PADTYPE_N64;
+	padType[0]		 = PADTYPE_NONE;
+	padType[1]		 = PADTYPE_NONE;
+	padType[2]		 = PADTYPE_NONE;
+	padType[3]		 = PADTYPE_NONE;
 	padAssign[0]	 = PADASSIGN_INPUT0;
 	padAssign[1]	 = PADASSIGN_INPUT1;
 	padAssign[2]	 = PADASSIGN_INPUT2;

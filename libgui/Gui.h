@@ -48,7 +48,7 @@ private:
 	Gui();
 	~Gui();
 	FrameList frameList;
-	char fade;
+	u8 fade;
 };
 
 } //namespace menu 

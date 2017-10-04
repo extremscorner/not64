@@ -1899,7 +1899,7 @@ void read_vi()
       case 0x10:
 	update_count();
 	vi_register.vi_current = (vi_register.vi_delay-(next_vi-Count))/1500;
-	vi_register.vi_current = (vi_register.vi_current%(vi_register.vi_v_sync+1));
+	vi_register.vi_current = (vi_register.vi_current%vi_register.vi_v_sync);
 	vi_register.vi_current = (vi_register.vi_current&(~1))|vi_field;
 	break;
      }
@@ -1916,7 +1916,7 @@ void read_vib()
       case 0x13:
 	update_count();
 	vi_register.vi_current = (vi_register.vi_delay-(next_vi-Count))/1500;
-	vi_register.vi_current = (vi_register.vi_current%(vi_register.vi_v_sync+1));
+	vi_register.vi_current = (vi_register.vi_current%vi_register.vi_v_sync);
 	vi_register.vi_current = (vi_register.vi_current&(~1))|vi_field;
 	break;
      }
@@ -1932,7 +1932,7 @@ void read_vih()
       case 0x12:
 	update_count();
 	vi_register.vi_current = (vi_register.vi_delay-(next_vi-Count))/1500;
-	vi_register.vi_current = (vi_register.vi_current%(vi_register.vi_v_sync+1));
+	vi_register.vi_current = (vi_register.vi_current%vi_register.vi_v_sync);
 	vi_register.vi_current = (vi_register.vi_current&(~1))|vi_field;
 	break;
      }
@@ -1947,7 +1947,7 @@ void read_vid()
       case 0x10:
 	update_count();
 	vi_register.vi_current = (vi_register.vi_delay-(next_vi-Count))/1500;
-	vi_register.vi_current = (vi_register.vi_current%(vi_register.vi_v_sync+1));
+	vi_register.vi_current = (vi_register.vi_current%vi_register.vi_v_sync);
 	vi_register.vi_current = (vi_register.vi_current&(~1))|vi_field;
 	break;
      }

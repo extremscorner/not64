@@ -204,7 +204,8 @@ enum padAutoAssign
 extern char padType[4];
 enum padType
 {
-	PADTYPE_N64=0,
+	PADTYPE_NONE=-1,
+	PADTYPE_N64,
 	PADTYPE_GAMECUBE,
 	PADTYPE_WII
 };

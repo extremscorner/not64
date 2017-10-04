@@ -304,22 +304,20 @@ void dma_si_write()
      }
    for (i=0; i<(64/4); i++)
      PIF_RAM[i] = sl(rdram[si_register.si_dram_addr/4+i]);
-   update_pif_write();
+   si_register.si_status |= 1;
    update_count();
    add_interupt_event(SI_INT, /*0x100*/0x900);
 }
 
 void dma_si_read()
 {
-   int i;
    if (si_register.si_pif_addr_rd64b != 0x1FC007C0)
      {
 //	printf("unknown SI use\n");
 	stop=1;
      }
    update_pif_read();
-   for (i=0; i<(64/4); i++)
-     rdram[si_register.si_dram_addr/4+i] = sl(PIF_RAM[i]);
+   si_register.si_status |= 2;
    update_count();
    add_interupt_event(SI_INT, /*0x100*/0x900);
 }

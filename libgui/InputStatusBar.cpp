@@ -251,7 +251,7 @@ void InputStatusBar::drawComponent(Graphics& gfx)
 			}
 			break;
 #endif
-		case PADTYPE_N64:
+		default:
 			gfx.setColor(inactiveColor);
 			IplFont::getInstance().drawInit(inactiveColor);
 			statusIcon = Resources::getInstance().getImage(Resources::IMAGE_CONTROLLER_EMPTY);
@@ -265,8 +265,11 @@ void InputStatusBar::drawComponent(Graphics& gfx)
 		//draw numbers
 		sprintf(buffer,"%d",i+1);
 		IplFont::getInstance().drawString((int) base_x+36, (int) base_y+10, buffer, 0.8, true);
-		sprintf(buffer,"%d",padAssign[i]+1);
-		IplFont::getInstance().drawString((int) base_x+37, (int) base_y+52, buffer, 0.8, true);
+		if (padType[i]!=PADTYPE_NONE)
+		{
+			sprintf(buffer,"%d",padAssign[i]+1);
+			IplFont::getInstance().drawString((int) base_x+37, (int) base_y+52, buffer, 0.8, true);
+		}
 		//draw icon
 		statusIcon->activateImage(GX_TEXMAP0);
 		GX_SetTevColorIn(GX_TEVSTAGE0,GX_CC_ZERO,GX_CC_ZERO,GX_CC_ZERO,GX_CC_RASC);

@@ -70,13 +70,20 @@ void VI_UpdateSize()
 	u32 vEnd = _SHIFTR( *REG.VI_V_START, 0, 10 );
 	u32 vStart = _SHIFTR( *REG.VI_V_START, 16, 10 );
 
-	VI.width = hEnd == hStart ? *REG.VI_WIDTH :
-	           lrintf((hEnd - hStart) * xScale);
-	VI.height = lrintf((vEnd - vStart) * yScale
-	          * (*REG.VI_WIDTH > VI.width ? 1.0125f : 0.50625f));
+	u32 width = _SHIFTR( *REG.VI_WIDTH, 0, 12 );
 
-	if (VI.width == 0.0f) VI.width = 320.0f;
-	if (VI.height == 0.0f) VI.height = 240.0f;
+	VI.width = hEnd == hStart ? width : lrint(abs(hEnd - hStart) * xScale / 2) * 2;
+
+	yScale *= width  / VI.width;
+	vEnd   += vStart % 2;
+	vStart += vEnd   % 2;
+	vStart  = vStart / 2 - 1;
+	vEnd    = vEnd   / 2 + 1;
+
+	VI.height = lrint(abs(vEnd - vStart) * yScale / 2) * 2;
+
+	if (VI.width == 0) VI.width = 320;
+	if (VI.height == 0) VI.height = 240;
 }
 
 void VI_UpdateScreen()
@@ -241,8 +248,7 @@ void VI_GX_showFPS(){
 
 void VI_GX_showLoadIcon()
 {
-	if (!VI.enableLoadIcon)
-		return;
+	if (!VI.enableLoadIcon) return;
 	VI.enableLoadIcon = false;
 
 #ifndef MENU_V2

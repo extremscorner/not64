@@ -414,7 +414,7 @@ void auto_assign_controllers(void){
 	// 'Initialize' the unmapped virtual controllers
 	for(; i<4; ++i){
 		unassign_controller(i);
-		padType[i] = PADTYPE_N64;
+		padType[i] = PADTYPE_NONE;
 		padAssign[i] = i;
 	}
 }
