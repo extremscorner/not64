@@ -161,6 +161,42 @@ void ROMCache_read(u8* dest, u32 offset, u32 length){
 	}
 }
 
+void ROMCache_write(u8* src, u32 offset, u32 length){
+   
+  if(ROMTooBig){
+		u32 block = offset>>BLOCK_SHIFT;
+		u32 length2 = length;
+		u32 offset2 = offset&BLOCK_MASK;
+		
+		while(length2){
+			ensure_block(block);
+			
+			// Set length to the length for this block
+			if(length2 > BLOCK_SIZE - offset2) {
+				length = BLOCK_SIZE - offset2;
+			}
+			else {
+  			length = length2;
+			}
+		
+			// Increment LRU's; set this one to 0
+			int i;
+			for(i=0; i<NUM_BLOCKS; ++i) {
+  			++ROMBlocksLRU[i];
+			}
+			ROMBlocksLRU[block] = 0;
+			
+			// Actually write for this block
+			memcpy(ROMBlocks[block] + offset2, src, length);
+			
+			// In case the write spans multiple blocks, increment state
+			++block; length2 -= length; offset2 = 0; src += length; offset += length;
+		}
+	} else {
+		memcpy(ROMCACHE_LO + offset, src, length);
+	}
+}
+
 int ROMCache_load(fileBrowser_file* f){
 	char txt[128];
 #ifndef MENU_V2

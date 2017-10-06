@@ -251,7 +251,7 @@ int main(int argc, char* argv[]){
 	screenMode		 = SCREENMODE_4x3;
 	videoFormat		 = SYS_GetVideoMode();
 #else
-	count_per_op	 = COUNT_PER_OP_2;
+	count_per_op	 = SYS_GetCoreMultiplier() < 5.0 ? COUNT_PER_OP_2 : COUNT_PER_OP_1;
 	screenMode		 = CONF_GetAspectRatio() == CONF_ASPECT_16_9 ? SCREENMODE_16x9_PILLARBOX : SCREENMODE_4x3;
 	videoFormat		 = CONF_GetVideo();
 #endif

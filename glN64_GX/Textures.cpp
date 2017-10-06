@@ -1421,9 +1421,9 @@ u32 TextureCache_CalculateCRC( u32 t, u32 width, u32 height )
    	if (gSP.textureTile[t]->format == G_IM_FMT_CI)
 	{
 		if (gSP.textureTile[t]->size == G_IM_SIZ_4b)
-			crc = Hash_CalculatePalette( crc, &TMEM[0x100 + (gSP.textureTile[t]->palette << 4)], 128 );
+			crc = Hash_Calculate( crc, &TMEM[0x100 + (gSP.textureTile[t]->palette << 4)], 128 );
 		else if (gSP.textureTile[t]->size == G_IM_SIZ_8b)
-			crc = Hash_CalculatePalette( crc, &TMEM[0x100], 2048 );
+			crc = Hash_Calculate( crc, &TMEM[0x100], 2048 );
 	}
 	return crc;
 }
@@ -1522,9 +1522,9 @@ void TextureCache_UpdateBackground()
    	if (gSP.bgImage.format == G_IM_FMT_CI)
 	{
 		if (gSP.bgImage.size == G_IM_SIZ_4b)
-			crc = Hash_CalculatePalette( crc, &TMEM[0x100 + (gSP.bgImage.palette << 4)], 128 );
+			crc = Hash_Calculate( crc, &TMEM[0x100 + (gSP.bgImage.palette << 4)], 128 );
 		else if (gSP.bgImage.size == G_IM_SIZ_8b)
-			crc = Hash_CalculatePalette( crc, &TMEM[0x100], 2048 );
+			crc = Hash_Calculate( crc, &TMEM[0x100], 2048 );
 	}
 
 	CachedTexture *current = cache.top;

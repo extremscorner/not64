@@ -777,7 +777,7 @@ void gDPLoadTLUT( u32 tile, u32 uls, u32 ult, u32 lrs, u32 lrt )
     u16 count = (gDP.tiles[tile].lrs - gDP.tiles[tile].uls + 1) * (gDP.tiles[tile].lrt - gDP.tiles[tile].ult + 1);
 	u32	address = gDP.textureImage.address + gDP.tiles[tile].ult * gDP.textureImage.bpl + (gDP.tiles[tile].uls << gDP.textureImage.size >> 1);
 
-	u16 *dest = (u16*)(void*)&TMEM[gDP.tiles[tile].tmem]; 
+	u64 *dest = &TMEM[gDP.tiles[tile].tmem];
 	u16 *src = (u16*)&RDRAM[address];
 
 	int i = 0;
@@ -786,18 +786,10 @@ void gDPLoadTLUT( u32 tile, u32 uls, u32 ult, u32 lrs, u32 lrt )
 		for (u16 j = 0; (j < 16) && (i < count); j++, i++)
 		{
 #ifndef _BIG_ENDIAN
-			u16 color = swapword( src[i^1] );
-
-			*dest = color;
-			//dest[1] = color;
-			//dest[2] = color;
-			//dest[3] = color;
-
+			*dest++ = swapword( src[i^1] );
 #else // !_BIG_ENDIAN
-			*dest = src[i];
+			*dest++ = ((u64) src[i] << 48);
 #endif // _BIG_ENDIAN
-
-			dest += 4;
 		}
 	}
 

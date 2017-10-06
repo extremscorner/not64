@@ -20,5 +20,4 @@ void CRC_BuildTable();
 DWORD CRC_Calculate( DWORD crc, void *buffer, DWORD count );
 DWORD CRC_CalculatePalette( DWORD crc, void *buffer, DWORD count );
 
-u32 Hash_Calculate(u32 hash, void *buffer, u32 count);
-u32 Hash_CalculatePalette(u32 hash, void *buffer, u32 count);
+DWORD Hash_Calculate( DWORD hash, void *buffer, DWORD count );

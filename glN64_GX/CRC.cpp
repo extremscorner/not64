@@ -14,6 +14,11 @@
 #else
 # include "../main/winlnxdefs.h"
 #endif // __LINUX__
+#define XXH_PRIVATE_API
+#define XXH_FORCE_MEMORY_ACCESS 2
+#define XXH_FORCE_NATIVE_FORMAT 1
+#define XXH_FORCE_ALIGN_CHECK 0
+#include "../main/xxhash.h"
 
 #define CRC32_POLYNOMIAL     0x04C11DB7
 
@@ -95,39 +100,7 @@ DWORD CRC_CalculatePalette( DWORD crc, void *buffer, DWORD count )
     return crc ^ orig;
 }
 
-u32 Hash_Calculate(u32 hash, void *buffer, u32 count)
+DWORD Hash_Calculate( DWORD hash, void *buffer, DWORD count )
 {
-    unsigned int i;
-    u32 *data = (u32 *) buffer;
-
-    count /= 4;
-    for(i = 0; i < count; ++i) {
-        hash += data[i];
-        hash += (hash << 10);
-        hash ^= (hash >> 6);
-    }
-
-    hash += (hash << 3);
-    hash ^= (hash >> 11);
-    hash += (hash << 15);
-    return hash;
-}
-
-u32 Hash_CalculatePalette(u32 hash, void *buffer, u32 count)
-{
-    unsigned int i;
-    u16 *data = (u16 *) buffer;
-
-    count /= 16;
-    for(i = 0; i < count; ++i) {
-        hash += data[i * 8 + 0] << 16;
-        hash += data[i * 8 + 4];
-        hash += (hash << 10);
-        hash ^= (hash >> 6);
-    }
-
-    hash += (hash << 3);
-    hash ^= (hash >> 11);
-    hash += (hash << 15);
-    return hash;
+    return XXH32(buffer, count, hash);
 }

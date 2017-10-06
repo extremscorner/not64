@@ -54,16 +54,15 @@ int inflate_chunk(void* dst, void* src, int length){
 			inflateEnd(&zs);
 			return -1;
 		}
-
-		if(res == Z_STREAM_END){
-			inflateEnd(&zs);
-			return 0;
-		}
 		have = ZIPCHUNK - zs.avail_out;
 		if (have) {
 			/*** Copy to normal block buffer ***/
 			memcpy(dst + bufferoffset, buf, have);
 			bufferoffset += have;
+		}
+		if(res == Z_STREAM_END){
+			inflateEnd(&zs);
+			return bufferoffset;
 		}
 	}while(zs.avail_out == 0);
 

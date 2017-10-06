@@ -70,20 +70,20 @@ DPS_register dps_register;
 // TODO: We only need 8MB when it's used, it'll save
 //         memory when we can alloc only 4MB
 #ifdef USE_EXPANSION
-	unsigned long rdram[0x800000/4];
+	unsigned long rdram[0x800000/4] __attribute__((aligned(32)));
 	#define MEMMASK 0x7FFFFF
 	#define TOPOFMEM 0x800000
 #else
-	unsigned long rdram[0x400000/4];
+	unsigned long rdram[0x400000/4] __attribute__((aligned(32)));
 	#define MEMMASK 0x3FFFFF
 	#define TOPOFMEM 0x400000
 #endif
 unsigned char *const rdramb = (unsigned char *)(rdram);
-unsigned long SP_DMEM[0x1000/4*2];
+unsigned long SP_DMEM[0x1000/4*2] __attribute__((aligned(32)));
 unsigned long *const SP_IMEM = SP_DMEM+0x1000/4;
 unsigned char *const SP_DMEMb = (unsigned char *)(SP_DMEM);
 unsigned char *const SP_IMEMb = (unsigned char *)(SP_DMEM+0x1000/4);
-unsigned long PIF_RAM[0x40/4];
+unsigned long PIF_RAM[0x40/4] __attribute__((aligned(32)));
 unsigned char *const PIF_RAMb = (unsigned char *)(PIF_RAM);
 
 // address : address of the read/write operation being done
@@ -186,13 +186,9 @@ void (*rw_flashram1[8])() =
 	  write_flashram_command,  write_flashram_commandb,
 	  write_flashram_commandh, write_flashram_commandd };
 
-void (*rw_rom0[8])() =
-	{ read_rom,      read_romb,      read_romh,      read_romd,
-	  write_nothing, write_nothingb, write_nothingh, write_nothingd };
-
-void (*rw_rom1[8])() =
-	{ read_rom,      read_romb,      read_romh,      read_romd,
-	  write_rom,     write_nothingb, write_nothingh, write_nothingd };
+void (*rw_rom[8])() =
+	{ read_rom,  read_romb,  read_romh,  read_romd,
+	  write_rom, write_romb, write_romh, write_romd };
 
 void (*rw_pif[8])() =
 	{ read_pif,  read_pifb,  read_pifh,  read_pifd,
@@ -616,8 +612,8 @@ int init_memory()
    //init rom area
    for (i=0; i<(rom_length >> 16); i++) 
      {
-	rwmem[0x9000+i] = rw_rom0;
-	rwmem[0xb000+i] = rw_rom1;
+	rwmem[0x9000+i] = rw_rom;
+	rwmem[0xb000+i] = rw_rom;
      }
    for (i=(rom_length >> 16); i<0xfc0; i++) 
      {
@@ -3059,17 +3055,9 @@ void write_flashram_commandd()
    printf("write_flashram_commandd\n");
 }
 
-static unsigned long lastwrite = 0;
-
 void read_rom()
 {
-   if (lastwrite)
-     {
-	word = lastwrite;
-	lastwrite = 0;
-     }
-   else
-     word = *(unsigned long *)ROMCache_pointer(address & 0x3FFFFFF);
+   word = *(unsigned long *)ROMCache_pointer(address & 0x3FFFFFF);
 }
 
 void read_romb()
@@ -3089,7 +3077,22 @@ void read_romd()
 
 void write_rom()
 {
-   lastwrite = word;
+   *(unsigned long *)ROMCache_pointer(address & 0x3FFFFFF) = word;
+}
+
+void write_romb()
+{
+   *(unsigned char *)ROMCache_pointer(address & 0x3FFFFFF) = byte;
+}
+
+void write_romh()
+{
+   *(unsigned short *)ROMCache_pointer(address & 0x3FFFFFF) = hword;
+}
+
+void write_romd()
+{
+   *(unsigned long long *)ROMCache_pointer(address & 0x3FFFFFF) = dword;
 }
 
 void read_pif()

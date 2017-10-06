@@ -40,6 +40,7 @@ void ROMCache_init(fileBrowser_file* file)
 {
 	PKZIPHEADER pkzip;
 	romFile_readFile(file, &pkzip, sizeof(PKZIPHEADER));
+	romFile_seekFile(file, 0, FILE_BROWSER_SEEK_SET);
 	
 	if (pkzip.zipid == PKZIPID) {
 		rom_length = bswap32(pkzip.uncompressedSize);
@@ -51,7 +52,6 @@ void ROMCache_init(fileBrowser_file* file)
 	}
 	
 	ROMTooBig = rom_length > ROMCACHE_SIZE;
-	romFile_seekFile(file, 0, FILE_BROWSER_SEEK_SET);
 }
 
 void ROMCache_deinit()
@@ -72,11 +72,16 @@ void ROMCache_read(u8* ram_dest, u32 rom_offset, u32 length)
 	memcpy(ram_dest, ROMBase + rom_offset, length);
 }
 
+void ROMCache_write(u8* ram_src, u32 rom_offset, u32 length)
+{
+	memcpy(ROMBase + rom_offset, ram_src, length);
+}
+
 int ROMCache_load(fileBrowser_file* file)
 {
 	char txt[128];
 	int bytes_read;
-	unsigned i = 0, loads_til_update = 0;
+	unsigned i = 0, count = 0;
 	
 	if (ROMTooBig) {
 		void* VMBase = VM_Init(rom_length, ROMCACHE_SIZE);
@@ -99,21 +104,19 @@ int ROMCache_load(fileBrowser_file* file)
 			if (bytes_read < 0)
 				return ROM_CACHE_ERROR_READ;
 			
+			if (i == 0 && init_byte_swap(*(u32*)ROMBase) == BYTE_SWAP_BAD) {
+				romFile_deinit(file);
+				return ROM_CACHE_INVALID_ROM;
+			}
+			
+			byte_swap(ROMBase + (i & ~3), bytes_read + (i & 3));
 			i += bytes_read;
 			
-			if (!loads_til_update--) {
+			if (VIDEO_GetRetraceCount() - count > 2) {
 				LoadingBar_showBar((float)i / rom_length, txt);
-				loads_til_update = 256;
+				count = VIDEO_GetRetraceCount();
 			}
-		} while (bytes_read > 0);
-		
-		if (init_byte_swap(*(u32*)ROMBase) == BYTE_SWAP_BAD) {
-			romFile_deinit(file);
-			return ROM_CACHE_INVALID_ROM;
-		}
-		
-		LoadingBar_showBar(0.0, "Byteswapping ROM");
-		byte_swap(ROMBase, rom_length);
+		} while (i < rom_length);
 	} else {
 		do {
 			bytes_read = romFile_readFile(file, ROMBase + i, 32*KB);
@@ -125,14 +128,14 @@ int ROMCache_load(fileBrowser_file* file)
 				return ROM_CACHE_INVALID_ROM;
 			}
 			
-			byte_swap(ROMBase + i, bytes_read);
+			byte_swap(ROMBase + (i & ~3), bytes_read + (i & 3));
 			i += bytes_read;
 			
-			if (!loads_til_update--) {
+			if (VIDEO_GetRetraceCount() - count > 2) {
 				LoadingBar_showBar((float)i / rom_length, txt);
-				loads_til_update = 16;
+				count = VIDEO_GetRetraceCount();
 			}
-		} while (bytes_read > 0);
+		} while (i < rom_length);
 	}
 	
 	return 0;

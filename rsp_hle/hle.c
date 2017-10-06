@@ -50,6 +50,7 @@ static bool try_fast_audio_dispatching(struct hle_t* hle);
 static bool try_fast_task_dispatching(struct hle_t* hle);
 static void normal_task_dispatching(struct hle_t* hle);
 static void non_task_dispatching(struct hle_t* hle);
+static void re2_task_dispatching(struct hle_t* hle);
 
 #ifdef ENABLE_TASK_DUMP
 static void dump_binary(struct hle_t* hle, const char *const filename,
@@ -252,8 +253,10 @@ static bool try_fast_task_dispatching(struct hle_t* hle)
     switch (*dmem_u32(hle, TASK_TYPE)) {
     case 1:
         /* Resident evil 2 */
-        if (*dmem_u32(hle, TASK_DATA_PTR) == 0)
-            return false;
+        if (*dmem_u32(hle, TASK_DATA_PTR) == 0) {
+            re2_task_dispatching(hle);
+            return true;
+        }
 
         if (FORWARD_GFX) {
             forward_gfx_task(hle);
@@ -317,14 +320,6 @@ static void normal_task_dispatching(struct hle_t* hle)
     case 0x278b0:
         jpeg_decode_OB(hle);
         return;
-
-    /* Resident evil 2 */
-    case 0x29a20: /* USA */
-    case 0x298c5: /* Europe */
-    case 0x298b8: /* USA Rev A */
-    case 0x296d9: /* J */
-        resize_bilinear_task(hle);
-        return;
     }
 
     /* Send task_done signal for unknown ucodes to allow further processings */
@@ -353,6 +348,36 @@ static void non_task_dispatching(struct hle_t* hle)
 #endif
 }
 
+/* Resident evil 2 */
+static void re2_task_dispatching(struct hle_t* hle)
+{
+    const unsigned int sum =
+        sum_bytes((void*)dram_u32(hle, *dmem_u32(hle, TASK_UCODE)), 256);
+
+    switch (sum) {
+    
+    case 0x450f:
+        resize_bilinear_task(hle);
+        return;
+    
+    case 0x3b44:
+        decode_video_frame_task(hle);
+        return;
+
+    case 0x3d84:
+        /* TODO: Nothing to emulate? */
+        rsp_break(hle, SP_STATUS_TASKDONE);
+        return;
+    }
+
+    /* Send task_done signal for unknown ucodes to allow further processings */
+    rsp_break(hle, SP_STATUS_TASKDONE);
+
+    HleWarnMessage(hle->user_defined, "unknown OSTask: sum: %x PC:%x", sum, *hle->sp_pc);
+#ifdef ENABLE_TASK_DUMP
+    dump_unknown_task(hle, sum);
+#endif
+}
 
 #ifdef ENABLE_TASK_DUMP
 static void dump_unknown_task(struct hle_t* hle, unsigned int sum)

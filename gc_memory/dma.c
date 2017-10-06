@@ -107,31 +107,79 @@ int saveSram(fileBrowser_file* savepath){
 
 void dma_pi_read()
 {
+   unsigned long longueur;
    int i;
 
-   if (pi_register.pi_cart_addr_reg >= 0x08000000 &&
-       pi_register.pi_cart_addr_reg < 0x08010000)
+   if (pi_register.pi_cart_addr_reg < 0x10000000)
      {
-	if (use_flashram != 1)
+	if (pi_register.pi_cart_addr_reg >= 0x08000000 &&
+	    pi_register.pi_cart_addr_reg < 0x08010000)
 	  {
+	     if (use_flashram != 1)
+	       {
 
-	     sramWritten = TRUE;
+		  sramWritten = TRUE;
 
-	     for (i=0; i<(pi_register.pi_rd_len_reg & 0xFFFFFE)+2; i++)
-	       sram[((pi_register.pi_cart_addr_reg-0x08000000)+i)^S8]=
-	       ((unsigned char*)rdram)[(pi_register.pi_dram_addr_reg+i)^S8];
+		  for (i=0; i<(pi_register.pi_rd_len_reg & 0xFFFFFE)+2; i++)
+		    sram[((pi_register.pi_cart_addr_reg-0x08000000)+i)^S8]=
+		    ((unsigned char*)rdram)[(pi_register.pi_dram_addr_reg+i)^S8];
 
-	     use_flashram = -1;
+		  use_flashram = -1;
+	       }
+	     else
+	       dma_write_flashram();
 	  }
-	else
-	  dma_write_flashram();
-     }
- //  else
- //    printf("unknown dma read\n");
+//	else
+//	  printf("unknown dma read\n");
 
-   pi_register.read_pi_status_reg |= 1;
+	pi_register.read_pi_status_reg |= 1;
+	update_count();
+	add_interupt_event(PI_INT, 0x1000/*pi_register.pi_rd_len_reg*/);
+
+	return;
+     }
+
+   if (pi_register.pi_cart_addr_reg >= 0x1fc00000) // for paper mario
+     {
+	pi_register.read_pi_status_reg |= 1;
+	update_count();
+	add_interupt_event(PI_INT, 0x1000);
+	return;
+     }
+
+   longueur = (pi_register.pi_rd_len_reg & 0xFFFFFE)+2;
+   i = (pi_register.pi_cart_addr_reg-0x10000000)&0x3FFFFFF;
+   longueur = (i + longueur) > rom_length ?
+     (rom_length - i) : longueur;
+   longueur = (pi_register.pi_dram_addr_reg + longueur) > MEMMASK ?
+     (MEMMASK - pi_register.pi_dram_addr_reg) : longueur;
+
+   if(i>rom_length || pi_register.pi_dram_addr_reg > MEMMASK)
+     {
+	pi_register.read_pi_status_reg |= 3;
+	update_count();
+	add_interupt_event(PI_INT, longueur/8);
+	return;
+     }
+
+   ROMCache_write(rdramb + pi_register.pi_dram_addr_reg, (pi_register.pi_cart_addr_reg-0x10000000)&0x3FFFFFF, longueur);
+
+   if(!interpcore)
+     {
+	for (i=0; i<longueur; i++)
+	  {
+	     unsigned long rom_address1 = pi_register.pi_cart_addr_reg+i+0x80000000;
+	     unsigned long rom_address2 = pi_register.pi_cart_addr_reg+i+0xa0000000;
+
+	     invalidate_func(rom_address1);
+	     invalidate_func(rom_address2);
+	  }
+     }
+
+   pi_register.read_pi_status_reg |= 3;
    update_count();
-   add_interupt_event(PI_INT, 0x1000/*pi_register.pi_rd_len_reg*/);
+   add_interupt_event(PI_INT, longueur/8);
+   return;
 }
 
 void dma_pi_write()
@@ -244,33 +292,27 @@ void dma_pi_write()
 
 void dma_sp_write()
 {
-   unsigned int i,j;
+   unsigned int i;
 
    unsigned int l = sp_register.sp_rd_len_reg;
 
    unsigned int length = ((l & 0xfff) | 7) + 1;
    unsigned int count = ((l >> 12) & 0xff) + 1;
    unsigned int skip = ((l >> 20) & 0xfff);
- 
-   unsigned int memaddr = sp_register.sp_mem_addr_reg & 0xfff;
-   unsigned int dramaddr = sp_register.sp_dram_addr_reg & 0xffffff;
 
-   unsigned char *spmem = ((sp_register.sp_mem_addr_reg & 0x1000) != 0) ? (unsigned char*)SP_IMEM : (unsigned char*)SP_DMEM;
-   unsigned char *dram = (unsigned char*)rdram;
+   unsigned char *spmem = SP_DMEMb + (sp_register.sp_mem_addr_reg & 0x1fff);
+   unsigned char *dram = rdramb + (sp_register.sp_dram_addr_reg & 0xffffff);
 
-   for(j=0; j<count; j++) {
-     for(i=0; i<length; i++) {
-       spmem[memaddr^S8] = dram[dramaddr^S8];
-       memaddr++;
-       dramaddr++;
-     }
-     dramaddr+=skip;
+   for(i=0; i<count; i++) {
+     spmem = memcpy(spmem, dram, length);
+     spmem += length;
+     dram += length + skip;
    }
 }
 
 void dma_sp_read()
 {
-   unsigned int i,j;
+   unsigned int i;
 
    unsigned int l = sp_register.sp_wr_len_reg;
 
@@ -278,19 +320,13 @@ void dma_sp_read()
    unsigned int count = ((l >> 12) & 0xff) + 1;
    unsigned int skip = ((l >> 20) & 0xfff);
 
-   unsigned int memaddr = sp_register.sp_mem_addr_reg & 0xfff;
-   unsigned int dramaddr = sp_register.sp_dram_addr_reg & 0xffffff;
+   unsigned char *spmem = SP_DMEMb + (sp_register.sp_mem_addr_reg & 0x1fff);
+   unsigned char *dram = rdramb + (sp_register.sp_dram_addr_reg & 0xffffff);
 
-   unsigned char *spmem = ((sp_register.sp_mem_addr_reg & 0x1000) != 0) ? (unsigned char*)SP_IMEM : (unsigned char*)SP_DMEM;
-   unsigned char *dram = (unsigned char*)rdram;
-
-   for(j=0; j<count; j++) {
-     for(i=0; i<length; i++) {
-       dram[dramaddr^S8] = spmem[memaddr^S8];
-       memaddr++;
-       dramaddr++;
-     }
-     dramaddr+=skip;
+   for(i=0; i<count; i++) {
+     dram = memcpy(dram, spmem, length);
+     spmem += length;
+     dram += length + skip;
    }
 }
 
