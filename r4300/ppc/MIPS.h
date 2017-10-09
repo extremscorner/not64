@@ -311,6 +311,8 @@ typedef unsigned int MIPS_instr;
 #define MIPS_FUNC_ERET      24
 #define MIPS_FUNC_DERET     31
 
+#define MIPS_REG_K0	26	// Kernel reserved
+#define MIPS_REG_K1	27	// Kernel reserved
 #define MIPS_REG_GP	28	// Global pointer
 #define MIPS_REG_SP	29	// Stack  pointer
 #define MIPS_REG_FP	30	// Frame  pointer

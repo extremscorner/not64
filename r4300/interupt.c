@@ -40,7 +40,6 @@
 #include "../main/guifuncs.h"
 #include "../main/savestates.h"
 #include "../gc_memory/memory.h"
-#include "../gc_memory/pif.h"
 
 static int SPECIAL_done = 0;
 int vi_field            = 0;
@@ -432,19 +431,10 @@ void gen_interupt()
     break;
   
     case SI_INT:
-      if (si_register.si_status & 1) {
-        update_pif_write();
-      }
-      else if (si_register.si_status & 2) {
-        int i;
-        for (i=0; i<(64/4); i++)
-          rdram[si_register.si_dram_addr/4+i] = sl(PIF_RAM[i]);
-      }
       PIF_RAMb[0x3F] = 0x0;
       remove_interupt_event();
       MI_register.mi_intr_reg |= 0x02;
       si_register.si_status |= 0x1000;
-      si_register.si_status &= ~3;
       if(!chk_status(1)) {
         return;
       }

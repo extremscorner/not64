@@ -186,9 +186,13 @@ void (*rw_flashram1[8])() =
 	  write_flashram_command,  write_flashram_commandb,
 	  write_flashram_commandh, write_flashram_commandd };
 
-void (*rw_rom[8])() =
-	{ read_rom,  read_romb,  read_romh,  read_romd,
-	  write_rom, write_romb, write_romh, write_romd };
+void (*rw_rom0[8])() =
+	{ read_rom,      read_romb,      read_romh,      read_romd,
+	  write_nothing, write_nothingb, write_nothingh, write_nothingd };
+
+void (*rw_rom1[8])() =
+	{ read_rom,      read_romb,      read_romh,      read_romd,
+	  write_rom,     write_nothingb, write_nothingh, write_nothingd };
 
 void (*rw_pif[8])() =
 	{ read_pif,  read_pifb,  read_pifh,  read_pifd,
@@ -612,8 +616,8 @@ int init_memory()
    //init rom area
    for (i=0; i<(rom_length >> 16); i++) 
      {
-	rwmem[0x9000+i] = rw_rom;
-	rwmem[0xb000+i] = rw_rom;
+	rwmem[0x9000+i] = rw_rom0;
+	rwmem[0xb000+i] = rw_rom1;
      }
    for (i=(rom_length >> 16); i<0xfc0; i++) 
      {
@@ -885,24 +889,22 @@ void update_DPC()
 
 void read_nothing()
 {
-   if (address == 0xa5000508) word = 0xFFFFFFFF;
-   else
-    word = 0;
+   word = (*address_low << 16) | *address_low;
 }
 
 void read_nothingb()
 {
-   byte = 0;
+   byte = *address_low;
 }
 
 void read_nothingh()
 {
-   hword = 0;
+   hword = *address_low;
 }
 
 void read_nothingd()
 {
-   dword = 0;
+   dword = (*address_low << 16) | *address_low;
 }
 
 void write_nothing()
@@ -3055,9 +3057,18 @@ void write_flashram_commandd()
    printf("write_flashram_commandd\n");
 }
 
+static unsigned long last_write;
+static unsigned long rom_written;
+
 void read_rom()
 {
-   word = *(unsigned long *)ROMCache_pointer(address & 0x3FFFFFF);
+   if (rom_written)
+     {
+	word = last_write;
+	rom_written = 0;
+     }
+   else
+     word = *(unsigned long *)ROMCache_pointer(address & 0x3FFFFFF);
 }
 
 void read_romb()
@@ -3077,22 +3088,8 @@ void read_romd()
 
 void write_rom()
 {
-   *(unsigned long *)ROMCache_pointer(address & 0x3FFFFFF) = word;
-}
-
-void write_romb()
-{
-   *(unsigned char *)ROMCache_pointer(address & 0x3FFFFFF) = byte;
-}
-
-void write_romh()
-{
-   *(unsigned short *)ROMCache_pointer(address & 0x3FFFFFF) = hword;
-}
-
-void write_romd()
-{
-   *(unsigned long long *)ROMCache_pointer(address & 0x3FFFFFF) = dword;
+   last_write = word;
+   rom_written = 1;
 }
 
 void read_pif()

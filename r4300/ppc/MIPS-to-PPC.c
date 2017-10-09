@@ -160,7 +160,7 @@ static void genCmpi64(int cr, int _ra, short immed){
 	} else {
 		RegMapping ra = mapRegister64(_ra);
 		
-		GEN_CMPI(ppc, cr, ra.hi, (immed&0x8000) ? ~0 : 0);
+		GEN_CMPI(ppc, cr, ra.hi, immed < 0 ? ~0 : 0);
 		set_next_dst(ppc);
 		// Skip low word comparison if high words are mismatched
 		GEN_BNE(ppc, cr, 2, 0, 0);
@@ -546,11 +546,12 @@ static int BGTZ(MIPS_instr mips){
 
 static int ADDIU(MIPS_instr mips){
 	PowerPC_instr ppc;
+
 	int _rs = MIPS_GET_RS(mips), _rt = MIPS_GET_RT(mips);
 	short immed = MIPS_GET_IMMED(mips);
 
 	int rs = mapRegister(_rs);
-	int rt = mapConstantNew(_rt, isRegisterConstant(_rs));
+	int rt = mapConstantNew(_rt, isRegisterConstant(_rs), 1);
 	setRegisterConstant(_rt, getRegisterConstant(_rs) + immed);
 
 	GEN_ADDI(ppc, rt, rs, immed);
@@ -570,10 +571,14 @@ static int SLTI(MIPS_instr mips){
 	return INTERPRETED;
 #else
 	// FIXME: Do I need to worry about 64-bit values?
-	int rs = mapRegister( MIPS_GET_RS(mips) );
-	int rt = mapRegisterNew( MIPS_GET_RT(mips), 0 );
+	int _rs = MIPS_GET_RS(mips), _rt = MIPS_GET_RT(mips);
+	short immed = MIPS_GET_IMMED(mips);
 
-	GEN_CMPI(ppc, CR0, rs, MIPS_GET_IMMED(mips));
+	int rs = mapRegister(_rs);
+	int rt = mapConstantNew(_rt, isRegisterConstant(_rs), 0);
+	setRegisterConstant(_rt, getRegisterConstant(_rs) < immed ? 1 : 0);
+
+	GEN_CMPI(ppc, CR0, rs, immed);
 	set_next_dst(ppc);
 	GEN_MFCR(ppc, R2);
 	set_next_dst(ppc);
@@ -591,12 +596,16 @@ static int SLTIU(MIPS_instr mips){
 	return INTERPRETED;
 #else
 	// FIXME: Do I need to worry about 64-bit values?
-	int rs = mapRegister( MIPS_GET_RS(mips) );
-	int rt = mapRegisterNew( MIPS_GET_RT(mips), 0 );
+	int _rs = MIPS_GET_RS(mips), _rt = MIPS_GET_RT(mips);
+	unsigned short immed = MIPS_GET_IMMED(mips);
+
+	int rs = mapRegister(_rs);
+	int rt = mapConstantNew(_rt, isRegisterConstant(_rs), 0);
+	setRegisterConstant(_rt, (unsigned long)getRegisterConstant(_rs) < immed ? 1 : 0);
 
 	GEN_NOT(ppc, R0, rs);
 	set_next_dst(ppc);
-	GEN_ADDIC(ppc, R0, R0, MIPS_GET_IMMED(mips));
+	GEN_ADDIC(ppc, R0, R0, immed);
 	set_next_dst(ppc);
 	GEN_ADDZE(ppc, rt, DYNAREG_ZERO);
 	set_next_dst(ppc);
@@ -607,10 +616,15 @@ static int SLTIU(MIPS_instr mips){
 
 static int ANDI(MIPS_instr mips){
 	PowerPC_instr ppc;
-	int rs = mapRegister( MIPS_GET_RS(mips) );
-	int rt = mapRegisterNew( MIPS_GET_RT(mips), 0 );
 
-	GEN_ANDI(ppc, rt, rs, MIPS_GET_IMMED(mips));
+	int _rs = MIPS_GET_RS(mips), _rt = MIPS_GET_RT(mips);
+	unsigned short immed = MIPS_GET_IMMED(mips);
+
+	int rs = mapRegister(_rs);
+	int rt = mapConstantNew(_rt, isRegisterConstant(_rs), 0);
+	setRegisterConstant(_rt, getRegisterConstant(_rs) & immed);
+
+	GEN_ANDI(ppc, rt, rs, immed);
 	set_next_dst(ppc);
 
 	return CONVERT_SUCCESS;
@@ -618,12 +632,17 @@ static int ANDI(MIPS_instr mips){
 
 static int ORI(MIPS_instr mips){
 	PowerPC_instr ppc;
-	RegMapping rs = mapRegister64( MIPS_GET_RS(mips) );
-	RegMapping rt = mapRegister64New( MIPS_GET_RT(mips) );
+
+	int _rs = MIPS_GET_RS(mips), _rt = MIPS_GET_RT(mips);
+	unsigned short immed = MIPS_GET_IMMED(mips);
+
+	RegMapping rs = mapRegister64(_rs);
+	RegMapping rt = mapConstant64New(_rt, isRegisterConstant(_rs));
+	setRegisterConstant64(_rt, getRegisterConstant64(_rs) | immed);
 
 	GEN_MR(ppc, rt.hi, rs.hi);
 	set_next_dst(ppc);
-	GEN_ORI(ppc, rt.lo, rs.lo, MIPS_GET_IMMED(mips));
+	GEN_ORI(ppc, rt.lo, rs.lo, immed);
 	set_next_dst(ppc);
 
 	return CONVERT_SUCCESS;
@@ -631,12 +650,17 @@ static int ORI(MIPS_instr mips){
 
 static int XORI(MIPS_instr mips){
 	PowerPC_instr ppc;
-	RegMapping rs = mapRegister64( MIPS_GET_RS(mips) );
-	RegMapping rt = mapRegister64New( MIPS_GET_RT(mips) );
+
+	int _rs = MIPS_GET_RS(mips), _rt = MIPS_GET_RT(mips);
+	unsigned short immed = MIPS_GET_IMMED(mips);
+
+	RegMapping rs = mapRegister64(_rs);
+	RegMapping rt = mapConstant64New(_rt, isRegisterConstant(_rs));
+	setRegisterConstant64(_rt, getRegisterConstant64(_rs) ^ immed);
 
 	GEN_MR(ppc, rt.hi, rs.hi);
 	set_next_dst(ppc);
-	GEN_XORI(ppc, rt.lo, rs.lo, MIPS_GET_IMMED(mips));
+	GEN_XORI(ppc, rt.lo, rs.lo, immed);
 	set_next_dst(ppc);
 
 	return CONVERT_SUCCESS;
@@ -644,10 +668,11 @@ static int XORI(MIPS_instr mips){
 
 static int LUI(MIPS_instr mips){
 	PowerPC_instr ppc;
+
 	int _rt = MIPS_GET_RT(mips);
 	short immed = MIPS_GET_IMMED(mips);
 
-	int rt = mapConstantNew(_rt, 1);
+	int rt = mapConstantNew(_rt, 1, 1);
 	setRegisterConstant(_rt, immed << 16);
 
 	GEN_LIS(ppc, rt, immed);
@@ -715,14 +740,18 @@ static int DADDIU(MIPS_instr mips){
 	return INTERPRETED;
 #else // INTERPRET_DW || INTERPRET_DADDIU
 
-	RegMapping rs = mapRegister64( MIPS_GET_RS(mips) );
-	RegMapping rt = mapRegister64New( MIPS_GET_RT(mips) );
+	int _rs = MIPS_GET_RS(mips), _rt = MIPS_GET_RT(mips);
+	short immed = MIPS_GET_IMMED(mips);
+
+	RegMapping rs = mapRegister64(_rs);
+	RegMapping rt = mapConstant64New(_rt, isRegisterConstant(_rs));
+	setRegisterConstant64(_rt, getRegisterConstant64(_rs) + immed);
 
 	// Add the immediate to the LSW
-	GEN_ADDIC(ppc, rt.lo, rs.lo, MIPS_GET_IMMED(mips));
+	GEN_ADDIC(ppc, rt.lo, rs.lo, immed);
 	set_next_dst(ppc);
 	// Add the MSW with the sign-extension and the carry
-	if(MIPS_GET_IMMED(mips)&0x8000){
+	if(immed < 0){
 		GEN_ADDME(ppc, rt.hi, rs.hi);
 		set_next_dst(ppc);
 	} else {
@@ -1755,10 +1784,14 @@ static int SC(MIPS_instr mips){
 static int SLL(MIPS_instr mips){
 	PowerPC_instr ppc;
 
-	int rt = mapRegister( MIPS_GET_RT(mips) );
-	int rd = mapRegisterNew( MIPS_GET_RD(mips), 1 );
+	int _rt = MIPS_GET_RT(mips), _rd = MIPS_GET_RD(mips);
+	int sa = MIPS_GET_SA(mips);
 
-	GEN_SLWI(ppc, rd, rt, MIPS_GET_SA(mips));
+	int rt = mapRegister(_rt);
+	int rd = mapConstantNew(_rd, isRegisterConstant(_rt), 1);
+	setRegisterConstant(_rd, (unsigned long)getRegisterConstant(_rt) << sa);
+
+	GEN_SLWI(ppc, rd, rt, sa);
 	set_next_dst(ppc);
 
 	return CONVERT_SUCCESS;
@@ -1767,10 +1800,14 @@ static int SLL(MIPS_instr mips){
 static int SRL(MIPS_instr mips){
 	PowerPC_instr ppc;
 
-	int rt = mapRegister( MIPS_GET_RT(mips) );
-	int rd = mapRegisterNew( MIPS_GET_RD(mips), 1 );
+	int _rt = MIPS_GET_RT(mips), _rd = MIPS_GET_RD(mips);
+	int sa = MIPS_GET_SA(mips);
 
-	GEN_SRWI(ppc, rd, rt, MIPS_GET_SA(mips));
+	int rt = mapRegister(_rt);
+	int rd = mapConstantNew(_rd, isRegisterConstant(_rt), 1);
+	setRegisterConstant(_rd, (unsigned long)getRegisterConstant(_rt) >> sa);
+
+	GEN_SRWI(ppc, rd, rt, sa);
 	set_next_dst(ppc);
 
 	return CONVERT_SUCCESS;
@@ -1779,10 +1816,14 @@ static int SRL(MIPS_instr mips){
 static int SRA(MIPS_instr mips){
 	PowerPC_instr ppc;
 
-	int rt = mapRegister( MIPS_GET_RT(mips) );
-	int rd = mapRegisterNew( MIPS_GET_RD(mips), 1 );
+	int _rt = MIPS_GET_RT(mips), _rd = MIPS_GET_RD(mips);
+	int sa = MIPS_GET_SA(mips);
 
-	GEN_SRAWI(ppc, rd, rt, MIPS_GET_SA(mips));
+	int rt = mapRegister(_rt);
+	int rd = mapConstantNew(_rd, isRegisterConstant(_rt), 1);
+	setRegisterConstant(_rd, getRegisterConstant(_rt) >> sa);
+
+	GEN_SRAWI(ppc, rd, rt, sa);
 	set_next_dst(ppc);
 
 	return CONVERT_SUCCESS;
@@ -1790,9 +1831,13 @@ static int SRA(MIPS_instr mips){
 
 static int SLLV(MIPS_instr mips){
 	PowerPC_instr ppc;
-	int rt = mapRegister( MIPS_GET_RT(mips) );
-	int rs = mapRegister( MIPS_GET_RS(mips) );
-	int rd = mapRegisterNew( MIPS_GET_RD(mips), 1 );
+
+	int _rt = MIPS_GET_RT(mips), _rs = MIPS_GET_RS(mips), _rd = MIPS_GET_RD(mips);
+
+	int rt = mapRegister(_rt);
+	int rs = mapRegister(_rs);
+	int rd = mapConstantNew(_rd, isRegisterConstant(_rt) && isRegisterConstant(_rs), 1);
+	setRegisterConstant(_rd, (unsigned long)getRegisterConstant(_rt) << (getRegisterConstant(_rs) & 0x1F));
 
 	GEN_CLRLWI(ppc, R0, rs, 27); // Mask the lower 5-bits of rs
 	set_next_dst(ppc);
@@ -1804,9 +1849,13 @@ static int SLLV(MIPS_instr mips){
 
 static int SRLV(MIPS_instr mips){
 	PowerPC_instr ppc;
-	int rt = mapRegister( MIPS_GET_RT(mips) );
-	int rs = mapRegister( MIPS_GET_RS(mips) );
-	int rd = mapRegisterNew( MIPS_GET_RD(mips), 1 );
+
+	int _rt = MIPS_GET_RT(mips), _rs = MIPS_GET_RS(mips), _rd = MIPS_GET_RD(mips);
+
+	int rt = mapRegister(_rt);
+	int rs = mapRegister(_rs);
+	int rd = mapConstantNew(_rd, isRegisterConstant(_rt) && isRegisterConstant(_rs), 1);
+	setRegisterConstant(_rd, (unsigned long)getRegisterConstant(_rt) >> (getRegisterConstant(_rs) & 0x1F));
 
 	GEN_CLRLWI(ppc, R0, rs, 27); // Mask the lower 5-bits of rs
 	set_next_dst(ppc);
@@ -1818,9 +1867,13 @@ static int SRLV(MIPS_instr mips){
 
 static int SRAV(MIPS_instr mips){
 	PowerPC_instr ppc;
-	int rt = mapRegister( MIPS_GET_RT(mips) );
-	int rs = mapRegister( MIPS_GET_RS(mips) );
-	int rd = mapRegisterNew( MIPS_GET_RD(mips), 1 );
+
+	int _rt = MIPS_GET_RT(mips), _rs = MIPS_GET_RS(mips), _rd = MIPS_GET_RD(mips);
+
+	int rt = mapRegister(_rt);
+	int rs = mapRegister(_rs);
+	int rd = mapConstantNew(_rd, isRegisterConstant(_rt) && isRegisterConstant(_rs), 1);
+	setRegisterConstant(_rd, getRegisterConstant(_rt) >> (getRegisterConstant(_rs) & 0x1F));
 
 	GEN_CLRLWI(ppc, R0, rs, 27); // Mask the lower 5-bits of rs
 	set_next_dst(ppc);
@@ -1965,8 +2018,11 @@ static int MFHI(MIPS_instr mips){
 	return INTERPRETED;
 #else // INTERPRET_HILO
 
-	RegMapping hi = mapRegister64( MIPS_REG_HI );
-	RegMapping rd = mapRegister64New( MIPS_GET_RD(mips) );
+	int _rd = MIPS_GET_RD(mips);
+
+	RegMapping hi = mapRegister64(MIPS_REG_HI);
+	RegMapping rd = mapConstant64New(_rd, isRegisterConstant(MIPS_REG_HI));
+	setRegisterConstant64(_rd, getRegisterConstant64(MIPS_REG_HI));
 
 	// mr rd, hi
 	GEN_MR(ppc, rd.lo, hi.lo);
@@ -1985,8 +2041,11 @@ static int MTHI(MIPS_instr mips){
 	return INTERPRETED;
 #else // INTERPRET_HILO
 
-	RegMapping rs = mapRegister64( MIPS_GET_RS(mips) );
-	RegMapping hi = mapRegister64New( MIPS_REG_HI );
+	int _rs = MIPS_GET_RS(mips);
+
+	RegMapping rs = mapRegister64(_rs);
+	RegMapping hi = mapConstant64New(MIPS_REG_HI, isRegisterConstant(_rs));
+	setRegisterConstant64(MIPS_REG_HI, getRegisterConstant64(_rs));
 
 	// mr hi, rs
 	GEN_MR(ppc, hi.lo, rs.lo);
@@ -2005,8 +2064,11 @@ static int MFLO(MIPS_instr mips){
 	return INTERPRETED;
 #else // INTERPRET_HILO
 
-	RegMapping lo = mapRegister64( MIPS_REG_LO );
-	RegMapping rd = mapRegister64New( MIPS_GET_RD(mips) );
+	int _rd = MIPS_GET_RD(mips);
+
+	RegMapping lo = mapRegister64(MIPS_REG_LO);
+	RegMapping rd = mapConstant64New(_rd, isRegisterConstant(MIPS_REG_LO));
+	setRegisterConstant64(_rd, getRegisterConstant64(MIPS_REG_LO));
 
 	// mr rd, lo
 	GEN_MR(ppc, rd.lo, lo.lo);
@@ -2025,8 +2087,11 @@ static int MTLO(MIPS_instr mips){
 	return INTERPRETED;
 #else // INTERPRET_HILO
 
-	RegMapping rs = mapRegister64( MIPS_GET_RS(mips) );
-	RegMapping lo = mapRegister64New( MIPS_REG_LO );
+	int _rs = MIPS_GET_RS(mips);
+
+	RegMapping rs = mapRegister64(_rs);
+	RegMapping lo = mapConstant64New(MIPS_REG_LO, isRegisterConstant(_rs));
+	setRegisterConstant64(MIPS_REG_LO, getRegisterConstant64(_rs));
 
 	// mr lo, rs
 	GEN_MR(ppc, lo.lo, rs.lo);
@@ -2044,13 +2109,18 @@ static int MULT(MIPS_instr mips){
 	genCallInterp(mips);
 	return INTERPRETED;
 #else // INTERPRET_MULT
-	int rs = mapRegister( MIPS_GET_RS(mips) );
-	int rt = mapRegister( MIPS_GET_RT(mips) );
-	int hi = mapRegisterNew( MIPS_REG_HI, 1 );
-	int lo = mapRegisterNew( MIPS_REG_LO, 1 );
+
+	int _rs = MIPS_GET_RS(mips), _rt = MIPS_GET_RT(mips);
+
+	int rs = mapRegister(_rs);
+	int rt = mapRegister(_rt);
+	int lo = mapConstantNew(MIPS_REG_LO, isRegisterConstant(_rs) && isRegisterConstant(_rt), 1);
+	int hi = mapConstantNew(MIPS_REG_HI, isRegisterConstant(_rs) && isRegisterConstant(_rt), 1);
+	setRegisterConstant(MIPS_REG_LO, ((long long)getRegisterConstant(_rs) * getRegisterConstant(_rt)));
+	setRegisterConstant(MIPS_REG_HI, ((long long)getRegisterConstant(_rs) * getRegisterConstant(_rt)) >> 32);
 
 	// Don't multiply if they're using r0
-	if(MIPS_GET_RS(mips) && MIPS_GET_RT(mips)){
+	if(_rs && _rt){
 		// mullw lo, rs, rt
 		GEN_MULLW(ppc, lo, rs, rt);
 		set_next_dst(ppc);
@@ -2076,13 +2146,18 @@ static int MULTU(MIPS_instr mips){
 	genCallInterp(mips);
 	return INTERPRETED;
 #else // INTERPRET_MULTU
-	int rs = mapRegister( MIPS_GET_RS(mips) );
-	int rt = mapRegister( MIPS_GET_RT(mips) );
-	int hi = mapRegisterNew( MIPS_REG_HI, 1 );
-	int lo = mapRegisterNew( MIPS_REG_LO, 1 );
+
+	int _rs = MIPS_GET_RS(mips), _rt = MIPS_GET_RT(mips);
+
+	int rs = mapRegister(_rs);
+	int rt = mapRegister(_rt);
+	int lo = mapConstantNew(MIPS_REG_LO, isRegisterConstant(_rs) && isRegisterConstant(_rt), 1);
+	int hi = mapConstantNew(MIPS_REG_HI, isRegisterConstant(_rs) && isRegisterConstant(_rt), 1);
+	setRegisterConstant(MIPS_REG_LO, ((unsigned long long)getRegisterConstant(_rs) * getRegisterConstant(_rt)));
+	setRegisterConstant(MIPS_REG_HI, ((unsigned long long)getRegisterConstant(_rs) * getRegisterConstant(_rt)) >> 32);
 
 	// Don't multiply if they're using r0
-	if(MIPS_GET_RS(mips) && MIPS_GET_RT(mips)){
+	if(_rs && _rt){
 		// mullw lo, rs, rt
 		GEN_MULLW(ppc, lo, rs, rt);
 		set_next_dst(ppc);
@@ -2110,13 +2185,17 @@ static int DIV(MIPS_instr mips){
 #else // INTERPRET_DIV
 	// This instruction computes the quotient and remainder
 	//   and stores the results in lo and hi respectively
-	int rs = mapRegister( MIPS_GET_RS(mips) );
-	int rt = mapRegister( MIPS_GET_RT(mips) );
-	int hi = mapRegisterNew( MIPS_REG_HI, 1 );
-	int lo = mapRegisterNew( MIPS_REG_LO, 1 );
+	int _rs = MIPS_GET_RS(mips), _rt = MIPS_GET_RT(mips);
+
+	int rs = mapRegister(_rs);
+	int rt = mapRegister(_rt);
+	int lo = mapConstantNew(MIPS_REG_LO, isRegisterConstant(_rs) && isRegisterConstant(_rt), 1);
+	int hi = mapConstantNew(MIPS_REG_HI, isRegisterConstant(_rs) && isRegisterConstant(_rt), 1);
+	setRegisterConstant(MIPS_REG_LO, getRegisterConstant(_rs) / getRegisterConstant(_rt));
+	setRegisterConstant(MIPS_REG_HI, getRegisterConstant(_rs) % getRegisterConstant(_rt));
 
 	// Don't divide if they're using r0
-	if(MIPS_GET_RS(mips) && MIPS_GET_RT(mips)){
+	if(_rs && _rt){
 		// divw lo, rs, rt
 		GEN_DIVW(ppc, lo, rs, rt);
 		set_next_dst(ppc);
@@ -2143,10 +2222,14 @@ static int DIVU(MIPS_instr mips){
 #else // INTERPRET_DIVU
 	// This instruction computes the quotient and remainder
 	//   and stores the results in lo and hi respectively
-	int rs = mapRegister( MIPS_GET_RS(mips) );
-	int rt = mapRegister( MIPS_GET_RT(mips) );
-	int hi = mapRegisterNew( MIPS_REG_HI, 1 );
-	int lo = mapRegisterNew( MIPS_REG_LO, 1 );
+	int _rs = MIPS_GET_RS(mips), _rt = MIPS_GET_RT(mips);
+
+	int rs = mapRegister(_rs);
+	int rt = mapRegister(_rt);
+	int lo = mapConstantNew(MIPS_REG_LO, isRegisterConstant(_rs) && isRegisterConstant(_rt), 1);
+	int hi = mapConstantNew(MIPS_REG_HI, isRegisterConstant(_rs) && isRegisterConstant(_rt), 1);
+	setRegisterConstant(MIPS_REG_LO, (unsigned long)getRegisterConstant(_rs) / getRegisterConstant(_rt));
+	setRegisterConstant(MIPS_REG_HI, (unsigned long)getRegisterConstant(_rs) % getRegisterConstant(_rt));
 
 	// Don't divide if they're using r0
 	if(MIPS_GET_RS(mips) && MIPS_GET_RT(mips)){
@@ -2175,9 +2258,12 @@ static int DSLLV(MIPS_instr mips){
 	return INTERPRETED;
 #else  // INTERPRET_DW || INTERPRET_DSLLV
 
-	int rs = mapRegister( MIPS_GET_RS(mips) );
-	RegMapping rt = mapRegister64( MIPS_GET_RT(mips) );
-	RegMapping rd = mapRegister64New( MIPS_GET_RD(mips) );
+	int _rs = MIPS_GET_RS(mips), _rt = MIPS_GET_RT(mips), _rd = MIPS_GET_RD(mips);
+
+	int rs = mapRegister(_rs);
+	RegMapping rt = mapRegister64(_rt);
+	RegMapping rd = mapConstant64New(_rd, isRegisterConstant(_rt) && isRegisterConstant(_rs));
+	setRegisterConstant64(_rd, (unsigned long long)getRegisterConstant64(_rt) << (getRegisterConstant(_rs) & 0x3F));
 
 	GEN_CLRLWI(ppc, R2, rs, 26);
 	set_next_dst(ppc);
@@ -2213,9 +2299,12 @@ static int DSRLV(MIPS_instr mips){
 	return INTERPRETED;
 #else  // INTERPRET_DW || INTERPRET_DSRLV
 
-	int rs = mapRegister( MIPS_GET_RS(mips) );
-	RegMapping rt = mapRegister64( MIPS_GET_RT(mips) );
-	RegMapping rd = mapRegister64New( MIPS_GET_RD(mips) );
+	int _rs = MIPS_GET_RS(mips), _rt = MIPS_GET_RT(mips), _rd = MIPS_GET_RD(mips);
+
+	int rs = mapRegister(_rs);
+	RegMapping rt = mapRegister64(_rt);
+	RegMapping rd = mapConstant64New(_rd, isRegisterConstant(_rt) && isRegisterConstant(_rs));
+	setRegisterConstant64(_rd, (unsigned long long)getRegisterConstant64(_rt) >> (getRegisterConstant(_rs) & 0x3F));
 
 	GEN_CLRLWI(ppc, R2, rs, 26);
 	set_next_dst(ppc);
@@ -2251,9 +2340,12 @@ static int DSRAV(MIPS_instr mips){
 	return INTERPRETED;
 #else  // INTERPRET_DW || INTERPRET_DSRAV
 
-	int rs = mapRegister( MIPS_GET_RS(mips) );
-	RegMapping rt = mapRegister64( MIPS_GET_RT(mips) );
-	RegMapping rd = mapRegister64New( MIPS_GET_RD(mips) );
+	int _rs = MIPS_GET_RS(mips), _rt = MIPS_GET_RT(mips), _rd = MIPS_GET_RD(mips);
+
+	int rs = mapRegister(_rs);
+	RegMapping rt = mapRegister64(_rt);
+	RegMapping rd = mapConstant64New(_rd, isRegisterConstant(_rt) && isRegisterConstant(_rs));
+	setRegisterConstant64(_rd, getRegisterConstant64(_rt) >> (getRegisterConstant(_rs) & 0x3F));
 
 	GEN_CLRLWI(ppc, R2, rs, 26);
 	set_next_dst(ppc);
@@ -2408,9 +2500,12 @@ static int DADDU(MIPS_instr mips){
 	return INTERPRETED;
 #else // INTERPRET_DW || INTERPRET_DADDU
 
-	RegMapping rs = mapRegister64( MIPS_GET_RS(mips) );
-	RegMapping rt = mapRegister64( MIPS_GET_RT(mips) );
-	RegMapping rd = mapRegister64New( MIPS_GET_RD(mips) );
+	int _rs = MIPS_GET_RS(mips), _rt = MIPS_GET_RT(mips), _rd = MIPS_GET_RD(mips);
+
+	RegMapping rs = mapRegister64(_rs);
+	RegMapping rt = mapRegister64(_rt);
+	RegMapping rd = mapConstant64New(_rd, isRegisterConstant(_rs) && isRegisterConstant(_rt));
+	setRegisterConstant64(_rd, getRegisterConstant64(_rs) + getRegisterConstant64(_rt));
 
 	GEN_ADDC(ppc, rd.lo, rs.lo, rt.lo);
 	set_next_dst(ppc);
@@ -2432,9 +2527,12 @@ static int DSUBU(MIPS_instr mips){
 	return INTERPRETED;
 #else // INTERPRET_DW || INTERPRET_DSUBU
 
-	RegMapping rs = mapRegister64( MIPS_GET_RS(mips) );
-	RegMapping rt = mapRegister64( MIPS_GET_RT(mips) );
-	RegMapping rd = mapRegister64New( MIPS_GET_RD(mips) );
+	int _rs = MIPS_GET_RS(mips), _rt = MIPS_GET_RT(mips), _rd = MIPS_GET_RD(mips);
+
+	RegMapping rs = mapRegister64(_rs);
+	RegMapping rt = mapRegister64(_rt);
+	RegMapping rd = mapConstant64New(_rd, isRegisterConstant(_rs) && isRegisterConstant(_rt));
+	setRegisterConstant64(_rd, getRegisterConstant64(_rs) - getRegisterConstant64(_rt));
 
 	GEN_SUBFC(ppc, rd.lo, rt.lo, rs.lo);
 	set_next_dst(ppc);
@@ -2456,9 +2554,12 @@ static int DSLL(MIPS_instr mips){
 	return INTERPRETED;
 #else // INTERPRET_DW || INTERPRET_DSLL
 
-	RegMapping rt = mapRegister64( MIPS_GET_RT(mips) );
-	RegMapping rd = mapRegister64New( MIPS_GET_RD(mips) );
+	int _rt = MIPS_GET_RT(mips), _rd = MIPS_GET_RD(mips);
 	int sa = MIPS_GET_SA(mips);
+
+	RegMapping rt = mapRegister64(_rt);
+	RegMapping rd = mapConstant64New(_rd, isRegisterConstant(_rt));
+	setRegisterConstant64(_rd, (unsigned long long)getRegisterConstant64(_rt) << sa);
 
 	if(sa){
 		// Shift MSW left by SA
@@ -2490,9 +2591,12 @@ static int DSRL(MIPS_instr mips){
 	return INTERPRETED;
 #else // INTERPRET_DW || INTERPRET_DSRL
 
-	RegMapping rt = mapRegister64( MIPS_GET_RT(mips) );
-	RegMapping rd = mapRegister64New( MIPS_GET_RD(mips) );
+	int _rt = MIPS_GET_RT(mips), _rd = MIPS_GET_RD(mips);
 	int sa = MIPS_GET_SA(mips);
+
+	RegMapping rt = mapRegister64(_rt);
+	RegMapping rd = mapConstant64New(_rd, isRegisterConstant(_rt));
+	setRegisterConstant64(_rd, (unsigned long long)getRegisterConstant64(_rt) >> sa);
 
 	if(sa){
 		// Shift LSW right by SA
@@ -2524,9 +2628,12 @@ static int DSRA(MIPS_instr mips){
 	return INTERPRETED;
 #else // INTERPRET_DW || INTERPRET_DSRA
 
-	RegMapping rt = mapRegister64( MIPS_GET_RT(mips) );
-	RegMapping rd = mapRegister64New( MIPS_GET_RD(mips) );
+	int _rt = MIPS_GET_RT(mips), _rd = MIPS_GET_RD(mips);
 	int sa = MIPS_GET_SA(mips);
+
+	RegMapping rt = mapRegister64(_rt);
+	RegMapping rd = mapConstant64New(_rd, isRegisterConstant(_rt));
+	setRegisterConstant64(_rd, getRegisterConstant64(_rt) << sa);
 
 	if(sa){
 		// Shift LSW right by SA
@@ -2619,9 +2726,13 @@ static int DSRA32(MIPS_instr mips){
 
 static int ADDU(MIPS_instr mips){
 	PowerPC_instr ppc;
-	int rt = mapRegister( MIPS_GET_RT(mips) );
-	int rs = mapRegister( MIPS_GET_RS(mips) );
-	int rd = mapRegisterNew( MIPS_GET_RD(mips), 1 );
+
+	int _rs = MIPS_GET_RS(mips), _rt = MIPS_GET_RT(mips), _rd = MIPS_GET_RD(mips);
+
+	int rs = mapRegister(_rs);
+	int rt = mapRegister(_rt);
+	int rd = mapConstantNew(_rd, isRegisterConstant(_rs) && isRegisterConstant(_rt), 1);
+	setRegisterConstant(_rd, getRegisterConstant(_rs) + getRegisterConstant(_rt));
 
 	GEN_ADD(ppc, rd, rs, rt);
 	set_next_dst(ppc);
@@ -2635,9 +2746,13 @@ static int ADD(MIPS_instr mips){
 
 static int SUBU(MIPS_instr mips){
 	PowerPC_instr ppc;
-	int rt = mapRegister( MIPS_GET_RT(mips) );
-	int rs = mapRegister( MIPS_GET_RS(mips) );
-	int rd = mapRegisterNew( MIPS_GET_RD(mips), 1 );
+
+	int _rs = MIPS_GET_RS(mips), _rt = MIPS_GET_RT(mips), _rd = MIPS_GET_RD(mips);
+
+	int rs = mapRegister(_rs);
+	int rt = mapRegister(_rt);
+	int rd = mapConstantNew(_rd, isRegisterConstant(_rs) && isRegisterConstant(_rt), 1);
+	setRegisterConstant(_rd, getRegisterConstant(_rs) - getRegisterConstant(_rt));
 
 	GEN_SUB(ppc, rd, rs, rt);
 	set_next_dst(ppc);
@@ -2651,9 +2766,13 @@ static int SUB(MIPS_instr mips){
 
 static int AND(MIPS_instr mips){
 	PowerPC_instr ppc;
-	RegMapping rt = mapRegister64( MIPS_GET_RT(mips) );
-	RegMapping rs = mapRegister64( MIPS_GET_RS(mips) );
-	RegMapping rd = mapRegister64New( MIPS_GET_RD(mips) );
+
+	int _rs = MIPS_GET_RS(mips), _rt = MIPS_GET_RT(mips), _rd = MIPS_GET_RD(mips);
+
+	RegMapping rs = mapRegister64(_rs);
+	RegMapping rt = mapRegister64(_rt);
+	RegMapping rd = mapConstant64New(_rd, isRegisterConstant(_rs) && isRegisterConstant(_rt));
+	setRegisterConstant64(_rd, getRegisterConstant64(_rs) & getRegisterConstant64(_rt));
 
 	GEN_AND(ppc, rd.hi, rs.hi, rt.hi);
 	set_next_dst(ppc);
@@ -2665,9 +2784,13 @@ static int AND(MIPS_instr mips){
 
 static int OR(MIPS_instr mips){
 	PowerPC_instr ppc;
-	RegMapping rt = mapRegister64( MIPS_GET_RT(mips) );
-	RegMapping rs = mapRegister64( MIPS_GET_RS(mips) );
-	RegMapping rd = mapRegister64New( MIPS_GET_RD(mips) );
+
+	int _rs = MIPS_GET_RS(mips), _rt = MIPS_GET_RT(mips), _rd = MIPS_GET_RD(mips);
+
+	RegMapping rs = mapRegister64(_rs);
+	RegMapping rt = mapRegister64(_rt);
+	RegMapping rd = mapConstant64New(_rd, isRegisterConstant(_rs) && isRegisterConstant(_rt));
+	setRegisterConstant64(_rd, getRegisterConstant64(_rs) | getRegisterConstant64(_rt));
 
 	GEN_OR(ppc, rd.hi, rs.hi, rt.hi);
 	set_next_dst(ppc);
@@ -2679,9 +2802,13 @@ static int OR(MIPS_instr mips){
 
 static int XOR(MIPS_instr mips){
 	PowerPC_instr ppc;
-	RegMapping rt = mapRegister64( MIPS_GET_RT(mips) );
-	RegMapping rs = mapRegister64( MIPS_GET_RS(mips) );
-	RegMapping rd = mapRegister64New( MIPS_GET_RD(mips) );
+
+	int _rs = MIPS_GET_RS(mips), _rt = MIPS_GET_RT(mips), _rd = MIPS_GET_RD(mips);
+
+	RegMapping rs = mapRegister64(_rs);
+	RegMapping rt = mapRegister64(_rt);
+	RegMapping rd = mapConstant64New(_rd, isRegisterConstant(_rs) && isRegisterConstant(_rt));
+	setRegisterConstant64(_rd, getRegisterConstant64(_rs) ^ getRegisterConstant64(_rt));
 
 	GEN_XOR(ppc, rd.hi, rs.hi, rt.hi);
 	set_next_dst(ppc);
@@ -2693,9 +2820,13 @@ static int XOR(MIPS_instr mips){
 
 static int NOR(MIPS_instr mips){
 	PowerPC_instr ppc;
-	RegMapping rt = mapRegister64( MIPS_GET_RT(mips) );
-	RegMapping rs = mapRegister64( MIPS_GET_RS(mips) );
-	RegMapping rd = mapRegister64New( MIPS_GET_RD(mips) );
+
+	int _rs = MIPS_GET_RS(mips), _rt = MIPS_GET_RT(mips), _rd = MIPS_GET_RD(mips);
+
+	RegMapping rs = mapRegister64(_rs);
+	RegMapping rt = mapRegister64(_rt);
+	RegMapping rd = mapConstant64New(_rd, isRegisterConstant(_rs) && isRegisterConstant(_rt));
+	setRegisterConstant64(_rd, ~(getRegisterConstant64(_rs) | getRegisterConstant64(_rt)));
 
 	GEN_NOR(ppc, rd.hi, rs.hi, rt.hi);
 	set_next_dst(ppc);
@@ -2712,9 +2843,12 @@ static int SLT(MIPS_instr mips){
 	return INTERPRETED;
 #else
 	// FIXME: Do I need to worry about 64-bit values?
-	int rt = mapRegister( MIPS_GET_RT(mips) );
-	int rs = mapRegister( MIPS_GET_RS(mips) );
-	int rd = mapRegisterNew( MIPS_GET_RD(mips), 0 );
+	int _rs = MIPS_GET_RS(mips), _rt = MIPS_GET_RT(mips), _rd = MIPS_GET_RD(mips);
+
+	int rs = mapRegister(_rs);
+	int rt = mapRegister(_rt);
+	int rd = mapConstantNew(_rd, isRegisterConstant(_rs) && isRegisterConstant(_rt), 0);
+	setRegisterConstant(_rd, getRegisterConstant(_rs) < getRegisterConstant(_rt));
 
 	GEN_CMP(ppc, CR0, rs, rt);
 	set_next_dst(ppc);
@@ -2734,9 +2868,12 @@ static int SLTU(MIPS_instr mips){
 	return INTERPRETED;
 #else
 	// FIXME: Do I need to worry about 64-bit values?
-	int rt = mapRegister( MIPS_GET_RT(mips) );
-	int rs = mapRegister( MIPS_GET_RS(mips) );
-	int rd = mapRegisterNew( MIPS_GET_RD(mips), 0 );
+	int _rs = MIPS_GET_RS(mips), _rt = MIPS_GET_RT(mips), _rd = MIPS_GET_RD(mips);
+
+	int rs = mapRegister(_rs);
+	int rt = mapRegister(_rt);
+	int rd = mapConstantNew(_rd, isRegisterConstant(_rs) && isRegisterConstant(_rt), 0);
+	setRegisterConstant(_rd, (unsigned long)getRegisterConstant(_rs) < getRegisterConstant(_rt));
 
 	GEN_NOT(ppc, R0, rs);
 	set_next_dst(ppc);
@@ -4582,20 +4719,30 @@ static void genCheckFP(void){
 }
 
 #define check_memory() \
+{ \
 	invalidateRegisters(); \
 	GEN_B(ppc, add_jump(&invalidate_func, 1, 1), 0, 1); \
 	set_next_dst(ppc); \
 	GEN_LWZ(ppc, R0, DYNAOFF_LR, R1); \
 	set_next_dst(ppc); \
 	GEN_MTLR(ppc, R0); \
-	set_next_dst(ppc);
+	set_next_dst(ppc); \
+}
 
 static void genCallDynaMem(memType type, int count, int _rs, int _rt, short immed){
 	PowerPC_instr ppc;
-	int isPhysical = 1, isVirtual = 1;
+	int isPhysical = 1, isVirtual = 1, isUnsafe = 1;
 	int isConstant = isRegisterConstant(_rs);
 	int constant = getRegisterConstant(_rs) + immed;
 	int i;
+
+	if(_rs >= MIPS_REG_K0){
+		isUnsafe = 0;
+		if(!isConstant){
+			isConstant = 2;
+			constant = reg[_rs];
+		}
+	}
 
 #ifdef FASTMEM
 	if(isConstant){
@@ -4610,7 +4757,7 @@ static void genCallDynaMem(memType type, int count, int _rs, int _rt, short imme
 		else if(constant >= 0xA0000000 && constant < 0xA0400000)
 			isVirtual = 0;
 	#endif
-		else
+		else if(isConstant == 1)
 			isPhysical = 0;
 	}
 #endif
@@ -4620,17 +4767,22 @@ static void genCallDynaMem(memType type, int count, int _rs, int _rt, short imme
 		isVirtual = 1;
 	}
 
+	if(type < MEM_SW || type > MEM_SD)
+		isUnsafe = 0;
+
 	if(type == MEM_LWC1 || type == MEM_LDC1 || type == MEM_SWC1 || type == MEM_SDC1)
 		genCheckFP();
 
-	flushRegisters();
-	reset_code_addr();
+	if(isVirtual || isUnsafe){
+		flushRegisters();
+		reset_code_addr();
+	}
 
 	int rd = mapRegisterTemp();
 	int rs = mapRegister(_rs);
 
 	// addr = rs + immed
-	GEN_ADDI(ppc, R3, rs, immed);
+	GEN_ADDI(ppc, rd, rs, immed);
 	set_next_dst(ppc);
 
 #ifdef FASTMEM
@@ -4638,7 +4790,7 @@ static void genCallDynaMem(memType type, int count, int _rs, int _rt, short imme
 	PowerPC_instr* ts_preCall;
 	if(isPhysical && isVirtual){
 		// If base in physical memory
-		GEN_XORIS(ppc, R0, R3, 0x8000);
+		GEN_XORIS(ppc, R0, rs, 0x8000);
 		set_next_dst(ppc);
 	#ifdef USE_EXPANSION
 		GEN_ANDIS(ppc, R0, R0, 0xDF80);
@@ -4660,7 +4812,7 @@ static void genCallDynaMem(memType type, int count, int _rs, int _rt, short imme
 				for(i = 0; i < count; i++){
 					int rt = mapRegisterNew(_rt + i, 1);
 					if(i == 0){
-						GEN_RLWINM(ppc, R2, R3, 0, 8, 29);
+						GEN_RLWINM(ppc, R2, rd, 0, 8, 29);
 						set_next_dst(ppc);
 						GEN_LWZUX(ppc, rt, R2, DYNAREG_RDRAM);
 						set_next_dst(ppc);
@@ -4676,7 +4828,7 @@ static void genCallDynaMem(memType type, int count, int _rs, int _rt, short imme
 				for(i = 0; i < count; i++){
 					int rt = mapRegisterNew(_rt + i, 0);
 					if(i == 0){
-						GEN_RLWINM(ppc, R2, R3, 0, 8, 29);
+						GEN_RLWINM(ppc, R2, rd, 0, 8, 29);
 						set_next_dst(ppc);
 						GEN_LWZUX(ppc, rt, R2, DYNAREG_RDRAM);
 						set_next_dst(ppc);
@@ -4692,7 +4844,7 @@ static void genCallDynaMem(memType type, int count, int _rs, int _rt, short imme
 				for(i = 0; i < count; i++){
 					int rt = mapRegisterNew(_rt + i, 1);
 					if(i == 0){
-						GEN_RLWINM(ppc, R2, R3, 0, 8, 30);
+						GEN_RLWINM(ppc, R2, rd, 0, 8, 30);
 						set_next_dst(ppc);
 						GEN_LHAUX(ppc, rt, R2, DYNAREG_RDRAM);
 						set_next_dst(ppc);
@@ -4708,7 +4860,7 @@ static void genCallDynaMem(memType type, int count, int _rs, int _rt, short imme
 				for(i = 0; i < count; i++){
 					int rt = mapRegisterNew(_rt + i, 0);
 					if(i == 0){
-						GEN_RLWINM(ppc, R2, R3, 0, 8, 30);
+						GEN_RLWINM(ppc, R2, rd, 0, 8, 30);
 						set_next_dst(ppc);
 						GEN_LHZUX(ppc, rt, R2, DYNAREG_RDRAM);
 						set_next_dst(ppc);
@@ -4724,7 +4876,7 @@ static void genCallDynaMem(memType type, int count, int _rs, int _rt, short imme
 				for(i = 0; i < count; i++){
 					int rt = mapRegisterNew(_rt + i, 1);
 					if(i == 0){
-						GEN_RLWINM(ppc, R2, R3, 0, 8, 31);
+						GEN_RLWINM(ppc, R2, rd, 0, 8, 31);
 						set_next_dst(ppc);
 						GEN_LBZUX(ppc, rt, R2, DYNAREG_RDRAM);
 						set_next_dst(ppc);
@@ -4742,7 +4894,7 @@ static void genCallDynaMem(memType type, int count, int _rs, int _rt, short imme
 				for(i = 0; i < count; i++){
 					int rt = mapRegisterNew(_rt + i, 0);
 					if(i == 0){
-						GEN_RLWINM(ppc, R2, R3, 0, 8, 31);
+						GEN_RLWINM(ppc, R2, rd, 0, 8, 31);
 						set_next_dst(ppc);
 						GEN_LBZUX(ppc, rt, R2, DYNAREG_RDRAM);
 						set_next_dst(ppc);
@@ -4758,7 +4910,7 @@ static void genCallDynaMem(memType type, int count, int _rs, int _rt, short imme
 				for(i = 0; i < count; i++){
 					RegMapping rt = mapRegister64New(_rt + i);
 					if(i == 0){
-						GEN_RLWINM(ppc, R2, R3, 0, 8, 28);
+						GEN_RLWINM(ppc, R2, rd, 0, 8, 28);
 						set_next_dst(ppc);
 						GEN_LWZUX(ppc, rt.hi, R2, DYNAREG_RDRAM);
 						set_next_dst(ppc);
@@ -4776,7 +4928,7 @@ static void genCallDynaMem(memType type, int count, int _rs, int _rt, short imme
 				for(i = 0; i < count; i++){
 					int rt = mapFPRNew(_rt + i*2, 0);
 					if(i == 0){
-						GEN_RLWINM(ppc, R2, R3, 0, 8, 29);
+						GEN_RLWINM(ppc, R2, rd, 0, 8, 29);
 						set_next_dst(ppc);
 						GEN_LFSUX(ppc, rt, R2, DYNAREG_RDRAM);
 						set_next_dst(ppc);
@@ -4792,7 +4944,7 @@ static void genCallDynaMem(memType type, int count, int _rs, int _rt, short imme
 				for(i = 0; i < count; i++){
 					int rt = mapFPRNew(_rt + i*2, 1);
 					if(i == 0){
-						GEN_RLWINM(ppc, R2, R3, 0, 8, 28);
+						GEN_RLWINM(ppc, R2, rd, 0, 8, 28);
 						set_next_dst(ppc);
 						GEN_LFDUX(ppc, rt, R2, DYNAREG_RDRAM);
 						set_next_dst(ppc);
@@ -4806,7 +4958,7 @@ static void genCallDynaMem(memType type, int count, int _rs, int _rt, short imme
 			case MEM_LL:
 			{
 				int rt = mapRegisterNew(_rt, 1);
-				GEN_RLWINM(ppc, R2, R3, 0, 8, 29);
+				GEN_RLWINM(ppc, R2, rd, 0, 8, 29);
 				set_next_dst(ppc);
 				GEN_LI(ppc, R0, 1);
 				set_next_dst(ppc);
@@ -4821,9 +4973,9 @@ static void genCallDynaMem(memType type, int count, int _rs, int _rt, short imme
 				int rt = mapRegister(_rt);
 				int word = mapRegisterTemp();
 				int mask = mapRegisterTemp();
-				GEN_RLWINM(ppc, R2, R3, 0, 8, 29);
+				GEN_RLWINM(ppc, R2, rd, 0, 8, 29);
 				set_next_dst(ppc);
-				GEN_CLRLSLWI(ppc, R0, R3, 30, 3);
+				GEN_CLRLSLWI(ppc, R0, rd, 30, 3);
 				set_next_dst(ppc);
 				GEN_LWZUX(ppc, word, R2, DYNAREG_RDRAM);
 				set_next_dst(ppc);
@@ -4838,6 +4990,8 @@ static void genCallDynaMem(memType type, int count, int _rs, int _rt, short imme
 				GEN_OR(ppc, rt, word, rt);
 				set_next_dst(ppc);
 				mapRegisterNew(_rt, 1);
+				unmapRegisterTemp(word);
+				unmapRegisterTemp(mask);
 				break;
 			}
 			case MEM_LWR:
@@ -4845,9 +4999,9 @@ static void genCallDynaMem(memType type, int count, int _rs, int _rt, short imme
 				int rt = mapRegister(_rt);
 				int word = mapRegisterTemp();
 				int mask = mapRegisterTemp();
-				GEN_NOT(ppc, R0, R3);
+				GEN_NOT(ppc, R0, rd);
 				set_next_dst(ppc);
-				GEN_RLWINM(ppc, R2, R3, 0, 8, 29);
+				GEN_RLWINM(ppc, R2, rd, 0, 8, 29);
 				set_next_dst(ppc);
 				GEN_CLRLSLWI(ppc, R0, R0, 30, 3);
 				set_next_dst(ppc);
@@ -4864,6 +5018,8 @@ static void genCallDynaMem(memType type, int count, int _rs, int _rt, short imme
 				GEN_OR(ppc, rt, word, rt);
 				set_next_dst(ppc);
 				mapRegisterNew(_rt, 1);
+				unmapRegisterTemp(word);
+				unmapRegisterTemp(mask);
 				break;
 			}
 			case MEM_LDL:
@@ -4875,7 +5031,7 @@ static void genCallDynaMem(memType type, int count, int _rs, int _rt, short imme
 				for(i = 0; i < count; i++){
 					int rt = mapRegister(_rt + i);
 					if(i == 0){
-						GEN_RLWINM(ppc, R2, R3, 0, 8, 29);
+						GEN_RLWINM(ppc, R2, rd, 0, 8, 29);
 						set_next_dst(ppc);
 						GEN_STWUX(ppc, rt, R2, DYNAREG_RDRAM);
 						set_next_dst(ppc);
@@ -4884,7 +5040,7 @@ static void genCallDynaMem(memType type, int count, int _rs, int _rt, short imme
 						set_next_dst(ppc);
 					}
 				}
-				check_memory();
+				if(isUnsafe) check_memory();
 				break;
 			}
 			case MEM_SH:
@@ -4892,7 +5048,7 @@ static void genCallDynaMem(memType type, int count, int _rs, int _rt, short imme
 				for(i = 0; i < count; i++){
 					int rt = mapRegister(_rt + i);
 					if(i == 0){
-						GEN_RLWINM(ppc, R2, R3, 0, 8, 30);
+						GEN_RLWINM(ppc, R2, rd, 0, 8, 30);
 						set_next_dst(ppc);
 						GEN_STHUX(ppc, rt, R2, DYNAREG_RDRAM);
 						set_next_dst(ppc);
@@ -4901,7 +5057,7 @@ static void genCallDynaMem(memType type, int count, int _rs, int _rt, short imme
 						set_next_dst(ppc);
 					}
 				}
-				check_memory();
+				if(isUnsafe) check_memory();
 				break;
 			}
 			case MEM_SB:
@@ -4909,7 +5065,7 @@ static void genCallDynaMem(memType type, int count, int _rs, int _rt, short imme
 				for(i = 0; i < count; i++){
 					int rt = mapRegister(_rt + i);
 					if(i == 0){
-						GEN_RLWINM(ppc, R2, R3, 0, 8, 31);
+						GEN_RLWINM(ppc, R2, rd, 0, 8, 31);
 						set_next_dst(ppc);
 						GEN_STBUX(ppc, rt, R2, DYNAREG_RDRAM);
 						set_next_dst(ppc);
@@ -4918,7 +5074,7 @@ static void genCallDynaMem(memType type, int count, int _rs, int _rt, short imme
 						set_next_dst(ppc);
 					}
 				}
-				check_memory();
+				if(isUnsafe) check_memory();
 				break;
 			}
 			case MEM_SD:
@@ -4926,7 +5082,7 @@ static void genCallDynaMem(memType type, int count, int _rs, int _rt, short imme
 				for(i = 0; i < count; i++){
 					RegMapping rt = mapRegister64(_rt + i);
 					if(i == 0){
-						GEN_RLWINM(ppc, R2, R3, 0, 8, 28);
+						GEN_RLWINM(ppc, R2, rd, 0, 8, 28);
 						set_next_dst(ppc);
 						GEN_STWUX(ppc, rt.hi, R2, DYNAREG_RDRAM);
 						set_next_dst(ppc);
@@ -4937,7 +5093,7 @@ static void genCallDynaMem(memType type, int count, int _rs, int _rt, short imme
 					GEN_STW(ppc, rt.lo, i*8+4, R2);
 					set_next_dst(ppc);
 				}
-				check_memory();
+				if(isUnsafe) check_memory();
 				break;
 			}
 			case MEM_SWC1:
@@ -4945,7 +5101,7 @@ static void genCallDynaMem(memType type, int count, int _rs, int _rt, short imme
 				for(i = 0; i < count; i++){
 					int rt = mapFPR(_rt + i*2, 0);
 					if(i == 0){
-						GEN_RLWINM(ppc, R2, R3, 0, 8, 29);
+						GEN_RLWINM(ppc, R2, rd, 0, 8, 29);
 						set_next_dst(ppc);
 						GEN_STFSUX(ppc, rt, R2, DYNAREG_RDRAM);
 						set_next_dst(ppc);
@@ -4954,7 +5110,7 @@ static void genCallDynaMem(memType type, int count, int _rs, int _rt, short imme
 						set_next_dst(ppc);
 					}
 				}
-				check_memory();
+				if(isUnsafe) check_memory();
 				break;
 			}
 			case MEM_SDC1:
@@ -4962,7 +5118,7 @@ static void genCallDynaMem(memType type, int count, int _rs, int _rt, short imme
 				for(i = 0; i < count; i++){
 					int rt = mapFPR(_rt + i*2, 1);
 					if(i == 0){
-						GEN_RLWINM(ppc, R2, R3, 0, 8, 28);
+						GEN_RLWINM(ppc, R2, rd, 0, 8, 28);
 						set_next_dst(ppc);
 						GEN_STFDUX(ppc, rt, R2, DYNAREG_RDRAM);
 						set_next_dst(ppc);
@@ -4971,7 +5127,7 @@ static void genCallDynaMem(memType type, int count, int _rs, int _rt, short imme
 						set_next_dst(ppc);
 					}
 				}
-				check_memory();
+				if(isUnsafe) check_memory();
 				break;
 			}
 			case MEM_SC:
@@ -4983,11 +5139,11 @@ static void genCallDynaMem(memType type, int count, int _rs, int _rt, short imme
 				set_next_dst(ppc);
 				GEN_BEQ(ppc, CR2, 6, 0, 0);
 				set_next_dst(ppc);
-				GEN_RLWINM(ppc, R2, R3, 0, 8, 29);
+				GEN_RLWINM(ppc, R2, rd, 0, 8, 29);
 				set_next_dst(ppc);
 				GEN_STWUX(ppc, rt, R2, DYNAREG_RDRAM);
 				set_next_dst(ppc);
-				check_memory();
+				if(isUnsafe) check_memory();
 				GEN_MFCR(ppc, R2);
 				set_next_dst(ppc);
 				GEN_RLWINM(ppc, mapRegisterNew(_rt, 0), R2, 10, 31, 31);
@@ -5001,9 +5157,9 @@ static void genCallDynaMem(memType type, int count, int _rs, int _rt, short imme
 				int rt = mapRegister(_rt);
 				int word = mapRegisterTemp();
 				int mask = mapRegisterTemp();
-				GEN_RLWINM(ppc, R2, R3, 0, 8, 29);
+				GEN_RLWINM(ppc, R2, rd, 0, 8, 29);
 				set_next_dst(ppc);
-				GEN_CLRLSLWI(ppc, R0, R3, 30, 3);
+				GEN_CLRLSLWI(ppc, R0, rd, 30, 3);
 				set_next_dst(ppc);
 				GEN_LWZUX(ppc, word, R2, DYNAREG_RDRAM);
 				set_next_dst(ppc);
@@ -5019,7 +5175,9 @@ static void genCallDynaMem(memType type, int count, int _rs, int _rt, short imme
 				set_next_dst(ppc);
 				GEN_STW(ppc, R0, 0, R2);
 				set_next_dst(ppc);
-				check_memory();
+				if(isUnsafe) check_memory();
+				unmapRegisterTemp(word);
+				unmapRegisterTemp(mask);
 				break;
 			}
 			case MEM_SWR:
@@ -5027,9 +5185,9 @@ static void genCallDynaMem(memType type, int count, int _rs, int _rt, short imme
 				int rt = mapRegister(_rt);
 				int word = mapRegisterTemp();
 				int mask = mapRegisterTemp();
-				GEN_NOT(ppc, R0, R3);
+				GEN_NOT(ppc, R0, rd);
 				set_next_dst(ppc);
-				GEN_RLWINM(ppc, R2, R3, 0, 8, 29);
+				GEN_RLWINM(ppc, R2, rd, 0, 8, 29);
 				set_next_dst(ppc);
 				GEN_CLRLSLWI(ppc, R0, R0, 30, 3);
 				set_next_dst(ppc);
@@ -5047,7 +5205,9 @@ static void genCallDynaMem(memType type, int count, int _rs, int _rt, short imme
 				set_next_dst(ppc);
 				GEN_STW(ppc, R0, 0, R2);
 				set_next_dst(ppc);
-				check_memory();
+				if(isUnsafe) check_memory();
+				unmapRegisterTemp(word);
+				unmapRegisterTemp(mask);
 				break;
 			}
 			case MEM_SDL:
@@ -5113,6 +5273,8 @@ static void genCallDynaMem(memType type, int count, int _rs, int _rt, short imme
 		set_jump_special(not_fastmem_id, callSize+1);
 	}
 #endif
+
+	unmapRegisterTemp(rd);
 }
 
 static int mips_is_jump(MIPS_instr instr){
