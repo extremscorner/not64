@@ -32,7 +32,6 @@ public:
 #ifdef HW_RVL
 	WPADData* getWpad();
 #endif
-	PADStatus* getPad();
 	void clearInputData();
 	static Input& getInstance()
 	{
@@ -43,10 +42,6 @@ public:
 private:
 	Input();
 	~Input();
-	PADStatus gcPad[4];
-#ifdef HW_RVL
-	WPADData *wiiPad;
-#endif
 
 };
 

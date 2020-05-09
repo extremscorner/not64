@@ -92,10 +92,10 @@ static inline u16 ataReadu16(int chn)
 }
 
 
-// Reads up to 0xFFFF * 4 bytes of data (255kb) from the hdd at the given offset
-static inline void ata_read_blocks(int chn, u16 numSectors, u32 *dst) 
+// Reads 512 bytes
+static inline void ata_read_buffer(int chn, u32 *dst) 
 {
-	u16 dwords = (numSectors<<7);
+	u16 dwords = 128;	// 128 * 4 = 512 bytes
 	// (31:29) 011b | (28:24) 10000b | (23:16) <num_words_LSB> | (15:8) <num_words_MSB> | (7:0) 00h (4 bytes)
 	u32 dat = 0x70000000 | ((dwords&0xff) << 16) | (((dwords>>8)&0xff) << 8);
 	EXI_Lock(chn, 0, NULL);
@@ -123,21 +123,21 @@ static inline void ata_read_blocks(int chn, u16 numSectors, u32 *dst)
 	}
 	else {
 		// IDE_EXI_V2, no need to select / deselect all the time
-		EXI_ImmEx(chn,dst,numSectors*512,EXI_READ);
+		EXI_ImmEx(chn,dst,512,EXI_READ);
 		EXI_Deselect(chn);
 		EXI_Unlock(chn);
 	}
 }
 
-static inline void ata_write_blocks(int chn, u16 numSectors, u32 *src) 
+static inline void ata_write_buffer(int chn, u32 *src) 
 {
-	u16 dwords = (numSectors<<7);
+	u16 dwords = 128;	// 128 * 4 = 512 bytes
 	// (23:21) 111b | (20:16) 10000b | (15:8) <num_words_LSB> | (7:0) <num_words_MSB> (3 bytes)
 	u32 dat = 0xF0000000 | ((dwords&0xff) << 16) | (((dwords>>8)&0xff) << 8);
 	EXI_Lock(chn, 0, NULL);
 	EXI_Select(chn,0,EXI_SPEED32MHZ);
 	EXI_ImmEx(chn,&dat,3,EXI_WRITE);
-	EXI_ImmEx(chn, src,numSectors*512,EXI_WRITE);
+	EXI_ImmEx(chn, src,512,EXI_WRITE);
 	dat = 0;
 	EXI_ImmEx(chn,&dat,1,EXI_WRITE);	// Burn an extra cycle for the IDE-EXI to know to stop serving data
 	EXI_Deselect(chn);
@@ -280,7 +280,7 @@ int ataUnlock(int chn, int useMaster, char *password)
 
 // Reads sectors from the specified lba, for the specified slot
 // Returns 0 on success, -1 on failure.
-int _ataReadSectors(int chn, u64 lba, u16 numsectors, u32 *Buffer)
+int _ataReadSector(int chn, u64 lba, u32 *Buffer)
 {
 	u32 temp = 0;
   	
@@ -299,17 +299,17 @@ int _ataReadSectors(int chn, u64 lba, u16 numsectors, u32 *Buffer)
   		
 	// check if drive supports LBA 48-bit
 	if(ataDriveInfo.lba48Support) {  		
-		ataWriteByte(chn, ATA_REG_SECCOUNT, (u8)((numsectors>>8) & 0xFF));	// Sector count (Hi)
+		ataWriteByte(chn, ATA_REG_SECCOUNT, 0);								// Sector count (Hi)
 		ataWriteByte(chn, ATA_REG_LBALO, (u8)((lba>>24)& 0xFF));			// LBA 4
 		ataWriteByte(chn, ATA_REG_LBAMID, (u8)((lba>>32) & 0xFF));			// LBA 5
 		ataWriteByte(chn, ATA_REG_LBAHI, (u8)((lba>>40) & 0xFF));			// LBA 6
-		ataWriteByte(chn, ATA_REG_SECCOUNT, (u8)(numsectors & 0xFF));		// Sector count (Lo)
+		ataWriteByte(chn, ATA_REG_SECCOUNT, 1);								// Sector count (Lo)
 		ataWriteByte(chn, ATA_REG_LBALO, (u8)(lba & 0xFF));					// LBA 1
   		ataWriteByte(chn, ATA_REG_LBAMID, (u8)((lba>>8) & 0xFF));			// LBA 2
   		ataWriteByte(chn, ATA_REG_LBAHI, (u8)((lba>>16) & 0xFF));			// LBA 3
 	}
 	else {
-		ataWriteByte(chn, ATA_REG_SECCOUNT, (u8)(numsectors & 0xFF));		// Sector count
+		ataWriteByte(chn, ATA_REG_SECCOUNT, 1);								// Sector count
 		ataWriteByte(chn, ATA_REG_LBALO, (u8)(lba & 0xFF));					// LBA Lo
   		ataWriteByte(chn, ATA_REG_LBAMID, (u8)((lba>>8) & 0xFF));			// LBA Mid
   		ataWriteByte(chn, ATA_REG_LBAHI, (u8)((lba>>16) & 0xFF));			// LBA Hi
@@ -330,7 +330,7 @@ int _ataReadSectors(int chn, u64 lba, u16 numsectors, u32 *Buffer)
 	while(!(ataReadStatusReg(chn) & ATA_SR_DRQ));
 	
 	// read data from drive
-	ata_read_blocks(chn, numsectors, Buffer);
+	ata_read_buffer(chn, Buffer);
 
 	temp = ataReadStatusReg(chn);
 	// If the error bit was set, fail.
@@ -342,9 +342,9 @@ int _ataReadSectors(int chn, u64 lba, u16 numsectors, u32 *Buffer)
 
 // Writes sectors to the specified lba, for the specified slot
 // Returns 0 on success, -1 on failure.
-int _ataWriteSectors(int chn, u64 lba, u16 numsectors, u32 *Buffer)
+int _ataWriteSector(int chn, u64 lba, u32 *Buffer)
 {
-	u32 temp;
+	u32 i, temp;
   	
   	// Wait for drive to be ready (BSY to clear)
 	while(ataReadStatusReg(chn) & ATA_SR_BSY);
@@ -361,17 +361,17 @@ int _ataWriteSectors(int chn, u64 lba, u16 numsectors, u32 *Buffer)
   		
 	// check if drive supports LBA 48-bit
 	if(ataDriveInfo.lba48Support) {  		
-		ataWriteByte(chn, ATA_REG_SECCOUNT, (u8)((numsectors>>8) & 0xFF));	// Sector count (Hi)
+		ataWriteByte(chn, ATA_REG_SECCOUNT, 0);								// Sector count (Hi)
 		ataWriteByte(chn, ATA_REG_LBALO, (u8)((lba>>24)& 0xFF));			// LBA 4
 		ataWriteByte(chn, ATA_REG_LBAMID, (u8)((lba>>32) & 0xFF));			// LBA 4
 		ataWriteByte(chn, ATA_REG_LBAHI, (u8)((lba>>40) & 0xFF));			// LBA 5
-  		ataWriteByte(chn, ATA_REG_SECCOUNT, (u8)(numsectors & 0xFF));		// Sector count (Lo)
+  		ataWriteByte(chn, ATA_REG_SECCOUNT, 1);								// Sector count (Lo)
 		ataWriteByte(chn, ATA_REG_LBALO, (u8)(lba & 0xFF));					// LBA 1
   		ataWriteByte(chn, ATA_REG_LBAMID, (u8)((lba>>8) & 0xFF));			// LBA 2
   		ataWriteByte(chn, ATA_REG_LBAHI, (u8)((lba>>16) & 0xFF));			// LBA 3
 	}
 	else {
-  		ataWriteByte(chn, ATA_REG_SECCOUNT, (u8)(numsectors & 0xFF));		// Sector count
+  		ataWriteByte(chn, ATA_REG_SECCOUNT, 1);								// Sector count
 		ataWriteByte(chn, ATA_REG_LBALO, (u8)(lba & 0xFF));					// LBA Lo
   		ataWriteByte(chn, ATA_REG_LBAMID, (u8)((lba>>8) & 0xFF));			// LBA Mid
   		ataWriteByte(chn, ATA_REG_LBAHI, (u8)((lba>>16) & 0xFF));			// LBA Hi
@@ -391,26 +391,12 @@ int _ataWriteSectors(int chn, u64 lba, u16 numsectors, u32 *Buffer)
 	while(!(ataReadStatusReg(chn) & ATA_SR_DRQ));
 
 	// Write data to the drive
-	if(_ideexi_version == IDE_EXI_V1) {
-		// IDE_EXI_V1, select / deselect for every 4 bytes
-		u16 *ptr = (u16*)Buffer;
-		int i = 0;
-		for (i=0; i<(numsectors*256); i++) {
-			ataWriteu16(chn, ptr[i]);
-		}
-	}
-	else {
-		// IDE_EXI_V2, blocks with single select/deselect
-		ata_write_blocks(chn, numsectors, Buffer);
+	u16 *ptr = (u16*)Buffer;
+	for (i=0; i<256; i++) {
+		ataWriteu16(chn, ptr[i]);
 	}
 	
 	// Wait for the write to finish
-	while(ataReadStatusReg(chn) & ATA_SR_BSY);
-	
-	// Send Flush command to flush cache to hdd
-	ataWriteByte(chn, ATA_REG_COMMAND, 0xE7);
-	
-	// Wait for the cache flush
 	while(ataReadStatusReg(chn) & ATA_SR_BSY);
 	
 	temp = ataReadStatusReg(chn);
@@ -426,19 +412,13 @@ int _ataWriteSectors(int chn, u64 lba, u16 numsectors, u32 *Buffer)
 int ataReadSectors(int chn, u64 sector, unsigned int numSectors, unsigned char *dest) 
 {
 	int ret = 0;
-	int sectorchunks = 1;
-	while(numSectors > sectorchunks) {
-		if((ret=_ataReadSectors(chn,sector,sectorchunks,(u32*)dest))) {
+	while(numSectors) {
+		if((ret=_ataReadSector(chn,sector,(u32*)dest))) {
 			return -1;
 		}
-		dest+=(sectorchunks*512);
-		sector+=sectorchunks;
-		numSectors-=sectorchunks;
-	}
-	if(numSectors) {
-		if((ret=_ataReadSectors(chn,sector,numSectors,(u32*)dest))) {
-			return -1;
-		}
+		dest+=512;
+		sector++;
+		numSectors--;
 	}
 	return 0;
 }
@@ -448,14 +428,13 @@ int ataReadSectors(int chn, u64 sector, unsigned int numSectors, unsigned char *
 int ataWriteSectors(int chn, u64 sector,unsigned int numSectors, unsigned char *src) 
 {
 	int ret = 0;
-	int sectorchunks = 1;
-	while(numSectors > sectorchunks) {
-		if((ret=_ataWriteSectors(chn,sector,sectorchunks,(u32*)src))) {
+	while(numSectors) {
+		if((ret=_ataWriteSector(chn,sector,(u32*)src))) {
 			return -1;
 		}
-		src+=(sectorchunks*512);
-		sector+=sectorchunks;
-		numSectors-=sectorchunks;
+		src+=512;
+		sector++;
+		numSectors--;
 	}
 	return 0;
 }

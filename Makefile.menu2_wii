@@ -4,7 +4,7 @@ CC		=powerpc-eabi-gcc
 CXX		=powerpc-eabi-g++
 AS		=powerpc-eabi-as
 
-CFLAGS  = -pipe -Ofast -Wall -mrvl -flto=jobserver \
+CFLAGS  = -pipe -Ofast -Wall -Wno-multichar -mrvl -fgnu89-inline -flto=jobserver \
 	  -DWII -DRELEASE -DMENU_V2 -DGLN64_GX -DUSE_EXPANSION \
 	  -DPPC_DYNAREC -DUSE_RECOMP_CACHE -DFASTMEM -DNDEBUG
 
@@ -105,6 +105,7 @@ OBJ_RSPHLE	=rsp_hle/alist.o \
 		rsp_hle/audio.o \
 		rsp_hle/cicx105.o \
 		rsp_hle/hle.o \
+		rsp_hle/hvqm.o \
 		rsp_hle/jpeg.o \
 		rsp_hle/memory.o \
 		rsp_hle/mp3.o \

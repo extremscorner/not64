@@ -1,6 +1,6 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *   Mupen64plus-rsp-hle - alist.c                                         *
- *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
+ *   Mupen64Plus homepage: https://mupen64plus.org/                        *
  *   Copyright (C) 2014 Bobby Smiles                                       *
  *   Copyright (C) 2009 Richard Goedeken                                   *
  *   Copyright (C) 2002 Hacktarux                                          *
@@ -666,11 +666,11 @@ void alist_resample(
     while (count != 0) {
         const int16_t* lut = RESAMPLE_LUT + ((pitch_accu & 0xfc00) >> 8);
 
-        *sample(hle, opos++) = clamp_s16((
-                (*sample(hle, ipos    ) * lut[0]) +
-                (*sample(hle, ipos + 1) * lut[1]) +
-                (*sample(hle, ipos + 2) * lut[2]) +
-                (*sample(hle, ipos + 3) * lut[3])) >> 15);
+        *sample(hle, opos++) = clamp_s16( (
+            (*sample(hle, ipos    ) * lut[0]) +
+            (*sample(hle, ipos + 1) * lut[1]) +
+            (*sample(hle, ipos + 2) * lut[2]) +
+            (*sample(hle, ipos + 3) * lut[3]) ) >> 15);
 
         pitch_accu += pitch;
         ipos += (pitch_accu >> 16);

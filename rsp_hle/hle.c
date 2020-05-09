@@ -1,6 +1,6 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *   Mupen64plus-rsp-hle - hle.c                                           *
- *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
+ *   Mupen64Plus homepage: https://mupen64plus.org/                        *
  *   Copyright (C) 2012 Bobby Smiles                                       *
  *   Copyright (C) 2009 Richard Goedeken                                   *
  *   Copyright (C) 2002 Hacktarux                                          *
@@ -33,8 +33,6 @@
 #include "memory.h"
 #include "ucodes.h"
 
-#include "../main/wii64config.h"
-
 #define min(a,b) (((a) < (b)) ? (a) : (b))
 
 /* some rdp status flags */
@@ -45,23 +43,19 @@
 /* helper functions prototypes */
 static unsigned int sum_bytes(const unsigned char *bytes, unsigned int size);
 static bool is_task(struct hle_t* hle);
-static void forward_gfx_task(struct hle_t* hle);
-static bool try_fast_audio_dispatching(struct hle_t* hle);
-static bool try_fast_task_dispatching(struct hle_t* hle);
-static void normal_task_dispatching(struct hle_t* hle);
-static void non_task_dispatching(struct hle_t* hle);
-static void re2_task_dispatching(struct hle_t* hle);
+static void send_dlist_to_gfx_plugin(struct hle_t* hle);
+static ucode_func_t try_audio_task_detection(struct hle_t* hle);
+static ucode_func_t try_normal_task_detection(struct hle_t* hle);
+static ucode_func_t non_task_detection(struct hle_t* hle);
+static ucode_func_t task_detection(struct hle_t* hle);
 
 #ifdef ENABLE_TASK_DUMP
 static void dump_binary(struct hle_t* hle, const char *const filename,
                         const unsigned char *const bytes, unsigned int size);
 static void dump_task(struct hle_t* hle, const char *const filename);
-static void dump_unknown_task(struct hle_t* hle, unsigned int sum);
-static void dump_unknown_non_task(struct hle_t* hle, unsigned int sum);
+static void dump_unknown_task(struct hle_t* hle, unsigned int uc_start);
+static void dump_unknown_non_task(struct hle_t* hle, unsigned int uc_start);
 #endif
-
-/* local variables */
-static const bool FORWARD_AUDIO = false, FORWARD_GFX = true;
 
 /* Global functions */
 void hle_init(struct hle_t* hle,
@@ -114,12 +108,36 @@ void hle_init(struct hle_t* hle,
 
 void hle_execute(struct hle_t* hle)
 {
-    if (is_task(hle)) {
-        if (!try_fast_task_dispatching(hle))
-            normal_task_dispatching(hle);
-    } else {
-        non_task_dispatching(hle);
+    uint32_t uc_start = *dmem_u32(hle, TASK_UCODE);
+    uint32_t uc_dstart = *dmem_u32(hle, TASK_UCODE_DATA);
+    uint32_t uc_dsize = *dmem_u32(hle, TASK_UCODE_DATA_SIZE);
+
+    bool match = false;
+    struct cached_ucodes_t * cached_ucodes = &hle->cached_ucodes;
+    struct ucode_info_t *info = &cached_ucodes->infos[cached_ucodes->count-1];
+    for (int i = 0; i < cached_ucodes->count; i++)
+    {
+        if (info->uc_start == uc_start && info->uc_dstart == uc_dstart && info->uc_dsize == uc_dsize)
+        {
+            match = true;
+            break;
+        }
+        info--;
     }
+
+    if (!match)
+    {
+        info = &cached_ucodes->infos[cached_ucodes->count];
+        info->uc_start = uc_start;
+        info->uc_dstart = uc_dstart;
+        info->uc_dsize = uc_dsize;
+        info->uc_pfunc = task_detection(hle);
+        cached_ucodes->count++;
+        assert(cached_ucodes->count <= CACHED_UCODES_MAX_SIZE);
+        assert(info->uc_pfunc != NULL);
+    }
+
+    info->uc_pfunc(hle);
 }
 
 /* local functions */
@@ -159,14 +177,67 @@ void rsp_break(struct hle_t* hle, unsigned int setbits)
     }
 }
 
-static void forward_gfx_task(struct hle_t* hle)
+static void send_alist_to_audio_plugin(struct hle_t* hle)
 {
-    HleProcessDlistList(hle->user_defined);
-    *hle->dpc_status &= ~DP_STATUS_FREEZE;
+    HleProcessAlistList(hle->user_defined);
     rsp_break(hle, SP_STATUS_TASKDONE);
 }
 
-static bool try_fast_audio_dispatching(struct hle_t* hle)
+static void send_dlist_to_gfx_plugin(struct hle_t* hle)
+{
+    /* Since GFX_INFO version 2, these bits are set before calling the ProcessDlistList function.
+     * And the GFX plugin is responsible to unset them if needed.
+     * For GFX_INFO version < 2, the GFX plugin didn't have access to sp_status so
+     * it doesn't matter if we set these bits before calling ProcessDlistList function.
+     */
+    *hle->sp_status |= SP_STATUS_TASKDONE | SP_STATUS_BROKE | SP_STATUS_HALT;
+
+    HleProcessDlistList(hle->user_defined);
+    *hle->dpc_status &= ~DP_STATUS_FREEZE;
+
+    if ((*hle->sp_status & SP_STATUS_INTR_ON_BREAK) && (*hle->sp_status & (SP_STATUS_TASKDONE | SP_STATUS_BROKE | SP_STATUS_HALT))) {
+        *hle->mi_intr |= MI_INTR_SP;
+        HleCheckInterrupts(hle->user_defined);
+    }
+}
+
+static void task_done(struct hle_t* hle)
+{
+    rsp_break(hle, SP_STATUS_TASKDONE);
+}
+
+static void unknown_ucode(struct hle_t* hle)
+{
+    /* Forward task to RSP Fallback.
+     * If task is not forwarded, use the regular "unknown ucode" path */
+    if (HleForwardTask(hle->user_defined) != 0) {
+
+        uint32_t uc_start = *dmem_u32(hle, TASK_UCODE);
+        HleWarnMessage(hle->user_defined, "unknown RSP code: uc_start: %x PC:%x", uc_start, *hle->sp_pc);
+#ifdef ENABLE_TASK_DUMP
+        dump_unknown_non_task(hle, uc_start);
+#endif
+    }
+}
+
+static void unknown_task(struct hle_t* hle)
+{
+    /* Forward task to RSP Fallback.
+     * If task is not forwarded, use the regular "unknown task" path */
+    if (HleForwardTask(hle->user_defined) != 0) {
+
+        /* Send task_done signal for unknown ucodes to allow further processings */
+        rsp_break(hle, SP_STATUS_TASKDONE);
+
+        uint32_t uc_start = *dmem_u32(hle, TASK_UCODE);
+        HleWarnMessage(hle->user_defined, "unknown OSTask: uc_start: %x PC:%x", uc_start, *hle->sp_pc);
+#ifdef ENABLE_TASK_DUMP
+        dump_unknown_task(hle, uc_start);
+#endif
+    }
+}
+
+static ucode_func_t try_audio_task_detection(struct hle_t* hle)
 {
     /* identify audio ucode by using the content of ucode_data */
     uint32_t ucode_data = *dmem_u32(hle, TASK_UCODE_DATA);
@@ -178,11 +249,11 @@ static bool try_fast_audio_dispatching(struct hle_t* hle)
             switch(v)
             {
             case 0x1e24138c: /* audio ABI (most common) */
-                alist_process_audio(hle); return true;
+                return &alist_process_audio;
             case 0x1dc8138c: /* GoldenEye */
-                alist_process_audio_ge(hle); return true;
+                return &alist_process_audio_ge;
             case 0x1e3c1390: /* BlastCorp, DiddyKongRacing */
-                alist_process_audio_bc(hle); return true;
+                return &alist_process_audio_bc;
             default:
                 HleWarnMessage(hle->user_defined, "ABI1 identification regression: v=%08x", v);
             }
@@ -191,30 +262,33 @@ static bool try_fast_audio_dispatching(struct hle_t* hle)
             switch(v)
             {
             case 0x11181350: /* MarioKart, WaveRace (E) */
-                alist_process_nead_mk(hle); return true;
+                return &alist_process_nead_mk;
             case 0x111812e0: /* StarFox (J) */
-                alist_process_nead_sfj(hle); return true;
+                return &alist_process_nead_sfj;
             case 0x110412ac: /* WaveRace (J RevB) */
-                alist_process_nead_wrjb(hle); return true;
+                return &alist_process_nead_wrjb;
             case 0x110412cc: /* StarFox/LylatWars (except J) */
-                alist_process_nead_sf(hle); return true;
+                return &alist_process_nead_sf;
             case 0x1cd01250: /* FZeroX */
-                alist_process_nead_fz(hle); return true;
+                return &alist_process_nead_fz;
             case 0x1f08122c: /* YoshisStory */
-                alist_process_nead_ys(hle); return true;
+                return &alist_process_nead_ys;
             case 0x1f38122c: /* 1080° Snowboarding */
-                alist_process_nead_1080(hle); return true;
+                return &alist_process_nead_1080;
             case 0x1f681230: /* Zelda OoT / Zelda MM (J, J RevA) */
-                alist_process_nead_oot(hle); return true;
+                return &alist_process_nead_oot;
             case 0x1f801250: /* Zelda MM (except J, J RevA, E Beta), PokemonStadium 2 */
-                alist_process_nead_mm(hle); return true;
+                return &alist_process_nead_mm;
             case 0x109411f8: /* Zelda MM (E Beta) */
-                alist_process_nead_mmb(hle); return true;
+                return &alist_process_nead_mmb;
             case 0x1eac11b8: /* AnimalCrossing */
-                alist_process_nead_ac(hle); return true;
+                return &alist_process_nead_ac;
             case 0x00010010: /* MusyX v2 (IndianaJones, BattleForNaboo) */
-                musyx_v2_task(hle); return true;
-
+                return &musyx_v2_task;
+            case 0x1f701238: /* Mario Artist Talent Studio */
+                return &alist_process_nead_mats;
+            case 0x1f4c1230: /* FZeroX Expansion */
+                return &alist_process_nead_efz;
             default:
                 HleWarnMessage(hle->user_defined, "ABI2 identification regression: v=%08x", v);
             }
@@ -227,201 +301,172 @@ static bool try_fast_audio_dispatching(struct hle_t* hle)
             RogueSquadron, ResidentEvil2, PolarisSnoCross,
             TheWorldIsNotEnough, RugratsInParis, NBAShowTime,
             HydroThunder, Tarzan, GauntletLegend, Rush2049 */
-            musyx_v1_task(hle); return true;
+            return &musyx_v1_task;
         case 0x0000127c: /* naudio (many games) */
-            alist_process_naudio(hle); return true;
+            return &alist_process_naudio;
         case 0x00001280: /* BanjoKazooie */
-            alist_process_naudio_bk(hle); return true;
+            return &alist_process_naudio_bk;
         case 0x1c58126c: /* DonkeyKong */
-            alist_process_naudio_dk(hle); return true;
+            return &alist_process_naudio_dk;
         case 0x1ae8143c: /* BanjoTooie, JetForceGemini, MickeySpeedWayUSA, PerfectDark */
-            alist_process_naudio_mp3(hle); return true;
+            return &alist_process_naudio_mp3;
         case 0x1ab0140c: /* ConkerBadFurDay */
-            alist_process_naudio_cbfd(hle); return true;
+            return &alist_process_naudio_cbfd;
 
         default:
             HleWarnMessage(hle->user_defined, "ABI3 identification regression: v=%08x", v);
         }
     }
 
-    return false;
+    return NULL;
 }
 
-static bool try_fast_task_dispatching(struct hle_t* hle)
+static ucode_func_t try_normal_task_detection(struct hle_t* hle)
 {
-    /* identify task ucode by its type */
-    switch (*dmem_u32(hle, TASK_TYPE)) {
-    case 1:
-        /* Resident evil 2 */
-        if (*dmem_u32(hle, TASK_DATA_PTR) == 0) {
-            re2_task_dispatching(hle);
-            return true;
-        }
-
-        if (FORWARD_GFX) {
-            forward_gfx_task(hle);
-            return true;
-        }
-        break;
-
-    case 2:
-        if (!audioEnabled)
-            return true;
-
-        if (FORWARD_AUDIO) {
-            HleProcessAlistList(hle->user_defined);
-            rsp_break(hle, SP_STATUS_TASKDONE);
-            return true;
-        } else if (try_fast_audio_dispatching(hle))
-            return true;
-        break;
-
-    case 7:
-        HleShowCFB(hle->user_defined);
-        rsp_break(hle, SP_STATUS_TASKDONE);
-        return true;
-    }
-
-    return false;
-}
-
-static void normal_task_dispatching(struct hle_t* hle)
-{
-    const unsigned int sum =
+    unsigned int sum =
         sum_bytes((void*)dram_u32(hle, *dmem_u32(hle, TASK_UCODE)), min(*dmem_u32(hle, TASK_UCODE_SIZE), 0xf80) >> 1);
 
     switch (sum) {
     /* StoreVe12: found in Zelda Ocarina of Time [misleading task->type == 4] */
     case 0x278:
         /* Nothing to emulate */
-        rsp_break(hle, SP_STATUS_TASKDONE);
-        return;
+        return &task_done;
 
     /* GFX: Twintris [misleading task->type == 0] */
     case 0x212ee:
-        if (FORWARD_GFX) {
-            forward_gfx_task(hle);
-            return;
+        if (hle->hle_gfx) {
+            return &send_dlist_to_gfx_plugin;
         }
-        break;
+        return NULL;
 
     /* JPEG: found in Pokemon Stadium J */
     case 0x2c85a:
-        jpeg_decode_PS0(hle);
-        return;
+        return &jpeg_decode_PS0;
 
     /* JPEG: found in Zelda Ocarina of Time, Pokemon Stadium 1, Pokemon Stadium 2 */
     case 0x2caa6:
-        jpeg_decode_PS(hle);
-        return;
+        return &jpeg_decode_PS;
 
     /* JPEG: found in Ogre Battle, Bottom of the 9th */
     case 0x130de:
     case 0x278b0:
-        jpeg_decode_OB(hle);
-        return;
+        return &jpeg_decode_OB;
     }
 
-    /* Send task_done signal for unknown ucodes to allow further processings */
-    rsp_break(hle, SP_STATUS_TASKDONE);
+    /* Resident Evil 2 */
+    sum = sum_bytes((void*)dram_u32(hle, *dmem_u32(hle, TASK_UCODE)), 256);
+    switch (sum) {
 
-    HleWarnMessage(hle->user_defined, "unknown OSTask: sum: %x PC:%x", sum, *hle->sp_pc);
-#ifdef ENABLE_TASK_DUMP
-    dump_unknown_task(hle, sum);
-#endif
+    case 0x450f:
+        return &resize_bilinear_task;
+
+    case 0x3b44:
+        return &decode_video_frame_task;
+
+    case 0x3d84:
+        return &fill_video_double_buffer_task;
+    }
+
+    /* HVQM */
+    sum = sum_bytes((void*)dram_u32(hle, *dmem_u32(hle, TASK_UCODE)), 1488);
+    switch (sum) {
+    case 0x19495:
+        return &hvqm2_decode_sp1_task;
+
+    case 0x19728:
+        return &hvqm2_decode_sp2_task;
+    }
+
+    return NULL;
 }
 
-static void non_task_dispatching(struct hle_t* hle)
+static ucode_func_t non_task_detection(struct hle_t* hle)
 {
     const unsigned int sum = sum_bytes(hle->imem, 44);
 
     if (sum == 0x9e2)
     {
         /* CIC x105 ucode (used during boot of CIC x105 games) */
-        cicx105_ucode(hle);
-        return;
+        return &cicx105_ucode;
     }
-
-    HleWarnMessage(hle->user_defined, "unknown RSP code: sum: %x PC:%x", sum, *hle->sp_pc);
-#ifdef ENABLE_TASK_DUMP
-    dump_unknown_non_task(hle, sum);
-#endif
+    return &unknown_ucode;
 }
 
-/* Resident evil 2 */
-static void re2_task_dispatching(struct hle_t* hle)
+static ucode_func_t task_detection(struct hle_t* hle)
 {
-    const unsigned int sum =
-        sum_bytes((void*)dram_u32(hle, *dmem_u32(hle, TASK_UCODE)), 256);
+    if (is_task(hle)) {
+        ucode_func_t uc_pfunc;
+        uint32_t type = *dmem_u32(hle, TASK_TYPE);
 
-    switch (sum) {
-    
-    case 0x450f:
-        resize_bilinear_task(hle);
-        return;
-    
-    case 0x3b44:
-        decode_video_frame_task(hle);
-        return;
+        if (type == 2) {
+            if (hle->hle_aud) {
+                return &send_alist_to_audio_plugin;
+            }
+            uc_pfunc = try_audio_task_detection(hle);
+            if (uc_pfunc)
+                return uc_pfunc;
+        }
 
-    case 0x3d84:
-        /* TODO: Nothing to emulate? */
-        rsp_break(hle, SP_STATUS_TASKDONE);
-        return;
+        uc_pfunc = try_normal_task_detection(hle);
+        if (uc_pfunc)
+            return uc_pfunc;
+        
+        if (type == 1) {
+            if (hle->hle_gfx) {
+                return &send_dlist_to_gfx_plugin;
+            }
+        }
+
+        return &unknown_task;
     }
-
-    /* Send task_done signal for unknown ucodes to allow further processings */
-    rsp_break(hle, SP_STATUS_TASKDONE);
-
-    HleWarnMessage(hle->user_defined, "unknown OSTask: sum: %x PC:%x", sum, *hle->sp_pc);
-#ifdef ENABLE_TASK_DUMP
-    dump_unknown_task(hle, sum);
-#endif
+    else {
+        return non_task_detection(hle);
+    }
 }
 
 #ifdef ENABLE_TASK_DUMP
-static void dump_unknown_task(struct hle_t* hle, unsigned int sum)
+static void dump_unknown_task(struct hle_t* hle, unsigned int uc_start)
 {
     char filename[256];
     uint32_t ucode = *dmem_u32(hle, TASK_UCODE);
     uint32_t ucode_data = *dmem_u32(hle, TASK_UCODE_DATA);
     uint32_t data_ptr = *dmem_u32(hle, TASK_DATA_PTR);
 
-    sprintf(&filename[0], "task_%x.log", sum);
+    sprintf(&filename[0], "task_%x.log", uc_start);
     dump_task(hle, filename);
 
     /* dump ucode_boot */
-    sprintf(&filename[0], "ucode_boot_%x.bin", sum);
+    sprintf(&filename[0], "ucode_boot_%x.bin", uc_start);
     dump_binary(hle, filename, (void*)dram_u32(hle, *dmem_u32(hle, TASK_UCODE_BOOT)), *dmem_u32(hle, TASK_UCODE_BOOT_SIZE));
 
     /* dump ucode */
     if (ucode != 0) {
-        sprintf(&filename[0], "ucode_%x.bin", sum);
+        sprintf(&filename[0], "ucode_%x.bin", uc_start);
         dump_binary(hle, filename, (void*)dram_u32(hle, ucode), 0xf80);
     }
 
     /* dump ucode_data */
     if (ucode_data != 0) {
-        sprintf(&filename[0], "ucode_data_%x.bin", sum);
+        sprintf(&filename[0], "ucode_data_%x.bin", uc_start);
         dump_binary(hle, filename, (void*)dram_u32(hle, ucode_data), *dmem_u32(hle, TASK_UCODE_DATA_SIZE));
     }
 
     /* dump data */
     if (data_ptr != 0) {
-        sprintf(&filename[0], "data_%x.bin", sum);
+        sprintf(&filename[0], "data_%x.bin", uc_start);
         dump_binary(hle, filename, (void*)dram_u32(hle, data_ptr), *dmem_u32(hle, TASK_DATA_SIZE));
     }
 }
 
-static void dump_unknown_non_task(struct hle_t* hle, unsigned int sum)
+static void dump_unknown_non_task(struct hle_t* hle, unsigned int uc_start)
 {
     char filename[256];
 
     /* dump IMEM & DMEM for further analysis */
-    sprintf(&filename[0], "imem_%x.bin", sum);
+    sprintf(&filename[0], "imem_%x.bin", uc_start);
     dump_binary(hle, filename, hle->imem, 0x1000);
 
-    sprintf(&filename[0], "dmem_%x.bin", sum);
+    sprintf(&filename[0], "dmem_%x.bin", uc_start);
     dump_binary(hle, filename, hle->dmem, 0x1000);
 }
 

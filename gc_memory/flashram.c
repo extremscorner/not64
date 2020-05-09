@@ -221,7 +221,7 @@ void dma_read_flashram()
 
 	for (i=0; i<(pi_register.pi_wr_len_reg & 0x0FFFFFE)+2; i++)
 	  ((unsigned char*)rdram)[(pi_register.pi_dram_addr_reg+i)^S8]=
-	  flashram[(((pi_register.pi_cart_addr_reg-0x08000000)&0xFFFF)*2+i)^S8];
+	  flashram[(((pi_register.pi_cart_addr_reg-0x08000000)&0xFFFE)*2+i)^S8];
 	break;
       default:
 	printf("unknown dma_read_flashram:%x\n", mode);

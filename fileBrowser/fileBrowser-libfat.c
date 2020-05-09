@@ -46,6 +46,7 @@ const DISC_INTERFACE* usbmsd = &__io_usbstorage;
 #endif
 const DISC_INTERFACE* carda = &__io_gcsda;
 const DISC_INTERFACE* cardb = &__io_gcsdb;
+const DISC_INTERFACE* cardc = &__io_gcsd2;
 const DISC_INTERFACE* ideexia = &__io_ataa;
 const DISC_INTERFACE* ideexib = &__io_atab;
 
@@ -53,6 +54,7 @@ const DISC_INTERFACE* ideexib = &__io_atab;
 #define THREAD_SLEEP 100
 #define CARD_A  1
 #define CARD_B  2
+#define CARD_C  3
 #define FRONTSD 3
 #define USBMSD  3
 static lwp_t removalThread = LWP_THREAD_NULL;
@@ -309,7 +311,11 @@ int fileBrowser_libfat_init(fileBrowser_file* f){
 #else
   if(f->name[0] == 's') {
     if(!sdMounted) {
-    	if(fatMountSimple ("sd", cardb)) {
+    	if(fatMountSimple ("sd", cardc)) {
+     	  sdMounted = CARD_C;
+     	  res = 1;
+   	  }
+   	  else if(fatMountSimple ("sd", cardb)) {
      	  sdMounted = CARD_B;
      	  res = 1;
    	  }

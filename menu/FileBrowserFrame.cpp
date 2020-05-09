@@ -155,11 +155,14 @@ void FileBrowserFrame::drawChildren(menu::Graphics &gfx)
 	if(isVisible())
 	{
 #ifdef HW_RVL
-		WPADData* wiiPad = menu::Input::getInstance().getWpad();
+		WPADData* wpad = menu::Input::getInstance().getWpad();
 #endif
 		for (int i=0; i<4; i++)
 		{
 			u16 currentButtonsGC = PAD_ButtonsHeld(i);
+#ifdef HW_RVL
+			u32 currentButtonsWii = WPAD_ButtonsHeld(i);
+#endif
 			if (currentButtonsGC ^ previousButtonsGC[i])
 			{
 				u16 currentButtonsDownGC = (currentButtonsGC ^ previousButtonsGC[i]) & currentButtonsGC;
@@ -181,11 +184,11 @@ void FileBrowserFrame::drawChildren(menu::Graphics &gfx)
 				break;
 			}
 #ifdef HW_RVL
-			else if (wiiPad[i].btns_h ^ previousButtonsWii[i])
+			else if (currentButtonsWii ^ previousButtonsWii[i])
 			{
-				u32 currentButtonsDownWii = (wiiPad[i].btns_h ^ previousButtonsWii[i]) & wiiPad[i].btns_h;
-				previousButtonsWii[i] = wiiPad[i].btns_h;
-				switch (wiiPad[i].exp.type)
+				u32 currentButtonsDownWii = (currentButtonsWii ^ previousButtonsWii[i]) & currentButtonsWii;
+				previousButtonsWii[i] = currentButtonsWii;
+				switch (wpad[i].exp.type)
 				{
 				case WPAD_EXP_CLASSIC:
 				case WPAD_EXP_WIIUPRO:

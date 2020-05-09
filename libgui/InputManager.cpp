@@ -53,21 +53,15 @@ void Input::refreshInput()
 	PAD_ScanPads();
 #ifdef HW_RVL
 	WPAD_ScanPads();
-	wiiPad = WPAD_Data(0);
 #endif
 }
 
 #ifdef HW_RVL
 WPADData* Input::getWpad()
 {
-	return wiiPad;
+	return WPAD_Data(0);
 }
 #endif
-
-PADStatus* Input::getPad()
-{
-	return &gcPad[0];
-}
 
 void Input::clearInputData()
 {

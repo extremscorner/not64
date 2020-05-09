@@ -58,7 +58,8 @@ typedef struct _rom_header
 	unsigned int unknown;
 	unsigned int Manufacturer_ID;
 	unsigned short Cartridge_ID;
-	unsigned short Country_code;
+	unsigned char Country_code;
+	unsigned char Version;
 } rom_header;
 extern rom_header ROM_HEADER;
 

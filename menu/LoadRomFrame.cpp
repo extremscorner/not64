@@ -40,7 +40,7 @@ extern "C" {
 void Func_LoadFromSD();
 void Func_LoadFromDVD();
 void Func_LoadFromUSB();
-void Func_LoadFromSamba();
+void Func_LoadFromSMB();
 void Func_ReturnFromLoadRomFrame();
 
 #define NUM_FRAME_BUTTONS 4
@@ -51,7 +51,7 @@ static char FRAME_STRINGS[4][25] =
 	{ "Load from SD",
 	  "Load from DVD",
 	  "Load from USB",
-	  "Load from Samba"};
+	  "Load from SMB"};
 
 struct ButtonInfo
 {
@@ -73,7 +73,7 @@ struct ButtonInfo
 	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[0],	150.0,	100.0,	340.0,	56.0,	 3,	 1,	-1,	-1,	Func_LoadFromSD,	Func_ReturnFromLoadRomFrame }, // Load From SD
 	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[1],	150.0,	180.0,	340.0,	56.0,	 0,	 2,	-1,	-1,	Func_LoadFromDVD,	Func_ReturnFromLoadRomFrame }, // Load From DVD
 	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[2],	150.0,	260.0,	340.0,	56.0,	 1,	 3,	-1,	-1,	Func_LoadFromUSB,	Func_ReturnFromLoadRomFrame }, // Load From USB
-	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[3],	150.0,	340.0,	340.0,	56.0,	 2,	 0,	-1,	-1,	Func_LoadFromSamba,	Func_ReturnFromLoadRomFrame }, // Load From Samba
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[3],	150.0,	340.0,	340.0,	56.0,	 2,	 0,	-1,	-1,	Func_LoadFromSMB,	Func_ReturnFromLoadRomFrame }, // Load From SMB
 };
 
 LoadRomFrame::LoadRomFrame()
@@ -196,7 +196,7 @@ void Func_LoadFromUSB()
 	fileBrowserFrame_OpenDirectory(romFile_topLevel);
 }
 
-void Func_LoadFromSamba()
+void Func_LoadFromSMB()
 {
 	// Deinit any existing romFile state
 	if(romFile_deinit) romFile_deinit( romFile_topLevel );

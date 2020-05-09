@@ -1,6 +1,6 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *   Mupen64plus-rsp-hle - alist_nead.c                                    *
- *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
+ *   Mupen64Plus homepage: https://mupen64plus.org/                        *
  *   Copyright (C) 2014 Bobby Smiles                                       *
  *   Copyright (C) 2009 Richard Goedeken                                   *
  *   Copyright (C) 2002 Hacktarux                                          *
@@ -531,4 +531,26 @@ void alist_process_nead_ac(struct hle_t* hle)
 
     alist_process(hle, ABI, 0x18);
     rsp_break(hle, SP_STATUS_TASKDONE);
+}
+
+void alist_process_nead_mats(struct hle_t* hle)
+{
+    /* FIXME: implement proper ucode
+     * Forward the task if possible,
+     * otherwise better to have no sound than garbage sound
+     */
+    if (HleForwardTask(hle->user_defined) != 0) {
+        rsp_break(hle, SP_STATUS_TASKDONE);
+    }
+}
+
+void alist_process_nead_efz(struct hle_t* hle)
+{
+    /* FIXME: implement proper ucode
+     * Forward the task if possible,
+     * otherwise use FZero ucode which should be very similar
+     */
+    if (HleForwardTask(hle->user_defined) != 0) {
+        alist_process_nead_fz(hle);
+    }
 }

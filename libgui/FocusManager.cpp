@@ -51,9 +51,8 @@ void Focus::updateFocus()
 	int focusDirection = 0;
 	int buttonsDown = 0;
 #ifdef HW_RVL
-	WPADData* wiiPad = Input::getInstance().getWpad();
+	WPADData* wpad = Input::getInstance().getWpad();
 #endif
-//	PADStatus* gcPad = Input::getInstance().getPad();
 
 	if (!focusActive) return;
 
@@ -71,7 +70,7 @@ void Focus::updateFocus()
 		{
 			previousButtonsGC[i] = PAD_ButtonsHeld(i);
 #ifdef HW_RVL
-			previousButtonsWii[i] = wiiPad[i].btns_h;
+			previousButtonsWii[i] = WPAD_ButtonsHeld(i);
 #endif
 		}
 		clearInput = false;
@@ -80,9 +79,13 @@ void Focus::updateFocus()
 	for (int i=0; i<4; i++)
 	{
 		u16 currentButtonsGC = PAD_ButtonsHeld(i);
+#ifdef HW_RVL
+		u32 currentButtonsWii = WPAD_ButtonsHeld(i);
+#endif
 		if (currentButtonsGC ^ previousButtonsGC[i])
 		{
 			u16 currentButtonsDownGC = (currentButtonsGC ^ previousButtonsGC[i]) & currentButtonsGC;
+			previousButtonsGC[i] = currentButtonsGC;
 			switch (currentButtonsDownGC & 0xf) {
 			case PAD_BUTTON_LEFT:
 				focusDirection = DIRECTION_LEFT;
@@ -108,14 +111,14 @@ void Focus::updateFocus()
 			}
 			if (primaryFocusOwner) primaryFocusOwner = primaryFocusOwner->updateFocus(focusDirection,buttonsDown);
 			else primaryFocusOwner = currentFrame->updateFocus(focusDirection,buttonsDown);
-			previousButtonsGC[i] = currentButtonsGC;
 			break;
 		}
 #ifdef HW_RVL
-		else if (wiiPad[i].btns_h ^ previousButtonsWii[i])
+		else if (currentButtonsWii ^ previousButtonsWii[i])
 		{
-			u32 currentButtonsDownWii = (wiiPad[i].btns_h ^ previousButtonsWii[i]) & wiiPad[i].btns_h;
-			switch (wiiPad[i].exp.type)
+			u32 currentButtonsDownWii = (currentButtonsWii ^ previousButtonsWii[i]) & currentButtonsWii;
+			previousButtonsWii[i] = currentButtonsWii;
+			switch (wpad[i].exp.type)
 			{
 			case WPAD_EXP_CLASSIC:
 			case WPAD_EXP_WIIUPRO:
@@ -208,7 +211,6 @@ void Focus::updateFocus()
 			}
 			if (primaryFocusOwner) primaryFocusOwner = primaryFocusOwner->updateFocus(focusDirection,buttonsDown);
 			else primaryFocusOwner = currentFrame->updateFocus(focusDirection,buttonsDown);
-			previousButtonsWii[i] = wiiPad[i].btns_h;
 			break;
 		}
 #endif

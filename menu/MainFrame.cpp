@@ -229,8 +229,7 @@ void Func_PlayGame()
 		{
 			if((u16)PAD_ButtonsHeld(i)) buttonHeld++;
 #ifdef HW_RVL
-			WPADData* wiiPad = WPAD_Data(i);
-			if(wiiPad->err == WPAD_ERR_NONE && wiiPad->btns_h) buttonHeld++;
+			if(WPAD_ButtonsHeld(i)) buttonHeld++;
 #endif
 		}
 	}

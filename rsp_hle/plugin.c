@@ -1,6 +1,6 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *   Mupen64plus-rsp-hle - plugin.c                                        *
- *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
+ *   Mupen64Plus homepage: https://mupen64plus.org/                        *
  *   Copyright (C) 2014 Bobby Smiles                                       *
  *   Copyright (C) 2009 Richard Goedeken                                   *
  *   Copyright (C) 2002 Hacktarux                                          *
@@ -28,6 +28,7 @@
 #include "common.h"
 #include "hle.h"
 #include "hle_internal.h"
+#include "hle_external.h"
 
 #include "RSPPlugin.h"
 #include "Rsp_#1.1.h"
@@ -45,6 +46,11 @@ static void (*l_ShowCFB)(void) = NULL;
 void HleVerboseMessage(void* UNUSED(user_defined), const char *message, ...)
 {
     /* discard verbose message */
+}
+
+void HleInfoMessage(void* UNUSED(user_defined), const char *message, ...)
+{
+    /* discard informational message */
 }
 
 void HleErrorMessage(void* UNUSED(user_defined), const char *message, ...)
@@ -97,6 +103,10 @@ void HleShowCFB(void* UNUSED(user_defined))
     (*l_ShowCFB)();
 }
 
+int HleForwardTask(void* user_defined)
+{
+    return -1;
+}
 
 /* DLL-exported functions */
 EXPORT void CALL CloseDLL(void)
@@ -140,9 +150,12 @@ EXPORT void CALL InitiateRSP(RSP_INFO Rsp_Info, unsigned int* UNUSED(CycleCount)
     l_ProcessAlistList = Rsp_Info.ProcessAlistList;
     l_ProcessRdpList = Rsp_Info.ProcessRdpList;
     l_ShowCFB = Rsp_Info.ShowCFB;
+
+    g_hle.hle_gfx = 1;
+    g_hle.hle_aud = 0;
 }
 
 EXPORT void CALL RomClosed(void)
 {
-    /* do nothing */
+    g_hle.cached_ucodes.count = 0;
 }

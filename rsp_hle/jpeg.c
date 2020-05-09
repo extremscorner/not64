@@ -1,6 +1,6 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *   Mupen64plus-rsp-hle - jpeg.c                                          *
- *   Mupen64Plus homepage: http://code.google.com/p/mupen64plus/           *
+ *   Mupen64Plus homepage: https://mupen64plus.org/                        *
  *   Copyright (C) 2012 Bobby Smiles                                       *
  *   Copyright (C) 2009 Richard Goedeken                                   *
  *   Copyright (C) 2002 Hacktarux                                          *
@@ -475,7 +475,7 @@ static void ReorderSubBlock(int16_t *dst, const int16_t *src, const unsigned int
     unsigned int i;
 
     /* source and destination sublocks cannot overlap */
-    assert(abs(dst - src) > SUBBLOCK_SIZE);
+    assert(labs(dst - src) > SUBBLOCK_SIZE);
 
     for (i = 0; i < SUBBLOCK_SIZE; ++i)
         dst[i] = src[table[i]];
