@@ -564,7 +564,6 @@ void VI_GX_renderCpuFramebuffer()
 	GX_SetFog(GX_FOG_NONE,0.1,1.0,0.0,1.0,(GXColor) {0,0,0,255});
 
 	Mtx44 GXprojection;
-	guMtxIdentity(GXprojection);
 	guOrtho(GXprojection, 0, 480, 0, 640, 0.0f, 1.0f);
 	GX_LoadProjectionMtx(GXprojection, GX_ORTHOGRAPHIC); 
 	Mtx	GXmodelViewIdent;

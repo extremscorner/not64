@@ -423,7 +423,6 @@ void FrameBuffer_RenderBuffer( u32 address )
 			GX_SetFog(GX_FOG_NONE,0.1,1.0,0.0,1.0,(GXColor) {0,0,0,255});
 
 			Mtx44 GXprojection;
-			guMtxIdentity(GXprojection);
 			guOrtho(GXprojection, 0, OGL.height, 0, OGL.width, 0.0f, 1.0f);
 			GX_LoadProjectionMtx(GXprojection, GX_ORTHOGRAPHIC); 
 			GX_LoadPosMtxImm(OGL.GXmodelViewIdent,GX_PNMTX0);
@@ -558,7 +557,6 @@ void FrameBuffer_RestoreBuffer( u32 address, u16 size, u16 width )
 			GX_SetFog(GX_FOG_NONE,0.1,1.0,0.0,1.0,(GXColor) {0,0,0,255});
 
 			Mtx44 GXprojection;
-			guMtxIdentity(GXprojection);
 			guOrtho(GXprojection, 0, OGL.height, 0, OGL.width, 0.0f, 1.0f);
 			GX_LoadProjectionMtx(GXprojection, GX_ORTHOGRAPHIC); 
 			GX_LoadPosMtxImm(OGL.GXmodelViewIdent,GX_PNMTX0);

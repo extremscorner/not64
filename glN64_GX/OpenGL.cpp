@@ -1043,7 +1043,6 @@ void OGL_AddTriangle( SPVertex *vertices, int v0, int v1, int v2 )
 		//Note: Could also handle primDepthZ by manipulating the Projection matrix
 //		OGL.vertices[OGL.numVertices].z = (gDP.otherMode.depthSource == G_ZS_PRIM) && !(OGL.GXuseProj) ? gDP.primDepth.z * vertices[v[i]].w : vertices[v[i]].z;
 		OGL.vertices[OGL.numVertices].z = vertices[v[i]].z;
-		OGL.vertices[OGL.numVertices].zPrime = vertices[v[i]].zPrime;
 #endif // __GX__
 		OGL.vertices[OGL.numVertices].w = vertices[v[i]].w;
 
@@ -1248,13 +1247,11 @@ void OGL_DrawTriangles()
 	for (int i = 0; i < OGL.numVertices; i++) {
 		if(OGL.GXuseCombW)
 			GX_Position3f32( OGL.vertices[i].x, OGL.vertices[i].y, -OGL.vertices[i].w );
-//			GX_Position3f32( OGL.vertices[i].x, OGL.vertices[i].y, OGL.vertices[i].zPrime );
 		else
 		{
 			invW = (OGL.vertices[i].w != 0) ? 1/OGL.vertices[i].w : 0.0f;
 			GX_Position3f32( OGL.vertices[i].x*invW, OGL.vertices[i].y*invW, OGL.vertices[i].z*invW );
 		}
-//		GX_Position3f32(OGL.vertices[i].x/OGL.vertices[i].w, OGL.vertices[i].y/OGL.vertices[i].w, OGL.vertices[i].z/OGL.vertices[i].w);
 		GXcol.r = GXcastf32u8(OGL.vertices[i].color.r);
 		GXcol.g = GXcastf32u8(OGL.vertices[i].color.g);
 		GXcol.b = GXcastf32u8(OGL.vertices[i].color.b);
@@ -1425,7 +1422,6 @@ void OGL_DrawRect( int ulx, int uly, int lrx, int lry, float *color )
 	GX_SetScissor((u32) 0,(u32) 0,(u32) OGL.width,(u32) OGL.height);	//Disable Scissor
 	GX_SetCullMode (GX_CULL_NONE);
 	Mtx44 GXprojection;
-	guMtxIdentity(GXprojection);
 	guOrtho(GXprojection, 0, VI.height, 0, VI.width, 1.0f, -1.0f);
 	if(OGL.GXpolyOffset)
 		GXprojection[2][3] -= GXpolyOffsetFactor;
@@ -1518,7 +1514,6 @@ void OGL_DrawTexturedRect( float ulx, float uly, float lrx, float lry, float uls
 	GX_SetScissor((u32) ulx1,(u32) uly1,(u32) (lrx1 - ulx1),(u32) (lry1 - uly1));
 	GX_SetCullMode (GX_CULL_NONE);
 	Mtx44 GXprojection;
-	guMtxIdentity(GXprojection);
 	guOrtho(GXprojection, 0, VI.height, 0, VI.width, 1.0f, -1.0f);
 	if(OGL.GXpolyOffset)
 		GXprojection[2][3] -= GXpolyOffsetFactor;
@@ -2027,13 +2022,14 @@ void OGL_GXinitDlist()
 	GX_LoadTexMtxImm(OGL.GXmodelViewIdent,GX_TEXMTX0,GX_MTX2x4);
 
 	//Reset projection matrix
-	guMtxIdentity(OGL.GXcombW);
-	guMtxIdentity(OGL.GXprojIdent);
-//	guOrtho(OGL.GXprojIdent, -1, 1, -1, 1, 1.0f, -1.0f);
+	guMtx44Identity(OGL.GXcombW);
+	guMtx44Identity(OGL.GXprojIdent);
 	//N64 Z clip space is backwards, so mult z components by -1
 	//N64 Z [-1,1] whereas GC Z [-1,0], so mult by 0.5 and shift by -0.5
-	OGL.GXcombW[3][2] = -1;
-	OGL.GXcombW[3][3] = 0;
+	OGL.GXcombW[2][2] = 0.0f;
+	OGL.GXcombW[2][3] = -0.5f;
+	OGL.GXcombW[3][2] = -1.0f;
+	OGL.GXcombW[3][3] = 0.0f;
 	OGL.GXprojIdent[2][2] = GXprojZScale; //0.5;
 	OGL.GXprojIdent[2][3] = GXprojZOffset; //-0.5;
 	GX_LoadProjectionMtx(OGL.GXprojIdent, GX_ORTHOGRAPHIC);
@@ -2086,7 +2082,6 @@ void OGL_GXclearEFB()
 //	GX_SetScissor(0,0,rmode->fbWidth,rmode->efbHeight);
 	GX_SetCullMode (GX_CULL_NONE);
 	Mtx44 GXprojection;
-	guMtxIdentity(GXprojection);
 	guOrtho(GXprojection, 0, OGL.height, 0, OGL.width, 0.0f, 1.0f);
 	GX_LoadProjectionMtx(GXprojection, GX_ORTHOGRAPHIC); 
 	GX_LoadPosMtxImm(OGL.GXmodelViewIdent,GX_PNMTX0);
