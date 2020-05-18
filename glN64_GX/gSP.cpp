@@ -127,7 +127,8 @@ void gSPCombineMatrices()
 
 	if (OGL.GXprojTemp[2][3] != 0.0f)
 	{
-		OGL.GXcombW[2][3] = (1.0f / OGL.GXprojTemp[2][3]) * GXprojZScale;
+		OGL.GXcombW[2][3] = GXprojZScale / OGL.GXprojTemp[2][3];
+		OGL.GXcombW[2][2] = -GXprojZOffset + (OGL.GXcombW[2][3] * OGL.GXprojTemp[3][3]);
 		OGL.GXuseCombW = true;
 		OGL.GXupdateMtx = true;
 	}
@@ -373,20 +374,20 @@ void gSPViewport( u32 v )
 #ifndef _BIG_ENDIAN
 	gSP.viewport.vscale[0] = _FIXED2FLOAT( *(s16*)&RDRAM[address +  2], 2 );
 	gSP.viewport.vscale[1] = _FIXED2FLOAT( *(s16*)&RDRAM[address     ], 2 );
-	gSP.viewport.vscale[2] = _FIXED2FLOAT( *(s16*)&RDRAM[address +  6], 10 );// * 0.00097847357f;
+	gSP.viewport.vscale[2] = _FIXED2FLOAT( *(s16*)&RDRAM[address +  6], 10 ) + FIXED2FLOATRECIP10;
 	gSP.viewport.vscale[3] = *(s16*)&RDRAM[address +  4];
 	gSP.viewport.vtrans[0] = _FIXED2FLOAT( *(s16*)&RDRAM[address + 10], 2 );
 	gSP.viewport.vtrans[1] = _FIXED2FLOAT( *(s16*)&RDRAM[address +  8], 2 );
-	gSP.viewport.vtrans[2] = _FIXED2FLOAT( *(s16*)&RDRAM[address + 14], 10 );// * 0.00097847357f;
+	gSP.viewport.vtrans[2] = _FIXED2FLOAT( *(s16*)&RDRAM[address + 14], 10 ) + FIXED2FLOATRECIP10;
 	gSP.viewport.vtrans[3] = *(s16*)&RDRAM[address + 12];
 #else // !_BIG_ENDIAN -> This is to correct for big endian
 	gSP.viewport.vscale[0] = _FIXED2FLOAT( *(s16*)&RDRAM[address     ], 2 );
 	gSP.viewport.vscale[1] = _FIXED2FLOAT( *(s16*)&RDRAM[address +  2], 2 );
-	gSP.viewport.vscale[2] = _FIXED2FLOAT( *(s16*)&RDRAM[address +  4], 10 );// * 0.00097847357f;
+	gSP.viewport.vscale[2] = _FIXED2FLOAT( *(s16*)&RDRAM[address +  4], 10 ) + FIXED2FLOATRECIP10;
 	gSP.viewport.vscale[3] = *(s16*)&RDRAM[address +  6];
 	gSP.viewport.vtrans[0] = _FIXED2FLOAT( *(s16*)&RDRAM[address +  8], 2 );
 	gSP.viewport.vtrans[1] = _FIXED2FLOAT( *(s16*)&RDRAM[address + 10], 2 );
-	gSP.viewport.vtrans[2] = _FIXED2FLOAT( *(s16*)&RDRAM[address + 12], 10 );// * 0.00097847357f;
+	gSP.viewport.vtrans[2] = _FIXED2FLOAT( *(s16*)&RDRAM[address + 12], 10 ) + FIXED2FLOATRECIP10;
 	gSP.viewport.vtrans[3] = *(s16*)&RDRAM[address + 14];
 #endif // _BIG_ENDIAN
 
@@ -432,7 +433,8 @@ void gSPForceMatrix( u32 mptr )
 
 	if (OGL.GXprojTemp[2][3] != 0.0f)
 	{
-		OGL.GXcombW[2][3] = (1.0f / OGL.GXprojTemp[2][3]) * GXprojZScale;
+		OGL.GXcombW[2][3] = GXprojZScale / OGL.GXprojTemp[2][3];
+		OGL.GXcombW[2][2] = -GXprojZOffset + (OGL.GXcombW[2][3] * OGL.GXprojTemp[3][3]);
 		OGL.GXuseCombW = true;
 		OGL.GXupdateMtx = true;
 	}
@@ -1232,7 +1234,8 @@ void gSPInsertMatrix( u32 where, u32 num )
 
 	if (OGL.GXprojTemp[2][3] != 0.0f)
 	{
-		OGL.GXcombW[2][3] = (1.0f / OGL.GXprojTemp[2][3]) * GXprojZScale;
+		OGL.GXcombW[2][3] = GXprojZScale / OGL.GXprojTemp[2][3];
+		OGL.GXcombW[2][2] = -GXprojZOffset + (OGL.GXcombW[2][3] * OGL.GXprojTemp[3][3]);
 		OGL.GXuseCombW = true;
 		OGL.GXupdateMtx = true;
 	}

@@ -608,8 +608,12 @@ void OGL_UpdateViewport()
 	            (int)(gSP.viewport.width * OGL.scaleX), (int)(gSP.viewport.height * OGL.scaleY) );
 	glDepthRange( 0.0f, 1.0f );//gSP.viewport.nearz, gSP.viewport.farz );
 #else // !__GX__
-	GX_SetViewport((f32) (OGL.GXorigX + gSP.viewport.x * OGL.GXscaleX),(f32) (OGL.GXorigY + gSP.viewport.y * OGL.GXscaleY),
-		(f32) (gSP.viewport.width * OGL.GXscaleX),(f32) (gSP.viewport.height * OGL.GXscaleY), 0.0f, 1.0f);
+	if (OGL.GXpolyOffset)
+		GX_SetViewport((f32) (OGL.GXorigX + gSP.viewport.x * OGL.GXscaleX),(f32) (OGL.GXorigY + gSP.viewport.y * OGL.GXscaleY),
+			(f32) (gSP.viewport.width * OGL.GXscaleX),(f32) (gSP.viewport.height * OGL.GXscaleY), gSP.viewport.nearz, gSP.viewport.farz - GXpolyOffsetFactor);
+	else
+		GX_SetViewport((f32) (OGL.GXorigX + gSP.viewport.x * OGL.GXscaleX),(f32) (OGL.GXorigY + gSP.viewport.y * OGL.GXscaleY),
+			(f32) (gSP.viewport.width * OGL.GXscaleX),(f32) (gSP.viewport.height * OGL.GXscaleY), gSP.viewport.nearz, gSP.viewport.farz);
 #endif // __GX__
 }
 
@@ -1160,39 +1164,11 @@ void OGL_DrawTriangles()
 	//Update MV & P Matrices
 	if(OGL.GXupdateMtx)
 	{
-		if(OGL.GXpolyOffset)
-		{
-			if(OGL.GXuseCombW)
-			{
-				CopyMatrix( OGL.GXprojTemp, OGL.GXcombW );
-				OGL.GXprojTemp[2][2] += GXpolyOffsetFactor;
-				GX_LoadProjectionMtx(OGL.GXprojTemp, GX_PERSPECTIVE); 
-			}
-			else
-			{
-				CopyMatrix( OGL.GXprojTemp, OGL.GXprojIdent );
-				OGL.GXprojTemp[2][3] -= GXpolyOffsetFactor;
-				GX_LoadProjectionMtx(OGL.GXprojTemp, GX_ORTHOGRAPHIC); 
-			}
-		}
+		OGL_UpdateViewport();
+		if(OGL.GXuseCombW)
+			GX_LoadProjectionMtx(OGL.GXcombW, GX_PERSPECTIVE);
 		else
-		{
-			//TODO: handle this case when !G_ZBUFFER
-/*			if(!(gSP.geometryMode & G_ZBUFFER))
-			{
-				CopyMatrix( OGL.GXprojTemp, OGL.GXproj );
-				OGL.GXprojTemp[2][2] =  0.0;
-				OGL.GXprojTemp[2][3] = -1.0;
-				if(OGL.GXprojTemp[3][2] == -1)
-					GX_LoadProjectionMtx(OGL.GXprojTemp, GX_PERSPECTIVE);
-				else
-					GX_LoadProjectionMtx(OGL.GXprojTemp, GX_ORTHOGRAPHIC); 
-			}*/
-			if(OGL.GXuseCombW)
-				GX_LoadProjectionMtx(OGL.GXcombW, GX_PERSPECTIVE); 
-			else
-				GX_LoadProjectionMtx(OGL.GXprojIdent, GX_ORTHOGRAPHIC); 
-		}
+			GX_LoadProjectionMtx(OGL.GXprojIdent, GX_ORTHOGRAPHIC);
 		OGL.GXupdateMtx = false;
 	}
 
@@ -1319,28 +1295,11 @@ void OGL_DrawLine( SPVertex *vertices, int v0, int v1, float width )
 	//Update MV & P Matrices
 	if(OGL.GXupdateMtx)
 	{
-		if(OGL.GXpolyOffset)
-		{
-			if(OGL.GXuseCombW)
-			{
-				CopyMatrix( OGL.GXprojTemp, OGL.GXcombW );
-				OGL.GXprojTemp[2][2] += GXpolyOffsetFactor;
-				GX_LoadProjectionMtx(OGL.GXprojTemp, GX_PERSPECTIVE); 
-			}
-			else
-			{
-				CopyMatrix( OGL.GXprojTemp, OGL.GXprojIdent );
-				OGL.GXprojTemp[2][3] -= GXpolyOffsetFactor;
-				GX_LoadProjectionMtx(OGL.GXprojTemp, GX_ORTHOGRAPHIC); 
-			}
-		}
+		OGL_UpdateViewport();
+		if(OGL.GXuseCombW)
+			GX_LoadProjectionMtx(OGL.GXcombW, GX_PERSPECTIVE);
 		else
-		{
-			if(OGL.GXuseCombW)
-				GX_LoadProjectionMtx(OGL.GXcombW, GX_PERSPECTIVE); 
-			else
-				GX_LoadProjectionMtx(OGL.GXprojIdent, GX_ORTHOGRAPHIC); 
-		}
+			GX_LoadProjectionMtx(OGL.GXprojIdent, GX_ORTHOGRAPHIC);
 		OGL.GXupdateMtx = false;
 	}
 
@@ -1423,8 +1382,6 @@ void OGL_DrawRect( int ulx, int uly, int lrx, int lry, float *color )
 	GX_SetCullMode (GX_CULL_NONE);
 	Mtx44 GXprojection;
 	guOrtho(GXprojection, 0, VI.height, 0, VI.width, 1.0f, -1.0f);
-	if(OGL.GXpolyOffset)
-		GXprojection[2][3] -= GXpolyOffsetFactor;
 	GX_LoadProjectionMtx(GXprojection, GX_ORTHOGRAPHIC); 
 	GX_LoadPosMtxImm(OGL.GXmodelViewIdent,GX_PNMTX0);
 
@@ -1515,10 +1472,7 @@ void OGL_DrawTexturedRect( float ulx, float uly, float lrx, float lry, float uls
 	GX_SetCullMode (GX_CULL_NONE);
 	Mtx44 GXprojection;
 	guOrtho(GXprojection, 0, VI.height, 0, VI.width, 1.0f, -1.0f);
-	if(OGL.GXpolyOffset)
-		GXprojection[2][3] -= GXpolyOffsetFactor;
 	GX_LoadProjectionMtx(GXprojection, GX_ORTHOGRAPHIC); 
-
 	GX_LoadPosMtxImm(OGL.GXmodelViewIdent,GX_PNMTX0);
 
 	GX_SetViewport((f32) OGL.GXorigX,(f32) OGL.GXorigY,(f32) OGL.GXwidth,(f32) OGL.GXheight, 0.0f, 1.0f);
