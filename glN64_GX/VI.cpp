@@ -285,7 +285,7 @@ void VI_GX_showLoadIcon()
 	GX_SetAlphaUpdate(GX_ENABLE);
 	GX_SetDstAlpha(GX_DISABLE, 0xFF);
 	GX_SetZMode(GX_DISABLE,GX_ALWAYS,GX_FALSE);
-	GX_SetZTexture(GX_ZT_DISABLE,GX_TF_Z16,0);	//GX_ZT_DISABLE or GX_ZT_REPLACE; set in gDP.cpp
+	GX_SetZTexture(GX_ZT_DISABLE,GX_TF_Z8,0);
 	GX_SetZCompLoc(GX_TRUE);	// Do Z-compare before texturing.
 	//set cull mode
 	GX_SetCullMode (GX_CULL_NONE);
@@ -351,7 +351,7 @@ void VI_GX_showLoadIcon()
 	GX_SetAlphaUpdate(GX_ENABLE);
 	GX_SetDstAlpha(GX_DISABLE, 0xFF);
 	GX_SetZMode(GX_DISABLE,GX_ALWAYS,GX_FALSE);
-	GX_SetZTexture(GX_ZT_DISABLE,GX_TF_Z16,0);	//GX_ZT_DISABLE or GX_ZT_REPLACE; set in gDP.cpp
+	GX_SetZTexture(GX_ZT_DISABLE,GX_TF_Z8,0);
 	GX_SetZCompLoc(GX_TRUE);	// Do Z-compare before texturing.
 	//set cull mode
 	GX_SetCullMode (GX_CULL_NONE);

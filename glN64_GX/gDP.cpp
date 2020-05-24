@@ -82,15 +82,16 @@ void gDPSetOtherMode( u32 mode0, u32 mode1 )
 
 void gDPSetPrimDepth( u16 z, u16 dz )
 {
-	gDP.primDepth.z = min( 1.0f, max( 0.0f, (_FIXED2FLOAT( z, 15 ) - gSP.viewport.vtrans[2]) / gSP.viewport.vscale[2] ) );
-	gDP.primDepth.deltaZ = dz;
+	gDP.primDepth.z = _FIXED2FLOAT( _SHIFTR( z, 0, 15 ), 15 );
+	gDP.primDepth.deltaZ = _FIXED2FLOAT( _SHIFTR( dz, 0, 15 ), 15 );
 
 #ifdef __GX__
+	gDP.changed |= CHANGED_RENDERMODE;
+
 #ifdef SHOW_DEBUG
 	sprintf(txtbuffer,"gDP: Setting PrimDepth to %f", gDP.primDepth.z);
 	DEBUG_print(txtbuffer,DBG_RSPINFO1);
 #endif
-	TextureCache_UpdatePrimDepthZtex(gDP.primDepth.z);
 #endif //__GX__
 
 #ifdef DEBUG
@@ -230,11 +231,6 @@ void gDPSetDepthSource( u32 source )
 
 #ifdef __GX__
 	gDP.changed |= CHANGED_RENDERMODE;
-
-/*	if (gDP.otherMode.depthSource == G_ZS_PRIM)
-		GX_SetZTexture(GX_ZT_REPLACE,GX_TF_Z16,0);
-	else
-		GX_SetZTexture(GX_ZT_DISABLE,GX_TF_Z16,0);*/
 #endif // __GX__
 
 #ifdef DEBUG

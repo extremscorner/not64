@@ -75,6 +75,14 @@ void byte_swap(char* buffer, unsigned int length)
 	}
 }
 
+void stripInvalidChars(char* str)
+{
+	char* p;
+	
+	while ((p = strpbrk(str, "\\/:*?\"<>|")) != NULL)
+		*p = '_';
+}
+
 static struct {
 	int Cartridge_ID;
 	char* Country_codes;
@@ -150,6 +158,8 @@ int rom_read(fileBrowser_file* file){
   		break;
     }
   }
+  // Replace any non file system compliant chars with underscores
+  stripInvalidChars(&ROM_SETTINGS.goodname[0]);
   // Fix save type for certain special sized (16kbit) eeprom games
   ROM_SETTINGS.isEEPROM16k = isEEPROM16k();
 

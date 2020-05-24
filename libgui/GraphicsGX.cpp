@@ -220,7 +220,7 @@ void Graphics::init()
 void Graphics::drawInit()
 {
 	// Reset various parameters from gfx plugin
-	GX_SetZTexture(GX_ZT_DISABLE,GX_TF_Z16,0);	//GX_ZT_DISABLE or GX_ZT_REPLACE; set in gDP.cpp
+	GX_SetZTexture(GX_ZT_DISABLE,GX_TF_Z8,0);
 	GX_SetZCompLoc(GX_TRUE);	// Do Z-compare before texturing.
 	GX_SetFog(GX_FOG_NONE,0,1,0,1,(GXColor){0,0,0,255});
 	GX_SetViewport(0,0,vmode->fbWidth,vmode->efbHeight,0,1);

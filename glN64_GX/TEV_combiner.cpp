@@ -168,6 +168,7 @@ void Init_TEV_combine()	//Called at Combiner Init
 	//Load dummy tex for first 2 textures. Maybe should for 2 more for Noise/FB textures.
 	TextureCache_ActivateDummy( 0 );
 	TextureCache_ActivateDummy( 1 );
+	TextureCache_ActivateDummy( 2 );
 
 	/*
 	if ((OGL.ARB_texture_env_crossbar) || (OGL.NV_texture_env_combine4) || (OGL.ATIX_texture_env_route))

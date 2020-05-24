@@ -794,9 +794,9 @@ void OGL_UpdateStates()
 			glDisable( GL_POLYGON_STIPPLE );*/
 
 		if (gDP.otherMode.depthSource == G_ZS_PRIM)
-			GX_SetZTexture(GX_ZT_REPLACE,GX_TF_Z16,0);
+			GX_SetZTexture(GX_ZT_REPLACE,GX_TF_Z24X8,gDP.primDepth.z*GX_MAX_Z24);
 		else
-			GX_SetZTexture(GX_ZT_DISABLE,GX_TF_Z16,0);
+			GX_SetZTexture(GX_ZT_DISABLE,GX_TF_Z8,0);
 	}
 #endif // __GX__
 
@@ -1950,9 +1950,8 @@ void OGL_GXinitDlist()
 	OGL.enable2xSaI = glN64_use2xSaiTextures;
 	OGL.forceBilinear = glN64_use2xSaiTextures;
 
-	// init primeDepthZtex, Ztexture, AlphaCompare, and Texture Clamping
-	TextureCache_UpdatePrimDepthZtex( 1.0f );
-	GX_SetZTexture(GX_ZT_DISABLE,GX_TF_Z16,0);	//GX_ZT_DISABLE or GX_ZT_REPLACE; set in gDP.cpp
+	// init Ztexture, AlphaCompare, and Texture Clamping
+	GX_SetZTexture(GX_ZT_DISABLE,GX_TF_Z8,0);
 	OGL.GXuseAlphaCompare = false;
 	GX_SetZCompLoc(GX_TRUE);	// Do Z-compare before texturing.
 	OGL.GXrenderTexRect = false;
@@ -2027,7 +2026,7 @@ void OGL_GXclearEFB()
 	GX_SetTevOp (GX_TEVSTAGE0, GX_PASSCLR);
 	GX_SetTevOrder (GX_TEVSTAGE0, GX_TEXMAP_NULL, GX_TEXMAP_NULL, GX_COLOR0A0);
 	GX_SetBlendMode(GX_BM_NONE, GX_BL_ONE, GX_BL_ZERO, GX_LO_CLEAR); 
-	GX_SetZTexture(GX_ZT_DISABLE,GX_TF_Z16,0);	//GX_ZT_DISABLE or GX_ZT_REPLACE; set in gDP.cpp
+	GX_SetZTexture(GX_ZT_DISABLE,GX_TF_Z8,0);
 	GX_SetZCompLoc(GX_TRUE);	// Do Z-compare before texturing.
 	GX_SetAlphaCompare(GX_ALWAYS,0,GX_AOP_AND,GX_ALWAYS,0);
 	GX_SetFog(GX_FOG_NONE,0.1,1.0,0.0,1.0,(GXColor){0,0,0,255});
