@@ -45,18 +45,18 @@ void Func_TabAudio();
 void Func_TabSaves();
 
 void Func_NativeSaveSD();
-void Func_NativeSaveUSB();
+void Func_NativeSaveFAT();
 void Func_NativeSaveCardA();
 void Func_NativeSaveCardB();
 void Func_SaveStateSD();
-void Func_SaveStateUSB();
+void Func_SaveStateFAT();
 void Func_CpuPureInterp();
 void Func_CpuDynarec();
 void Func_ClockDivider1();
 void Func_ClockDivider2();
 void Func_ClockDivider3();
 void Func_SaveSettingsSD();
-void Func_SaveSettingsUSB();
+void Func_SaveSettingsFAT();
 
 void Func_ShowFpsOn();
 void Func_ShowFpsOff();
@@ -74,7 +74,7 @@ void Func_ConfigureInput();
 void Func_ConfigurePaks();
 void Func_ConfigureButtons();
 void Func_SaveButtonsSD();
-void Func_SaveButtonsUSB();
+void Func_SaveButtonsFAT();
 void Func_ToggleButtonLoad();
 
 void Func_DisableAudioYes();
@@ -112,7 +112,7 @@ static char FRAME_STRINGS[45][23] =
 	  "CPU Clock Divider",
 	  "Save Settings",
 	  "SD",
-	  "USB",
+	  "FAT",
 	  "CardA",
 	  "CardB",
 	  "Interpreter",
@@ -176,18 +176,18 @@ struct ButtonInfo
 	{	NULL,	BTN_A_SEL,	FRAME_STRINGS[4],	515.0,	 30.0,	100.0,	56.0,	-1,	-1,	 3,	 0,	Func_TabSaves,			Func_ReturnFromSettingsFrame }, // Saves tab
 	//Buttons for General Tab (starts at button[5])
 	{	NULL,	BTN_A_SEL,	FRAME_STRINGS[10],	295.0,	100.0,	 55.0,	56.0,	 0,	 9,	 8,	 6,	Func_NativeSaveSD,		Func_ReturnFromSettingsFrame }, // Native Save: SD
-	{	NULL,	BTN_A_SEL,	FRAME_STRINGS[11],	360.0,	100.0,	 70.0,	56.0,	 0,	10,	 5,	 7,	Func_NativeSaveUSB,		Func_ReturnFromSettingsFrame }, // Native Save: USB
+	{	NULL,	BTN_A_SEL,	FRAME_STRINGS[11],	360.0,	100.0,	 70.0,	56.0,	 0,	10,	 5,	 7,	Func_NativeSaveFAT,		Func_ReturnFromSettingsFrame }, // Native Save: FAT
 	{	NULL,	BTN_A_SEL,	FRAME_STRINGS[12],	440.0,	100.0,	 90.0,	56.0,	 0,	10,	 6,	 8,	Func_NativeSaveCardA,	Func_ReturnFromSettingsFrame }, // Native Save: Card A
 	{	NULL,	BTN_A_SEL,	FRAME_STRINGS[13],	540.0,	100.0,	 90.0,	56.0,	 0,	10,	 7,	 5,	Func_NativeSaveCardB,	Func_ReturnFromSettingsFrame }, // Native Save: Card B
 	{	NULL,	BTN_A_SEL,	FRAME_STRINGS[10],	295.0,	170.0,	 55.0,	56.0,	 5,	11,	10,	10,	Func_SaveStateSD,		Func_ReturnFromSettingsFrame }, // Save State: SD
-	{	NULL,	BTN_A_SEL,	FRAME_STRINGS[11],	360.0,	170.0,	 70.0,	56.0,	 6,	11,	 9,	 9,	Func_SaveStateUSB,		Func_ReturnFromSettingsFrame }, // Save State: USB
+	{	NULL,	BTN_A_SEL,	FRAME_STRINGS[11],	360.0,	170.0,	 70.0,	56.0,	 6,	11,	 9,	 9,	Func_SaveStateFAT,		Func_ReturnFromSettingsFrame }, // Save State: FAT
 	{	NULL,	BTN_A_SEL,	FRAME_STRINGS[14],	295.0,	240.0,	160.0,	56.0,	 9,	13,	12,	12,	Func_CpuPureInterp,		Func_ReturnFromSettingsFrame }, // CPU Emulator: Interpreter
 	{	NULL,	BTN_A_SEL,	FRAME_STRINGS[15],	465.0,	240.0,	160.0,	56.0,	10,	15,	11,	11,	Func_CpuDynarec,		Func_ReturnFromSettingsFrame }, // CPU Emulator: Recompiler
 	{	NULL,	BTN_A_SEL,	FRAME_STRINGS[16],	295.0,	310.0,	 55.0,	56.0,	11,	16,	15,	14,	Func_ClockDivider1,		Func_ReturnFromSettingsFrame }, // CPU Clock Divider: 1
 	{	NULL,	BTN_A_SEL,	FRAME_STRINGS[17],	360.0,	310.0,	 55.0,	56.0,	11,	17,	13,	15,	Func_ClockDivider2,		Func_ReturnFromSettingsFrame }, // CPU Clock Divider: 2
 	{	NULL,	BTN_A_SEL,	FRAME_STRINGS[18],	425.0,	310.0,	 55.0,	56.0,	11,	17,	14,	13,	Func_ClockDivider3,		Func_ReturnFromSettingsFrame }, // CPU Clock Divider: 3
 	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[10],	295.0,	380.0,	 55.0,	56.0,	13,	 0,	17,	17,	Func_SaveSettingsSD,	Func_ReturnFromSettingsFrame }, // Save Settings: SD
-	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[11],	360.0,	380.0,	 70.0,	56.0,	14,	 0,	16,	16,	Func_SaveSettingsUSB,	Func_ReturnFromSettingsFrame }, // Save Settings: USB
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[11],	360.0,	380.0,	 70.0,	56.0,	14,	 0,	16,	16,	Func_SaveSettingsFAT,	Func_ReturnFromSettingsFrame }, // Save Settings: FAT
 	//Buttons for Video Tab (starts at button[18])
 	{	NULL,	BTN_A_SEL,	FRAME_STRINGS[24],	325.0,	100.0,	 75.0,	56.0,	 1,	21,	19,	19,	Func_ShowFpsOn,			Func_ReturnFromSettingsFrame }, // Show FPS: On
 	{	NULL,	BTN_A_SEL,	FRAME_STRINGS[25],	420.0,	100.0,	 75.0,	56.0,	 1,	22,	18,	18,	Func_ShowFpsOff,		Func_ReturnFromSettingsFrame }, // Show FPS: Off
@@ -205,7 +205,7 @@ struct ButtonInfo
 	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[30],	180.0,	170.0,	280.0,	56.0,	29,	31,	-1,	-1,	Func_ConfigurePaks,		Func_ReturnFromSettingsFrame }, // Configure Paks
 	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[31],	180.0,	240.0,	280.0,	56.0,	30,	32,	-1,	-1,	Func_ConfigureButtons,	Func_ReturnFromSettingsFrame }, // Configure Buttons
 	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[10],	295.0,	310.0,	 55.0,	56.0,	31,	34,	33,	33,	Func_SaveButtonsSD,		Func_ReturnFromSettingsFrame }, // Save Configuration: SD
-	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[11],	360.0,	310.0,	 70.0,	56.0,	31,	34,	32,	32,	Func_SaveButtonsUSB,	Func_ReturnFromSettingsFrame }, // Save Configuration: USB
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[11],	360.0,	310.0,	 70.0,	56.0,	31,	34,	32,	32,	Func_SaveButtonsFAT,	Func_ReturnFromSettingsFrame }, // Save Configuration: FAT
 	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[34],	295.0,	380.0,	135.0,	56.0,	32,	 2,	-1,	-1,	Func_ToggleButtonLoad,	Func_ReturnFromSettingsFrame }, // Toggle Button Load Slot
 	//Buttons for Audio Tab (starts at button[35])
 	{	NULL,	BTN_A_SEL,	FRAME_STRINGS[38],	345.0,	100.0,	 75.0,	56.0,	 3,	38,	36,	36,	Func_DisableAudioYes,	Func_ReturnFromSettingsFrame }, // Disable Audio: Yes
@@ -233,11 +233,11 @@ struct TextBoxInfo
 } FRAME_TEXTBOXES[NUM_FRAME_TEXTBOXES] =
 { //	textBox	textBoxString		x		y		scale	centered
 	//TextBoxes for General Tab (starts at textBox[0])
-	{	NULL,	FRAME_STRINGS[5],	155.0,	128.0,	 1.0,	true }, // Native Save Device: SD/USB/CardA/CardB
-	{	NULL,	FRAME_STRINGS[6],	155.0,	198.0,	 1.0,	true }, // Save State Device: SD/USB
+	{	NULL,	FRAME_STRINGS[5],	155.0,	128.0,	 1.0,	true }, // Native Save Device: SD/FAT/CardA/CardB
+	{	NULL,	FRAME_STRINGS[6],	155.0,	198.0,	 1.0,	true }, // Save State Device: SD/FAT
 	{	NULL,	FRAME_STRINGS[7],	155.0,	268.0,	 1.0,	true }, // CPU Emulator: Interpreter/Recompiler
 	{	NULL,	FRAME_STRINGS[8],	155.0,	338.0,	 1.0,	true }, // CPU Clock Divider: 1/2/3
-	{	NULL,	FRAME_STRINGS[9],	155.0,	408.0,	 1.0,	true }, // Save Settings: SD/USB
+	{	NULL,	FRAME_STRINGS[9],	155.0,	408.0,	 1.0,	true }, // Save Settings: SD/FAT
 	//TextBoxes for Video Tab (starts at textBox[4])
 	{	NULL,	FRAME_STRINGS[19],	190.0,	128.0,	 1.0,	true }, // Show FPS: On/Off
 	{	NULL,	FRAME_STRINGS[20],	130.0,	198.0,	 1.0,	true }, // ScreenMode: 4:3/16:9/Force 16:9
@@ -245,7 +245,7 @@ struct TextBoxInfo
 	{	NULL,	FRAME_STRINGS[22],	190.0,	338.0,	 1.0,	true }, // 2xSaI Textures: On/Off
 	{	NULL,	FRAME_STRINGS[23],	190.0,	408.0,	 1.0,	true }, // FB Textures: On/Off
 	//TextBoxes for Input Tab (starts at textBox[9])
-	{	NULL,	FRAME_STRINGS[32],	155.0,	338.0,	 1.0,	true }, // Save Configuration: SD/USB
+	{	NULL,	FRAME_STRINGS[32],	155.0,	338.0,	 1.0,	true }, // Save Configuration: SD/FAT
 	{	NULL,	FRAME_STRINGS[33],	155.0,	408.0,	 1.0,	true }, // Toggle Button Load Slot
 	//TextBoxes for Audio Tab (starts at textBox[11])
 	{	NULL,	FRAME_STRINGS[35],	210.0,	128.0,	 1.0,	true }, // Disable Audio: Yes/No
@@ -621,12 +621,12 @@ void Func_NativeSaveSD()
 	nativeSaveDevice = NATIVESAVEDEVICE_SD;
 }
 
-void Func_NativeSaveUSB()
+void Func_NativeSaveFAT()
 {
 	for (int i = 5; i <= 8; i++)
 		FRAME_BUTTONS[i].button->setSelected(false);
 	FRAME_BUTTONS[6].button->setSelected(true);
-	nativeSaveDevice = NATIVESAVEDEVICE_USB;
+	nativeSaveDevice = NATIVESAVEDEVICE_FAT;
 }
 
 void Func_NativeSaveCardA()
@@ -653,12 +653,12 @@ void Func_SaveStateSD()
 	saveStateDevice = SAVESTATEDEVICE_SD;
 }
 
-void Func_SaveStateUSB()
+void Func_SaveStateFAT()
 {
 	for (int i = 9; i <= 10; i++)
 		FRAME_BUTTONS[i].button->setSelected(false);
 	FRAME_BUTTONS[10].button->setSelected(true);
-	saveStateDevice = SAVESTATEDEVICE_USB;
+	saveStateDevice = SAVESTATEDEVICE_FAT;
 }
 
 void Func_CpuPureInterp()
@@ -725,21 +725,21 @@ void Func_SaveSettingsSD()
 	menu::MessageBox::getInstance().setMessage("Error saving settings to SD");
 }
 
-void Func_SaveSettingsUSB()
+void Func_SaveSettingsFAT()
 {
 	fileBrowser_file* configFile_file;
 	int (*configFile_init)(fileBrowser_file*) = fileBrowser_libfat_init;
-	configFile_file = &saveDir_libfat_USB;
+	configFile_file = &saveDir_libfat;
 	if(configFile_init(configFile_file)) {                //only if device initialized ok
-		FILE* f = fopen( "usb:/not64/settings.cfg", "wb" ); //attempt to open file
+		FILE* f = fopen( "fat:/not64/settings.cfg", "wb" ); //attempt to open file
 		if(f) {
 			writeConfig(f);                                   //write out the config
 			fclose(f);
-			menu::MessageBox::getInstance().setMessage("Saved settings to USB");
+			menu::MessageBox::getInstance().setMessage("Saved settings to FAT");
 			return;
 		}
 	}
-	menu::MessageBox::getInstance().setMessage("Error saving settings to USB");
+	menu::MessageBox::getInstance().setMessage("Error saving settings to FAT");
 }
 
 void Func_ShowFpsOn()
@@ -933,63 +933,63 @@ void Func_SaveButtonsSD()
 		menu::MessageBox::getInstance().setMessage("Error saving configuration to SD");
 }
 
-void Func_SaveButtonsUSB()
+void Func_SaveButtonsFAT()
 {
 	fileBrowser_file* configFile_file;
 	int (*configFile_init)(fileBrowser_file*) = fileBrowser_libfat_init;
 	int num_written = 0;
-	configFile_file = &saveDir_libfat_USB;
+	configFile_file = &saveDir_libfat;
 	if(configFile_init(configFile_file)) {                //only if device initialized ok
-		FILE* f = fopen( "usb:/not64/controlG.cfg", "wb" );  //attempt to open file
+		FILE* f = fopen( "fat:/not64/controlG.cfg", "wb" );  //attempt to open file
 		if(f) {
 			save_configurations(f, &controller_GC);					//write out GC controller mappings
 			fclose(f);
 			num_written++;
 		}
 #ifdef HW_RVL
-		f = fopen( "usb:/not64/controlD.cfg", "wb" );  //attempt to open file
+		f = fopen( "fat:/not64/controlD.cfg", "wb" );  //attempt to open file
 		if(f) {
 			save_configurations(f, &controller_ExtenmoteGC);		//write out GC controller mappings
 			fclose(f);
 			num_written++;
 		}
-		f = fopen( "usb:/not64/controlU.cfg", "wb" );  //attempt to open file
+		f = fopen( "fat:/not64/controlU.cfg", "wb" );  //attempt to open file
 		if(f) {
 			save_configurations(f, &controller_ExtenmoteN64);		//write out N64 controller mappings
 			fclose(f);
 			num_written++;
 		}
-		f = fopen( "usb:/not64/controlS.cfg", "wb" );  //attempt to open file
+		f = fopen( "fat:/not64/controlS.cfg", "wb" );  //attempt to open file
 		if(f) {
 			save_configurations(f, &controller_ExtenmoteSNES);		//write out SNES controller mappings
 			fclose(f);
 			num_written++;
 		}
-		f = fopen( "usb:/not64/controlF.cfg", "wb" );  //attempt to open file
+		f = fopen( "fat:/not64/controlF.cfg", "wb" );  //attempt to open file
 		if(f) {
 			save_configurations(f, &controller_ExtenmoteNES);		//write out NES controller mappings
 			fclose(f);
 			num_written++;
 		}
-		f = fopen( "usb:/not64/controlP.cfg", "wb" );  //attempt to open file
+		f = fopen( "fat:/not64/controlP.cfg", "wb" );  //attempt to open file
 		if(f) {
 			save_configurations(f, &controller_WiiUPro);			//write out WiiU Pro controller mappings
 			fclose(f);
 			num_written++;
 		}
-		f = fopen( "usb:/not64/controlC.cfg", "wb" );  //attempt to open file
+		f = fopen( "fat:/not64/controlC.cfg", "wb" );  //attempt to open file
 		if(f) {
 			save_configurations(f, &controller_Classic);			//write out Classic controller mappings
 			fclose(f);
 			num_written++;
 		}
-		f = fopen( "usb:/not64/controlN.cfg", "wb" );  //attempt to open file
+		f = fopen( "fat:/not64/controlN.cfg", "wb" );  //attempt to open file
 		if(f) {
 			save_configurations(f, &controller_WiimoteNunchuk);	//write out WM+NC controller mappings
 			fclose(f);
 			num_written++;
 		}
-		f = fopen( "usb:/not64/controlW.cfg", "wb" );  //attempt to open file
+		f = fopen( "fat:/not64/controlW.cfg", "wb" );  //attempt to open file
 		if(f) {
 			save_configurations(f, &controller_Wiimote);			//write out Wiimote controller mappings
 			fclose(f);
@@ -998,9 +998,9 @@ void Func_SaveButtonsUSB()
 #endif //HW_RVL
 	}
 	if (num_written == num_controller_t)
-		menu::MessageBox::getInstance().setMessage("Saved configuration to USB");
+		menu::MessageBox::getInstance().setMessage("Saved configuration to FAT");
 	else
-		menu::MessageBox::getInstance().setMessage("Error saving configuration to USB");
+		menu::MessageBox::getInstance().setMessage("Error saving configuration to FAT");
 }
 
 void Func_ToggleButtonLoad()

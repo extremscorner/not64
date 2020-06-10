@@ -42,7 +42,10 @@ extern int stop;
 #include <sdcard/wiisd_io.h>
 #include <ogc/usbstorage.h>
 const DISC_INTERFACE* frontsd = &__io_wiisd;
-const DISC_INTERFACE* usbmsd = &__io_usbstorage;
+const DISC_INTERFACE* usb = &__io_usbstorage;
+#else
+#include <ogc/dvd.h>
+const DISC_INTERFACE* gcloader = &__io_gcode;
 #endif
 const DISC_INTERFACE* carda = &__io_gcsda;
 const DISC_INTERFACE* cardb = &__io_gcsdb;
@@ -52,18 +55,19 @@ const DISC_INTERFACE* ideexib = &__io_atab;
 
 // Threaded insertion/removal detection
 #define THREAD_SLEEP 100
-#define CARD_A  1
-#define CARD_B  2
-#define CARD_C  3
-#define FRONTSD 3
-#define USBMSD  3
+#define CARD_A   1
+#define CARD_B   2
+#define CARD_C   3
+#define GCLOADER 3
+#define FRONTSD  3
+#define USB      3
 static lwp_t removalThread = LWP_THREAD_NULL;
 static int rThreadRun = 0;
 static int rThreadCreated = 0;
 static char sdMounted  = 0;
 static char sdNeedsUnmount  = 0;
-static char usbMounted = 0;
-static char usbNeedsUnmount = 0;
+static char fatMounted = 0;
+static char fatNeedsUnmount = 0;
 
 fileBrowser_file topLevel_libfat_Auto =
 	{ "\0",
@@ -81,8 +85,8 @@ fileBrowser_file topLevel_libfat_Default =
 	  FILE_BROWSER_ATTR_DIR
 	 };
 	 
-fileBrowser_file topLevel_libfat_USB =
-	{ "usb:/not64/roms", // file name
+fileBrowser_file topLevel_libfat =
+	{ "fat:/not64/roms", // file name
 	  0, // sector
 	  0, // offset
 	  0, // size
@@ -97,8 +101,8 @@ fileBrowser_file saveDir_libfat_Default =
 	  FILE_BROWSER_ATTR_DIR
 	 };
 	 
-fileBrowser_file saveDir_libfat_USB =
-	{ "usb:/not64/saves",
+fileBrowser_file saveDir_libfat =
+	{ "fat:/not64/saves",
 	  0,
 	  0,
 	  0,
@@ -147,10 +151,10 @@ static void *removalCallback (void *arg)
         sdNeedsUnmount=FRONTSD;
         sdMounted=0;
       }
-    if(usbMounted==USBMSD)
-      if(!usbmsd->isInserted()) {
-        usbNeedsUnmount=USBMSD;
-        usbMounted = 0;
+    if(fatMounted==USB)
+      if(!usb->isInserted()) {
+        fatNeedsUnmount=USB;
+        fatMounted = 0;
       }
 #endif      
       
@@ -281,25 +285,25 @@ int fileBrowser_libfat_init(fileBrowser_file* f){
  	  else
  	    return 1;
  	}
- 	else if(f->name[0] == 'u') {
-   	if(!usbMounted) {
+ 	else if(f->name[0] == 'f') {
+   	if(!fatMounted) {
      	pauseRemovalThread();
-     	if(usbNeedsUnmount==USBMSD) {
-     	  fatUnmount("usb:");
-     	  usbmsd->shutdown();
-     	  usbNeedsUnmount=0;
+     	if(fatNeedsUnmount==USB) {
+     	  fatUnmount("fat:");
+     	  usb->shutdown();
+     	  fatNeedsUnmount=0;
       }
      	usleep(devsleep);
-     	if(fatMountSimple ("usb", usbmsd)) {
-        usbMounted = USBMSD;
+     	if(fatMountSimple ("fat", usb)) {
+        fatMounted = USB;
         res = 1;
      	}
-     	else if(fatMountSimple ("usb", ideexib)) {
-     	  usbMounted = CARD_B;
+     	else if(fatMountSimple ("fat", ideexib)) {
+     	  fatMounted = CARD_B;
      	  res = 1;
       }
-      else if(fatMountSimple ("usb", ideexia)) {
-     	  usbMounted = CARD_A;
+      else if(fatMountSimple ("fat", ideexia)) {
+     	  fatMounted = CARD_A;
      	  res = 1;
       }
       continueRemovalThread();
@@ -328,14 +332,18 @@ int fileBrowser_libfat_init(fileBrowser_file* f){
  	  else
  	    return 1;
  	}
- 	else if(f->name[0] == 'u') {
-   	if(!usbMounted) {
-     	if(fatMountSimple ("usb", ideexib)) {
-     	  usbMounted = CARD_B;
+ 	else if(f->name[0] == 'f') {
+   	if(!fatMounted) {
+    	if(fatMountSimple ("fat", gcloader)) {
+     	  fatMounted = GCLOADER;
+     	  res = 1;
+   	  }
+   	  else if(fatMountSimple ("fat", ideexib)) {
+     	  fatMounted = CARD_B;
      	  res = 1;
       }
-      else if(fatMountSimple ("usb", ideexia)) {
-     	  usbMounted = CARD_A;
+      else if(fatMountSimple ("fat", ideexia)) {
+     	  fatMounted = CARD_A;
      	  res = 1;
       }
       return res;

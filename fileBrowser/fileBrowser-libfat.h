@@ -28,9 +28,9 @@
 
 extern fileBrowser_file topLevel_libfat_Auto;
 extern fileBrowser_file topLevel_libfat_Default;  //GC SD Slots & Wii Front SD Slot
-extern fileBrowser_file topLevel_libfat_USB;      //Wii only, USB
+extern fileBrowser_file topLevel_libfat;          //Wii only, USB
 extern fileBrowser_file saveDir_libfat_Default;   //GC SD Slots & Wii Front SD Slot
-extern fileBrowser_file saveDir_libfat_USB;       //Wii only, USB
+extern fileBrowser_file saveDir_libfat;           //Wii only, USB
 
 int fileBrowser_libfat_readDir(fileBrowser_file*, fileBrowser_file**);
 int fileBrowser_libfat_readFile(fileBrowser_file*, void*, unsigned int);

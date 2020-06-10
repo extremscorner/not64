@@ -500,14 +500,14 @@ void fileBrowserFrame_LoadFile(int i)
 			case NATIVESAVEDEVICE_SD:
 				strcat(RomInfo,"\nFound & loaded save from SD card\n");
 				break;
-			case NATIVESAVEDEVICE_USB:
-				strcat(RomInfo,"\nFound & loaded save from USB device\n");
+			case NATIVESAVEDEVICE_FAT:
+				strcat(RomInfo,"\nFound & loaded save from FAT device\n");
 				break;
 			case NATIVESAVEDEVICE_CARDA:
-				strcat(RomInfo,"\nFound & loaded save from memcard in slot A\n");
+				strcat(RomInfo,"\nFound & loaded save from Memory Card A\n");
 				break;
 			case NATIVESAVEDEVICE_CARDB:
-				strcat(RomInfo,"\nFound & loaded save from memcard in slot B\n");
+				strcat(RomInfo,"\nFound & loaded save from Memory Card B\n");
 				break;
 			}
 			autoSaveLoaded = NATIVESAVEDEVICE_NONE;

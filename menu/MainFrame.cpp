@@ -260,9 +260,9 @@ void Func_PlayGame()
       switch (nativeSaveDevice)
     	{
     		case NATIVESAVEDEVICE_SD:
-    		case NATIVESAVEDEVICE_USB:
+    		case NATIVESAVEDEVICE_FAT:
     			// Adjust saveFile pointers
-    			saveFile_dir = (nativeSaveDevice==NATIVESAVEDEVICE_SD) ? &saveDir_libfat_Default:&saveDir_libfat_USB;
+    			saveFile_dir = (nativeSaveDevice==NATIVESAVEDEVICE_SD) ? &saveDir_libfat_Default:&saveDir_libfat;
     			saveFile_readFile  = fileBrowser_libfat_readFile;
     			saveFile_writeFile = fileBrowser_libfat_writeFile;
     			saveFile_init      = fileBrowser_libfat_init;
@@ -293,14 +293,14 @@ void Func_PlayGame()
     			case NATIVESAVEDEVICE_SD:
     				menu::MessageBox::getInstance().fadeMessage("Automatically saved to SD card");
     				break;
-    			case NATIVESAVEDEVICE_USB:
-    				menu::MessageBox::getInstance().fadeMessage("Automatically saved to USB device");
+    			case NATIVESAVEDEVICE_FAT:
+    				menu::MessageBox::getInstance().fadeMessage("Automatically saved to FAT device");
     				break;
     			case NATIVESAVEDEVICE_CARDA:
-    				menu::MessageBox::getInstance().fadeMessage("Automatically saved to memcard in Slot A");
+    				menu::MessageBox::getInstance().fadeMessage("Automatically saved to Memory Card A");
     				break;
     			case NATIVESAVEDEVICE_CARDB:
-    				menu::MessageBox::getInstance().fadeMessage("Automatically saved to memcard in Slot B");
+    				menu::MessageBox::getInstance().fadeMessage("Automatically saved to Memory Card B");
     				break;
     		}
     		flashramWritten = sramWritten = eepromWritten = mempakWritten = 0;  //nothing new written since save

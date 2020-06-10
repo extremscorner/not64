@@ -38,8 +38,8 @@ extern "C" {
 }
 
 void Func_LoadFromSD();
+void Func_LoadFromFAT();
 void Func_LoadFromDVD();
-void Func_LoadFromUSB();
 void Func_LoadFromSMB();
 void Func_ReturnFromLoadRomFrame();
 
@@ -49,8 +49,8 @@ void Func_ReturnFromLoadRomFrame();
 
 static char FRAME_STRINGS[4][25] =
 	{ "Load from SD",
+	  "Load from FAT",
 	  "Load from DVD",
-	  "Load from USB",
 	  "Load from SMB"};
 
 struct ButtonInfo
@@ -71,8 +71,8 @@ struct ButtonInfo
 } FRAME_BUTTONS[NUM_FRAME_BUTTONS] =
 { //	button	buttonStyle	buttonString		x		y		width	height	Up	Dwn	Lft	Rt	clickFunc			returnFunc
 	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[0],	150.0,	100.0,	340.0,	56.0,	 3,	 1,	-1,	-1,	Func_LoadFromSD,	Func_ReturnFromLoadRomFrame }, // Load From SD
-	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[1],	150.0,	180.0,	340.0,	56.0,	 0,	 2,	-1,	-1,	Func_LoadFromDVD,	Func_ReturnFromLoadRomFrame }, // Load From DVD
-	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[2],	150.0,	260.0,	340.0,	56.0,	 1,	 3,	-1,	-1,	Func_LoadFromUSB,	Func_ReturnFromLoadRomFrame }, // Load From USB
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[1],	150.0,	180.0,	340.0,	56.0,	 0,	 2,	-1,	-1,	Func_LoadFromFAT,	Func_ReturnFromLoadRomFrame }, // Load From FAT
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[2],	150.0,	260.0,	340.0,	56.0,	 1,	 3,	-1,	-1,	Func_LoadFromDVD,	Func_ReturnFromLoadRomFrame }, // Load From DVD
 	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[3],	150.0,	340.0,	340.0,	56.0,	 2,	 0,	-1,	-1,	Func_LoadFromSMB,	Func_ReturnFromLoadRomFrame }, // Load From SMB
 };
 
@@ -159,6 +159,25 @@ void Func_LoadFromSD()
 	fileBrowserFrame_OpenDirectory(romFile_topLevel);
 }
 
+void Func_LoadFromFAT()
+{
+	// Deinit any existing romFile state
+	if(romFile_deinit) romFile_deinit( romFile_topLevel );
+	// Change all the romFile pointers
+	romFile_topLevel = &topLevel_libfat;
+	romFile_readDir  = fileBrowser_libfat_readDir;
+	romFile_readFile = fileBrowser_libfatROM_readFile;
+	romFile_seekFile = fileBrowser_libfat_seekFile;
+	romFile_init     = fileBrowser_libfat_init;
+	romFile_deinit   = fileBrowser_libfatROM_deinit;
+	// Make sure the romFile system is ready before we browse the filesystem
+	romFile_deinit( romFile_topLevel );
+	romFile_init( romFile_topLevel );
+
+	pMenuContext->setActiveFrame(MenuContext::FRAME_FILEBROWSER);
+	fileBrowserFrame_OpenDirectory(romFile_topLevel);
+}
+
 void Func_LoadFromDVD()
 {
 	// Deinit any existing romFile state
@@ -173,25 +192,6 @@ void Func_LoadFromDVD()
 	// Make sure the romFile system is ready before we browse the filesystem
 	romFile_init( romFile_topLevel );
 
-	pMenuContext->setActiveFrame(MenuContext::FRAME_FILEBROWSER);
-	fileBrowserFrame_OpenDirectory(romFile_topLevel);
-}
-
-void Func_LoadFromUSB()
-{
-	// Deinit any existing romFile state
-	if(romFile_deinit) romFile_deinit( romFile_topLevel );
-	// Change all the romFile pointers
-	romFile_topLevel = &topLevel_libfat_USB;
-	romFile_readDir  = fileBrowser_libfat_readDir;
-	romFile_readFile = fileBrowser_libfatROM_readFile;
-	romFile_seekFile = fileBrowser_libfat_seekFile;
-	romFile_init     = fileBrowser_libfat_init;
-	romFile_deinit   = fileBrowser_libfatROM_deinit;
-	// Make sure the romFile system is ready before we browse the filesystem
-	romFile_deinit( romFile_topLevel );
-	romFile_init( romFile_topLevel );
-	
 	pMenuContext->setActiveFrame(MenuContext::FRAME_FILEBROWSER);
 	fileBrowserFrame_OpenDirectory(romFile_topLevel);
 }

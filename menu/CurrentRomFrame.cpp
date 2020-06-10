@@ -191,9 +191,9 @@ void Func_LoadSave()
 	switch (nativeSaveDevice)
   {
   	case NATIVESAVEDEVICE_SD:
-  	case NATIVESAVEDEVICE_USB:
+  	case NATIVESAVEDEVICE_FAT:
   		// Adjust saveFile pointers
-  		saveFile_dir = (nativeSaveDevice==NATIVESAVEDEVICE_SD) ? &saveDir_libfat_Default:&saveDir_libfat_USB;
+  		saveFile_dir = (nativeSaveDevice==NATIVESAVEDEVICE_SD) ? &saveDir_libfat_Default:&saveDir_libfat;
   		saveFile_readFile  = fileBrowser_libfat_readFile;
   		saveFile_writeFile = fileBrowser_libfat_writeFile;
   		saveFile_init      = fileBrowser_libfat_init;
@@ -225,17 +225,17 @@ void Func_LoadSave()
 			if (result) menu::MessageBox::getInstance().setMessage("Loaded save from SD card");
 			else		menu::MessageBox::getInstance().setMessage("No saves found on SD card");
 			break;
-		case NATIVESAVEDEVICE_USB:
-			if (result) menu::MessageBox::getInstance().setMessage("Loaded save from USB device");
-			else		menu::MessageBox::getInstance().setMessage("No saves found on USB device");
+		case NATIVESAVEDEVICE_FAT:
+			if (result) menu::MessageBox::getInstance().setMessage("Loaded save from FAT device");
+			else		menu::MessageBox::getInstance().setMessage("No saves found on FAT device");
 			break;
 		case NATIVESAVEDEVICE_CARDA:
-			if (result) menu::MessageBox::getInstance().setMessage("Loaded save from memcard in slot A");
-			else		menu::MessageBox::getInstance().setMessage("No saves found on memcard A");
+			if (result) menu::MessageBox::getInstance().setMessage("Loaded save from Memory Card A");
+			else		menu::MessageBox::getInstance().setMessage("No saves found on Memory Card A");
 			break;
 		case NATIVESAVEDEVICE_CARDB:
-			if (result) menu::MessageBox::getInstance().setMessage("Loaded save from memcard in slot A");
-			else		menu::MessageBox::getInstance().setMessage("No saves found on memcard B");
+			if (result) menu::MessageBox::getInstance().setMessage("Loaded save from Memory Card B");
+			else		menu::MessageBox::getInstance().setMessage("No saves found on Memory Card B");
 			break;
 	}
 	sramWritten = eepromWritten = mempakWritten = flashramWritten = false;
@@ -250,9 +250,9 @@ void Func_SaveGame()
 	switch (nativeSaveDevice)
   {
   	case NATIVESAVEDEVICE_SD:
-  	case NATIVESAVEDEVICE_USB:
+  	case NATIVESAVEDEVICE_FAT:
   		// Adjust saveFile pointers
-  		saveFile_dir = (nativeSaveDevice==NATIVESAVEDEVICE_SD) ? &saveDir_libfat_Default:&saveDir_libfat_USB;
+  		saveFile_dir = (nativeSaveDevice==NATIVESAVEDEVICE_SD) ? &saveDir_libfat_Default:&saveDir_libfat;
   		saveFile_readFile  = fileBrowser_libfat_readFile;
   		saveFile_writeFile = fileBrowser_libfat_writeFile;
   		saveFile_init      = fileBrowser_libfat_init;
@@ -285,14 +285,14 @@ void Func_SaveGame()
 			case NATIVESAVEDEVICE_SD:
 				menu::MessageBox::getInstance().setMessage("Saved game to SD card");
 				break;
-			case NATIVESAVEDEVICE_USB:
-				menu::MessageBox::getInstance().setMessage("Saved game to USB device");
+			case NATIVESAVEDEVICE_FAT:
+				menu::MessageBox::getInstance().setMessage("Saved game to FAT device");
 				break;
 			case NATIVESAVEDEVICE_CARDA:
-				menu::MessageBox::getInstance().setMessage("Saved game to memcard in Slot A");
+				menu::MessageBox::getInstance().setMessage("Saved game to Memory Card A");
 				break;
 			case NATIVESAVEDEVICE_CARDB:
-				menu::MessageBox::getInstance().setMessage("Saved game to memcard in Slot B");
+				menu::MessageBox::getInstance().setMessage("Saved game to Memory Card B");
 				break;
 		}
 		sramWritten = eepromWritten = mempakWritten = flashramWritten = false;

@@ -163,7 +163,7 @@ static struct {
   { "Core", ((char*)&dynacore)+3, DYNACORE_INTERPRETER, DYNACORE_PURE_INTERP },
   { "CountPerOp", ((char*)&count_per_op)+3, COUNT_PER_OP_1, COUNT_PER_OP_3 },
   { "NativeDevice", &nativeSaveDevice, NATIVESAVEDEVICE_SD, NATIVESAVEDEVICE_CARDB },
-  { "StatesDevice", &saveStateDevice, SAVESTATEDEVICE_SD, SAVESTATEDEVICE_USB },
+  { "StatesDevice", &saveStateDevice, SAVESTATEDEVICE_SD, SAVESTATEDEVICE_FAT },
   { "AutoSave", &autoSave, AUTOSAVE_DISABLE, AUTOSAVE_ENABLE },
   { "LimitVIs", &Timers.limitVIs, LIMITVIS_NONE, LIMITVIS_WAIT_FOR_FRAME },
   { "PollRate", &pollRate, POLLRATE_VSYNC, POLLRATE_11MS },
@@ -285,58 +285,58 @@ int main(int argc, char* argv[]){
 	fileBrowser_file* configFile_file;
 	int (*configFile_init)(fileBrowser_file*) = fileBrowser_libfat_init;
 #ifdef HW_RVL
-	if(argc > 0 && argv[0][0] == 'u') {  //assume USB
-		nativeSaveDevice = NATIVESAVEDEVICE_USB;
-		saveStateDevice = SAVESTATEDEVICE_USB;
-		configFile_file = &saveDir_libfat_USB;
+	if(argc && argv[0][0] == 'u') {  //assume FAT
+		nativeSaveDevice = NATIVESAVEDEVICE_FAT;
+		saveStateDevice = SAVESTATEDEVICE_FAT;
+		configFile_file = &saveDir_libfat;
 		if(configFile_init(configFile_file)) {                //only if device initialized ok
-			FILE* f = fopen( "usb:/not64/settings.cfg", "r" );  //attempt to open file
+			FILE* f = fopen( "fat:/not64/settings.cfg", "r" );  //attempt to open file
 			if(f) {        //open ok, read it
 				readConfig(f);
 				fclose(f);
 			}
-			f = fopen( "usb:/not64/controlG.cfg", "r" );  //attempt to open file
+			f = fopen( "fat:/not64/controlG.cfg", "r" );  //attempt to open file
 			if(f) {
 				load_configurations(f, &controller_GC);					//write out GC controller mappings
 				fclose(f);
 			}
 #ifdef HW_RVL
-			f = fopen( "usb:/not64/controlD.cfg", "r" );  //attempt to open file
+			f = fopen( "fat:/not64/controlD.cfg", "r" );  //attempt to open file
 			if(f) {
 				load_configurations(f, &controller_ExtenmoteGC);		//write out GC controller mappings
 				fclose(f);
 			}
-			f = fopen( "usb:/not64/controlU.cfg", "r" );  //attempt to open file
+			f = fopen( "fat:/not64/controlU.cfg", "r" );  //attempt to open file
 			if(f) {
 				load_configurations(f, &controller_ExtenmoteN64);		//write out N64 controller mappings
 				fclose(f);
 			}
-			f = fopen( "usb:/not64/controlS.cfg", "r" );  //attempt to open file
+			f = fopen( "fat:/not64/controlS.cfg", "r" );  //attempt to open file
 			if(f) {
 				load_configurations(f, &controller_ExtenmoteSNES);		//write out SNES controller mappings
 				fclose(f);
 			}
-			f = fopen( "usb:/not64/controlF.cfg", "r" );  //attempt to open file
+			f = fopen( "fat:/not64/controlF.cfg", "r" );  //attempt to open file
 			if(f) {
 				load_configurations(f, &controller_ExtenmoteNES);		//write out NES controller mappings
 				fclose(f);
 			}
-			f = fopen( "usb:/not64/controlP.cfg", "r" );  //attempt to open file
+			f = fopen( "fat:/not64/controlP.cfg", "r" );  //attempt to open file
 			if(f) {
 				load_configurations(f, &controller_WiiUPro);			//write out WiiU Pro controller mappings
 				fclose(f);
 			}
-			f = fopen( "usb:/not64/controlC.cfg", "r" );  //attempt to open file
+			f = fopen( "fat:/not64/controlC.cfg", "r" );  //attempt to open file
 			if(f) {
 				load_configurations(f, &controller_Classic);			//write out Classic controller mappings
 				fclose(f);
 			}
-			f = fopen( "usb:/not64/controlN.cfg", "r" );  //attempt to open file
+			f = fopen( "fat:/not64/controlN.cfg", "r" );  //attempt to open file
 			if(f) {
 				load_configurations(f, &controller_WiimoteNunchuk);	//write out WM+NC controller mappings
 				fclose(f);
 			}
-			f = fopen( "usb:/not64/controlW.cfg", "r" );  //attempt to open file
+			f = fopen( "fat:/not64/controlW.cfg", "r" );  //attempt to open file
 			if(f) {
 				load_configurations(f, &controller_Wiimote);			//write out Wiimote controller mappings
 				fclose(f);
@@ -502,9 +502,9 @@ int loadROM(fileBrowser_file* rom){
     switch (nativeSaveDevice)
     {
     	case NATIVESAVEDEVICE_SD:
-    	case NATIVESAVEDEVICE_USB:
+    	case NATIVESAVEDEVICE_FAT:
     		// Adjust saveFile pointers
-    		saveFile_dir = (nativeSaveDevice==NATIVESAVEDEVICE_SD) ? &saveDir_libfat_Default:&saveDir_libfat_USB;
+    		saveFile_dir = (nativeSaveDevice==NATIVESAVEDEVICE_SD) ? &saveDir_libfat_Default:&saveDir_libfat;
     		saveFile_readFile  = fileBrowser_libfat_readFile;
     		saveFile_writeFile = fileBrowser_libfat_writeFile;
     		saveFile_init      = fileBrowser_libfat_init;
@@ -535,16 +535,16 @@ int loadROM(fileBrowser_file* rom){
 //			if (result) menu::MessageBox::getInstance().setMessage("Found & loaded save from SD card");
   			if (result) autoSaveLoaded = NATIVESAVEDEVICE_SD;
   			break;
-  		case NATIVESAVEDEVICE_USB:
-//			if (result) menu::MessageBox::getInstance().setMessage("Found & loaded save from USB device");
-  			if (result) autoSaveLoaded = NATIVESAVEDEVICE_USB;
+  		case NATIVESAVEDEVICE_FAT:
+//			if (result) menu::MessageBox::getInstance().setMessage("Found & loaded save from FAT device");
+  			if (result) autoSaveLoaded = NATIVESAVEDEVICE_FAT;
   			break;
   		case NATIVESAVEDEVICE_CARDA:
-//			if (result) menu::MessageBox::getInstance().setMessage("Found & loaded save from memcard in slot A");
+//			if (result) menu::MessageBox::getInstance().setMessage("Found & loaded save from Memory Card A");
   			if (result) autoSaveLoaded = NATIVESAVEDEVICE_CARDA;
   			break;
   		case NATIVESAVEDEVICE_CARDB:
- //			if (result) menu::MessageBox::getInstance().setMessage("Found & loaded save from memcard in slot B");
+ //			if (result) menu::MessageBox::getInstance().setMessage("Found & loaded save from Memory Card B");
   			if (result) autoSaveLoaded = NATIVESAVEDEVICE_CARDB;
   			break;
   	}
