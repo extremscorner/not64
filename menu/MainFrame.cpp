@@ -167,13 +167,13 @@ void Func_Credits()
 	strcat(CreditsInfo,"Not64 Build: " __DATE__ " " __TIME__ "\n");
 	strcat(CreditsInfo,"Modified by Extrems' Corner.org\n");
 	strcat(CreditsInfo,"\n");
-	strcat(CreditsInfo,"Wii64 Team: www.emulatemii.com\n");
+	strcat(CreditsInfo,"Wii64 Team:\n");
 	strcat(CreditsInfo,"tehpola - core\n");
 	strcat(CreditsInfo,"sepp256 - graphics & menu\n");
 	strcat(CreditsInfo,"emu_kidid - general coding\n");
 	strcat(CreditsInfo,"\n");
-	strcat(CreditsInfo,"Special Thanks To:\n");
-	strcat(CreditsInfo,"drmr - for menu graphics\n");
+	strcat(CreditsInfo,"Special thanks to:\n");
+	strcat(CreditsInfo,"drmr - menu graphics\n");
 #ifdef HW_RVL
 	strcat(CreditsInfo,"Team Twiizers - for Wii homebrew\n");
 #endif
@@ -315,6 +315,7 @@ void Func_PlayGame()
 	resume_netinit_thread();
 	FRAME_BUTTONS[5].buttonString = FRAME_STRINGS[6];
 	menu::Cursor::getInstance().clearCursorFocus();
+	menu::Focus::getInstance().clearPrimaryFocus();
 }
 
 void Func_SetPlayGame()

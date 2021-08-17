@@ -52,13 +52,14 @@ const DISC_INTERFACE* cardb = &__io_gcsdb;
 const DISC_INTERFACE* cardc = &__io_gcsd2;
 const DISC_INTERFACE* ideexia = &__io_ataa;
 const DISC_INTERFACE* ideexib = &__io_atab;
+const DISC_INTERFACE* ideexic = &__io_ata1;
 
 // Threaded insertion/removal detection
 #define THREAD_SLEEP 100
 #define CARD_A   1
 #define CARD_B   2
 #define CARD_C   3
-#define GCLOADER 3
+#define GCLOADER 4
 #define FRONTSD  3
 #define USB      3
 static lwp_t removalThread = LWP_THREAD_NULL;
@@ -254,105 +255,119 @@ int fileBrowser_libfat_writeFile(fileBrowser_file* file, void* buffer, unsigned 
     - returns 1 on ok
 */
 int fileBrowser_libfat_init(fileBrowser_file* f){
- 	
+  
   int res = 0;
- 	
- 	if(!rThreadCreated) InitRemovalThread();
+  
+  if(!rThreadCreated) InitRemovalThread();
 #ifdef HW_RVL
-  if(f->name[0] == 's') {      //SD
-    if(!sdMounted) {           //if there's nothing currently mounted
+  if(!strncmp(f->name, "sd", 2)) {  //SD
+    if(!sdMounted) {                //if there's nothing currently mounted
       pauseRemovalThread();
       if(sdNeedsUnmount==FRONTSD) {
-        fatUnmount("sd:");
+        fatUnmount(f->name);
         frontsd->shutdown();
         sdNeedsUnmount = 0;
       }
-    	if(fatMountSimple ("sd", frontsd)) {
-       	sdMounted = FRONTSD;
-       	res = 1;
-     	}
-     	else if(fatMountSimple ("sd", cardb)) {
-     	  sdMounted = CARD_B;
-     	  res = 1;
-   	  }
-   	  else if(fatMountSimple ("sd", carda)) {
-     	  sdMounted = CARD_A;
-     	  res = 1;
-   	  }
-   	  continueRemovalThread();
-   	  return res;
- 	  }
- 	  else
- 	    return 1;
- 	}
- 	else if(f->name[0] == 'f') {
-   	if(!fatMounted) {
-     	pauseRemovalThread();
-     	if(fatNeedsUnmount==USB) {
-     	  fatUnmount("fat:");
-     	  usb->shutdown();
-     	  fatNeedsUnmount=0;
-      }
-     	usleep(devsleep);
-     	if(fatMountSimple ("fat", usb)) {
-        fatMounted = USB;
+      if(fatMountSimple("sd", frontsd)) {
+        sdMounted = FRONTSD;
         res = 1;
-     	}
-     	else if(fatMountSimple ("fat", ideexib)) {
-     	  fatMounted = CARD_B;
-     	  res = 1;
       }
-      else if(fatMountSimple ("fat", ideexia)) {
-     	  fatMounted = CARD_A;
-     	  res = 1;
+      else if(fatMountSimple("sd", cardb)) {
+        sdMounted = CARD_B;
+        res = 1;
+      }
+      else if(fatMountSimple("sd", carda)) {
+        sdMounted = CARD_A;
+        res = 1;
       }
       continueRemovalThread();
-      return res;
     }
     else
-      return 1;
+      res = 1;
+    if(res)
+      mkdir("sd:/not64", 0755);
+  }
+  else if(!strncmp(f->name, "fat", 3)) {
+    if(!fatMounted) {
+      pauseRemovalThread();
+      if(fatNeedsUnmount==USB) {
+        fatUnmount(f->name);
+        usb->shutdown();
+        fatNeedsUnmount=0;
+      }
+      usleep(devsleep);
+      if(fatMountSimple("fat", usb)) {
+        fatMounted = USB;
+        res = 1;
+      }
+      else if(fatMountSimple("fat", ideexib)) {
+        fatMounted = CARD_B;
+        res = 1;
+      }
+      else if(fatMountSimple("fat", ideexia)) {
+        fatMounted = CARD_A;
+        res = 1;
+      }
+      continueRemovalThread();
+    }
+    else
+      res = 1;
+    if(res)
+      mkdir("fat:/not64", 0755);
   }
 #else
-  if(f->name[0] == 's') {
+  if(!strncmp(f->name, "sd", 2)) {
     if(!sdMounted) {
-    	if(fatMountSimple ("sd", cardc)) {
-     	  sdMounted = CARD_C;
-     	  res = 1;
-   	  }
-   	  else if(fatMountSimple ("sd", cardb)) {
-     	  sdMounted = CARD_B;
-     	  res = 1;
-   	  }
-   	  else if(fatMountSimple ("sd", carda)) {
-     	  sdMounted = CARD_A;
-     	  res = 1;
-   	  }
-   	  return res;
- 	  }
- 	  else
- 	    return 1;
- 	}
- 	else if(f->name[0] == 'f') {
-   	if(!fatMounted) {
-    	if(fatMountSimple ("fat", gcloader)) {
-     	  fatMounted = GCLOADER;
-     	  res = 1;
-   	  }
-   	  else if(fatMountSimple ("fat", ideexib)) {
-     	  fatMounted = CARD_B;
-     	  res = 1;
+      if(fatMountSimple("sd", cardc)) {
+        sdMounted = CARD_C;
+        res = 1;
       }
-      else if(fatMountSimple ("fat", ideexia)) {
-     	  fatMounted = CARD_A;
-     	  res = 1;
+      else if(fatMountSimple("sd", cardb)) {
+        sdMounted = CARD_B;
+        res = 1;
       }
-      return res;
+      else if(fatMountSimple("sd", carda)) {
+        sdMounted = CARD_A;
+        res = 1;
+      }
+      else if(fatMounted != GCLOADER && fatMountSimple("sd", gcloader)) {
+        sdMounted = GCLOADER;
+        res = 1;
+      }
     }
     else
-      return 1;
+      res = 1;
+    if(res)
+      mkdir("sd:/not64", 0755);
+  }
+  else if(!strncmp(f->name, "fat", 3)) {
+    if(!fatMounted) {
+      if(sdMounted != GCLOADER && fatMountSimple("fat", gcloader)) {
+        fatMounted = GCLOADER;
+        res = 1;
+      }
+      else if(fatMountSimple("fat", ideexic)) {
+        fatMounted = CARD_C;
+        res = 1;
+      }
+      else if(fatMountSimple("fat", ideexib)) {
+        fatMounted = CARD_B;
+        res = 1;
+      }
+      else if(fatMountSimple("fat", ideexia)) {
+        fatMounted = CARD_A;
+        res = 1;
+      }
+    }
+    else
+      res = 1;
+    if(res)
+      mkdir("fat:/not64", 0755);
   }
 #endif
- 	return res;
+  if(res)
+    mkdir(f->name, 0755);
+  return res;
 }
 
 int fileBrowser_libfat_deinit(fileBrowser_file* f){

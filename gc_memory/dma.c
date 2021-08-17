@@ -121,7 +121,7 @@ void dma_pi_read()
 		  sramWritten = TRUE;
 
 		  for (i=0; i<(pi_register.pi_rd_len_reg & 0xFFFFFE)+2; i++)
-		    sram[((pi_register.pi_cart_addr_reg-0x08000000)+i)^S8]=
+		    sram[(((pi_register.pi_cart_addr_reg-0x08000000)&0xFFFE)+i)^S8]=
 		    ((unsigned char*)rdram)[(pi_register.pi_dram_addr_reg+i)^S8];
 
 		  use_flashram = -1;
@@ -300,8 +300,8 @@ void dma_sp_write()
    unsigned int count = ((l >> 12) & 0xff) + 1;
    unsigned int skip = ((l >> 20) & 0xfff);
 
-   unsigned char *spmem = SP_DMEMb + (sp_register.sp_mem_addr_reg & 0x1fff);
-   unsigned char *dram = rdramb + (sp_register.sp_dram_addr_reg & 0xffffff);
+   unsigned char *spmem = SP_DMEMb + (sp_register.sp_mem_addr_reg & 0x1ff8);
+   unsigned char *dram = rdramb + (sp_register.sp_dram_addr_reg & 0xfffff8);
 
    for(i=0; i<count; i++) {
      spmem = memcpy(spmem, dram, length);
@@ -320,8 +320,8 @@ void dma_sp_read()
    unsigned int count = ((l >> 12) & 0xff) + 1;
    unsigned int skip = ((l >> 20) & 0xfff);
 
-   unsigned char *spmem = SP_DMEMb + (sp_register.sp_mem_addr_reg & 0x1fff);
-   unsigned char *dram = rdramb + (sp_register.sp_dram_addr_reg & 0xffffff);
+   unsigned char *spmem = SP_DMEMb + (sp_register.sp_mem_addr_reg & 0x1ff8);
+   unsigned char *dram = rdramb + (sp_register.sp_dram_addr_reg & 0xfffff8);
 
    for(i=0; i<count; i++) {
      dram = memcpy(dram, spmem, length);

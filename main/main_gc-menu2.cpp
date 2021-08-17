@@ -187,9 +187,9 @@ static struct {
   { "smbipaddr", smbIpAddr, CONFIG_STRING_TYPE, CONFIG_STRING_TYPE },
   { "rompath", romPath, CONFIG_STRING_TYPE, CONFIG_STRING_TYPE }
 };
-void handleConfigPair(char* kv);
 void readConfig(FILE* f);
 void writeConfig(FILE* f);
+void readArgs(int argc, char* argv[]);
 
 extern "C" void gfx_set_fb(unsigned int* fb1, unsigned int* fb2);
 void gfx_set_window(int x, int y, int width, int height);
@@ -295,6 +295,8 @@ int main(int argc, char* argv[]){
 				readConfig(f);
 				fclose(f);
 			}
+			readArgs(argc, argv);
+
 			f = fopen( "fat:/not64/controlG.cfg", "r" );  //attempt to open file
 			if(f) {
 				load_configurations(f, &controller_GC);					//write out GC controller mappings
@@ -342,7 +344,8 @@ int main(int argc, char* argv[]){
 				fclose(f);
 			}
 #endif //HW_RVL
-		}
+		} else
+			readArgs(argc, argv);
 	}
 	else /*if((argv[0][0]=='s') || (argv[0][0]=='/'))*/
 #endif
@@ -356,6 +359,8 @@ int main(int argc, char* argv[]){
 				readConfig(f);
 				fclose(f);
 			}
+			readArgs(argc, argv);
+
 			f = fopen( "sd:/not64/controlG.cfg", "r" );  //attempt to open file
 			if(f) {
 				load_configurations(f, &controller_GC);					//write out GC controller mappings
@@ -403,12 +408,8 @@ int main(int argc, char* argv[]){
 				fclose(f);
 			}
 #endif //HW_RVL
-		}
-	}
-	// Handle options passed in through arguments
-	int i;
-	for(i=1; i<argc; ++i){
-		handleConfigPair(argv[i]);
+		} else
+			readArgs(argc, argv);
 	}
 
 	MenuContext *menu = new MenuContext(vmode);
@@ -793,5 +794,11 @@ void writeConfig(FILE* f){
 			fprintf(f, "%s = \"%s\"\n", OPTIONS[i].key, OPTIONS[i].value);
 		else
 			fprintf(f, "%s = %d\n", OPTIONS[i].key, *OPTIONS[i].value);
+	}
+}
+
+void readArgs(int argc, char* argv[]){
+	for(int i=1; i<argc; ++i){
+		handleConfigPair(argv[i]);
 	}
 }

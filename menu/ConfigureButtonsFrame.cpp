@@ -251,7 +251,6 @@ void ConfigureButtonsFrame::activateSubmenu(int submenu)
 	if (submenu != SUBMENU_N64_PADNONE)
 	{
 		activePad = submenu;
-		menu::Gui::getInstance().menuLogo->setVisible(false);
 	}
 
 	//Fill out title text

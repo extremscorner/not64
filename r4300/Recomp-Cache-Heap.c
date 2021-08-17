@@ -215,11 +215,6 @@ static void release(int minNeeded){
 }
 
 void RecompCache_Alloc(unsigned int size, unsigned int address, PowerPC_func* func){
-	CacheMetaNode* newBlock = malloc( sizeof(CacheMetaNode) );
-	newBlock->addr = address;
-	newBlock->size = size;
-	newBlock->func = func;
-
 	// Allocate new memory for this code
 	void* code = __lwp_heap_allocate(cache, size);
 	while(!code){
@@ -228,6 +223,11 @@ void RecompCache_Alloc(unsigned int size, unsigned int address, PowerPC_func* fu
 	}
 	int num_instrs = (func->end_addr - func->start_addr) >> 2;
 	void* code_addr = MetaCache_Alloc(num_instrs * sizeof(void*));
+
+	CacheMetaNode* newBlock = malloc(sizeof(CacheMetaNode));
+	newBlock->addr = address;
+	newBlock->size = size;
+	newBlock->func = func;
 
 	cacheSize += size;
 	newBlock->func->code = code;

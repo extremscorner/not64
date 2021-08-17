@@ -18,6 +18,7 @@
 
 extern const DISC_INTERFACE __io_ataa;
 extern const DISC_INTERFACE __io_atab;
+extern const DISC_INTERFACE __io_ata1;
 
 // ATA status register bits
 #define ATA_SR_BSY		0x80
@@ -81,14 +82,14 @@ typedef struct
 	int  lba48Support;
 	char model[48];
 	char serial[24];
-} typeDriveInfo ATTRIBUTE_ALIGN (32);
+} typeDriveInfo;
 
 typedef struct
 {
 	u16 type; //1 = master pw, 0 = user
 	char password[32];
-	u8 reserved[479];
-} unlockStruct ATTRIBUTE_ALIGN (32);
+	u8 reserved[478];
+} unlockStruct;
 
 extern typeDriveInfo ataDriveInfo;
 

@@ -193,22 +193,33 @@ EXPORT void CALL GetDllInfo ( PLUGIN_INFO * PluginInfo )
 extern int stop;
 EXPORT void CALL GetKeys(int Control, BUTTONS * Keys )
 {
-#if defined(WII) && !defined(NO_BT)
-	//Need to switch between Classic and WiimoteNunchuck if user swapped extensions
-	if (padType[virtualControllers[Control].number] == PADTYPE_WII)
-	{
-		if (virtualControllers[Control].control == &controller_Classic &&
-			!controller_Classic.available[virtualControllers[Control].number] &&
-			controller_WiimoteNunchuk.available[virtualControllers[Control].number])
-			assign_controller(Control, &controller_WiimoteNunchuk, virtualControllers[Control].number);
-		else if (virtualControllers[Control].control == &controller_WiimoteNunchuk &&
-			!controller_WiimoteNunchuk.available[virtualControllers[Control].number] &&
-			controller_Classic.available[virtualControllers[Control].number])
-			assign_controller(Control, &controller_Classic, virtualControllers[Control].number);
-	}
-#endif
 	if(DO_CONTROL(Control, GetKeys, Keys, virtualControllers[Control].config))
 		stop = 1;
+#if defined(WII) && !defined(NO_BT)
+	// Need to switch between Classic and WiimoteNunchuck if user swapped extensions
+	if(!virtualControllers[Control].control->available[virtualControllers[Control].number]){
+		switch(padType[Control]){
+		case PADTYPE_WII:
+			if(controller_ExtenmoteGC.available[virtualControllers[Control].number])
+				assign_controller(Control, &controller_ExtenmoteGC, virtualControllers[Control].number);
+			else if(controller_ExtenmoteN64.available[virtualControllers[Control].number])
+				assign_controller(Control, &controller_ExtenmoteN64, virtualControllers[Control].number);
+			else if(controller_ExtenmoteSNES.available[virtualControllers[Control].number])
+				assign_controller(Control, &controller_ExtenmoteSNES, virtualControllers[Control].number);
+			else if(controller_ExtenmoteNES.available[virtualControllers[Control].number])
+				assign_controller(Control, &controller_ExtenmoteNES, virtualControllers[Control].number);
+			else if(controller_WiiUPro.available[virtualControllers[Control].number])
+				assign_controller(Control, &controller_WiiUPro, virtualControllers[Control].number);
+			else if(controller_Classic.available[virtualControllers[Control].number])
+				assign_controller(Control, &controller_Classic, virtualControllers[Control].number);
+			else if(controller_WiimoteNunchuk.available[virtualControllers[Control].number])
+				assign_controller(Control, &controller_WiimoteNunchuk, virtualControllers[Control].number);
+			else if(controller_Wiimote.available[virtualControllers[Control].number])
+				assign_controller(Control, &controller_Wiimote, virtualControllers[Control].number);
+			break;
+		}
+	}
+#endif
 }
 
 /******************************************************************

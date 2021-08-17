@@ -121,6 +121,10 @@ extern void fileBrowserFrame_AutoLoadFile(char* path);
 void Func_LoadFromAuto()
 {
 	if (!strlen(&romPath[0])) return;
+#ifdef HW_RVL
+	if (!strncmp(&romPath[0], "usb", 3) && (romPath[3] == ':' || (isdigit(romPath[3]) && romPath[4] == ':')))
+		strncpy(&romPath[0], "fat", 3);
+#endif
 	strcpy(topLevel_libfat_Auto.name, &romPath[0]);
 	char *sep = strrchr(topLevel_libfat_Auto.name, '/');
 	if (sep)

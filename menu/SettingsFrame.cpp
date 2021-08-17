@@ -859,7 +859,7 @@ void Func_ConfigurePaks()
 
 void Func_ConfigureButtons()
 {
-//	menu::MessageBox::getInstance().setMessage("Controller Buttons not implemented");
+	menu::Gui::getInstance().menuLogo->setVisible(false);
 	pMenuContext->setActiveFrame(MenuContext::FRAME_CONFIGUREBUTTONS,ConfigureButtonsFrame::SUBMENU_N64_PADNONE);
 }
 
