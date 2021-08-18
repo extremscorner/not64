@@ -27,6 +27,7 @@
          If it's possible, only use the blocks physical addresses (saves space)
  */
 
+#include <ogc/cache.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -36,6 +37,7 @@
 #include "../interupt.h"
 #include "Recompile.h"
 #include "../Recomp-Cache.h"
+#include "Register-Cache.h"
 #include "Wrappers.h"
 #include "../ARAM-blocks.h"
 

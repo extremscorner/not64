@@ -22,6 +22,7 @@
 
 
 #include <ogc/lwp_heap.h>
+#include <ogc/cache.h>
 #include <stdlib.h>
 #include <malloc.h>
 #include "../gc_memory/MEM2.h"

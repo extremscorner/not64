@@ -139,7 +139,7 @@ int fileBrowser_CARD_writeFile(fileBrowser_file* file, void* buffer, unsigned in
 	  CardStat.banner_fmt = 0;
 	  CardStat.icon_addr = 0x40;
 	  tmpBuffer = memalign(32,newLength);
-	  memset(tmpBuffer,0,sizeof(tmpBuffer));
+	  memset(tmpBuffer,0,newLength);
 	  strcpy(tmpBuffer,ctime (&gc_time));
 	  strcpy(tmpBuffer+0x20,file->name);
 	  memcpy(tmpBuffer+0x40,CARDIcon,sizeof(CARDIcon));       // copy icon

@@ -807,7 +807,7 @@ void OGL_UpdateStates()
 			(int)((gDP.scissor.lrx - gDP.scissor.ulx) * OGL.scaleX), (int)((gDP.scissor.lry - gDP.scissor.uly) * OGL.scaleY) );
 	}
 #else // !__GX__
-	if ((gDP.changed & CHANGED_SCISSOR) || (gSP.changed & CHANGED_VIEWPORT))
+	if (gDP.changed & CHANGED_SCISSOR)
 	{
 		float ulx = max(OGL.GXorigX + gDP.scissor.ulx * OGL.GXscaleX, 0);
 		float uly = max(OGL.GXorigY + gDP.scissor.uly * OGL.GXscaleY, 0);

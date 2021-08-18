@@ -26,6 +26,7 @@
 #include "../ARAM-blocks.h"
 #include "../../gc_memory/memory.h"
 #include "../interupt.h"
+#include "../exception.h"
 #include "../r4300.h"
 #include "../macros.h"
 #include "../Recomp-Cache.h"
@@ -51,7 +52,7 @@ static PowerPC_func* last_func;
  *  $sp	    | old sp
  */
 
-inline unsigned int dyna_run(PowerPC_func* func, unsigned int (*code)(void)){
+inline unsigned int dyna_run(PowerPC_func* func, PowerPC_instr* code){
 	PowerPC_instr* return_addr;
 
 	register void* r3  __asm__("r3");
@@ -134,8 +135,7 @@ void dynarec(unsigned int address){
 		int index = (address - func->start_addr)>>2;
 
 		// Recompute the block offset
-		unsigned int (*code)(void);
-		code = (unsigned int (*)(void))func->code_addr[index];
+		PowerPC_instr* code = func->code_addr[index];
 		
 		// Create a link if possible
 		if(link_branch && !func_was_freed(last_func))

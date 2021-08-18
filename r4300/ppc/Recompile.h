@@ -103,6 +103,7 @@ void clear_freed_funcs(void);
 PowerPC_func* recompile_block(PowerPC_block* ppc_block, unsigned int addr);
 void init_block  (PowerPC_block* ppc_block);
 void deinit_block(PowerPC_block* ppc_block);
+void invalidate_block(PowerPC_block* ppc_block);
 
 #ifdef HW_RVL
 #include "../../gc_memory/MEM2.h"
