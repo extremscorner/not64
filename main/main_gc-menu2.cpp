@@ -168,10 +168,17 @@ static struct {
   { "LimitVIs", &Timers.limitVIs, LIMITVIS_NONE, LIMITVIS_WAIT_FOR_FRAME },
   { "PollRate", &pollRate, POLLRATE_VSYNC, POLLRATE_11MS },
   { "PadAutoAssign", &padAutoAssign, PADAUTOASSIGN_MANUAL, PADAUTOASSIGN_AUTOMATIC },
+#ifdef HW_RVL
   { "PadType1", &padType[0], PADTYPE_NONE, PADTYPE_WII },
   { "PadType2", &padType[1], PADTYPE_NONE, PADTYPE_WII },
   { "PadType3", &padType[2], PADTYPE_NONE, PADTYPE_WII },
   { "PadType4", &padType[3], PADTYPE_NONE, PADTYPE_WII },
+#else
+  { "PadType1", &padType[0], PADTYPE_NONE, PADTYPE_GAMECUBE },
+  { "PadType2", &padType[1], PADTYPE_NONE, PADTYPE_GAMECUBE },
+  { "PadType3", &padType[2], PADTYPE_NONE, PADTYPE_GAMECUBE },
+  { "PadType4", &padType[3], PADTYPE_NONE, PADTYPE_GAMECUBE },
+#endif
   { "PadAssign1", &padAssign[0], PADASSIGN_INPUT0, PADASSIGN_INPUT3 },
   { "PadAssign2", &padAssign[1], PADASSIGN_INPUT0, PADASSIGN_INPUT3 },
   { "PadAssign3", &padAssign[2], PADASSIGN_INPUT0, PADASSIGN_INPUT3 },

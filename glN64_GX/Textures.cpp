@@ -101,6 +101,13 @@ inline u32 GXGetCI8IA_IA8( u64 *src, u16 x, u16 i, u8 palette )
 	return (u32) color;
 }
 
+inline u32 GXGetCI16IA_IA8( u64 *src, u16 x, u16 i, u8 palette )
+{
+	u16 color = *(u16*)(void*)&TMEM[256 + (u8)((u16*)src)[x^i]];
+	color = ((color & 0xff00) >> 8) | ((color & 0x00ff) << 8);
+	return (u32) color;
+}
+
 inline u32 GXGetCI4RGBA_RGB5A3( u64 *src, u16 x, u16 i, u8 palette )
 {
 	u8 ind4B = ((u8*)src)[(x>>1)^(i<<1)];
@@ -118,7 +125,15 @@ inline u32 GXGetCI8RGBA_RGB5A3( u64 *src, u16 x, u16 i, u8 palette )
 	else			c = 0x0000|(((c>>12)&0xF)<<8)|(((c>>7)&0xF)<<4)|((c>>2)&0xF);   //transparent texel
 	return (u32) c;
 }
- 
+
+inline u32 GXGetCI16RGBA_RGB5A3( u64 *src, u16 x, u16 i, u8 palette )
+{
+	u16 c = *(u16*)(void*)&TMEM[256 + (u8)((u16*)src)[x^i]];
+	if ((c&1) != 0)	c = 0x8000|(((c>>11)&0x1F)<<10)|(((c>>6)&0x1F)<<5)|((c>>1)&0x1F);   //opaque texel
+	else			c = 0x0000|(((c>>12)&0xF)<<8)|(((c>>7)&0xF)<<4)|((c>>2)&0xF);   //transparent texel
+	return (u32) c;
+}
+
 inline u32 GXGetI8_IA8( u64 *src, u16 x, u16 i, u8 palette )
 {
 	u8 color = ((u8*)src)[x^(i<<1)];
@@ -319,36 +334,128 @@ const struct
 	u32				autoFormat; 
 #endif // !__GX__
 	u32				lineShift, maxTexels;
-} imageFormat[4][5] =
+} imageFormat[4][4][5] =
 #ifdef __GX__
-{ //		GetGX					GXtexfmt		GXsize	lineShift	maxTexels
-	{ // 4-bit
-		{	GXGetCI4RGBA_RGB5A3,	GX_TF_RGB5A3,	2,		4,			4096 }, // CI (Banjo-Kazooie uses this, doesn't make sense, but it works...)
-		{	GetNone,				GX_TF_RGB5A3,	0,		4,			8192 }, // YUV
-		{	GXGetCI4RGBA_RGB5A3,	GX_TF_RGB5A3,	2,		4,			4096 }, // CI
-		{	GXGetIA31_IA4,			GX_TF_IA4,		1,		4,			8192 }, // IA
-		{	GXGetI4_IA4,			GX_TF_IA4,		1,		4,			8192 }, // I
+{ //			GetGX					GXtexfmt		GXsize	lineShift	maxTexels
+	{ // G_TT_NONE
+		{ // 4-bit
+			{	GXGetI4_IA4,			GX_TF_IA4,		1,		4,			8192 }, // RGBA as I
+			{	GetNone,				GX_TF_I4,		0,		4,			8192 }, // YUV
+			{	GXGetCI4RGBA_RGB5A3,	GX_TF_RGB5A3,	2,		4,			4096 }, // CI without palette
+			{	GXGetIA31_IA4,			GX_TF_IA4,		1,		4,			8192 }, // IA
+			{	GXGetI4_IA4,			GX_TF_IA4,		1,		4,			8192 }, // I
+		},
+		{ // 8-bit
+			{	GXGetI8_IA8,			GX_TF_IA8,		2,		3,			4096 }, // RGBA as I
+			{	GetNone,				GX_TF_I4,		0,		3,			4096 }, // YUV
+			{	GXGetI8_IA8,			GX_TF_IA8,		2,		3,			4096 }, // CI without palette
+			{	GXGetIA44_IA4,			GX_TF_IA4,		1,		3,			4096 }, // IA
+			{	GXGetI8_IA8,			GX_TF_IA8,		2,		3,			4096 }, // I
+		},
+		{ // 16-bit
+			{	GXGetRGBA5551_RGB5A3,	GX_TF_RGB5A3,	2,		2,			2048 }, // RGBA
+			{	GetNone,				GX_TF_I4,		0,		2,			2048 }, // YUV
+			{	GXGetIA88_IA8,			GX_TF_IA8,		2,		2,			2048 }, // CI as IA
+			{	GXGetIA88_IA8,			GX_TF_IA8,		2,		2,			2048 }, // IA
+			{	GetNone,				GX_TF_I4,		0,		2,			2048 }, // I
+		},
+		{ // 32-bit
+			{	GXGetRGBA8888_RGBA8,	GX_TF_RGBA8,	4,		2,			1024 }, // RGBA
+			{	GetNone,				GX_TF_I4,		0,		2,			1024 }, // YUV
+			{	GetNone,				GX_TF_I4,		0,		2,			1024 }, // CI
+			{	GetNone,				GX_TF_I4,		0,		2,			1024 }, // IA
+			{	GetNone,				GX_TF_I4,		0,		2,			1024 }, // I
+		}
 	},
-	{ // 8-bit
-		{	GXGetCI8RGBA_RGB5A3,	GX_TF_RGB5A3,	2,		3,			2048 }, // RGBA
-		{	GetNone,				GX_TF_RGB5A3,	0,		0,			4096 }, // YUV
-		{	GXGetCI8RGBA_RGB5A3,	GX_TF_RGB5A3,	2,		3,			2048 }, // CI
-		{	GXGetIA44_IA4,			GX_TF_IA4,		1,		3,			4096 }, // IA
-		{	GXGetI8_IA8,			GX_TF_IA8,		2,		3,			4096 }, // I
+	{ // DUMMY
+		{ // 4-bit
+			{	GXGetCI4RGBA_RGB5A3,	GX_TF_RGB5A3,	2,		4,			4096 }, // CI (Banjo-Kazooie uses this, doesn't make sense, but it works...)
+			{	GetNone,				GX_TF_I4,		0,		4,			4096 }, // YUV
+			{	GXGetCI4RGBA_RGB5A3,	GX_TF_RGB5A3,	2,		4,			4096 }, // CI
+			{	GXGetCI4RGBA_RGB5A3,	GX_TF_RGB5A3,	2,		4,			4096 }, // IA as CI
+			{	GXGetCI4RGBA_RGB5A3,	GX_TF_RGB5A3,	2,		4,			4096 }, // I as CI
+		},
+		{ // 8-bit
+			{	GXGetCI8RGBA_RGB5A3,	GX_TF_RGB5A3,	2,		3,			2048 }, // RGBA
+			{	GetNone,				GX_TF_I4,		0,		3,			2048 }, // YUV
+			{	GXGetCI8RGBA_RGB5A3,	GX_TF_RGB5A3,	2,		3,			2048 }, // CI
+			{	GXGetCI8RGBA_RGB5A3,	GX_TF_RGB5A3,	2,		3,			2048 }, // IA as CI
+			{	GXGetCI8RGBA_RGB5A3,	GX_TF_RGB5A3,	2,		3,			2048 }, // I as CI
+		},
+		{ // 16-bit
+			{	GXGetCI16RGBA_RGB5A3,	GX_TF_RGB5A3,	2,		2,			1024 }, // RGBA
+			{	GetNone,				GX_TF_I4,		0,		2,			1024 }, // YUV
+			{	GetNone,				GX_TF_I4,		0,		2,			1024 }, // CI
+			{	GXGetCI16RGBA_RGB5A3,	GX_TF_RGB5A3,	2,		2,			1024 }, // IA as CI
+			{	GetNone,				GX_TF_I4,		0,		2,			1024 }, // I
+		},
+		{ // 32-bit
+			{	GXGetRGBA8888_RGBA8,	GX_TF_RGBA8,	4,		2,			1024 }, // RGBA
+			{	GetNone,				GX_TF_I4,		0,		2,			1024 }, // YUV
+			{	GetNone,				GX_TF_I4,		0,		2,			1024 }, // CI
+			{	GetNone,				GX_TF_I4,		0,		2,			1024 }, // IA
+			{	GetNone,				GX_TF_I4,		0,		2,			1024 }, // I
+		}
 	},
-	{ // 16-bit
-		{	GXGetRGBA5551_RGB5A3,	GX_TF_RGB5A3,	2,		2,			2048 }, // RGBA
-		{	GetNone,				GX_TF_RGB5A3,	0,		2,			2048 }, // YUV
-		{	GetNone,				GX_TF_RGB5A3,	0,		0,			2048 }, // CI
-		{	GXGetIA88_IA8,			GX_TF_IA8,		2,		2,			2048 }, // IA
-		{	GetNone,				GX_TF_RGB5A3,	0,		0,			2048 }, // I
+	{ // G_TT_RGBA16
+		{ // 4-bit
+			{	GXGetCI4RGBA_RGB5A3,	GX_TF_RGB5A3,	2,		4,			4096 }, // CI (Banjo-Kazooie uses this, doesn't make sense, but it works...)
+			{	GetNone,				GX_TF_I4,		0,		4,			4096 }, // YUV
+			{	GXGetCI4RGBA_RGB5A3,	GX_TF_RGB5A3,	2,		4,			4096 }, // CI
+			{	GXGetCI4RGBA_RGB5A3,	GX_TF_RGB5A3,	2,		4,			4096 }, // IA as CI
+			{	GXGetCI4RGBA_RGB5A3,	GX_TF_RGB5A3,	2,		4,			4096 }, // I as CI
+		},
+		{ // 8-bit
+			{	GXGetCI8RGBA_RGB5A3,	GX_TF_RGB5A3,	2,		3,			2048 }, // RGBA
+			{	GetNone,				GX_TF_I4,		0,		3,			2048 }, // YUV
+			{	GXGetCI8RGBA_RGB5A3,	GX_TF_RGB5A3,	2,		3,			2048 }, // CI
+			{	GXGetCI8RGBA_RGB5A3,	GX_TF_RGB5A3,	2,		3,			2048 }, // IA as CI
+			{	GXGetCI8RGBA_RGB5A3,	GX_TF_RGB5A3,	2,		3,			2048 }, // I as CI
+		},
+		{ // 16-bit
+			{	GXGetCI16RGBA_RGB5A3,	GX_TF_RGB5A3,	2,		2,			1024 }, // RGBA
+			{	GetNone,				GX_TF_I4,		0,		2,			1024 }, // YUV
+			{	GetNone,				GX_TF_I4,		0,		2,			1024 }, // CI
+			{	GXGetCI16RGBA_RGB5A3,	GX_TF_RGB5A3,	2,		2,			1024 }, // IA as CI
+			{	GetNone,				GX_TF_I4,		0,		2,			1024 }, // I
+		},
+		{ // 32-bit
+			{	GXGetRGBA8888_RGBA8,	GX_TF_RGBA8,	4,		2,			1024 }, // RGBA
+			{	GetNone,				GX_TF_I4,		0,		2,			1024 }, // YUV
+			{	GetNone,				GX_TF_I4,		0,		2,			1024 }, // CI
+			{	GetNone,				GX_TF_I4,		0,		2,			1024 }, // IA
+			{	GetNone,				GX_TF_I4,		0,		2,			1024 }, // I
+		}
 	},
-	{ // 32-bit
-		{	GXGetRGBA8888_RGBA8,	GX_TF_RGBA8,	4,		2,			1024 }, // RGBA
-		{	GetNone,				GX_TF_RGB5A3,	0,		0,			1024 }, // YUV
-		{	GetNone,				GX_TF_RGB5A3,	0,		0,			1024 }, // CI
-		{	GetNone,				GX_TF_RGB5A3,	0,		0,			1024 }, // IA
-		{	GetNone,				GX_TF_RGB5A3,	0,		0,			1024 }, // I
+	{ // G_TT_IA16
+		{ // 4-bit
+			{	GXGetCI4IA_IA8,			GX_TF_IA8,		2,		4,			4096 }, // IA
+			{	GetNone,				GX_TF_I4,		0,		4,			4096 }, // YUV
+			{	GXGetCI4IA_IA8,			GX_TF_IA8,		2,		4,			4096 }, // CI
+			{	GXGetCI4IA_IA8,			GX_TF_IA8,		2,		4,			4096 }, // IA
+			{	GXGetCI4IA_IA8,			GX_TF_IA8,		2,		4,			4096 }, // I
+		},
+		{ // 8-bit
+			{	GXGetCI8IA_IA8,			GX_TF_IA8,		2,		3,			2048 }, // RGBA
+			{	GetNone,				GX_TF_I4,		0,		3,			2048 }, // YUV
+			{	GXGetCI8IA_IA8,			GX_TF_IA8,		2,		3,			2048 }, // CI
+			{	GXGetCI8IA_IA8,			GX_TF_IA8,		2,		3,			2048 }, // IA
+			{	GXGetCI8IA_IA8,			GX_TF_IA8,		2,		3,			2048 }, // I
+		},
+		{ // 16-bit
+			{	GXGetCI16IA_IA8,		GX_TF_IA8,		2,		2,			1024 }, // RGBA
+			{	GetNone,				GX_TF_I4,		0,		2,			1024 }, // YUV
+			{	GetNone,				GX_TF_I4,		0,		2,			1024 }, // CI
+			{	GXGetCI16IA_IA8,		GX_TF_IA8,		2,		2,			1024 }, // IA
+			{	GetNone,				GX_TF_I4,		0,		2,			1024 }, // I
+		},
+		{ // 32-bit
+			{	GXGetRGBA8888_RGBA8,	GX_TF_RGBA8,	4,		2,			1024 }, // RGBA
+			{	GetNone,				GX_TF_I4,		0,		2,			1024 }, // YUV
+			{	GetNone,				GX_TF_I4,		0,		2,			1024 }, // CI
+			{	GetNone,				GX_TF_I4,		0,		2,			1024 }, // IA
+			{	GetNone,				GX_TF_I4,		0,		2,			1024 }, // I
+		}
 	}
 };
 #else // __GX__
@@ -755,22 +862,19 @@ void TextureCache_LoadBackground( CachedTexture *texInfo )
 		}
 	}
 #else // !__GX__
-	if ((texInfo->format == G_IM_FMT_CI) && (gDP.otherMode.textureLUT == G_TT_IA16))
+	if (texInfo->format == G_IM_FMT_CI)
 	{
-		if (texInfo->size == G_IM_SIZ_4b)
-			GetTexel = GXGetCI4IA_IA8;
-		else
-			GetTexel = GXGetCI8IA_IA8;
+		GetTexel = imageFormat[G_TT_RGBA16][texInfo->size][texInfo->format].GetGX;
+		texInfo->GXtexfmt = imageFormat[G_TT_RGBA16][texInfo->size][texInfo->format].GXtexfmt;
+		GXsize = imageFormat[G_TT_RGBA16][texInfo->size][texInfo->format].GXsize;
+	}
+	else
+	{
+		GetTexel = imageFormat[G_TT_NONE][texInfo->size][texInfo->format].GetGX;
+		texInfo->GXtexfmt = imageFormat[G_TT_NONE][texInfo->size][texInfo->format].GXtexfmt;
+		GXsize = imageFormat[G_TT_NONE][texInfo->size][texInfo->format].GXsize;
+	}
 
-		texInfo->GXtexfmt = GX_TF_IA8;
-		GXsize = 2;
-	}
-		else
-	{
-		GetTexel = imageFormat[texInfo->size][texInfo->format].GetGX;
-		texInfo->GXtexfmt = imageFormat[texInfo->size][texInfo->format].GXtexfmt;
-		GXsize = imageFormat[texInfo->size][texInfo->format].GXsize;
-	}
 	//If realWidth or realHeight do not match the GX texture block size, then specify a compatible blocksize
 	int blockWidth = (GXsize == 1) ? 8 : 4;
 	int blockHeight = 4;
@@ -1057,22 +1161,11 @@ void TextureCache_Load( CachedTexture *texInfo )
 	}
 	dest = (u32*)malloc( texInfo->textureBytes );
 #else // !__GX__
-	if ((texInfo->format == G_IM_FMT_CI) && (gDP.otherMode.textureLUT == G_TT_IA16))
-	{
-		if (texInfo->size == G_IM_SIZ_4b)
-			GetTexel = GXGetCI4IA_IA8;
-		else
-			GetTexel = GXGetCI8IA_IA8;
 
-		texInfo->GXtexfmt = GX_TF_IA8;
-		GXsize = 2;
-	}
-		else
-	{
-		GetTexel = imageFormat[texInfo->size][texInfo->format].GetGX;
-		texInfo->GXtexfmt = imageFormat[texInfo->size][texInfo->format].GXtexfmt;
-		GXsize = imageFormat[texInfo->size][texInfo->format].GXsize;
-	}
+	GetTexel = imageFormat[gDP.otherMode.textureLUT][texInfo->size][texInfo->format].GetGX;
+	texInfo->GXtexfmt = imageFormat[gDP.otherMode.textureLUT][texInfo->size][texInfo->format].GXtexfmt;
+	GXsize = imageFormat[gDP.otherMode.textureLUT][texInfo->size][texInfo->format].GXsize;
+
 	//If realWidth or realHeight do not match the GX texture block size, then specify a compatible blocksize
 	int blockWidth = (GXsize == 1) ? 8 : 4;
 	int blockHeight = 4;
@@ -1121,7 +1214,7 @@ void TextureCache_Load( CachedTexture *texInfo )
 	}
 	else
 	{
-		clampSClamp = min( texInfo->clampWidth, texInfo->width ) - 1;
+		clampSClamp = texInfo->clampS ? texInfo->clampWidth - 1 : texInfo->width - 1;
 		maskSMask = 0xFFFF;
 		mirrorSBit = 0x0000;
 	}
@@ -1134,15 +1227,10 @@ void TextureCache_Load( CachedTexture *texInfo )
 	}
 	else
 	{
-		clampTClamp = min( texInfo->clampHeight, texInfo->height ) - 1;
+		clampTClamp = texInfo->clampT ? texInfo->clampHeight - 1 : texInfo->height - 1;
 		maskTMask = 0xFFFF;
 		mirrorTBit = 0x0000;
 	}
-
-	if (clampSClamp & 0x8000)
-		clampSClamp = 0;
-	if (clampTClamp & 0x8000)
-		clampTClamp = 0;
 
 #ifdef __GX__
 	texInfo->GXtexture = (u16*) dest;
@@ -1390,11 +1478,11 @@ u32 TextureCache_CalculateCRC( u32 t, u32 width, u32 height )
 		crc = Hash_Calculate( crc, src, bpl );
 	}
 
-   	if (gSP.textureTile[t]->format == G_IM_FMT_CI)
+	if (gDP.otherMode.textureLUT != G_TT_NONE)
 	{
 		if (gSP.textureTile[t]->size == G_IM_SIZ_4b)
 			crc = Hash_Calculate( crc, &TMEM[0x100 + (gSP.textureTile[t]->palette << 4)], 128 );
-		else if (gSP.textureTile[t]->size == G_IM_SIZ_8b)
+		else if ((gSP.textureTile[t]->size == G_IM_SIZ_8b) || (gSP.textureTile[t]->size == G_IM_SIZ_16b))
 			crc = Hash_Calculate( crc, &TMEM[0x100], 2048 );
 	}
 	return crc;
@@ -1607,7 +1695,7 @@ void TextureCache_Update( u32 t )
 		return;
 	}
 
-	maxTexels = imageFormat[gSP.textureTile[t]->size][gSP.textureTile[t]->format].maxTexels;
+	maxTexels = imageFormat[gDP.otherMode.textureLUT][gSP.textureTile[t]->size][gSP.textureTile[t]->format].maxTexels;
 
 	// Here comes a bunch of code that just calculates the texture size...I wish there was an easier way...
 	tileWidth = gSP.textureTile[t]->lrs - gSP.textureTile[t]->uls + 1;
@@ -1619,7 +1707,7 @@ void TextureCache_Update( u32 t )
 	loadWidth = gDP.loadTile->lrs - gDP.loadTile->uls + 1;
 	loadHeight = gDP.loadTile->lrt - gDP.loadTile->ult + 1;
 
-	lineWidth = gSP.textureTile[t]->line << imageFormat[gSP.textureTile[t]->size][gSP.textureTile[t]->format].lineShift;
+	lineWidth = gSP.textureTile[t]->line << imageFormat[gDP.otherMode.textureLUT][gSP.textureTile[t]->size][gSP.textureTile[t]->format].lineShift;
 
 	if (lineWidth) // Don't allow division by zero
 		lineHeight = min( maxTexels / lineWidth, tileHeight );

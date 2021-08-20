@@ -32,7 +32,8 @@
 #define PTE_SIZE         ((HTABMASK+1)*65536)
 #define PTE_COUNT        (PTE_SIZE>>3)
 
-#define VM_FILENAME      "/tmp/pagefile.sys"
+#define VM_FILENAME      "/shared2/sys/pagefile.sys"
+#define VM_TMPFILENAME   "/tmp/pagefile.sys"
 
 // keeps a record of each currently mapped page
 typedef union
@@ -223,7 +224,6 @@ void* VM_Init(size_t VMSize, size_t MEMSize)
 {
 	u32 i;
 	u16 index, v_index;
-	STACK_ALIGN(fstats,st,1,32);
 
 	if (vm_initialized)
 	{
@@ -258,14 +258,19 @@ void* VM_Init(size_t VMSize, size_t MEMSize)
 	}
 
 	ISFS_Initialize();
-	// doesn't matter if this fails, will be caught when file is opened
-	ISFS_CreateFile(VM_FILENAME, 0, ISFS_OPEN_RW, ISFS_OPEN_RW, ISFS_OPEN_RW);
 
 	pagefile_fd = ISFS_Open(VM_FILENAME, ISFS_OPEN_RW);
 	if (pagefile_fd < 0)
 	{
-		errno = ENOENT;
-		return NULL;
+		// doesn't matter if this fails, will be caught when file is opened
+		ISFS_CreateFile(VM_TMPFILENAME, 0, ISFS_OPEN_RW, ISFS_OPEN_RW, ISFS_OPEN_RW);
+
+		pagefile_fd = ISFS_Open(VM_TMPFILENAME, ISFS_OPEN_RW);
+		if (pagefile_fd < 0)
+		{
+			errno = ENOENT;
+			return NULL;
+		}
 	}
 
 	tlbia();
@@ -279,9 +284,8 @@ void* VM_Init(size_t VMSize, size_t MEMSize)
 	 * plus we need to be able to quickly seek to any page
 	 * within the file.
 	 */
-	ISFS_Seek(pagefile_fd, 0, SEEK_END);
-	ISFS_GetFileStats(pagefile_fd, st);
-	for (i=st->file_length; i<VMSize;)
+	i = ISFS_Seek(pagefile_fd, 0, SEEK_END);
+	while (i<VMSize)
 	{
 		u32 to_write = VMSize - i;
 		if (to_write > MEMSize)
