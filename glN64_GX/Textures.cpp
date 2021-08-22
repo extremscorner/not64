@@ -156,6 +156,48 @@ inline u32 GXGetRGBA5551_RGB5A3( u64 *src, u16 x, u16 i, u8 palette )
 	return (u32) c;
 }
 
+inline u32 GXGetUYVY8888_RGBA8( u64 *src, u16 x, u16 i, u8 palette )
+{
+	u16 color = ((u16*)src)[x^i];
+	s32 y, u, v;
+	s32 r, g, b;
+
+	if (x & 1)
+	{
+		y = color & 0xFF;
+		v = (color >> 8) - 0x80;
+		color = ((u16*)src)[x^i^1];
+		u = (color >> 8) - 0x80;
+	}
+	else
+	{
+		y = color & 0xFF;
+		u = (color >> 8) - 0x80;
+		color = ((u16*)src)[x^i^1];
+		v = (color >> 8) - 0x80;
+	}
+
+	if (palette & 1)
+	{
+		g = y + ((gDP.convert.k1 * u + gDP.convert.k2 * v + 0x80) >> 8);
+		if (g & ~0xFF)
+			g = ~g >> 31 & 0xFF;
+		b = y + ((gDP.convert.k3 * u + 0x80) >> 8);
+		if (b & ~0xFF)
+			b = ~b >> 31 & 0xFF;
+		color = (g << 8) | b;
+	}
+	else
+	{
+		r = y + ((gDP.convert.k0 * v + 0x80) >> 8);
+		if (r & ~0xFF)
+			r = ~r >> 31 & 0xFF;
+		color = (y << 8) | r;
+	}
+
+	return (u32) color;
+}
+
 inline u32 GXGetRGBA8888_RGBA8( u64 *src, u16 x, u16 i, u8 palette )
 {
 //set palette = 0 for AR texels and palette = 1 for GB texels
@@ -354,7 +396,7 @@ const struct
 		},
 		{ // 16-bit
 			{	GXGetRGBA5551_RGB5A3,	GX_TF_RGB5A3,	2,		2,			2048 }, // RGBA
-			{	GetNone,				GX_TF_I4,		0,		2,			2048 }, // YUV
+			{	GXGetUYVY8888_RGBA8,	GX_TF_RGBA8,	4,		2,			2048 }, // YUV
 			{	GXGetIA88_IA8,			GX_TF_IA8,		2,		2,			2048 }, // CI as IA
 			{	GXGetIA88_IA8,			GX_TF_IA8,		2,		2,			2048 }, // IA
 			{	GetNone,				GX_TF_I4,		0,		2,			2048 }, // I
@@ -384,7 +426,7 @@ const struct
 		},
 		{ // 16-bit
 			{	GXGetCI16RGBA_RGB5A3,	GX_TF_RGB5A3,	2,		2,			1024 }, // RGBA
-			{	GetNone,				GX_TF_I4,		0,		2,			1024 }, // YUV
+			{	GXGetUYVY8888_RGBA8,	GX_TF_RGBA8,	4,		2,			2048 }, // YUV
 			{	GetNone,				GX_TF_I4,		0,		2,			1024 }, // CI
 			{	GXGetCI16RGBA_RGB5A3,	GX_TF_RGB5A3,	2,		2,			1024 }, // IA as CI
 			{	GetNone,				GX_TF_I4,		0,		2,			1024 }, // I
@@ -414,7 +456,7 @@ const struct
 		},
 		{ // 16-bit
 			{	GXGetCI16RGBA_RGB5A3,	GX_TF_RGB5A3,	2,		2,			1024 }, // RGBA
-			{	GetNone,				GX_TF_I4,		0,		2,			1024 }, // YUV
+			{	GXGetUYVY8888_RGBA8,	GX_TF_RGBA8,	4,		2,			2048 }, // YUV
 			{	GetNone,				GX_TF_I4,		0,		2,			1024 }, // CI
 			{	GXGetCI16RGBA_RGB5A3,	GX_TF_RGB5A3,	2,		2,			1024 }, // IA as CI
 			{	GetNone,				GX_TF_I4,		0,		2,			1024 }, // I
@@ -444,7 +486,7 @@ const struct
 		},
 		{ // 16-bit
 			{	GXGetCI16IA_IA8,		GX_TF_IA8,		2,		2,			1024 }, // RGBA
-			{	GetNone,				GX_TF_I4,		0,		2,			1024 }, // YUV
+			{	GXGetUYVY8888_RGBA8,	GX_TF_RGBA8,	4,		2,			2048 }, // YUV
 			{	GetNone,				GX_TF_I4,		0,		2,			1024 }, // CI
 			{	GXGetCI16IA_IA8,		GX_TF_IA8,		2,		2,			1024 }, // IA
 			{	GetNone,				GX_TF_I4,		0,		2,			1024 }, // I
@@ -1203,7 +1245,7 @@ void TextureCache_Load( CachedTexture *texInfo )
 
 	line = texInfo->line;
 
-	if (texInfo->size == G_IM_SIZ_32b)
+	if (((texInfo->format == G_IM_FMT_YUV) && (texInfo->size == G_IM_SIZ_16b)) || (texInfo->size == G_IM_SIZ_32b))
 		line <<= 1;
 
 	if (texInfo->maskS)

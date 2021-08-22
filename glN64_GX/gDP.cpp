@@ -856,10 +856,10 @@ void gDPFillRectangle( s32 ulx, s32 uly, s32 lrx, s32 lry )
 
 void gDPSetConvert( s32 k0, s32 k1, s32 k2, s32 k3, s32 k4, s32 k5 )
 {
-	gDP.convert.k0 = k0;
-	gDP.convert.k1 = k1;
-	gDP.convert.k2 = k2;
-	gDP.convert.k3 = k3;
+	gDP.convert.k0 = (k0 << (32 - 9) >> (32 - 10)) + 1;
+	gDP.convert.k1 = (k1 << (32 - 9) >> (32 - 10)) + 1;
+	gDP.convert.k2 = (k2 << (32 - 9) >> (32 - 10)) + 1;
+	gDP.convert.k3 = (k3 << (32 - 9) >> (32 - 10)) + 1;
 	gDP.convert.k4 = k4;
 	gDP.convert.k5 = k5;
 }

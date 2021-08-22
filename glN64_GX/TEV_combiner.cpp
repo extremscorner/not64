@@ -240,14 +240,14 @@ void Update_TEV_combine_Colors( TEVCombiner *TEVcombiner )	//Called from OGL_Upd
 			case TEV_K4:
 				GXconstantColor.r =
 				GXconstantColor.g =
-				GXconstantColor.b =
-				GXconstantColor.a = gDP.convert.k4;
+				GXconstantColor.b = gDP.convert.k4;
+				GXconstantColor.a = (gDP.convert.k4 * gDP.convert.k5 + 0x80) >> 8;
 				break;
 			case TEV_K5:
 				GXconstantColor.r =
 				GXconstantColor.g =
-				GXconstantColor.b =
-				GXconstantColor.a = gDP.convert.k5;
+				GXconstantColor.b = gDP.convert.k5;
+				GXconstantColor.a = (gDP.convert.k5 * gDP.convert.k4 + 0x80) >> 8;
 				break;
 			}
 			GX_SetTevKColor(TEVconstRegs[TEVcombiner->TEVconstant[i]].tev_regid, GXconstantColor);
@@ -487,6 +487,9 @@ TEVCombiner *Compile_TEV_combine( Combiner *color, Combiner *alpha )
 				sb = (gDP.primColor.r + gDP.primColor.b + gDP.primColor.g) / 3.0f;
 			else if (color->stage[i].op[j].param1 == ENVIRONMENT)
 				sb = (gDP.envColor.r + gDP.envColor.b + gDP.envColor.g) / 3.0f;
+			else if ((color->stage[i].op[j].param1 == K4) &&
+				(color->stage[i].op[j+1].param1 == K5))
+				sb = 1.0f;
 
 			// This helps with problems caused by not using signed values between texture units
 			//Instead of (A - B)*C + D do A*C - B*C + D
@@ -521,24 +524,37 @@ TEVCombiner *Compile_TEV_combine( Combiner *color, Combiner *alpha )
 					GX_TEV_ADD, colorTEX, colorCONST, colorCONST_AAA, GX_TEVREG0);
 				if (currStageC) TEVcombiner->TEVstage[currStageC-1].colorClamp = GX_ENABLE; //TEVPREV used in Mult!
 				currStageC++;
-				//TEVstage[currStageC++] -> ( d(PREV) - b(param1) * c(param2) );
-				colorTEX = (TEVArgs[color->stage[i].op[j].param1].TEV_TexCoordMap == GX_TEXMAP_NULL) ?
-					TEVArgs[color->stage[i].op[j+1].param1].TEV_TexCoordMap : TEVArgs[color->stage[i].op[j].param1].TEV_TexCoordMap;
-				colorCONST = (TEVArgs[color->stage[i].op[j].param1].TEV_inpType <= TEV_MAX_CONST) ?
-					TEVArgs[color->stage[i].op[j].param1].TEV_inpType : TEVArgs[color->stage[i].op[j+1].param1].TEV_inpType;
-				//TODO: The following would break if both RGB and AAA versions of the same constant are used.
-				colorCONST_AAA = TEVArgs[color->stage[i].op[j].param1].KonstAAA || TEVArgs[color->stage[i].op[j+1].param1].KonstAAA;
-				while((TEVcombiner->TEVstage[currStageC].texmap != GX_TEXMAP_NULL) &&
-					(TEVcombiner->TEVstage[currStageC].texmap != colorTEX))
+
+				if ((color->stage[i].op[j].param1 == K4) &&
+					(color->stage[i].op[j+1].param1 == K5))
 				{
-					SetColorTEVskip(currStageC);
+					//TEVstage[currStageC++] -> ( d(PREV) - b(param1) * c(param2) );
+					SetColorTEV(currStageC, TEVArgs[color->stage[i].op[j+1].param1].TEV_colorIn, GX_CC_ZERO, GX_CC_ZERO, GX_CC_C0,
+						GX_TEV_SUB, TEVArgs[color->stage[i].op[j+1].param1].TEV_TexCoordMap, TEVArgs[color->stage[i].op[j+1].param1].TEV_inpType, TRUE, GX_TEVREG0);
 					currStageC++;
+					j+=2;
 				}
-				SetColorTEV(currStageC, GX_CC_ZERO, TEVArgs[color->stage[i].op[j].param1].TEV_colorIn,
-					TEVArgs[color->stage[i].op[j+1].param1].TEV_colorIn, GX_CC_C0,
-					GX_TEV_SUB, colorTEX, colorCONST, colorCONST_AAA, GX_TEVREG0);
-				currStageC++;
-				j+=2;
+				else
+				{
+					//TEVstage[currStageC++] -> ( d(PREV) - b(param1) * c(param2) );
+					colorTEX = (TEVArgs[color->stage[i].op[j].param1].TEV_TexCoordMap == GX_TEXMAP_NULL) ?
+						TEVArgs[color->stage[i].op[j+1].param1].TEV_TexCoordMap : TEVArgs[color->stage[i].op[j].param1].TEV_TexCoordMap;
+					colorCONST = (TEVArgs[color->stage[i].op[j].param1].TEV_inpType <= TEV_MAX_CONST) ?
+						TEVArgs[color->stage[i].op[j].param1].TEV_inpType : TEVArgs[color->stage[i].op[j+1].param1].TEV_inpType;
+					//TODO: The following would break if both RGB and AAA versions of the same constant are used.
+					colorCONST_AAA = TEVArgs[color->stage[i].op[j].param1].KonstAAA || TEVArgs[color->stage[i].op[j+1].param1].KonstAAA;
+					while((TEVcombiner->TEVstage[currStageC].texmap != GX_TEXMAP_NULL) &&
+						(TEVcombiner->TEVstage[currStageC].texmap != colorTEX))
+					{
+						SetColorTEVskip(currStageC);
+						currStageC++;
+					}
+					SetColorTEV(currStageC, GX_CC_ZERO, TEVArgs[color->stage[i].op[j].param1].TEV_colorIn,
+						TEVArgs[color->stage[i].op[j+1].param1].TEV_colorIn, GX_CC_C0,
+						GX_TEV_SUB, colorTEX, colorCONST, colorCONST_AAA, GX_TEVREG0);
+					currStageC++;
+					j+=2;
+				}
 			}
 			else
 			{
