@@ -77,8 +77,6 @@ enum limitVIs
 	LIMITVIS_WAIT_FOR_FRAME
 };
 
-extern char saveEnabled;	//???
-
 extern char nativeSaveDevice;
 enum nativeSaveDevice
 {
@@ -96,7 +94,14 @@ enum saveStateDevice
 	SAVESTATEDEVICE_FAT
 };
 
-extern char autoSave; //TODO: Use me
+extern char autoLoadSave;
+enum autoLoadSave
+{
+	AUTOLOADSAVE_DISABLE=0,
+	AUTOLOADSAVE_ENABLE
+};
+
+extern char autoSave;
 enum autoSave
 {
 	AUTOSAVE_DISABLE=0,

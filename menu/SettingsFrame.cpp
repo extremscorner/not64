@@ -85,21 +85,23 @@ void Func_SpeedLimitDl();
 void Func_ScalePitchYes();
 void Func_ScalePitchNo();
 
-void Func_AutoSaveNativeYes();
-void Func_AutoSaveNativeNo();
+void Func_AutoLoadSaveYes();
+void Func_AutoLoadSaveNo();
+void Func_AutoSaveYes();
+void Func_AutoSaveNo();
 void Func_CopySaves();
 void Func_DeleteSaves();
 void Func_ReturnFromSettingsFrame();
 
 
-#define NUM_FRAME_BUTTONS 46
+#define NUM_FRAME_BUTTONS 48
 #define NUM_TAB_BUTTONS 5
 #define FRAME_BUTTONS settingsFrameButtons
 #define FRAME_STRINGS settingsFrameStrings
-#define NUM_FRAME_TEXTBOXES 16
+#define NUM_FRAME_TEXTBOXES 17
 #define FRAME_TEXTBOXES settingsFrameTextBoxes
 
-static char FRAME_STRINGS[45][23] =
+static char FRAME_STRINGS[46][23] =
 	{ "General",
 	  "Video",
 	  "Input",
@@ -147,6 +149,7 @@ static char FRAME_STRINGS[45][23] =
 	  "VI",
 	  "DL",
 	//Strings for Saves tab [42]
+	  "Auto Load Native Saves",
 	  "Auto Save Native Saves",
 	  "Copy Saves",
 	  "Delete Saves"};
@@ -216,10 +219,12 @@ struct ButtonInfo
 	{	NULL,	BTN_A_SEL,	FRAME_STRINGS[38],	345.0,	240.0,	 75.0,	56.0,	38,	 3,	41,	41,	Func_ScalePitchYes,		Func_ReturnFromSettingsFrame }, // Scale Pitch: Yes
 	{	NULL,	BTN_A_SEL,	FRAME_STRINGS[39],	440.0,	240.0,	 75.0,	56.0,	39,	 3,	40,	40,	Func_ScalePitchNo,		Func_ReturnFromSettingsFrame }, // Scale Pitch: No
 	//Buttons for Saves Tab (starts at button[42])
-	{	NULL,	BTN_A_SEL,	FRAME_STRINGS[38],	375.0,	100.0,	 75.0,	56.0,	 4,	44,	43,	43,	Func_AutoSaveNativeYes,	Func_ReturnFromSettingsFrame }, // Auto Save Native: Yes
-	{	NULL,	BTN_A_SEL,	FRAME_STRINGS[39],	470.0,	100.0,	 75.0,	56.0,	 4,	44,	42,	42,	Func_AutoSaveNativeNo,	Func_ReturnFromSettingsFrame }, // Auto Save Native: No
-	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[43],	365.0,	170.0,	190.0,	56.0,	42,	45,	-1,	-1,	Func_CopySaves,			Func_ReturnFromSettingsFrame }, // Copy Saves
-	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[44],	365.0,	240.0,	190.0,	56.0,	44,	 4,	-1,	-1,	Func_DeleteSaves,		Func_ReturnFromSettingsFrame }, // Delete Saves
+	{	NULL,	BTN_A_SEL,	FRAME_STRINGS[38],	375.0,	100.0,	 75.0,	56.0,	 4,	44,	43,	43,	Func_AutoLoadSaveYes,	Func_ReturnFromSettingsFrame }, // Auto Load Native Saves: Yes
+	{	NULL,	BTN_A_SEL,	FRAME_STRINGS[39],	470.0,	100.0,	 75.0,	56.0,	 4,	45,	42,	42,	Func_AutoLoadSaveNo,	Func_ReturnFromSettingsFrame }, // Auto Load Native Saves: No
+	{	NULL,	BTN_A_SEL,	FRAME_STRINGS[38],	375.0,	170.0,	 75.0,	56.0,	42,	46,	45,	45,	Func_AutoSaveYes,		Func_ReturnFromSettingsFrame }, // Auto Save Native Saves: Yes
+	{	NULL,	BTN_A_SEL,	FRAME_STRINGS[39],	470.0,	170.0,	 75.0,	56.0,	43,	46,	44,	44,	Func_AutoSaveNo,		Func_ReturnFromSettingsFrame }, // Auto Save Native Saves: No
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[44],	365.0,	240.0,	190.0,	56.0,	44,	47,	-1,	-1,	Func_CopySaves,			Func_ReturnFromSettingsFrame }, // Copy Saves
+	{	NULL,	BTN_A_NRM,	FRAME_STRINGS[45],	365.0,	310.0,	190.0,	56.0,	46,	 4,	-1,	-1,	Func_DeleteSaves,		Func_ReturnFromSettingsFrame }, // Delete Saves
 };
 
 struct TextBoxInfo
@@ -252,7 +257,8 @@ struct TextBoxInfo
 	{	NULL,	FRAME_STRINGS[36],	150.0,	198.0,	 1.0,	true }, // Speed Limit: Off/VI/DL
 	{	NULL,	FRAME_STRINGS[37],	210.0,	268.0,	 1.0,	true }, // Scale Pitch: Yes/No
 	//TextBoxes for Saves Tab (starts at textBox[14])
-	{	NULL,	FRAME_STRINGS[42],	200.0,	128.0,	 1.0,	true }, // Auto Save Native Save: Yes/No
+	{	NULL,	FRAME_STRINGS[42],	200.0,	128.0,	 1.0,	true }, // Auto Load Native Saves: Yes/No
+	{	NULL,	FRAME_STRINGS[43],	200.0,	198.0,	 1.0,	true }, // Auto Save Native Saves: Yes/No
 };
 
 SettingsFrame::SettingsFrame()
@@ -427,14 +433,16 @@ void SettingsFrame::activateSubmenu(int submenu)
 			{
 				FRAME_BUTTONS[i].button->setVisible(true);
 				FRAME_BUTTONS[i].button->setNextFocus(menu::Focus::DIRECTION_DOWN, FRAME_BUTTONS[42].button);
-				FRAME_BUTTONS[i].button->setNextFocus(menu::Focus::DIRECTION_UP, FRAME_BUTTONS[45].button);
+				FRAME_BUTTONS[i].button->setNextFocus(menu::Focus::DIRECTION_UP, FRAME_BUTTONS[47].button);
 				FRAME_BUTTONS[i].button->setActive(true);
 			}
-			for (int i = 15; i < 16; i++)
+			for (int i = 15; i < NUM_FRAME_TEXTBOXES; i++)
 				FRAME_TEXTBOXES[i].textBox->setVisible(true);
 			FRAME_BUTTONS[4].button->setSelected(true);
-			if (autoSave == AUTOSAVE_ENABLE)	FRAME_BUTTONS[42].button->setSelected(true);
-			else								FRAME_BUTTONS[43].button->setSelected(true);
+			if (autoLoadSave == AUTOLOADSAVE_ENABLE)	FRAME_BUTTONS[42].button->setSelected(true);
+			else										FRAME_BUTTONS[43].button->setSelected(true);
+			if (autoSave == AUTOSAVE_ENABLE)	FRAME_BUTTONS[44].button->setSelected(true);
+			else								FRAME_BUTTONS[45].button->setSelected(true);
 			for (int i = 42; i < NUM_FRAME_BUTTONS; i++)
 			{
 				FRAME_BUTTONS[i].button->setVisible(true);
@@ -1068,19 +1076,35 @@ void Func_ScalePitchNo()
 	scalePitch = SCALEPITCH_DISABLE;
 }
 
-void Func_AutoSaveNativeYes()
+void Func_AutoLoadSaveYes()
 {
 	for (int i = 42; i <= 43; i++)
 		FRAME_BUTTONS[i].button->setSelected(false);
 	FRAME_BUTTONS[42].button->setSelected(true);
-	autoSave = AUTOSAVE_ENABLE;
+	autoLoadSave = AUTOLOADSAVE_ENABLE;
 }
 
-void Func_AutoSaveNativeNo()
+void Func_AutoLoadSaveNo()
 {
 	for (int i = 42; i <= 43; i++)
 		FRAME_BUTTONS[i].button->setSelected(false);
 	FRAME_BUTTONS[43].button->setSelected(true);
+	autoLoadSave = AUTOLOADSAVE_DISABLE;
+}
+
+void Func_AutoSaveYes()
+{
+	for (int i = 44; i <= 45; i++)
+		FRAME_BUTTONS[i].button->setSelected(false);
+	FRAME_BUTTONS[44].button->setSelected(true);
+	autoSave = AUTOSAVE_ENABLE;
+}
+
+void Func_AutoSaveNo()
+{
+	for (int i = 44; i <= 45; i++)
+		FRAME_BUTTONS[i].button->setSelected(false);
+	FRAME_BUTTONS[45].button->setSelected(true);
 	autoSave = AUTOSAVE_DISABLE;
 }
 

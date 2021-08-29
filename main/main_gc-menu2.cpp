@@ -115,11 +115,11 @@ char renderCpuFramebuffer;
 extern timers Timers;
 char menuActive;
 char skipMenu;
-       char saveEnabled;
        char creditsScrolling;
        char shutdown = 0;
 	   char nativeSaveDevice;
 	   char saveStateDevice;
+       char autoLoadSave;
        char autoSave;
        char screenMode = 0;
        char videoFormat;
@@ -164,6 +164,7 @@ static struct {
   { "CountPerOp", ((char*)&count_per_op)+3, COUNT_PER_OP_1, COUNT_PER_OP_3 },
   { "NativeDevice", &nativeSaveDevice, NATIVESAVEDEVICE_SD, NATIVESAVEDEVICE_CARDB },
   { "StatesDevice", &saveStateDevice, SAVESTATEDEVICE_SD, SAVESTATEDEVICE_FAT },
+  { "AutoLoadSave", &autoLoadSave, AUTOLOADSAVE_DISABLE, AUTOLOADSAVE_ENABLE },
   { "AutoSave", &autoSave, AUTOSAVE_DISABLE, AUTOSAVE_ENABLE },
   { "LimitVIs", &Timers.limitVIs, LIMITVIS_NONE, LIMITVIS_WAIT_FOR_FRAME },
   { "PollRate", &pollRate, POLLRATE_VSYNC, POLLRATE_11MS },
@@ -251,6 +252,7 @@ int main(int argc, char* argv[]){
 	printToScreen    = 1; // Show DEBUG text on screen
 	printToSD        = 0; // Disable SD logging
 	Timers.limitVIs  = 1;
+	autoLoadSave     = 1; // Auto Load Save File
 	autoSave         = 1; // Auto Save Game
 	dynacore         = 1; // Dynarec
 #ifndef HW_RVL
@@ -438,7 +440,7 @@ extern BOOL mempakWritten;
 extern BOOL sramWritten;
 extern BOOL flashramWritten;
 BOOL hasLoadedROM = FALSE;
-int autoSaveLoaded = NATIVESAVEDEVICE_NONE;
+int autoLoadedSave = NATIVESAVEDEVICE_NONE;
 
 int loadROM(fileBrowser_file* rom){
   int ret = 0;
@@ -506,7 +508,7 @@ int loadROM(fileBrowser_file* rom){
 
 	cpu_init();
 
-  if(autoSave==AUTOSAVE_ENABLE) {
+  if(autoLoadSave==AUTOLOADSAVE_ENABLE) {
     switch (nativeSaveDevice)
     {
     	case NATIVESAVEDEVICE_SD:
@@ -541,19 +543,19 @@ int loadROM(fileBrowser_file* rom){
   	{
   		case NATIVESAVEDEVICE_SD:
 //			if (result) menu::MessageBox::getInstance().setMessage("Found & loaded save from SD card");
-  			if (result) autoSaveLoaded = NATIVESAVEDEVICE_SD;
+  			if (result) autoLoadedSave = NATIVESAVEDEVICE_SD;
   			break;
   		case NATIVESAVEDEVICE_FAT:
 //			if (result) menu::MessageBox::getInstance().setMessage("Found & loaded save from FAT device");
-  			if (result) autoSaveLoaded = NATIVESAVEDEVICE_FAT;
+  			if (result) autoLoadedSave = NATIVESAVEDEVICE_FAT;
   			break;
   		case NATIVESAVEDEVICE_CARDA:
 //			if (result) menu::MessageBox::getInstance().setMessage("Found & loaded save from Memory Card A");
-  			if (result) autoSaveLoaded = NATIVESAVEDEVICE_CARDA;
+  			if (result) autoLoadedSave = NATIVESAVEDEVICE_CARDA;
   			break;
   		case NATIVESAVEDEVICE_CARDB:
  //			if (result) menu::MessageBox::getInstance().setMessage("Found & loaded save from Memory Card B");
-  			if (result) autoSaveLoaded = NATIVESAVEDEVICE_CARDB;
+  			if (result) autoLoadedSave = NATIVESAVEDEVICE_CARDB;
   			break;
   	}
   }

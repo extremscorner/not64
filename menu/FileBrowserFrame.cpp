@@ -449,7 +449,7 @@ void fileBrowserFrame_FillPage()
 
 extern BOOL hasLoadedROM;
 extern int rom_length;
-extern int autoSaveLoaded;
+extern int autoLoadedSave;
 void Func_PlayGame();
 void Func_SetPlayGame();
 
@@ -493,7 +493,7 @@ void fileBrowserFrame_LoadFile(int i)
 			countrycodestring(ROM_HEADER.Country_code&0xFF, buffer2);
 			sprintf(buffer,"Country: %s\n",buffer2);
 			strcat(RomInfo,buffer);
-			switch (autoSaveLoaded)
+			switch (autoLoadedSave)
 			{
 			case NATIVESAVEDEVICE_NONE:
 				break;
@@ -510,7 +510,7 @@ void fileBrowserFrame_LoadFile(int i)
 				strcat(RomInfo,"\nFound & loaded save from Memory Card B\n");
 				break;
 			}
-			autoSaveLoaded = NATIVESAVEDEVICE_NONE;
+			autoLoadedSave = NATIVESAVEDEVICE_NONE;
 
 			menu::MessageBox::getInstance().setMessage(RomInfo);
 			pMenuContext->setActiveFrame(MenuContext::FRAME_MAIN);

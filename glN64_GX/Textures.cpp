@@ -383,23 +383,23 @@ const struct
 		{ // 4-bit
 			{	GXGetI4_IA4,			GX_TF_IA4,		1,		4,			8192 }, // RGBA as I
 			{	GetNone,				GX_TF_I4,		0,		4,			8192 }, // YUV
-			{	GXGetCI4RGBA_RGB5A3,	GX_TF_RGB5A3,	2,		4,			4096 }, // CI without palette
+			{	GXGetCI4RGBA_RGB5A3,	GX_TF_RGB5A3,	2,		4,			4096 }, // CI as I (FIXME)
 			{	GXGetIA31_IA4,			GX_TF_IA4,		1,		4,			8192 }, // IA
 			{	GXGetI4_IA4,			GX_TF_IA4,		1,		4,			8192 }, // I
 		},
 		{ // 8-bit
 			{	GXGetI8_IA8,			GX_TF_IA8,		2,		3,			4096 }, // RGBA as I
 			{	GetNone,				GX_TF_I4,		0,		3,			4096 }, // YUV
-			{	GXGetI8_IA8,			GX_TF_IA8,		2,		3,			4096 }, // CI without palette
+			{	GXGetCI8RGBA_RGB5A3,	GX_TF_RGB5A3,	2,		3,			2048 }, // CI as I (FIXME)
 			{	GXGetIA44_IA4,			GX_TF_IA4,		1,		3,			4096 }, // IA
 			{	GXGetI8_IA8,			GX_TF_IA8,		2,		3,			4096 }, // I
 		},
 		{ // 16-bit
 			{	GXGetRGBA5551_RGB5A3,	GX_TF_RGB5A3,	2,		2,			2048 }, // RGBA
 			{	GXGetUYVY8888_RGBA8,	GX_TF_RGBA8,	4,		2,			2048 }, // YUV
-			{	GXGetIA88_IA8,			GX_TF_IA8,		2,		2,			2048 }, // CI as IA
+			{	GXGetCI16RGBA_RGB5A3,	GX_TF_RGB5A3,	2,		2,			1024 }, // CI as I (FIXME)
 			{	GXGetIA88_IA8,			GX_TF_IA8,		2,		2,			2048 }, // IA
-			{	GetNone,				GX_TF_I4,		0,		2,			2048 }, // I
+			{	GXGetIA88_IA8,			GX_TF_RGBA8,	4,		2,			2048 }, // I
 		},
 		{ // 32-bit
 			{	GXGetRGBA8888_RGBA8,	GX_TF_RGBA8,	4,		2,			1024 }, // RGBA
@@ -411,28 +411,28 @@ const struct
 	},
 	{ // DUMMY
 		{ // 4-bit
-			{	GXGetCI4RGBA_RGB5A3,	GX_TF_RGB5A3,	2,		4,			4096 }, // CI (Banjo-Kazooie uses this, doesn't make sense, but it works...)
-			{	GetNone,				GX_TF_I4,		0,		4,			4096 }, // YUV
+			{	GXGetCI4RGBA_RGB5A3,	GX_TF_RGB5A3,	2,		4,			4096 }, // RGBA as CI
+			{	GetNone,				GX_TF_I4,		0,		4,			4096 }, // YUV as CI
 			{	GXGetCI4RGBA_RGB5A3,	GX_TF_RGB5A3,	2,		4,			4096 }, // CI
 			{	GXGetCI4RGBA_RGB5A3,	GX_TF_RGB5A3,	2,		4,			4096 }, // IA as CI
 			{	GXGetCI4RGBA_RGB5A3,	GX_TF_RGB5A3,	2,		4,			4096 }, // I as CI
 		},
 		{ // 8-bit
-			{	GXGetCI8RGBA_RGB5A3,	GX_TF_RGB5A3,	2,		3,			2048 }, // RGBA
-			{	GetNone,				GX_TF_I4,		0,		3,			2048 }, // YUV
+			{	GXGetCI8RGBA_RGB5A3,	GX_TF_RGB5A3,	2,		3,			2048 }, // RGBA as CI
+			{	GetNone,				GX_TF_I4,		0,		3,			2048 }, // YUV as CI
 			{	GXGetCI8RGBA_RGB5A3,	GX_TF_RGB5A3,	2,		3,			2048 }, // CI
 			{	GXGetCI8RGBA_RGB5A3,	GX_TF_RGB5A3,	2,		3,			2048 }, // IA as CI
 			{	GXGetCI8RGBA_RGB5A3,	GX_TF_RGB5A3,	2,		3,			2048 }, // I as CI
 		},
 		{ // 16-bit
-			{	GXGetCI16RGBA_RGB5A3,	GX_TF_RGB5A3,	2,		2,			1024 }, // RGBA
-			{	GXGetUYVY8888_RGBA8,	GX_TF_RGBA8,	4,		2,			2048 }, // YUV
-			{	GetNone,				GX_TF_I4,		0,		2,			1024 }, // CI
+			{	GXGetCI16RGBA_RGB5A3,	GX_TF_RGB5A3,	2,		2,			1024 }, // RGBA as CI
+			{	GetNone,				GX_TF_I4,		0,		2,			1024 }, // YUV as CI
+			{	GXGetCI16RGBA_RGB5A3,	GX_TF_RGB5A3,	2,		2,			1024 }, // CI
 			{	GXGetCI16RGBA_RGB5A3,	GX_TF_RGB5A3,	2,		2,			1024 }, // IA as CI
-			{	GetNone,				GX_TF_I4,		0,		2,			1024 }, // I
+			{	GXGetCI16RGBA_RGB5A3,	GX_TF_RGB5A3,	2,		2,			1024 }, // I as CI
 		},
 		{ // 32-bit
-			{	GXGetRGBA8888_RGBA8,	GX_TF_RGBA8,	4,		2,			1024 }, // RGBA
+			{	GetNone,				GX_TF_I4,		0,		2,			1024 }, // RGBA
 			{	GetNone,				GX_TF_I4,		0,		2,			1024 }, // YUV
 			{	GetNone,				GX_TF_I4,		0,		2,			1024 }, // CI
 			{	GetNone,				GX_TF_I4,		0,		2,			1024 }, // IA
@@ -441,28 +441,28 @@ const struct
 	},
 	{ // G_TT_RGBA16
 		{ // 4-bit
-			{	GXGetCI4RGBA_RGB5A3,	GX_TF_RGB5A3,	2,		4,			4096 }, // CI (Banjo-Kazooie uses this, doesn't make sense, but it works...)
-			{	GetNone,				GX_TF_I4,		0,		4,			4096 }, // YUV
+			{	GXGetCI4RGBA_RGB5A3,	GX_TF_RGB5A3,	2,		4,			4096 }, // RGBA as CI
+			{	GetNone,				GX_TF_I4,		0,		4,			4096 }, // YUV as CI
 			{	GXGetCI4RGBA_RGB5A3,	GX_TF_RGB5A3,	2,		4,			4096 }, // CI
 			{	GXGetCI4RGBA_RGB5A3,	GX_TF_RGB5A3,	2,		4,			4096 }, // IA as CI
 			{	GXGetCI4RGBA_RGB5A3,	GX_TF_RGB5A3,	2,		4,			4096 }, // I as CI
 		},
 		{ // 8-bit
-			{	GXGetCI8RGBA_RGB5A3,	GX_TF_RGB5A3,	2,		3,			2048 }, // RGBA
-			{	GetNone,				GX_TF_I4,		0,		3,			2048 }, // YUV
+			{	GXGetCI8RGBA_RGB5A3,	GX_TF_RGB5A3,	2,		3,			2048 }, // RGBA as CI
+			{	GetNone,				GX_TF_I4,		0,		3,			2048 }, // YUV as CI
 			{	GXGetCI8RGBA_RGB5A3,	GX_TF_RGB5A3,	2,		3,			2048 }, // CI
 			{	GXGetCI8RGBA_RGB5A3,	GX_TF_RGB5A3,	2,		3,			2048 }, // IA as CI
 			{	GXGetCI8RGBA_RGB5A3,	GX_TF_RGB5A3,	2,		3,			2048 }, // I as CI
 		},
 		{ // 16-bit
-			{	GXGetCI16RGBA_RGB5A3,	GX_TF_RGB5A3,	2,		2,			1024 }, // RGBA
-			{	GXGetUYVY8888_RGBA8,	GX_TF_RGBA8,	4,		2,			2048 }, // YUV
-			{	GetNone,				GX_TF_I4,		0,		2,			1024 }, // CI
+			{	GXGetCI16RGBA_RGB5A3,	GX_TF_RGB5A3,	2,		2,			1024 }, // RGBA as CI
+			{	GetNone,				GX_TF_I4,		0,		2,			1024 }, // YUV as CI
+			{	GXGetCI16RGBA_RGB5A3,	GX_TF_RGB5A3,	2,		2,			1024 }, // CI
 			{	GXGetCI16RGBA_RGB5A3,	GX_TF_RGB5A3,	2,		2,			1024 }, // IA as CI
-			{	GetNone,				GX_TF_I4,		0,		2,			1024 }, // I
+			{	GXGetCI16RGBA_RGB5A3,	GX_TF_RGB5A3,	2,		2,			1024 }, // I as CI
 		},
 		{ // 32-bit
-			{	GXGetRGBA8888_RGBA8,	GX_TF_RGBA8,	4,		2,			1024 }, // RGBA
+			{	GetNone,				GX_TF_I4,		0,		2,			1024 }, // RGBA
 			{	GetNone,				GX_TF_I4,		0,		2,			1024 }, // YUV
 			{	GetNone,				GX_TF_I4,		0,		2,			1024 }, // CI
 			{	GetNone,				GX_TF_I4,		0,		2,			1024 }, // IA
@@ -471,28 +471,28 @@ const struct
 	},
 	{ // G_TT_IA16
 		{ // 4-bit
-			{	GXGetCI4IA_IA8,			GX_TF_IA8,		2,		4,			4096 }, // IA
-			{	GetNone,				GX_TF_I4,		0,		4,			4096 }, // YUV
+			{	GXGetCI4IA_IA8,			GX_TF_IA8,		2,		4,			4096 }, // RGBA as CI
+			{	GetNone,				GX_TF_I4,		0,		4,			4096 }, // YUV as CI
 			{	GXGetCI4IA_IA8,			GX_TF_IA8,		2,		4,			4096 }, // CI
-			{	GXGetCI4IA_IA8,			GX_TF_IA8,		2,		4,			4096 }, // IA
-			{	GXGetCI4IA_IA8,			GX_TF_IA8,		2,		4,			4096 }, // I
+			{	GXGetCI4IA_IA8,			GX_TF_IA8,		2,		4,			4096 }, // IA as CI
+			{	GXGetCI4IA_IA8,			GX_TF_IA8,		2,		4,			4096 }, // I as CI
 		},
 		{ // 8-bit
-			{	GXGetCI8IA_IA8,			GX_TF_IA8,		2,		3,			2048 }, // RGBA
-			{	GetNone,				GX_TF_I4,		0,		3,			2048 }, // YUV
+			{	GXGetCI8IA_IA8,			GX_TF_IA8,		2,		3,			2048 }, // RGBA as CI
+			{	GetNone,				GX_TF_I4,		0,		3,			2048 }, // YUV as CI
 			{	GXGetCI8IA_IA8,			GX_TF_IA8,		2,		3,			2048 }, // CI
-			{	GXGetCI8IA_IA8,			GX_TF_IA8,		2,		3,			2048 }, // IA
-			{	GXGetCI8IA_IA8,			GX_TF_IA8,		2,		3,			2048 }, // I
+			{	GXGetCI8IA_IA8,			GX_TF_IA8,		2,		3,			2048 }, // IA as CI
+			{	GXGetCI8IA_IA8,			GX_TF_IA8,		2,		3,			2048 }, // I as CI
 		},
 		{ // 16-bit
-			{	GXGetCI16IA_IA8,		GX_TF_IA8,		2,		2,			1024 }, // RGBA
-			{	GXGetUYVY8888_RGBA8,	GX_TF_RGBA8,	4,		2,			2048 }, // YUV
-			{	GetNone,				GX_TF_I4,		0,		2,			1024 }, // CI
-			{	GXGetCI16IA_IA8,		GX_TF_IA8,		2,		2,			1024 }, // IA
-			{	GetNone,				GX_TF_I4,		0,		2,			1024 }, // I
+			{	GXGetCI16IA_IA8,		GX_TF_IA8,		2,		2,			1024 }, // RGBA as CI
+			{	GetNone,				GX_TF_I4,		0,		2,			1024 }, // YUV as CI
+			{	GXGetCI16IA_IA8,		GX_TF_IA8,		2,		2,			1024 }, // CI
+			{	GXGetCI16IA_IA8,		GX_TF_IA8,		2,		2,			1024 }, // IA as CI
+			{	GXGetCI16IA_IA8,		GX_TF_IA8,		2,		2,			1024 }, // I as CI
 		},
 		{ // 32-bit
-			{	GXGetRGBA8888_RGBA8,	GX_TF_RGBA8,	4,		2,			1024 }, // RGBA
+			{	GetNone,				GX_TF_I4,		0,		2,			1024 }, // RGBA
 			{	GetNone,				GX_TF_I4,		0,		2,			1024 }, // YUV
 			{	GetNone,				GX_TF_I4,		0,		2,			1024 }, // CI
 			{	GetNone,				GX_TF_I4,		0,		2,			1024 }, // IA
@@ -1520,7 +1520,7 @@ u32 TextureCache_CalculateCRC( u32 t, u32 width, u32 height )
 		crc = Hash_Calculate( crc, src, bpl );
 	}
 
-	if (gDP.otherMode.textureLUT != G_TT_NONE)
+	if ((gDP.otherMode.textureLUT != G_TT_NONE) || (gSP.textureTile[t]->format == G_IM_FMT_CI))
 	{
 		if (gSP.textureTile[t]->size == G_IM_SIZ_4b)
 			crc = Hash_Calculate( crc, &TMEM[0x100 + (gSP.textureTile[t]->palette << 4)], 128 );
