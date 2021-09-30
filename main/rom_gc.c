@@ -112,6 +112,8 @@ static struct {
 	{ 'PD', "EJP"  }, // Perfect Dark
 	{ 'R7', "J"    }, // Robot Ponkottsu 64 - 7tsu no Umi no Caramel
 	{ 'RZ', "EP"   }, // RR64 - Ridge Racer 64
+	{ 'SI', "J"    }, // Fushigi no Dungeon: Fūrai no Shiren 2: Oni Shūrai! Shiren-jō!
+	{ 'SI', "E"    }, // Shiren 2
 	{ 'EP', "EJP"  }, // Star Wars Episode I - Racer
 	{ 'YS', "EJP"  }, // Yoshi's Story
 };
