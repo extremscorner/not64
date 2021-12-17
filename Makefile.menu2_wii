@@ -96,6 +96,7 @@ OBJ_INPUT	=gc_input/main.o \
 		gc_input/controller-GC.o \
 		gc_input/controller-Extenmote.o \
 		gc_input/controller-Classic.o \
+		gc_input/controller-DRC.o \
 		gc_input/controller-WiimoteNunchuk.o
 
 OBJ_RSPHLE	=rsp_hle/alist.o \
@@ -163,7 +164,7 @@ HEADER		=main/rom.h \
 		r4300/recomp.h \
 		gc_memory/pif.h
 
-LIB		=	-laesnd -lwiiuse -lbte -ltinysmb -lfat -lz -static
+LIB		=	-laesnd -lwiiuse -lbte -ltinysmb -lfat -lwiidrc -lz -static
 
 ifeq ($(strip mupen64_GX_gfx/main.cpp),)
 	export LD	:=	$(CC)
