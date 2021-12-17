@@ -38,6 +38,7 @@ Focus::Focus()
 {
 	for (int i=0; i<4; i++) {
 		previousButtonsWii[i] = 0;
+		previousButtonsDRC[i] = 0;
 		previousButtonsGC[i] = 0;
 	}
 }
@@ -71,6 +72,7 @@ void Focus::updateFocus()
 			previousButtonsGC[i] = PAD_ButtonsHeld(i);
 #ifdef HW_RVL
 			previousButtonsWii[i] = WPAD_ButtonsHeld(i);
+			previousButtonsDRC[i] = (i == 0 ? WiiDRC_ButtonsHeld() : 0);
 #endif
 		}
 		clearInput = false;
@@ -204,6 +206,38 @@ void Focus::updateFocus()
 				if (currentButtonsDownWii & WPAD_BUTTON_B) buttonsDown |= ACTION_BACK;
 				break;
 			}
+			if (freezeAction)
+			{
+				focusDirection = DIRECTION_NONE;
+				buttonsDown = 0;
+			}
+			if (primaryFocusOwner) primaryFocusOwner = primaryFocusOwner->updateFocus(focusDirection,buttonsDown);
+			else primaryFocusOwner = currentFrame->updateFocus(focusDirection,buttonsDown);
+			break;
+		}
+		
+		else if (i == 0 && WiiDRC_Inited() && WiiDRC_Connected() && (WiiDRC_ButtonsHeld() ^ previousButtonsDRC[i]))
+		{
+			u32 currentButtonsDownDRC = (WiiDRC_ButtonsHeld() ^ previousButtonsDRC[i]) & WiiDRC_ButtonsHeld();
+			previousButtonsDRC[i] = WiiDRC_ButtonsHeld();
+			switch (currentButtonsDownDRC) {
+				case WIIDRC_BUTTON_LEFT:
+					focusDirection = DIRECTION_LEFT;
+					break;
+				case WIIDRC_BUTTON_RIGHT:
+					focusDirection = DIRECTION_RIGHT;
+					break;
+				case WIIDRC_BUTTON_DOWN:
+					focusDirection = DIRECTION_DOWN;
+					break;
+				case WIIDRC_BUTTON_UP:
+					focusDirection = DIRECTION_UP;
+					break;
+				default:
+					focusDirection = DIRECTION_NONE;
+			}
+			if (currentButtonsDownDRC & (WIIDRC_BUTTON_A)) buttonsDown |= ACTION_SELECT;
+			if (currentButtonsDownDRC & (WIIDRC_BUTTON_B)) buttonsDown |= ACTION_BACK;
 			if (freezeAction)
 			{
 				focusDirection = DIRECTION_NONE;
