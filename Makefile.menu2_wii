@@ -5,7 +5,7 @@ CXX		=powerpc-eabi-g++
 AS		=powerpc-eabi-as
 
 CFLAGS  = -pipe -Ofast -Wall -Wno-multichar -mrvl -fgnu89-inline -flto=jobserver \
-	  -DWII -DRELEASE -DMENU_V2 -D__wii__ -DGLN64_GX -DUSE_EXPANSION \
+	  -DWII -DRELEASE -DMENU_V2 -D__wii__ -DRVL_LIBWIIDRC -DGLN64_GX -DUSE_EXPANSION \
 	  -DPPC_DYNAREC -DUSE_RECOMP_CACHE -DFASTMEM -DNDEBUG
 
 LDFLAGS	=$(CFLAGS) -Wl,-Map,$(notdir $@).map -Wl,--cref
