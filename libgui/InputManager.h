@@ -22,6 +22,7 @@
 #define INPUTMANAGER_H
 
 #include "GuiTypes.h"
+#include <wiidrc/wiidrc.h>
 
 namespace menu {
 
