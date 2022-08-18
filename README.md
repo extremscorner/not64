@@ -67,8 +67,7 @@ Beta 1.1
    * Delete Saves: Not yet implemented
 
 # COMPATIBILITY LIST
- Please visit http://emulatemii.com/wii64/compatList/ to see what runs
- Report any issues to http://code.google.com/p/mupen64gc/issues/list
+ Please visit [the compatibility list](https://wiki.gbatemp.net/wiki/Wii64_Compatibility_List) to see what runs
 
 # CREDITS
  * Core Coder: tehpola
