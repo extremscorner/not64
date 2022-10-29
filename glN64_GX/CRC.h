@@ -14,10 +14,16 @@
 #else
 # include "../main/winlnxdefs.h"
 #endif // __LINUX__
+#define XXH_INLINE_ALL
+#define XXH_FORCE_NATIVE_FORMAT 1
+#include "../main/xxhash.h"
 
 void CRC_BuildTable();
 
 DWORD CRC_Calculate( DWORD crc, void *buffer, DWORD count );
 DWORD CRC_CalculatePalette( DWORD crc, void *buffer, DWORD count );
 
-DWORD Hash_Calculate( DWORD hash, void *buffer, DWORD count );
+inline DWORD Hash_Calculate( DWORD hash, void *buffer, DWORD count )
+{
+	return XXH32(buffer, count, hash);
+}

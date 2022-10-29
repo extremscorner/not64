@@ -594,7 +594,7 @@ void TextureCache_Init()
 	cache.dummy->clampT = 1;
 	cache.dummy->clampWidth = 2;
 	cache.dummy->clampHeight = 2;
-	cache.dummy->crc = 0;
+	cache.dummy->hash = 0;
 	cache.dummy->format = 0;
 	cache.dummy->size = 0;
 	cache.dummy->frameBufferTexture = FALSE;
@@ -1500,9 +1500,9 @@ void TextureCache_Load( CachedTexture *texInfo )
 #endif // !__GX__
 }
 
-u32 TextureCache_CalculateCRC( u32 t, u32 width, u32 height )
+u32 TextureCache_CalculateHash( u32 t, u32 width, u32 height )
 {
-	u32 crc;
+	u32 hash;
 	u32 y, /*i,*/ bpl, lineBytes, line;
 	u64 *src;
 
@@ -1513,21 +1513,21 @@ u32 TextureCache_CalculateCRC( u32 t, u32 width, u32 height )
  	if (gSP.textureTile[t]->size == G_IM_SIZ_32b)
 		line <<= 1;
 
-	crc = 0xFFFFFFFF;
+	hash = 0;
  	for (y = 0; y < height; y++)
 	{
 		src = (u64*)&TMEM[(gSP.textureTile[t]->tmem + line * y) & 0x1FF];
-		crc = Hash_Calculate( crc, src, bpl );
+		hash = Hash_Calculate( hash, src, bpl );
 	}
 
 	if ((gDP.otherMode.textureLUT != G_TT_NONE) || (gSP.textureTile[t]->format == G_IM_FMT_CI))
 	{
 		if (gSP.textureTile[t]->size == G_IM_SIZ_4b)
-			crc = Hash_Calculate( crc, &TMEM[0x100 + (gSP.textureTile[t]->palette << 4)], 128 );
+			hash = Hash_Calculate( hash, &TMEM[0x100 + (gSP.textureTile[t]->palette << 4)], 128 );
 		else if ((gSP.textureTile[t]->size == G_IM_SIZ_8b) || (gSP.textureTile[t]->size == G_IM_SIZ_16b))
-			crc = Hash_Calculate( crc, &TMEM[0x100], 2048 );
+			hash = Hash_Calculate( hash, &TMEM[0x100], 2048 );
 	}
-	return crc;
+	return hash;
 }
 
 void TextureCache_ActivateTexture( u32 t, CachedTexture *texture )
@@ -1617,23 +1617,23 @@ void TextureCache_ActivateDummy( u32 t )
 void TextureCache_UpdateBackground()
 {
 	u32 numBytes = gSP.bgImage.width * gSP.bgImage.height << gSP.bgImage.size >> 1;
-	u32 crc;
+	u32 hash;
 
-	crc = Hash_Calculate( 0xFFFFFFFF, &RDRAM[gSP.bgImage.address], numBytes );
+	hash = Hash_Calculate( 0, &RDRAM[gSP.bgImage.address], numBytes );
 
    	if (gSP.bgImage.format == G_IM_FMT_CI)
 	{
 		if (gSP.bgImage.size == G_IM_SIZ_4b)
-			crc = Hash_Calculate( crc, &TMEM[0x100 + (gSP.bgImage.palette << 4)], 128 );
+			hash = Hash_Calculate( hash, &TMEM[0x100 + (gSP.bgImage.palette << 4)], 128 );
 		else if (gSP.bgImage.size == G_IM_SIZ_8b)
-			crc = Hash_Calculate( crc, &TMEM[0x100], 2048 );
+			hash = Hash_Calculate( hash, &TMEM[0x100], 2048 );
 	}
 
 	CachedTexture *current = cache.top;
 
  	while (current)
   	{
-		if ((current->crc == crc) &&
+		if ((current->hash == hash) &&
 			(current->width == gSP.bgImage.width) &&
 			(current->height == gSP.bgImage.height) &&
 			(current->format == gSP.bgImage.format) &&
@@ -1664,7 +1664,7 @@ void TextureCache_UpdateBackground()
 #endif // !__GX__
 
 	cache.current[0]->address = gSP.bgImage.address;
-	cache.current[0]->crc = crc;
+	cache.current[0]->hash = hash;
 
 	cache.current[0]->format = gSP.bgImage.format;
 	cache.current[0]->size = gSP.bgImage.size;
@@ -1706,7 +1706,7 @@ void TextureCache_Update( u32 t )
 {
 	CachedTexture *current;
 	//s32 i, j, k;
-	u32 crc, /*bpl, cacheNum,*/ maxTexels;
+	u32 hash, /*bpl, cacheNum,*/ maxTexels;
 	u32 tileWidth, maskWidth, loadWidth, lineWidth, clampWidth, height;
 	u32 tileHeight, maskHeight, loadHeight, lineHeight, clampHeight, width;
 
@@ -1848,7 +1848,7 @@ void TextureCache_Update( u32 t )
 		maskHeight = 1 << gSP.textureTile[t]->maskt;
 	}
 
-	crc = TextureCache_CalculateCRC( t, width, height );
+	hash = TextureCache_CalculateHash( t, width, height );
 
 //	if (!TextureCache_Verify())
 //		current = cache.top;
@@ -1856,7 +1856,7 @@ void TextureCache_Update( u32 t )
 	current = cache.top;
  	while (current)
   	{
-		if ((current->crc == crc) &&
+		if ((current->hash == hash) &&
 //			(current->address == gDP.textureImage.address) &&
 //			(current->palette == gSP.textureTile[t]->palette) &&
 			(current->width == width) &&
@@ -1902,7 +1902,7 @@ void TextureCache_Update( u32 t )
 #endif // !__GX__
 
 	cache.current[t]->address = gDP.textureImage.address;
-	cache.current[t]->crc = crc;
+	cache.current[t]->hash = hash;
 
 	cache.current[t]->format = gSP.textureTile[t]->format;
 	cache.current[t]->size = gSP.textureTile[t]->size;

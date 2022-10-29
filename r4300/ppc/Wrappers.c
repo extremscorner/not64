@@ -220,8 +220,12 @@ unsigned int dyna_mem(unsigned int addr, unsigned int value, int count,
 	PC->addr = interp_addr = pc;
 	delay_slot = isDelaySlot;
 
+	if(count < 1 || value + count > 32) abort();
+
 	switch(type){
 		case MEM_LW:
+			addr &= ~3;
+		case MEM_ULW:
 			for(i = 0; i < count; i++){
 				address = addr + i*4;
 				read_word_in_memory();
@@ -230,6 +234,7 @@ unsigned int dyna_mem(unsigned int addr, unsigned int value, int count,
 			}
 			break;
 		case MEM_LWU:
+			addr &= ~3;
 			for(i = 0; i < count; i++){
 				address = addr + i*4;
 				read_word_in_memory();
@@ -238,6 +243,7 @@ unsigned int dyna_mem(unsigned int addr, unsigned int value, int count,
 			}
 			break;
 		case MEM_LH:
+			addr &= ~1;
 			for(i = 0; i < count; i++){
 				address = addr + i*2;
 				read_hword_in_memory();
@@ -246,6 +252,7 @@ unsigned int dyna_mem(unsigned int addr, unsigned int value, int count,
 			}
 			break;
 		case MEM_LHU:
+			addr &= ~1;
 			for(i = 0; i < count; i++){
 				address = addr + i*2;
 				read_hword_in_memory();
@@ -270,6 +277,8 @@ unsigned int dyna_mem(unsigned int addr, unsigned int value, int count,
 			}
 			break;
 		case MEM_LD:
+			addr &= ~7;
+		case MEM_ULD:
 			for(i = 0; i < count; i++){
 				address = addr + i*8;
 				read_dword_in_memory();
@@ -278,6 +287,7 @@ unsigned int dyna_mem(unsigned int addr, unsigned int value, int count,
 			}
 			break;
 		case MEM_LWC1:
+			addr &= ~3;
 			for(i = 0; i < count; i++){
 				address = addr + i*4;
 				read_word_in_memory();
@@ -286,6 +296,7 @@ unsigned int dyna_mem(unsigned int addr, unsigned int value, int count,
 			}
 			break;
 		case MEM_LDC1:
+			addr &= ~7;
 			for(i = 0; i < count; i++){
 				address = addr + i*8;
 				read_dword_in_memory();
@@ -294,10 +305,17 @@ unsigned int dyna_mem(unsigned int addr, unsigned int value, int count,
 			}
 			break;
 		case MEM_LL:
-			address = addr;
+			address = addr &= ~3;
 			read_word_in_memory();
 			if(!address) break;
 			reg[value] = (signed long)word;
+			llbit = 1;
+			break;
+		case MEM_LLD:
+			address = addr &= ~7;
+			read_dword_in_memory();
+			if(!address) break;
+			reg[value] = dword;
 			llbit = 1;
 			break;
 		case MEM_LWL:
@@ -309,7 +327,7 @@ unsigned int dyna_mem(unsigned int addr, unsigned int value, int count,
 			} else {
 				u32 shift = (addr & 3) * 8;
 				u32 mask = 0xFFFFFFFF << shift;
-				reg[value] = (reg[value] & ~mask) | ((word << shift) & mask);
+				reg[value] = (signed long)((reg[value] & ~mask) | ((word << shift) & mask));
 			}
 			break;
 		case MEM_LWR:
@@ -321,7 +339,7 @@ unsigned int dyna_mem(unsigned int addr, unsigned int value, int count,
 			} else {
 				u32 shift = (~addr & 3) * 8;
 				u32 mask = 0xFFFFFFFF >> shift;
-				reg[value] = (reg[value] & ~mask) | ((word >> shift) & mask);
+				reg[value] = (signed long)((reg[value] & ~mask) | ((word >> shift) & mask));
 			}
 			break;
 		case MEM_LDL:
@@ -349,6 +367,8 @@ unsigned int dyna_mem(unsigned int addr, unsigned int value, int count,
 			}
 			break;
 		case MEM_SW:
+			addr &= ~3;
+		case MEM_USW:
 			for(i = 0; i < count; i++){
 				address = addr + i*4;
 				word = reg[value + i];
@@ -357,6 +377,7 @@ unsigned int dyna_mem(unsigned int addr, unsigned int value, int count,
 			invalidate_func(addr);
 			break;
 		case MEM_SH:
+			addr &= ~1;
 			for(i = 0; i < count; i++){
 				address = addr + i*2;
 				hword = reg[value + i];
@@ -373,6 +394,8 @@ unsigned int dyna_mem(unsigned int addr, unsigned int value, int count,
 			invalidate_func(addr);
 			break;
 		case MEM_SD:
+			addr &= ~7;
+		case MEM_USD:
 			for(i = 0; i < count; i++){
 				address = addr + i*8;
 				dword = reg[value + i];
@@ -381,6 +404,7 @@ unsigned int dyna_mem(unsigned int addr, unsigned int value, int count,
 			invalidate_func(addr);
 			break;
 		case MEM_SWC1:
+			addr &= ~3;
 			for(i = 0; i < count; i++){
 				address = addr + i*4;
 				word = *((long*)reg_cop1_simple[value + i*2]);
@@ -389,6 +413,7 @@ unsigned int dyna_mem(unsigned int addr, unsigned int value, int count,
 			invalidate_func(addr);
 			break;
 		case MEM_SDC1:
+			addr &= ~7;
 			for(i = 0; i < count; i++){
 				address = addr + i*8;
 				dword = *((long long*)reg_cop1_double[value + i*2]);
@@ -398,9 +423,19 @@ unsigned int dyna_mem(unsigned int addr, unsigned int value, int count,
 			break;
 		case MEM_SC:
 			if(llbit){
-				address = addr;
+				address = addr &= ~3;
 				word = reg[value];
 				write_word_in_memory();
+				invalidate_func(addr);
+			}
+			reg[value] = !!llbit;
+			llbit = 0;
+			break;
+		case MEM_SCD:
+			if(llbit){
+				address = addr &= ~7;
+				dword = reg[value];
+				write_dword_in_memory();
 				invalidate_func(addr);
 			}
 			reg[value] = !!llbit;
@@ -459,7 +494,7 @@ unsigned int dyna_mem(unsigned int addr, unsigned int value, int count,
 			invalidate_func(addr);
 			break;
 		default:
-			stop = 1;
+			abort();
 			break;
 	}
 	delay_slot = 0;

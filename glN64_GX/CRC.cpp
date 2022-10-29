@@ -14,11 +14,6 @@
 #else
 # include "../main/winlnxdefs.h"
 #endif // __LINUX__
-#define XXH_PRIVATE_API
-#define XXH_FORCE_MEMORY_ACCESS 2
-#define XXH_FORCE_NATIVE_FORMAT 1
-#define XXH_FORCE_ALIGN_CHECK 0
-#include "../main/xxhash.h"
 
 #define CRC32_POLYNOMIAL     0x04C11DB7
 
@@ -98,9 +93,4 @@ DWORD CRC_CalculatePalette( DWORD crc, void *buffer, DWORD count )
 	}
 
     return crc ^ orig;
-}
-
-DWORD Hash_Calculate( DWORD hash, void *buffer, DWORD count )
-{
-    return XXH32(buffer, count, hash);
 }

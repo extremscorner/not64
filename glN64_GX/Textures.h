@@ -37,7 +37,7 @@ struct CachedTexture
 
 	GLuint	glName;
 	u32		address;
-	u32		crc;
+	u32		hash;
 //	float	fulS, fulT;
 //	WORD	ulS, ulT, lrS, lrT;
 	float	offsetS, offsetT;

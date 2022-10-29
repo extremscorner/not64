@@ -1017,8 +1017,22 @@ void alist_iirf(
         count -= 0x10;
     } while (count > 0);
 
-    dram_store_u16(hle, (uint16_t*)&frame[6], address + 4, 4);
-    dram_store_u16(hle, (uint16_t*)&ibuf[(index-2)&3], address+8, 2);
-    dram_store_u16(hle, (uint16_t*)&ibuf[(index-1)&3], address+10, 2);
+    dram_store_u16(hle, (uint16_t*)&frame[6], address + 4, 2);
+    dram_store_u16(hle, (uint16_t*)&ibuf[(index-2)&3], address+8, 1);
+    dram_store_u16(hle, (uint16_t*)&ibuf[(index-1)&3], address+10, 1);
 }
 
+/* Perform a clamped gain, then attenuate it back by an amount */
+void alist_overload(struct hle_t* hle, uint16_t dmem, int16_t count, int16_t gain, uint16_t attenuation)
+{
+    int16_t accu;
+    int16_t * sample = (int16_t*)(hle->alist_buffer + dmem);
+
+    while (count != 0)
+    {
+        accu = clamp_s16(*sample * gain);
+        *sample = (accu * attenuation) >> 16;
+        sample++;
+        count --;
+    }
+}

@@ -43,11 +43,13 @@ extern double* reg_cop1_double[32] __attribute__((section(".sbss")));
 extern int noCheckInterrupt;
 
 typedef enum { MEM_LW,   MEM_LH,   MEM_LB,   MEM_LD,
+               MEM_ULW,                      MEM_ULD,
                MEM_LWU,  MEM_LHU,  MEM_LBU,
-               MEM_LWC1, MEM_LDC1, MEM_LL,
+               MEM_LWC1, MEM_LDC1, MEM_LL,   MEM_LLD,
                MEM_LWL,  MEM_LWR,  MEM_LDL,  MEM_LDR,
                MEM_SW,   MEM_SH,   MEM_SB,   MEM_SD,
-               MEM_SWC1, MEM_SDC1, MEM_SC,
+               MEM_USW,                      MEM_USD,
+               MEM_SWC1, MEM_SDC1, MEM_SC,   MEM_SCD,
                MEM_SWL,  MEM_SWR,  MEM_SDL,  MEM_SDR } memType;
 
 void dynarec(unsigned int address);

@@ -115,7 +115,9 @@ unsigned int decodeNInterpret();
 #define INTERPRET_TRAPS
 
 //#define INTERPRET_LL
+//#define INTERPRET_LLD
 //#define INTERPRET_SC
+//#define INTERPRET_SCD
 
 //#define INTERPRET_COP0
 //#define INTERPRET_MFC0

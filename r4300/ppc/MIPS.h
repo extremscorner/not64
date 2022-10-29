@@ -65,6 +65,8 @@ typedef unsigned int MIPS_instr;
 #define MIPS_IMMED_MASK   0xFFFF
 #define MIPS_IMMED_SHIFT  0
 #define MIPS_GET_IMMED(instr)   ((instr >> MIPS_IMMED_SHIFT)  & MIPS_IMMED_MASK)
+#define MIPS_GET_SIMMED(instr)  ((signed short)MIPS_GET_IMMED(instr))
+#define MIPS_GET_UIMMED(instr)  ((unsigned short)MIPS_GET_IMMED(instr))
 
 #define MIPS_LI_MASK      0x3FFFFFF
 #define MIPS_LI_SHIFT     0

@@ -141,8 +141,9 @@ RegMapping mapRegister64New(int gpr){
 		if(regMap[gpr].map.hi < 0){
 			// Try to find any already available register
 			int available = getAvailableHWReg();
-			if(available >= 0) regMap[gpr].map.hi = available;
-			else {
+			if(available >= 0){
+				regMap[gpr].map.hi = available;
+			} else {
 				// We didn't find an available register, so flush one
 				RegMapping lru = flushLRURegister();
 				if(lru.hi >= 0) availableRegs[lru.hi] = 1;
@@ -160,7 +161,10 @@ RegMapping mapRegister64New(int gpr){
 	if(regMap[gpr].map.lo < 0){
 		// We didn't find any available registers, so flush one
 		RegMapping lru = flushLRURegister();
-		if(lru.hi >= 0) availableRegs[lru.hi] = 1;
+		if(regMap[gpr].map.hi < 0)
+			regMap[gpr].map.hi = lru.hi;
+		else if(lru.hi >= 0)
+			availableRegs[lru.hi] = 1;
 		regMap[gpr].map.lo = lru.lo;
 	}
 	if(regMap[gpr].map.hi < 0){
@@ -241,7 +245,10 @@ RegMapping mapRegister64(int gpr){
 	if(regMap[gpr].map.lo < 0){
 		// We didn't find any available registers, so flush one
 		RegMapping lru = flushLRURegister();
-		if(lru.hi >= 0) availableRegs[lru.hi] = 1;
+		if(regMap[gpr].map.hi < 0)
+			regMap[gpr].map.hi = lru.hi;
+		else if(lru.hi >= 0)
+			availableRegs[lru.hi] = 1;
 		regMap[gpr].map.lo = lru.lo;
 	}
 	if(regMap[gpr].map.hi < 0){
