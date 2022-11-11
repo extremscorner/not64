@@ -272,7 +272,6 @@ void invalidateRegister(int gpr){
 	if(regMap[gpr].map.lo >= 0)
 		availableRegs[ regMap[gpr].map.lo ] = 1;
 	regMap[gpr].map.hi = regMap[gpr].map.lo = -1;
-	regMap[gpr].constant = 0;
 }
 
 void flushRegister(int gpr){
@@ -283,7 +282,6 @@ void flushRegister(int gpr){
 		availableRegs[ regMap[gpr].map.lo ] = 1;
 	}
 	regMap[gpr].map.hi = regMap[gpr].map.lo = -1;
-	regMap[gpr].constant = 0;
 }
 
 RegMappingType getRegisterMapping(int gpr){
@@ -307,6 +305,11 @@ RegMapping mapConstant64New(int gpr, int constant){
 	return mapping;
 }
 
+void invalidateConstant(int gpr){
+	regMap[gpr].constant = 0;
+	regMap[gpr].value = 0;
+}
+
 int isRegisterConstant(int gpr){
 	// Always constant for r0
 	return gpr ? regMap[gpr].constant : 1;
@@ -326,7 +329,8 @@ void setRegisterConstant(int gpr, long value){
 }
 
 void setRegisterConstant64(int gpr, long long value){
-	regMap[gpr].value = value;
+	if(regMap[gpr].constant)
+		regMap[gpr].value = value;
 }
 
 // -- FPR mappings --
@@ -487,6 +491,11 @@ void invalidateRegisters(void){
 	nextLRUValFPR = 0;
 }
 
+void invalidateConstants(void){
+	int i;
+	for(i=0; i<34; ++i) invalidateConstant(i);
+}
+
 int mapRegisterTemp(void){
 	// Try to find an already available register
 	int available = getAvailableHWReg();
@@ -497,8 +506,16 @@ int mapRegisterTemp(void){
 	return lru.lo;
 }
 
-void unmapRegisterTemp(int gpr){
-	availableRegs[gpr] = 1;
+void mapRegisterFixed(int tmp){
+	int i;
+	for(i=1; i<34; ++i)
+		if(regMap[i].map.hi == tmp ||
+		   regMap[i].map.lo == tmp) flushRegister(i);
+	availableRegs[tmp] = 0;
+}
+
+void unmapRegisterTemp(int tmp){
+	availableRegs[tmp] = 1;
 }
 
 int mapFPRTemp(void){
@@ -511,7 +528,14 @@ int mapFPRTemp(void){
 	return lru;
 }
 
-void unmapFPRTemp(int fpr){
-	availableFPRs[fpr] = 1;
+void mapFPRFixed(int tmp){
+	int i;
+	for(i=0; i<32; ++i)
+		if(fprMap[i].map == tmp) flushFPR(i);
+	availableFPRs[tmp] = 0;
+}
+
+void unmapFPRTemp(int tmp){
+	availableFPRs[tmp] = 1;
 }
 

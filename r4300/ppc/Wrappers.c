@@ -331,13 +331,13 @@ unsigned int dyna_mem(unsigned int addr, unsigned int value, int count,
 			}
 			break;
 		case MEM_LWR:
-			address = addr & ~3;
+			address = (addr + 3) & ~3;
 			read_word_in_memory();
 			if(!address) break;
-			if((~addr & 3) == 0){
+			if((-addr & 3) == 0){
 				reg[value] = (signed long)word;
 			} else {
-				u32 shift = (~addr & 3) * 8;
+				u32 shift = (-addr & 3) * 8;
 				u32 mask = 0xFFFFFFFF >> shift;
 				reg[value] = (signed long)((reg[value] & ~mask) | ((word >> shift) & mask));
 			}
@@ -355,13 +355,13 @@ unsigned int dyna_mem(unsigned int addr, unsigned int value, int count,
 			}
 			break;
 		case MEM_LDR:
-			address = addr & ~7;
+			address = (addr + 7) & ~7;
 			read_dword_in_memory();
 			if(!address) break;
-			if((~addr & 7) == 0){
+			if((-addr & 7) == 0){
 				reg[value] = dword;
 			} else {
-				u32 shift = (~addr & 7) * 8;
+				u32 shift = (-addr & 7) * 8;
 				u64 mask = 0xFFFFFFFFFFFFFFFFLL >> shift;
 				reg[value] = (reg[value] & ~mask) | ((dword >> shift) & mask);
 			}
@@ -455,12 +455,12 @@ unsigned int dyna_mem(unsigned int addr, unsigned int value, int count,
 			invalidate_func(addr);
 			break;
 		case MEM_SWR:
-			address = addr & ~3;
+			address = (addr + 3) & ~3;
 			read_word_in_memory();
-			if((~addr & 3) == 0){
+			if((-addr & 3) == 0){
 				word = reg[value];
 			} else {
-				u32 shift = (~addr & 3) * 8;
+				u32 shift = (-addr & 3) * 8;
 				u32 mask = 0xFFFFFFFF << shift;
 				word = (word & ~mask) | ((reg[value] << shift) & mask);
 			}
@@ -481,12 +481,12 @@ unsigned int dyna_mem(unsigned int addr, unsigned int value, int count,
 			invalidate_func(addr);
 			break;
 		case MEM_SDR:
-			address = addr & ~7;
+			address = (addr + 7) & ~7;
 			read_dword_in_memory();
-			if((~addr & 7) == 0){
+			if((-addr & 7) == 0){
 				dword = reg[value];
 			} else {
-				u32 shift = (~addr & 7) * 8;
+				u32 shift = (-addr & 7) * 8;
 				u64 mask = 0xFFFFFFFFFFFFFFFFLL << shift;
 				dword = (dword & ~mask) | ((reg[value] << shift) & mask);
 			}

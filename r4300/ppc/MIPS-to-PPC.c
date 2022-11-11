@@ -32,6 +32,7 @@
 #include "Interpreter.h"
 #include "Wrappers.h"
 #include "../Recomp-Cache.h"
+#include "../../gc_memory/memory.h"
 #include <math.h>
 
 #include <assert.h>
@@ -87,7 +88,7 @@ static int FP_need_check;
 static int delaySlotNext, isDelaySlot;
 // This should be called before the jump is recompiled
 static inline int check_delaySlot(void){
-	if(peek_next_src() == 0){ // MIPS uses 0 as a NOP
+	if(peek_next_src() == MIPS_NOP){
 		get_next_src();   // Get rid of the NOP
 		return 0;
 	} else {
@@ -104,6 +105,7 @@ static inline int check_delaySlot(void){
 // Initialize register mappings
 void start_new_block(void){
 	invalidateRegisters();
+	invalidateConstants();
 	// Check if the previous instruction was a branch
 	//   and thus whether this block begins with a delay slot
 	unget_last_src();
@@ -112,8 +114,9 @@ void start_new_block(void){
 }
 void start_new_mapping(void){
 	flushRegisters();
-	FP_need_check = 1;
+	invalidateConstants();
 	reset_code_addr();
+	FP_need_check = 1;
 }
 
 static inline int signExtend(int value, int size){
@@ -345,7 +348,10 @@ int convert(void){
 	MIPS_instr mips = get_next_src();
 	int result = gen_ops[MIPS_GET_OPCODE(mips)](mips);
 
-	if(needFlush) flushRegisters();
+	if(needFlush){
+		flushRegisters();
+		invalidateConstants();
+	}
 	return result;
 }
 
@@ -791,22 +797,52 @@ static int LDL(MIPS_instr mips){
 	genCallInterp(mips);
 	return INTERPRETED;
 #else // INTERPRET_LDL
+	int count = 1;
 	int _rs = MIPS_GET_RS(mips), _rt = MIPS_GET_RT(mips);
 	short immed = MIPS_GET_SIMMED(mips);
 
 #ifdef FASTMEM
-	if(!isDelaySlot && !is_j_dst(1)){
-		MIPS_instr peek = peek_next_src();
-		if(MIPS_GET_OPCODE(peek) == MIPS_OPCODE_LDR && MIPS_GET_RS(peek) == _rs && MIPS_GET_RT(peek) == _rt && MIPS_GET_SIMMED(peek) == immed + 7){
-			mips = get_next_src();
-
-			genCallDynaMem(MEM_ULD, 1, _rs, _rt, immed);
-			return CONVERT_SUCCESS;
+	if(!isDelaySlot){
+		while(has_next_src() && !is_j_dst(1)){
+			if(peek_next_src() == MIPS_NOP){
+				get_next_src();
+				continue;
+			}
+			if(count % 2){
+				MIPS_instr peek = peek_next_src();
+				if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_LDR)
+					break;
+				if(MIPS_GET_RS(peek) != MIPS_GET_RS(mips))
+					break;
+				if(MIPS_GET_RS(peek) == MIPS_GET_RT(mips))
+					break;
+				if(MIPS_GET_RT(peek) != MIPS_GET_RT(mips))
+					break;
+				if(MIPS_GET_SIMMED(peek) != MIPS_GET_SIMMED(mips) + 7)
+					break;
+				get_next_src();
+				count++;
+			} else {
+				MIPS_instr peek = peek_next_src();
+				if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_LDL)
+					break;
+				if(MIPS_GET_RS(peek) != MIPS_GET_RS(mips))
+					break;
+				if(MIPS_GET_RS(peek) == MIPS_GET_RT(mips))
+					break;
+				if(MIPS_GET_RT(peek) != MIPS_GET_RT(mips) + 1)
+					break;
+				if(MIPS_GET_SIMMED(peek) != MIPS_GET_SIMMED(mips) + 8)
+					break;
+				mips = get_next_src();
+				count++;
+			}
 		}
 	}
 #endif
 
-	genCallDynaMem(MEM_LDL, 1, _rs, _rt, immed);
+	if(count / 2) genCallDynaMem(MEM_ULD, count / 2, _rs, _rt, immed);
+	if(count % 2) genCallDynaMem(MEM_LDL, count % 2, MIPS_GET_RS(mips), MIPS_GET_RT(mips), MIPS_GET_SIMMED(mips));
 	return CONVERT_SUCCESS;
 #endif
 }
@@ -817,23 +853,52 @@ static int LDR(MIPS_instr mips){
 	genCallInterp(mips);
 	return INTERPRETED;
 #else // INTERPRET_LDR
+	int count = 1;
 	int _rs = MIPS_GET_RS(mips), _rt = MIPS_GET_RT(mips);
 	short immed = MIPS_GET_SIMMED(mips);
 
 #ifdef FASTMEM
-	if(!isDelaySlot && !is_j_dst(1)){
-		MIPS_instr peek = peek_next_src();
-		if(MIPS_GET_OPCODE(peek) == MIPS_OPCODE_LDL && MIPS_GET_RS(peek) == _rs && MIPS_GET_RT(peek) == _rt && MIPS_GET_SIMMED(peek) == immed - 7){
-			mips = get_next_src();
-			immed = MIPS_GET_SIMMED(mips);
-
-			genCallDynaMem(MEM_ULD, 1, _rs, _rt, immed);
-			return CONVERT_SUCCESS;
+	if(!isDelaySlot){
+		while(has_next_src() && !is_j_dst(1)){
+			if(peek_next_src() == MIPS_NOP){
+				get_next_src();
+				continue;
+			}
+			if(count % 2){
+				MIPS_instr peek = peek_next_src();
+				if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_LDL)
+					break;
+				if(MIPS_GET_RS(peek) != MIPS_GET_RS(mips))
+					break;
+				if(MIPS_GET_RS(peek) == MIPS_GET_RT(mips))
+					break;
+				if(MIPS_GET_RT(peek) != MIPS_GET_RT(mips))
+					break;
+				if(MIPS_GET_SIMMED(peek) != MIPS_GET_SIMMED(mips) - 7)
+					break;
+				get_next_src();
+				count++;
+			} else {
+				MIPS_instr peek = peek_next_src();
+				if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_LDR)
+					break;
+				if(MIPS_GET_RS(peek) != MIPS_GET_RS(mips))
+					break;
+				if(MIPS_GET_RS(peek) == MIPS_GET_RT(mips))
+					break;
+				if(MIPS_GET_RT(peek) != MIPS_GET_RT(mips) + 1)
+					break;
+				if(MIPS_GET_SIMMED(peek) != MIPS_GET_SIMMED(mips) + 8)
+					break;
+				mips = get_next_src();
+				count++;
+			}
 		}
 	}
 #endif
 
-	genCallDynaMem(MEM_LDR, 1, _rs, _rt, immed);
+	if(count / 2) genCallDynaMem(MEM_ULD, count / 2, _rs, _rt, immed - 7);
+	if(count % 2) genCallDynaMem(MEM_LDR, count % 2, MIPS_GET_RS(mips), MIPS_GET_RT(mips), MIPS_GET_SIMMED(mips) - 7);
 	return CONVERT_SUCCESS;
 #endif
 }
@@ -849,48 +914,63 @@ static int LB(MIPS_instr mips){
 	short immed = MIPS_GET_SIMMED(mips);
 
 #ifdef FASTMEM
-	if(!isDelaySlot && !is_j_dst(1)){
-		MIPS_instr peek = peek_next_src();
-		if(MIPS_GET_OPCODE(peek) == MIPS_OPCODE_LB && MIPS_GET_RS(peek) == _rs && MIPS_GET_RS(peek) != _rt){
-			if(MIPS_GET_RT(peek) == _rt + 1 && MIPS_GET_SIMMED(peek) == immed + 1){
-				mips = get_next_src();
-				count++;
-				while(has_next_src() && !is_j_dst(1)){
-					peek = peek_next_src();
-					if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_LB)
-						break;
-					if(MIPS_GET_RS(peek) != MIPS_GET_RS(mips))
-						break;
-					if(MIPS_GET_RS(peek) == MIPS_GET_RT(mips))
-						break;
-					if(MIPS_GET_RT(peek) != MIPS_GET_RT(mips) + 1)
-						break;
-					if(MIPS_GET_SIMMED(peek) != MIPS_GET_SIMMED(mips) + 1)
-						break;
-					mips = get_next_src();
-					count++;
-				}
-			} else if(MIPS_GET_RT(peek) == _rt - 1 && MIPS_GET_SIMMED(peek) == immed - 1){
-				mips = get_next_src();
-				count++;
-				while(has_next_src() && !is_j_dst(1)){
-					peek = peek_next_src();
-					if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_LB)
-						break;
-					if(MIPS_GET_RS(peek) != MIPS_GET_RS(mips))
-						break;
-					if(MIPS_GET_RS(peek) == MIPS_GET_RT(mips))
-						break;
-					if(MIPS_GET_RT(peek) != MIPS_GET_RT(mips) - 1)
-						break;
-					if(MIPS_GET_SIMMED(peek) != MIPS_GET_SIMMED(mips) - 1)
-						break;
-					mips = get_next_src();
-					count++;
-				}
-				_rt = MIPS_GET_RT(mips);
-				immed = MIPS_GET_SIMMED(mips);
+	if(!isDelaySlot){
+		while(has_next_src() && !is_j_dst(1)){
+			if(peek_next_src() == MIPS_NOP){
+				get_next_src();
+				continue;
 			}
+			MIPS_instr peek = peek_next_src();
+			if(MIPS_GET_OPCODE(peek) == MIPS_OPCODE_LB && MIPS_GET_RS(peek) == _rs && MIPS_GET_RS(peek) != _rt){
+				if(MIPS_GET_RT(peek) == _rt + 1 && MIPS_GET_SIMMED(peek) == immed + 1){
+					mips = get_next_src();
+					count++;
+					while(has_next_src() && !is_j_dst(1)){
+						if(peek_next_src() == MIPS_NOP){
+							get_next_src();
+							continue;
+						}
+						peek = peek_next_src();
+						if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_LB)
+							break;
+						if(MIPS_GET_RS(peek) != MIPS_GET_RS(mips))
+							break;
+						if(MIPS_GET_RS(peek) == MIPS_GET_RT(mips))
+							break;
+						if(MIPS_GET_RT(peek) != MIPS_GET_RT(mips) + 1)
+							break;
+						if(MIPS_GET_SIMMED(peek) != MIPS_GET_SIMMED(mips) + 1)
+							break;
+						mips = get_next_src();
+						count++;
+					}
+				} else if(MIPS_GET_RT(peek) == _rt - 1 && MIPS_GET_SIMMED(peek) == immed - 1){
+					mips = get_next_src();
+					count++;
+					while(has_next_src() && !is_j_dst(1)){
+						if(peek_next_src() == MIPS_NOP){
+							get_next_src();
+							continue;
+						}
+						peek = peek_next_src();
+						if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_LB)
+							break;
+						if(MIPS_GET_RS(peek) != MIPS_GET_RS(mips))
+							break;
+						if(MIPS_GET_RS(peek) == MIPS_GET_RT(mips))
+							break;
+						if(MIPS_GET_RT(peek) != MIPS_GET_RT(mips) - 1)
+							break;
+						if(MIPS_GET_SIMMED(peek) != MIPS_GET_SIMMED(mips) - 1)
+							break;
+						mips = get_next_src();
+						count++;
+					}
+					_rt = MIPS_GET_RT(mips);
+					immed = MIPS_GET_SIMMED(mips);
+				}
+			}
+			break;
 		}
 	}
 #endif
@@ -911,48 +991,63 @@ static int LH(MIPS_instr mips){
 	short immed = MIPS_GET_SIMMED(mips);
 
 #ifdef FASTMEM
-	if(!isDelaySlot && !is_j_dst(1)){
-		MIPS_instr peek = peek_next_src();
-		if(MIPS_GET_OPCODE(peek) == MIPS_OPCODE_LH && MIPS_GET_RS(peek) == _rs && MIPS_GET_RS(peek) != _rt){
-			if(MIPS_GET_RT(peek) == _rt + 1 && MIPS_GET_SIMMED(peek) == immed + 2){
-				mips = get_next_src();
-				count++;
-				while(has_next_src() && !is_j_dst(1)){
-					peek = peek_next_src();
-					if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_LH)
-						break;
-					if(MIPS_GET_RS(peek) != MIPS_GET_RS(mips))
-						break;
-					if(MIPS_GET_RS(peek) == MIPS_GET_RT(mips))
-						break;
-					if(MIPS_GET_RT(peek) != MIPS_GET_RT(mips) + 1)
-						break;
-					if(MIPS_GET_SIMMED(peek) != MIPS_GET_SIMMED(mips) + 2)
-						break;
-					mips = get_next_src();
-					count++;
-				}
-			} else if(MIPS_GET_RT(peek) == _rt - 1 && MIPS_GET_SIMMED(peek) == immed - 2){
-				mips = get_next_src();
-				count++;
-				while(has_next_src() && !is_j_dst(1)){
-					peek = peek_next_src();
-					if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_LH)
-						break;
-					if(MIPS_GET_RS(peek) != MIPS_GET_RS(mips))
-						break;
-					if(MIPS_GET_RS(peek) == MIPS_GET_RT(mips))
-						break;
-					if(MIPS_GET_RT(peek) != MIPS_GET_RT(mips) - 1)
-						break;
-					if(MIPS_GET_SIMMED(peek) != MIPS_GET_SIMMED(mips) - 2)
-						break;
-					mips = get_next_src();
-					count++;
-				}
-				_rt = MIPS_GET_RT(mips);
-				immed = MIPS_GET_SIMMED(mips);
+	if(!isDelaySlot){
+		while(has_next_src() && !is_j_dst(1)){
+			if(peek_next_src() == MIPS_NOP){
+				get_next_src();
+				continue;
 			}
+			MIPS_instr peek = peek_next_src();
+			if(MIPS_GET_OPCODE(peek) == MIPS_OPCODE_LH && MIPS_GET_RS(peek) == _rs && MIPS_GET_RS(peek) != _rt){
+				if(MIPS_GET_RT(peek) == _rt + 1 && MIPS_GET_SIMMED(peek) == immed + 2){
+					mips = get_next_src();
+					count++;
+					while(has_next_src() && !is_j_dst(1)){
+						if(peek_next_src() == MIPS_NOP){
+							get_next_src();
+							continue;
+						}
+						peek = peek_next_src();
+						if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_LH)
+							break;
+						if(MIPS_GET_RS(peek) != MIPS_GET_RS(mips))
+							break;
+						if(MIPS_GET_RS(peek) == MIPS_GET_RT(mips))
+							break;
+						if(MIPS_GET_RT(peek) != MIPS_GET_RT(mips) + 1)
+							break;
+						if(MIPS_GET_SIMMED(peek) != MIPS_GET_SIMMED(mips) + 2)
+							break;
+						mips = get_next_src();
+						count++;
+					}
+				} else if(MIPS_GET_RT(peek) == _rt - 1 && MIPS_GET_SIMMED(peek) == immed - 2){
+					mips = get_next_src();
+					count++;
+					while(has_next_src() && !is_j_dst(1)){
+						if(peek_next_src() == MIPS_NOP){
+							get_next_src();
+							continue;
+						}
+						peek = peek_next_src();
+						if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_LH)
+							break;
+						if(MIPS_GET_RS(peek) != MIPS_GET_RS(mips))
+							break;
+						if(MIPS_GET_RS(peek) == MIPS_GET_RT(mips))
+							break;
+						if(MIPS_GET_RT(peek) != MIPS_GET_RT(mips) - 1)
+							break;
+						if(MIPS_GET_SIMMED(peek) != MIPS_GET_SIMMED(mips) - 2)
+							break;
+						mips = get_next_src();
+						count++;
+					}
+					_rt = MIPS_GET_RT(mips);
+					immed = MIPS_GET_SIMMED(mips);
+				}
+			}
+			break;
 		}
 	}
 #endif
@@ -968,22 +1063,53 @@ static int LWL(MIPS_instr mips){
 	genCallInterp(mips);
 	return INTERPRETED;
 #else // INTERPRET_LWL
+	int count = 1;
 	int _rs = MIPS_GET_RS(mips), _rt = MIPS_GET_RT(mips);
 	short immed = MIPS_GET_SIMMED(mips);
 
 #ifdef FASTMEM
-	if(!isDelaySlot && !is_j_dst(1)){
-		MIPS_instr peek = peek_next_src();
-		if(MIPS_GET_OPCODE(peek) == MIPS_OPCODE_LWR && MIPS_GET_RS(peek) == _rs && MIPS_GET_RT(peek) == _rt && MIPS_GET_SIMMED(peek) == immed + 3){
-			mips = get_next_src();
-
-			genCallDynaMem(MEM_ULW, 1, _rs, _rt, immed);
-			return CONVERT_SUCCESS;
+	if(!isDelaySlot){
+		while(has_next_src() && !is_j_dst(1)){
+			if(peek_next_src() == MIPS_NOP){
+				get_next_src();
+				continue;
+			}
+			if(count % 2){
+				MIPS_instr peek = peek_next_src();
+				if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_LWR)
+					break;
+				if(MIPS_GET_RS(peek) != MIPS_GET_RS(mips))
+					break;
+				if(MIPS_GET_RS(peek) == MIPS_GET_RT(mips))
+					break;
+				if(MIPS_GET_RT(peek) != MIPS_GET_RT(mips))
+					break;
+				if(MIPS_GET_SIMMED(peek) != MIPS_GET_SIMMED(mips) + 3)
+					break;
+				get_next_src();
+				count++;
+			} else {
+				break;
+				MIPS_instr peek = peek_next_src();
+				if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_LWL)
+					break;
+				if(MIPS_GET_RS(peek) != MIPS_GET_RS(mips))
+					break;
+				if(MIPS_GET_RS(peek) == MIPS_GET_RT(mips))
+					break;
+				if(MIPS_GET_RT(peek) != MIPS_GET_RT(mips) + 1)
+					break;
+				if(MIPS_GET_SIMMED(peek) != MIPS_GET_SIMMED(mips) + 4)
+					break;
+				mips = get_next_src();
+				count++;
+			}
 		}
 	}
 #endif
 
-	genCallDynaMem(MEM_LWL, 1, _rs, _rt, immed);
+	if(count / 2) genCallDynaMem(MEM_ULW, count / 2, _rs, _rt, immed);
+	if(count % 2) genCallDynaMem(MEM_LWL, count % 2, MIPS_GET_RS(mips), MIPS_GET_RT(mips), MIPS_GET_SIMMED(mips));
 	return CONVERT_SUCCESS;
 #endif
 }
@@ -999,48 +1125,63 @@ static int LW(MIPS_instr mips){
 	short immed = MIPS_GET_SIMMED(mips);
 
 #ifdef FASTMEM
-	if(!isDelaySlot && !is_j_dst(1)){
-		MIPS_instr peek = peek_next_src();
-		if(MIPS_GET_OPCODE(peek) == MIPS_OPCODE_LW && MIPS_GET_RS(peek) == _rs && MIPS_GET_RS(peek) != _rt){
-			if(MIPS_GET_RT(peek) == _rt + 1 && MIPS_GET_SIMMED(peek) == immed + 4){
-				mips = get_next_src();
-				count++;
-				while(has_next_src() && !is_j_dst(1)){
-					peek = peek_next_src();
-					if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_LW)
-						break;
-					if(MIPS_GET_RS(peek) != MIPS_GET_RS(mips))
-						break;
-					if(MIPS_GET_RS(peek) == MIPS_GET_RT(mips))
-						break;
-					if(MIPS_GET_RT(peek) != MIPS_GET_RT(mips) + 1)
-						break;
-					if(MIPS_GET_SIMMED(peek) != MIPS_GET_SIMMED(mips) + 4)
-						break;
-					mips = get_next_src();
-					count++;
-				}
-			} else if(MIPS_GET_RT(peek) == _rt - 1 && MIPS_GET_SIMMED(peek) == immed - 4){
-				mips = get_next_src();
-				count++;
-				while(has_next_src() && !is_j_dst(1)){
-					peek = peek_next_src();
-					if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_LW)
-						break;
-					if(MIPS_GET_RS(peek) != MIPS_GET_RS(mips))
-						break;
-					if(MIPS_GET_RS(peek) == MIPS_GET_RT(mips))
-						break;
-					if(MIPS_GET_RT(peek) != MIPS_GET_RT(mips) - 1)
-						break;
-					if(MIPS_GET_SIMMED(peek) != MIPS_GET_SIMMED(mips) - 4)
-						break;
-					mips = get_next_src();
-					count++;
-				}
-				_rt = MIPS_GET_RT(mips);
-				immed = MIPS_GET_SIMMED(mips);
+	if(!isDelaySlot){
+		while(has_next_src() && !is_j_dst(1)){
+			if(peek_next_src() == MIPS_NOP){
+				get_next_src();
+				continue;
 			}
+			MIPS_instr peek = peek_next_src();
+			if(MIPS_GET_OPCODE(peek) == MIPS_OPCODE_LW && MIPS_GET_RS(peek) == _rs && MIPS_GET_RS(peek) != _rt){
+				if(MIPS_GET_RT(peek) == _rt + 1 && MIPS_GET_SIMMED(peek) == immed + 4){
+					mips = get_next_src();
+					count++;
+					while(has_next_src() && !is_j_dst(1)){
+						if(peek_next_src() == MIPS_NOP){
+							get_next_src();
+							continue;
+						}
+						peek = peek_next_src();
+						if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_LW)
+							break;
+						if(MIPS_GET_RS(peek) != MIPS_GET_RS(mips))
+							break;
+						if(MIPS_GET_RS(peek) == MIPS_GET_RT(mips))
+							break;
+						if(MIPS_GET_RT(peek) != MIPS_GET_RT(mips) + 1)
+							break;
+						if(MIPS_GET_SIMMED(peek) != MIPS_GET_SIMMED(mips) + 4)
+							break;
+						mips = get_next_src();
+						count++;
+					}
+				} else if(MIPS_GET_RT(peek) == _rt - 1 && MIPS_GET_SIMMED(peek) == immed - 4){
+					mips = get_next_src();
+					count++;
+					while(has_next_src() && !is_j_dst(1)){
+						if(peek_next_src() == MIPS_NOP){
+							get_next_src();
+							continue;
+						}
+						peek = peek_next_src();
+						if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_LW)
+							break;
+						if(MIPS_GET_RS(peek) != MIPS_GET_RS(mips))
+							break;
+						if(MIPS_GET_RS(peek) == MIPS_GET_RT(mips))
+							break;
+						if(MIPS_GET_RT(peek) != MIPS_GET_RT(mips) - 1)
+							break;
+						if(MIPS_GET_SIMMED(peek) != MIPS_GET_SIMMED(mips) - 4)
+							break;
+						mips = get_next_src();
+						count++;
+					}
+					_rt = MIPS_GET_RT(mips);
+					immed = MIPS_GET_SIMMED(mips);
+				}
+			}
+			break;
 		}
 	}
 #endif
@@ -1061,48 +1202,63 @@ static int LBU(MIPS_instr mips){
 	short immed = MIPS_GET_SIMMED(mips);
 
 #ifdef FASTMEM
-	if(!isDelaySlot && !is_j_dst(1)){
-		MIPS_instr peek = peek_next_src();
-		if(MIPS_GET_OPCODE(peek) == MIPS_OPCODE_LBU && MIPS_GET_RS(peek) == _rs && MIPS_GET_RS(peek) != _rt){
-			if(MIPS_GET_RT(peek) == _rt + 1 && MIPS_GET_SIMMED(peek) == immed + 1){
-				mips = get_next_src();
-				count++;
-				while(has_next_src() && !is_j_dst(1)){
-					peek = peek_next_src();
-					if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_LBU)
-						break;
-					if(MIPS_GET_RS(peek) != MIPS_GET_RS(mips))
-						break;
-					if(MIPS_GET_RS(peek) == MIPS_GET_RT(mips))
-						break;
-					if(MIPS_GET_RT(peek) != MIPS_GET_RT(mips) + 1)
-						break;
-					if(MIPS_GET_SIMMED(peek) != MIPS_GET_SIMMED(mips) + 1)
-						break;
-					mips = get_next_src();
-					count++;
-				}
-			} else if(MIPS_GET_RT(peek) == _rt - 1 && MIPS_GET_SIMMED(peek) == immed - 1){
-				mips = get_next_src();
-				count++;
-				while(has_next_src() && !is_j_dst(1)){
-					peek = peek_next_src();
-					if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_LBU)
-						break;
-					if(MIPS_GET_RS(peek) != MIPS_GET_RS(mips))
-						break;
-					if(MIPS_GET_RS(peek) == MIPS_GET_RT(mips))
-						break;
-					if(MIPS_GET_RT(peek) != MIPS_GET_RT(mips) - 1)
-						break;
-					if(MIPS_GET_SIMMED(peek) != MIPS_GET_SIMMED(mips) - 1)
-						break;
-					mips = get_next_src();
-					count++;
-				}
-				_rt = MIPS_GET_RT(mips);
-				immed = MIPS_GET_SIMMED(mips);
+	if(!isDelaySlot){
+		while(has_next_src() && !is_j_dst(1)){
+			if(peek_next_src() == MIPS_NOP){
+				get_next_src();
+				continue;
 			}
+			MIPS_instr peek = peek_next_src();
+			if(MIPS_GET_OPCODE(peek) == MIPS_OPCODE_LBU && MIPS_GET_RS(peek) == _rs && MIPS_GET_RS(peek) != _rt){
+				if(MIPS_GET_RT(peek) == _rt + 1 && MIPS_GET_SIMMED(peek) == immed + 1){
+					mips = get_next_src();
+					count++;
+					while(has_next_src() && !is_j_dst(1)){
+						if(peek_next_src() == MIPS_NOP){
+							get_next_src();
+							continue;
+						}
+						peek = peek_next_src();
+						if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_LBU)
+							break;
+						if(MIPS_GET_RS(peek) != MIPS_GET_RS(mips))
+							break;
+						if(MIPS_GET_RS(peek) == MIPS_GET_RT(mips))
+							break;
+						if(MIPS_GET_RT(peek) != MIPS_GET_RT(mips) + 1)
+							break;
+						if(MIPS_GET_SIMMED(peek) != MIPS_GET_SIMMED(mips) + 1)
+							break;
+						mips = get_next_src();
+						count++;
+					}
+				} else if(MIPS_GET_RT(peek) == _rt - 1 && MIPS_GET_SIMMED(peek) == immed - 1){
+					mips = get_next_src();
+					count++;
+					while(has_next_src() && !is_j_dst(1)){
+						if(peek_next_src() == MIPS_NOP){
+							get_next_src();
+							continue;
+						}
+						peek = peek_next_src();
+						if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_LBU)
+							break;
+						if(MIPS_GET_RS(peek) != MIPS_GET_RS(mips))
+							break;
+						if(MIPS_GET_RS(peek) == MIPS_GET_RT(mips))
+							break;
+						if(MIPS_GET_RT(peek) != MIPS_GET_RT(mips) - 1)
+							break;
+						if(MIPS_GET_SIMMED(peek) != MIPS_GET_SIMMED(mips) - 1)
+							break;
+						mips = get_next_src();
+						count++;
+					}
+					_rt = MIPS_GET_RT(mips);
+					immed = MIPS_GET_SIMMED(mips);
+				}
+			}
+			break;
 		}
 	}
 #endif
@@ -1123,48 +1279,63 @@ static int LHU(MIPS_instr mips){
 	short immed = MIPS_GET_SIMMED(mips);
 
 #ifdef FASTMEM
-	if(!isDelaySlot && !is_j_dst(1)){
-		MIPS_instr peek = peek_next_src();
-		if(MIPS_GET_OPCODE(peek) == MIPS_OPCODE_LHU && MIPS_GET_RS(peek) == _rs && MIPS_GET_RS(peek) != _rt){
-			if(MIPS_GET_RT(peek) == _rt + 1 && MIPS_GET_SIMMED(peek) == immed + 2){
-				mips = get_next_src();
-				count++;
-				while(has_next_src() && !is_j_dst(1)){
-					peek = peek_next_src();
-					if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_LHU)
-						break;
-					if(MIPS_GET_RS(peek) != MIPS_GET_RS(mips))
-						break;
-					if(MIPS_GET_RS(peek) == MIPS_GET_RT(mips))
-						break;
-					if(MIPS_GET_RT(peek) != MIPS_GET_RT(mips) + 1)
-						break;
-					if(MIPS_GET_SIMMED(peek) != MIPS_GET_SIMMED(mips) + 2)
-						break;
-					mips = get_next_src();
-					count++;
-				}
-			} else if(MIPS_GET_RT(peek) == _rt - 1 && MIPS_GET_SIMMED(peek) == immed - 2){
-				mips = get_next_src();
-				count++;
-				while(has_next_src() && !is_j_dst(1)){
-					peek = peek_next_src();
-					if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_LHU)
-						break;
-					if(MIPS_GET_RS(peek) != MIPS_GET_RS(mips))
-						break;
-					if(MIPS_GET_RS(peek) == MIPS_GET_RT(mips))
-						break;
-					if(MIPS_GET_RT(peek) != MIPS_GET_RT(mips) - 1)
-						break;
-					if(MIPS_GET_SIMMED(peek) != MIPS_GET_SIMMED(mips) - 2)
-						break;
-					mips = get_next_src();
-					count++;
-				}
-				_rt = MIPS_GET_RT(mips);
-				immed = MIPS_GET_SIMMED(mips);
+	if(!isDelaySlot){
+		while(has_next_src() && !is_j_dst(1)){
+			if(peek_next_src() == MIPS_NOP){
+				get_next_src();
+				continue;
 			}
+			MIPS_instr peek = peek_next_src();
+			if(MIPS_GET_OPCODE(peek) == MIPS_OPCODE_LHU && MIPS_GET_RS(peek) == _rs && MIPS_GET_RS(peek) != _rt){
+				if(MIPS_GET_RT(peek) == _rt + 1 && MIPS_GET_SIMMED(peek) == immed + 2){
+					mips = get_next_src();
+					count++;
+					while(has_next_src() && !is_j_dst(1)){
+						if(peek_next_src() == MIPS_NOP){
+							get_next_src();
+							continue;
+						}
+						peek = peek_next_src();
+						if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_LHU)
+							break;
+						if(MIPS_GET_RS(peek) != MIPS_GET_RS(mips))
+							break;
+						if(MIPS_GET_RS(peek) == MIPS_GET_RT(mips))
+							break;
+						if(MIPS_GET_RT(peek) != MIPS_GET_RT(mips) + 1)
+							break;
+						if(MIPS_GET_SIMMED(peek) != MIPS_GET_SIMMED(mips) + 2)
+							break;
+						mips = get_next_src();
+						count++;
+					}
+				} else if(MIPS_GET_RT(peek) == _rt - 1 && MIPS_GET_SIMMED(peek) == immed - 2){
+					mips = get_next_src();
+					count++;
+					while(has_next_src() && !is_j_dst(1)){
+						if(peek_next_src() == MIPS_NOP){
+							get_next_src();
+							continue;
+						}
+						peek = peek_next_src();
+						if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_LHU)
+							break;
+						if(MIPS_GET_RS(peek) != MIPS_GET_RS(mips))
+							break;
+						if(MIPS_GET_RS(peek) == MIPS_GET_RT(mips))
+							break;
+						if(MIPS_GET_RT(peek) != MIPS_GET_RT(mips) - 1)
+							break;
+						if(MIPS_GET_SIMMED(peek) != MIPS_GET_SIMMED(mips) - 2)
+							break;
+						mips = get_next_src();
+						count++;
+					}
+					_rt = MIPS_GET_RT(mips);
+					immed = MIPS_GET_SIMMED(mips);
+				}
+			}
+			break;
 		}
 	}
 #endif
@@ -1180,23 +1351,52 @@ static int LWR(MIPS_instr mips){
 	genCallInterp(mips);
 	return INTERPRETED;
 #else // INTERPRET_LWR
+	int count = 1;
 	int _rs = MIPS_GET_RS(mips), _rt = MIPS_GET_RT(mips);
 	short immed = MIPS_GET_SIMMED(mips);
 
 #ifdef FASTMEM
-	if(!isDelaySlot && !is_j_dst(1)){
-		MIPS_instr peek = peek_next_src();
-		if(MIPS_GET_OPCODE(peek) == MIPS_OPCODE_LWL && MIPS_GET_RS(peek) == _rs && MIPS_GET_RT(peek) == _rt && MIPS_GET_SIMMED(peek) == immed - 3){
-			mips = get_next_src();
-			immed = MIPS_GET_SIMMED(mips);
-
-			genCallDynaMem(MEM_ULW, 1, _rs, _rt, immed);
-			return CONVERT_SUCCESS;
+	if(!isDelaySlot){
+		while(has_next_src() && !is_j_dst(1)){
+			if(peek_next_src() == MIPS_NOP){
+				get_next_src();
+				continue;
+			}
+			if(count % 2){
+				MIPS_instr peek = peek_next_src();
+				if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_LWL)
+					break;
+				if(MIPS_GET_RS(peek) != MIPS_GET_RS(mips))
+					break;
+				if(MIPS_GET_RS(peek) == MIPS_GET_RT(mips))
+					break;
+				if(MIPS_GET_RT(peek) != MIPS_GET_RT(mips))
+					break;
+				if(MIPS_GET_SIMMED(peek) != MIPS_GET_SIMMED(mips) - 3)
+					break;
+				get_next_src();
+				count++;
+			} else {
+				MIPS_instr peek = peek_next_src();
+				if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_LWR)
+					break;
+				if(MIPS_GET_RS(peek) != MIPS_GET_RS(mips))
+					break;
+				if(MIPS_GET_RS(peek) == MIPS_GET_RT(mips))
+					break;
+				if(MIPS_GET_RT(peek) != MIPS_GET_RT(mips) + 1)
+					break;
+				if(MIPS_GET_SIMMED(peek) != MIPS_GET_SIMMED(mips) + 4)
+					break;
+				mips = get_next_src();
+				count++;
+			}
 		}
 	}
 #endif
 
-	genCallDynaMem(MEM_LWR, 1, _rs, _rt, immed);
+	if(count / 2) genCallDynaMem(MEM_ULW, count / 2, _rs, _rt, immed - 3);
+	if(count % 2) genCallDynaMem(MEM_LWR, count % 2, MIPS_GET_RS(mips), MIPS_GET_RT(mips), MIPS_GET_SIMMED(mips) - 3);
 	return CONVERT_SUCCESS;
 #endif
 }
@@ -1212,48 +1412,63 @@ static int LWU(MIPS_instr mips){
 	short immed = MIPS_GET_SIMMED(mips);
 
 #ifdef FASTMEM
-	if(!isDelaySlot && !is_j_dst(1)){
-		MIPS_instr peek = peek_next_src();
-		if(MIPS_GET_OPCODE(peek) == MIPS_OPCODE_LWU && MIPS_GET_RS(peek) == _rs && MIPS_GET_RS(peek) != _rt){
-			if(MIPS_GET_RT(peek) == _rt + 1 && MIPS_GET_SIMMED(peek) == immed + 4){
-				mips = get_next_src();
-				count++;
-				while(has_next_src() && !is_j_dst(1)){
-					peek = peek_next_src();
-					if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_LWU)
-						break;
-					if(MIPS_GET_RS(peek) != MIPS_GET_RS(mips))
-						break;
-					if(MIPS_GET_RS(peek) == MIPS_GET_RT(mips))
-						break;
-					if(MIPS_GET_RT(peek) != MIPS_GET_RT(mips) + 1)
-						break;
-					if(MIPS_GET_SIMMED(peek) != MIPS_GET_SIMMED(mips) + 4)
-						break;
-					mips = get_next_src();
-					count++;
-				}
-			} else if(MIPS_GET_RT(peek) == _rt - 1 && MIPS_GET_SIMMED(peek) == immed - 4){
-				mips = get_next_src();
-				count++;
-				while(has_next_src() && !is_j_dst(1)){
-					peek = peek_next_src();
-					if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_LWU)
-						break;
-					if(MIPS_GET_RS(peek) != MIPS_GET_RS(mips))
-						break;
-					if(MIPS_GET_RS(peek) == MIPS_GET_RT(mips))
-						break;
-					if(MIPS_GET_RT(peek) != MIPS_GET_RT(mips) - 1)
-						break;
-					if(MIPS_GET_SIMMED(peek) != MIPS_GET_SIMMED(mips) - 4)
-						break;
-					mips = get_next_src();
-					count++;
-				}
-				_rt = MIPS_GET_RT(mips);
-				immed = MIPS_GET_SIMMED(mips);
+	if(!isDelaySlot){
+		while(has_next_src() && !is_j_dst(1)){
+			if(peek_next_src() == MIPS_NOP){
+				get_next_src();
+				continue;
 			}
+			MIPS_instr peek = peek_next_src();
+			if(MIPS_GET_OPCODE(peek) == MIPS_OPCODE_LWU && MIPS_GET_RS(peek) == _rs && MIPS_GET_RS(peek) != _rt){
+				if(MIPS_GET_RT(peek) == _rt + 1 && MIPS_GET_SIMMED(peek) == immed + 4){
+					mips = get_next_src();
+					count++;
+					while(has_next_src() && !is_j_dst(1)){
+						if(peek_next_src() == MIPS_NOP){
+							get_next_src();
+							continue;
+						}
+						peek = peek_next_src();
+						if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_LWU)
+							break;
+						if(MIPS_GET_RS(peek) != MIPS_GET_RS(mips))
+							break;
+						if(MIPS_GET_RS(peek) == MIPS_GET_RT(mips))
+							break;
+						if(MIPS_GET_RT(peek) != MIPS_GET_RT(mips) + 1)
+							break;
+						if(MIPS_GET_SIMMED(peek) != MIPS_GET_SIMMED(mips) + 4)
+							break;
+						mips = get_next_src();
+						count++;
+					}
+				} else if(MIPS_GET_RT(peek) == _rt - 1 && MIPS_GET_SIMMED(peek) == immed - 4){
+					mips = get_next_src();
+					count++;
+					while(has_next_src() && !is_j_dst(1)){
+						if(peek_next_src() == MIPS_NOP){
+							get_next_src();
+							continue;
+						}
+						peek = peek_next_src();
+						if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_LWU)
+							break;
+						if(MIPS_GET_RS(peek) != MIPS_GET_RS(mips))
+							break;
+						if(MIPS_GET_RS(peek) == MIPS_GET_RT(mips))
+							break;
+						if(MIPS_GET_RT(peek) != MIPS_GET_RT(mips) - 1)
+							break;
+						if(MIPS_GET_SIMMED(peek) != MIPS_GET_SIMMED(mips) - 4)
+							break;
+						mips = get_next_src();
+						count++;
+					}
+					_rt = MIPS_GET_RT(mips);
+					immed = MIPS_GET_SIMMED(mips);
+				}
+			}
+			break;
 		}
 	}
 #endif
@@ -1274,44 +1489,59 @@ static int SB(MIPS_instr mips){
 	short immed = MIPS_GET_SIMMED(mips);
 
 #ifdef FASTMEM
-	if(!isDelaySlot && !is_j_dst(1)){
-		MIPS_instr peek = peek_next_src();
-		if(MIPS_GET_OPCODE(peek) == MIPS_OPCODE_SB && MIPS_GET_RS(peek) == _rs){
-			if(MIPS_GET_RT(peek) == _rt + 1 && MIPS_GET_SIMMED(peek) == immed + 1){
-				mips = get_next_src();
-				count++;
-				while(has_next_src() && !is_j_dst(1)){
-					peek = peek_next_src();
-					if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_SB)
-						break;
-					if(MIPS_GET_RS(peek) != MIPS_GET_RS(mips))
-						break;
-					if(MIPS_GET_RT(peek) != MIPS_GET_RT(mips) + 1)
-						break;
-					if(MIPS_GET_SIMMED(peek) != MIPS_GET_SIMMED(mips) + 1)
-						break;
-					mips = get_next_src();
-					count++;
-				}
-			} else if(MIPS_GET_RT(peek) == _rt - 1 && MIPS_GET_SIMMED(peek) == immed - 1){
-				mips = get_next_src();
-				count++;
-				while(has_next_src() && !is_j_dst(1)){
-					peek = peek_next_src();
-					if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_SB)
-						break;
-					if(MIPS_GET_RS(peek) != MIPS_GET_RS(mips))
-						break;
-					if(MIPS_GET_RT(peek) != MIPS_GET_RT(mips) - 1)
-						break;
-					if(MIPS_GET_SIMMED(peek) != MIPS_GET_SIMMED(mips) - 1)
-						break;
-					mips = get_next_src();
-					count++;
-				}
-				_rt = MIPS_GET_RT(mips);
-				immed = MIPS_GET_SIMMED(mips);
+	if(!isDelaySlot){
+		while(has_next_src() && !is_j_dst(1)){
+			if(peek_next_src() == MIPS_NOP){
+				get_next_src();
+				continue;
 			}
+			MIPS_instr peek = peek_next_src();
+			if(MIPS_GET_OPCODE(peek) == MIPS_OPCODE_SB && MIPS_GET_RS(peek) == _rs){
+				if(MIPS_GET_RT(peek) == _rt + 1 && MIPS_GET_SIMMED(peek) == immed + 1){
+					mips = get_next_src();
+					count++;
+					while(has_next_src() && !is_j_dst(1)){
+						if(peek_next_src() == MIPS_NOP){
+							get_next_src();
+							continue;
+						}
+						peek = peek_next_src();
+						if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_SB)
+							break;
+						if(MIPS_GET_RS(peek) != MIPS_GET_RS(mips))
+							break;
+						if(MIPS_GET_RT(peek) != MIPS_GET_RT(mips) + 1)
+							break;
+						if(MIPS_GET_SIMMED(peek) != MIPS_GET_SIMMED(mips) + 1)
+							break;
+						mips = get_next_src();
+						count++;
+					}
+				} else if(MIPS_GET_RT(peek) == _rt - 1 && MIPS_GET_SIMMED(peek) == immed - 1){
+					mips = get_next_src();
+					count++;
+					while(has_next_src() && !is_j_dst(1)){
+						if(peek_next_src() == MIPS_NOP){
+							get_next_src();
+							continue;
+						}
+						peek = peek_next_src();
+						if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_SB)
+							break;
+						if(MIPS_GET_RS(peek) != MIPS_GET_RS(mips))
+							break;
+						if(MIPS_GET_RT(peek) != MIPS_GET_RT(mips) - 1)
+							break;
+						if(MIPS_GET_SIMMED(peek) != MIPS_GET_SIMMED(mips) - 1)
+							break;
+						mips = get_next_src();
+						count++;
+					}
+					_rt = MIPS_GET_RT(mips);
+					immed = MIPS_GET_SIMMED(mips);
+				}
+			}
+			break;
 		}
 	}
 #endif
@@ -1332,44 +1562,59 @@ static int SH(MIPS_instr mips){
 	short immed = MIPS_GET_SIMMED(mips);
 
 #ifdef FASTMEM
-	if(!isDelaySlot && !is_j_dst(1)){
-		MIPS_instr peek = peek_next_src();
-		if(MIPS_GET_OPCODE(peek) == MIPS_OPCODE_SH && MIPS_GET_RS(peek) == _rs){
-			if(MIPS_GET_RT(peek) == _rt + 1 && MIPS_GET_SIMMED(peek) == immed + 2){
-				mips = get_next_src();
-				count++;
-				while(has_next_src() && !is_j_dst(1)){
-					peek = peek_next_src();
-					if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_SH)
-						break;
-					if(MIPS_GET_RS(peek) != MIPS_GET_RS(mips))
-						break;
-					if(MIPS_GET_RT(peek) != MIPS_GET_RT(mips) + 1)
-						break;
-					if(MIPS_GET_SIMMED(peek) != MIPS_GET_SIMMED(mips) + 2)
-						break;
-					mips = get_next_src();
-					count++;
-				}
-			} else if(MIPS_GET_RT(peek) == _rt - 1 && MIPS_GET_SIMMED(peek) == immed - 2){
-				mips = get_next_src();
-				count++;
-				while(has_next_src() && !is_j_dst(1)){
-					peek = peek_next_src();
-					if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_SH)
-						break;
-					if(MIPS_GET_RS(peek) != MIPS_GET_RS(mips))
-						break;
-					if(MIPS_GET_RT(peek) != MIPS_GET_RT(mips) - 1)
-						break;
-					if(MIPS_GET_SIMMED(peek) != MIPS_GET_SIMMED(mips) - 2)
-						break;
-					mips = get_next_src();
-					count++;
-				}
-				_rt = MIPS_GET_RT(mips);
-				immed = MIPS_GET_SIMMED(mips);
+	if(!isDelaySlot){
+		while(has_next_src() && !is_j_dst(1)){
+			if(peek_next_src() == MIPS_NOP){
+				get_next_src();
+				continue;
 			}
+			MIPS_instr peek = peek_next_src();
+			if(MIPS_GET_OPCODE(peek) == MIPS_OPCODE_SH && MIPS_GET_RS(peek) == _rs){
+				if(MIPS_GET_RT(peek) == _rt + 1 && MIPS_GET_SIMMED(peek) == immed + 2){
+					mips = get_next_src();
+					count++;
+					while(has_next_src() && !is_j_dst(1)){
+						if(peek_next_src() == MIPS_NOP){
+							get_next_src();
+							continue;
+						}
+						peek = peek_next_src();
+						if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_SH)
+							break;
+						if(MIPS_GET_RS(peek) != MIPS_GET_RS(mips))
+							break;
+						if(MIPS_GET_RT(peek) != MIPS_GET_RT(mips) + 1)
+							break;
+						if(MIPS_GET_SIMMED(peek) != MIPS_GET_SIMMED(mips) + 2)
+							break;
+						mips = get_next_src();
+						count++;
+					}
+				} else if(MIPS_GET_RT(peek) == _rt - 1 && MIPS_GET_SIMMED(peek) == immed - 2){
+					mips = get_next_src();
+					count++;
+					while(has_next_src() && !is_j_dst(1)){
+						if(peek_next_src() == MIPS_NOP){
+							get_next_src();
+							continue;
+						}
+						peek = peek_next_src();
+						if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_SH)
+							break;
+						if(MIPS_GET_RS(peek) != MIPS_GET_RS(mips))
+							break;
+						if(MIPS_GET_RT(peek) != MIPS_GET_RT(mips) - 1)
+							break;
+						if(MIPS_GET_SIMMED(peek) != MIPS_GET_SIMMED(mips) - 2)
+							break;
+						mips = get_next_src();
+						count++;
+					}
+					_rt = MIPS_GET_RT(mips);
+					immed = MIPS_GET_SIMMED(mips);
+				}
+			}
+			break;
 		}
 	}
 #endif
@@ -1385,22 +1630,53 @@ static int SWL(MIPS_instr mips){
 	genCallInterp(mips);
 	return INTERPRETED;
 #else // INTERPRET_SWL
+	int count = 1;
 	int _rs = MIPS_GET_RS(mips), _rt = MIPS_GET_RT(mips);
 	short immed = MIPS_GET_SIMMED(mips);
 
 #ifdef FASTMEM
-	if(!isDelaySlot && !is_j_dst(1)){
-		MIPS_instr peek = peek_next_src();
-		if(MIPS_GET_OPCODE(peek) == MIPS_OPCODE_SWR && MIPS_GET_RS(peek) == _rs && MIPS_GET_RT(peek) == _rt && MIPS_GET_SIMMED(peek) == immed + 3){
-			mips = get_next_src();
-
-			genCallDynaMem(MEM_USW, 1, _rs, _rt, immed);
-			return CONVERT_SUCCESS;
+	if(!isDelaySlot){
+		while(has_next_src() && !is_j_dst(1)){
+			if(peek_next_src() == MIPS_NOP){
+				get_next_src();
+				continue;
+			}
+			if(count % 2){
+				MIPS_instr peek = peek_next_src();
+				if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_SWR)
+					break;
+				if(MIPS_GET_RS(peek) != MIPS_GET_RS(mips))
+					break;
+				if(MIPS_GET_RS(peek) == MIPS_GET_RT(mips))
+					break;
+				if(MIPS_GET_RT(peek) != MIPS_GET_RT(mips))
+					break;
+				if(MIPS_GET_SIMMED(peek) != MIPS_GET_SIMMED(mips) + 3)
+					break;
+				get_next_src();
+				count++;
+			} else {
+				break;
+				MIPS_instr peek = peek_next_src();
+				if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_SWL)
+					break;
+				if(MIPS_GET_RS(peek) != MIPS_GET_RS(mips))
+					break;
+				if(MIPS_GET_RS(peek) == MIPS_GET_RT(mips))
+					break;
+				if(MIPS_GET_RT(peek) != MIPS_GET_RT(mips) + 1)
+					break;
+				if(MIPS_GET_SIMMED(peek) != MIPS_GET_SIMMED(mips) + 4)
+					break;
+				mips = get_next_src();
+				count++;
+			}
 		}
 	}
 #endif
 
-	genCallDynaMem(MEM_SWL, 1, _rs, _rt, immed);
+	if(count / 2) genCallDynaMem(MEM_USW, count / 2, _rs, _rt, immed);
+	if(count % 2) genCallDynaMem(MEM_SWL, count % 2, MIPS_GET_RS(mips), MIPS_GET_RT(mips), MIPS_GET_SIMMED(mips));
 	return CONVERT_SUCCESS;
 #endif
 }
@@ -1416,44 +1692,59 @@ static int SW(MIPS_instr mips){
 	short immed = MIPS_GET_SIMMED(mips);
 
 #ifdef FASTMEM
-	if(!isDelaySlot && !is_j_dst(1)){
-		MIPS_instr peek = peek_next_src();
-		if(MIPS_GET_OPCODE(peek) == MIPS_OPCODE_SW && MIPS_GET_RS(peek) == _rs){
-			if(MIPS_GET_RT(peek) == _rt + 1 && MIPS_GET_SIMMED(peek) == immed + 4){
-				mips = get_next_src();
-				count++;
-				while(has_next_src() && !is_j_dst(1)){
-					peek = peek_next_src();
-					if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_SW)
-						break;
-					if(MIPS_GET_RS(peek) != MIPS_GET_RS(mips))
-						break;
-					if(MIPS_GET_RT(peek) != MIPS_GET_RT(mips) + 1)
-						break;
-					if(MIPS_GET_SIMMED(peek) != MIPS_GET_SIMMED(mips) + 4)
-						break;
-					mips = get_next_src();
-					count++;
-				}
-			} else if(MIPS_GET_RT(peek) == _rt - 1 && MIPS_GET_SIMMED(peek) == immed - 4){
-				mips = get_next_src();
-				count++;
-				while(has_next_src() && !is_j_dst(1)){
-					peek = peek_next_src();
-					if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_SW)
-						break;
-					if(MIPS_GET_RS(peek) != MIPS_GET_RS(mips))
-						break;
-					if(MIPS_GET_RT(peek) != MIPS_GET_RT(mips) - 1)
-						break;
-					if(MIPS_GET_SIMMED(peek) != MIPS_GET_SIMMED(mips) - 4)
-						break;
-					mips = get_next_src();
-					count++;
-				}
-				_rt = MIPS_GET_RT(mips);
-				immed = MIPS_GET_SIMMED(mips);
+	if(!isDelaySlot){
+		while(has_next_src() && !is_j_dst(1)){
+			if(peek_next_src() == MIPS_NOP){
+				get_next_src();
+				continue;
 			}
+			MIPS_instr peek = peek_next_src();
+			if(MIPS_GET_OPCODE(peek) == MIPS_OPCODE_SW && MIPS_GET_RS(peek) == _rs){
+				if(MIPS_GET_RT(peek) == _rt + 1 && MIPS_GET_SIMMED(peek) == immed + 4){
+					mips = get_next_src();
+					count++;
+					while(has_next_src() && !is_j_dst(1)){
+						if(peek_next_src() == MIPS_NOP){
+							get_next_src();
+							continue;
+						}
+						peek = peek_next_src();
+						if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_SW)
+							break;
+						if(MIPS_GET_RS(peek) != MIPS_GET_RS(mips))
+							break;
+						if(MIPS_GET_RT(peek) != MIPS_GET_RT(mips) + 1)
+							break;
+						if(MIPS_GET_SIMMED(peek) != MIPS_GET_SIMMED(mips) + 4)
+							break;
+						mips = get_next_src();
+						count++;
+					}
+				} else if(MIPS_GET_RT(peek) == _rt - 1 && MIPS_GET_SIMMED(peek) == immed - 4){
+					mips = get_next_src();
+					count++;
+					while(has_next_src() && !is_j_dst(1)){
+						if(peek_next_src() == MIPS_NOP){
+							get_next_src();
+							continue;
+						}
+						peek = peek_next_src();
+						if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_SW)
+							break;
+						if(MIPS_GET_RS(peek) != MIPS_GET_RS(mips))
+							break;
+						if(MIPS_GET_RT(peek) != MIPS_GET_RT(mips) - 1)
+							break;
+						if(MIPS_GET_SIMMED(peek) != MIPS_GET_SIMMED(mips) - 4)
+							break;
+						mips = get_next_src();
+						count++;
+					}
+					_rt = MIPS_GET_RT(mips);
+					immed = MIPS_GET_SIMMED(mips);
+				}
+			}
+			break;
 		}
 	}
 #endif
@@ -1469,22 +1760,52 @@ static int SDL(MIPS_instr mips){
 	genCallInterp(mips);
 	return INTERPRETED;
 #else // INTERPRET_SDL
+	int count = 1;
 	int _rs = MIPS_GET_RS(mips), _rt = MIPS_GET_RT(mips);
 	short immed = MIPS_GET_SIMMED(mips);
 
 #ifdef FASTMEM
-	if(!isDelaySlot && !is_j_dst(1)){
-		MIPS_instr peek = peek_next_src();
-		if(MIPS_GET_OPCODE(peek) == MIPS_OPCODE_SDR && MIPS_GET_RS(peek) == _rs && MIPS_GET_RT(peek) == _rt && MIPS_GET_SIMMED(peek) == immed + 7){
-			mips = get_next_src();
-
-			genCallDynaMem(MEM_USD, 1, _rs, _rt, immed);
-			return CONVERT_SUCCESS;
+	if(!isDelaySlot){
+		while(has_next_src() && !is_j_dst(1)){
+			if(peek_next_src() == MIPS_NOP){
+				get_next_src();
+				continue;
+			}
+			if(count % 2){
+				MIPS_instr peek = peek_next_src();
+				if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_SDR)
+					break;
+				if(MIPS_GET_RS(peek) != MIPS_GET_RS(mips))
+					break;
+				if(MIPS_GET_RS(peek) == MIPS_GET_RT(mips))
+					break;
+				if(MIPS_GET_RT(peek) != MIPS_GET_RT(mips))
+					break;
+				if(MIPS_GET_SIMMED(peek) != MIPS_GET_SIMMED(mips) + 7)
+					break;
+				get_next_src();
+				count++;
+			} else {
+				MIPS_instr peek = peek_next_src();
+				if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_SDL)
+					break;
+				if(MIPS_GET_RS(peek) != MIPS_GET_RS(mips))
+					break;
+				if(MIPS_GET_RS(peek) == MIPS_GET_RT(mips))
+					break;
+				if(MIPS_GET_RT(peek) != MIPS_GET_RT(mips) + 1)
+					break;
+				if(MIPS_GET_SIMMED(peek) != MIPS_GET_SIMMED(mips) + 8)
+					break;
+				mips = get_next_src();
+				count++;
+			}
 		}
 	}
 #endif
 
-	genCallDynaMem(MEM_SDL, 1, _rs, _rt, immed);
+	if(count / 2) genCallDynaMem(MEM_USD, count / 2, _rs, _rt, immed);
+	if(count % 2) genCallDynaMem(MEM_SDL, count % 2, MIPS_GET_RS(mips), MIPS_GET_RT(mips), MIPS_GET_SIMMED(mips));
 	return CONVERT_SUCCESS;
 #endif
 }
@@ -1495,23 +1816,52 @@ static int SDR(MIPS_instr mips){
 	genCallInterp(mips);
 	return INTERPRETED;
 #else // INTERPRET_SDR
+	int count = 1;
 	int _rs = MIPS_GET_RS(mips), _rt = MIPS_GET_RT(mips);
 	short immed = MIPS_GET_SIMMED(mips);
 
 #ifdef FASTMEM
-	if(!isDelaySlot && !is_j_dst(1)){
-		MIPS_instr peek = peek_next_src();
-		if(MIPS_GET_OPCODE(peek) == MIPS_OPCODE_SDL && MIPS_GET_RS(peek) == _rs && MIPS_GET_RT(peek) == _rt && MIPS_GET_SIMMED(peek) == immed - 7){
-			mips = get_next_src();
-			immed = MIPS_GET_SIMMED(mips);
-
-			genCallDynaMem(MEM_USD, 1, _rs, _rt, immed);
-			return CONVERT_SUCCESS;
+	if(!isDelaySlot){
+		while(has_next_src() && !is_j_dst(1)){
+			if(peek_next_src() == MIPS_NOP){
+				get_next_src();
+				continue;
+			}
+			if(count % 2){
+				MIPS_instr peek = peek_next_src();
+				if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_SDL)
+					break;
+				if(MIPS_GET_RS(peek) != MIPS_GET_RS(mips))
+					break;
+				if(MIPS_GET_RS(peek) == MIPS_GET_RT(mips))
+					break;
+				if(MIPS_GET_RT(peek) != MIPS_GET_RT(mips))
+					break;
+				if(MIPS_GET_SIMMED(peek) != MIPS_GET_SIMMED(mips) - 7)
+					break;
+				get_next_src();
+				count++;
+			} else {
+				MIPS_instr peek = peek_next_src();
+				if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_SDR)
+					break;
+				if(MIPS_GET_RS(peek) != MIPS_GET_RS(mips))
+					break;
+				if(MIPS_GET_RS(peek) == MIPS_GET_RT(mips))
+					break;
+				if(MIPS_GET_RT(peek) != MIPS_GET_RT(mips) + 1)
+					break;
+				if(MIPS_GET_SIMMED(peek) != MIPS_GET_SIMMED(mips) + 8)
+					break;
+				mips = get_next_src();
+				count++;
+			}
 		}
 	}
 #endif
 
-	genCallDynaMem(MEM_SDR, 1, _rs, _rt, immed);
+	if(count / 2) genCallDynaMem(MEM_USD, count / 2, _rs, _rt, immed - 7);
+	if(count % 2) genCallDynaMem(MEM_SDR, count % 2, MIPS_GET_RS(mips), MIPS_GET_RT(mips), MIPS_GET_SIMMED(mips) - 7);
 	return CONVERT_SUCCESS;
 #endif
 }
@@ -1522,23 +1872,52 @@ static int SWR(MIPS_instr mips){
 	genCallInterp(mips);
 	return INTERPRETED;
 #else // INTERPRET_SWR
+	int count = 1;
 	int _rs = MIPS_GET_RS(mips), _rt = MIPS_GET_RT(mips);
 	short immed = MIPS_GET_SIMMED(mips);
 
 #ifdef FASTMEM
-	if(!isDelaySlot && !is_j_dst(1)){
-		MIPS_instr peek = peek_next_src();
-		if(MIPS_GET_OPCODE(peek) == MIPS_OPCODE_SWL && MIPS_GET_RS(peek) == _rs && MIPS_GET_RT(peek) == _rt && MIPS_GET_SIMMED(peek) == immed - 3){
-			mips = get_next_src();
-			immed = MIPS_GET_SIMMED(mips);
-
-			genCallDynaMem(MEM_USW, 1, _rs, _rt, immed);
-			return CONVERT_SUCCESS;
+	if(!isDelaySlot){
+		while(has_next_src() && !is_j_dst(1)){
+			if(peek_next_src() == MIPS_NOP){
+				get_next_src();
+				continue;
+			}
+			if(count % 2){
+				MIPS_instr peek = peek_next_src();
+				if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_SWL)
+					break;
+				if(MIPS_GET_RS(peek) != MIPS_GET_RS(mips))
+					break;
+				if(MIPS_GET_RS(peek) == MIPS_GET_RT(mips))
+					break;
+				if(MIPS_GET_RT(peek) != MIPS_GET_RT(mips))
+					break;
+				if(MIPS_GET_SIMMED(peek) != MIPS_GET_SIMMED(mips) - 3)
+					break;
+				get_next_src();
+				count++;
+			} else {
+				MIPS_instr peek = peek_next_src();
+				if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_SWR)
+					break;
+				if(MIPS_GET_RS(peek) != MIPS_GET_RS(mips))
+					break;
+				if(MIPS_GET_RS(peek) == MIPS_GET_RT(mips))
+					break;
+				if(MIPS_GET_RT(peek) != MIPS_GET_RT(mips) + 1)
+					break;
+				if(MIPS_GET_SIMMED(peek) != MIPS_GET_SIMMED(mips) + 4)
+					break;
+				mips = get_next_src();
+				count++;
+			}
 		}
 	}
 #endif
 
-	genCallDynaMem(MEM_SWR, 1, _rs, _rt, immed);
+	if(count / 2) genCallDynaMem(MEM_USW, count / 2, _rs, _rt, immed - 3);
+	if(count % 2) genCallDynaMem(MEM_SWR, count % 2, MIPS_GET_RS(mips), MIPS_GET_RT(mips), MIPS_GET_SIMMED(mips) - 3);
 	return CONVERT_SUCCESS;
 #endif
 }
@@ -1554,48 +1933,63 @@ static int LD(MIPS_instr mips){
 	short immed = MIPS_GET_SIMMED(mips);
 
 #ifdef FASTMEM
-	if(!isDelaySlot && !is_j_dst(1)){
-		MIPS_instr peek = peek_next_src();
-		if(MIPS_GET_OPCODE(peek) == MIPS_OPCODE_LD && MIPS_GET_RS(peek) == _rs && MIPS_GET_RS(peek) != _rt){
-			if(MIPS_GET_RT(peek) == _rt + 1 && MIPS_GET_SIMMED(peek) == immed + 8){
-				mips = get_next_src();
-				count++;
-				while(has_next_src() && !is_j_dst(1)){
-					peek = peek_next_src();
-					if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_LD)
-						break;
-					if(MIPS_GET_RS(peek) != MIPS_GET_RS(mips))
-						break;
-					if(MIPS_GET_RS(peek) == MIPS_GET_RT(mips))
-						break;
-					if(MIPS_GET_RT(peek) != MIPS_GET_RT(mips) + 1)
-						break;
-					if(MIPS_GET_SIMMED(peek) != MIPS_GET_SIMMED(mips) + 8)
-						break;
-					mips = get_next_src();
-					count++;
-				}
-			} else if(MIPS_GET_RT(peek) == _rt - 1 && MIPS_GET_SIMMED(peek) == immed - 8){
-				mips = get_next_src();
-				count++;
-				while(has_next_src() && !is_j_dst(1)){
-					peek = peek_next_src();
-					if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_LD)
-						break;
-					if(MIPS_GET_RS(peek) != MIPS_GET_RS(mips))
-						break;
-					if(MIPS_GET_RS(peek) == MIPS_GET_RT(mips))
-						break;
-					if(MIPS_GET_RT(peek) != MIPS_GET_RT(mips) - 1)
-						break;
-					if(MIPS_GET_SIMMED(peek) != MIPS_GET_SIMMED(mips) - 8)
-						break;
-					mips = get_next_src();
-					count++;
-				}
-				_rt = MIPS_GET_RT(mips);
-				immed = MIPS_GET_SIMMED(mips);
+	if(!isDelaySlot){
+		while(has_next_src() && !is_j_dst(1)){
+			if(peek_next_src() == MIPS_NOP){
+				get_next_src();
+				continue;
 			}
+			MIPS_instr peek = peek_next_src();
+			if(MIPS_GET_OPCODE(peek) == MIPS_OPCODE_LD && MIPS_GET_RS(peek) == _rs && MIPS_GET_RS(peek) != _rt){
+				if(MIPS_GET_RT(peek) == _rt + 1 && MIPS_GET_SIMMED(peek) == immed + 8){
+					mips = get_next_src();
+					count++;
+					while(has_next_src() && !is_j_dst(1)){
+						if(peek_next_src() == MIPS_NOP){
+							get_next_src();
+							continue;
+						}
+						peek = peek_next_src();
+						if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_LD)
+							break;
+						if(MIPS_GET_RS(peek) != MIPS_GET_RS(mips))
+							break;
+						if(MIPS_GET_RS(peek) == MIPS_GET_RT(mips))
+							break;
+						if(MIPS_GET_RT(peek) != MIPS_GET_RT(mips) + 1)
+							break;
+						if(MIPS_GET_SIMMED(peek) != MIPS_GET_SIMMED(mips) + 8)
+							break;
+						mips = get_next_src();
+						count++;
+					}
+				} else if(MIPS_GET_RT(peek) == _rt - 1 && MIPS_GET_SIMMED(peek) == immed - 8){
+					mips = get_next_src();
+					count++;
+					while(has_next_src() && !is_j_dst(1)){
+						if(peek_next_src() == MIPS_NOP){
+							get_next_src();
+							continue;
+						}
+						peek = peek_next_src();
+						if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_LD)
+							break;
+						if(MIPS_GET_RS(peek) != MIPS_GET_RS(mips))
+							break;
+						if(MIPS_GET_RS(peek) == MIPS_GET_RT(mips))
+							break;
+						if(MIPS_GET_RT(peek) != MIPS_GET_RT(mips) - 1)
+							break;
+						if(MIPS_GET_SIMMED(peek) != MIPS_GET_SIMMED(mips) - 8)
+							break;
+						mips = get_next_src();
+						count++;
+					}
+					_rt = MIPS_GET_RT(mips);
+					immed = MIPS_GET_SIMMED(mips);
+				}
+			}
+			break;
 		}
 	}
 #endif
@@ -1616,44 +2010,59 @@ static int SD(MIPS_instr mips){
 	short immed = MIPS_GET_SIMMED(mips);
 
 #ifdef FASTMEM
-	if(!isDelaySlot && !is_j_dst(1)){
-		MIPS_instr peek = peek_next_src();
-		if(MIPS_GET_OPCODE(peek) == MIPS_OPCODE_SD && MIPS_GET_RS(peek) == _rs){
-			if(MIPS_GET_RT(peek) == _rt + 1 && MIPS_GET_SIMMED(peek) == immed + 8){
-				mips = get_next_src();
-				count++;
-				while(has_next_src() && !is_j_dst(1)){
-					peek = peek_next_src();
-					if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_SD)
-						break;
-					if(MIPS_GET_RS(peek) != MIPS_GET_RS(mips))
-						break;
-					if(MIPS_GET_RT(peek) != MIPS_GET_RT(mips) + 1)
-						break;
-					if(MIPS_GET_SIMMED(peek) != MIPS_GET_SIMMED(mips) + 8)
-						break;
-					mips = get_next_src();
-					count++;
-				}
-			} else if(MIPS_GET_RT(peek) == _rt - 1 && MIPS_GET_SIMMED(peek) == immed - 8){
-				mips = get_next_src();
-				count++;
-				while(has_next_src() && !is_j_dst(1)){
-					peek = peek_next_src();
-					if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_SD)
-						break;
-					if(MIPS_GET_RS(peek) != MIPS_GET_RS(mips))
-						break;
-					if(MIPS_GET_RT(peek) != MIPS_GET_RT(mips) - 1)
-						break;
-					if(MIPS_GET_SIMMED(peek) != MIPS_GET_SIMMED(mips) - 8)
-						break;
-					mips = get_next_src();
-					count++;
-				}
-				_rt = MIPS_GET_RT(mips);
-				immed = MIPS_GET_SIMMED(mips);
+	if(!isDelaySlot){
+		while(has_next_src() && !is_j_dst(1)){
+			if(peek_next_src() == MIPS_NOP){
+				get_next_src();
+				continue;
 			}
+			MIPS_instr peek = peek_next_src();
+			if(MIPS_GET_OPCODE(peek) == MIPS_OPCODE_SD && MIPS_GET_RS(peek) == _rs){
+				if(MIPS_GET_RT(peek) == _rt + 1 && MIPS_GET_SIMMED(peek) == immed + 8){
+					mips = get_next_src();
+					count++;
+					while(has_next_src() && !is_j_dst(1)){
+						if(peek_next_src() == MIPS_NOP){
+							get_next_src();
+							continue;
+						}
+						peek = peek_next_src();
+						if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_SD)
+							break;
+						if(MIPS_GET_RS(peek) != MIPS_GET_RS(mips))
+							break;
+						if(MIPS_GET_RT(peek) != MIPS_GET_RT(mips) + 1)
+							break;
+						if(MIPS_GET_SIMMED(peek) != MIPS_GET_SIMMED(mips) + 8)
+							break;
+						mips = get_next_src();
+						count++;
+					}
+				} else if(MIPS_GET_RT(peek) == _rt - 1 && MIPS_GET_SIMMED(peek) == immed - 8){
+					mips = get_next_src();
+					count++;
+					while(has_next_src() && !is_j_dst(1)){
+						if(peek_next_src() == MIPS_NOP){
+							get_next_src();
+							continue;
+						}
+						peek = peek_next_src();
+						if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_SD)
+							break;
+						if(MIPS_GET_RS(peek) != MIPS_GET_RS(mips))
+							break;
+						if(MIPS_GET_RT(peek) != MIPS_GET_RT(mips) - 1)
+							break;
+						if(MIPS_GET_SIMMED(peek) != MIPS_GET_SIMMED(mips) - 8)
+							break;
+						mips = get_next_src();
+						count++;
+					}
+					_rt = MIPS_GET_RT(mips);
+					immed = MIPS_GET_SIMMED(mips);
+				}
+			}
+			break;
 		}
 	}
 #endif
@@ -1674,44 +2083,59 @@ static int LWC1(MIPS_instr mips){
 	short immed = MIPS_GET_SIMMED(mips);
 
 #ifdef FASTMEM
-	if(!isDelaySlot && !is_j_dst(1)){
-		MIPS_instr peek = peek_next_src();
-		if(MIPS_GET_OPCODE(peek) == MIPS_OPCODE_LWC1 && MIPS_GET_RS(peek) == _rs){
-			if(MIPS_GET_RT(peek) == _rt + 2 && MIPS_GET_SIMMED(peek) == immed + 4){
-				mips = get_next_src();
-				count++;
-				while(has_next_src() && !is_j_dst(1)){
-					peek = peek_next_src();
-					if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_LWC1)
-						break;
-					if(MIPS_GET_RS(peek) != MIPS_GET_RS(mips))
-						break;
-					if(MIPS_GET_RT(peek) != MIPS_GET_RT(mips) + 2)
-						break;
-					if(MIPS_GET_SIMMED(peek) != MIPS_GET_SIMMED(mips) + 4)
-						break;
-					mips = get_next_src();
-					count++;
-				}
-			} else if(MIPS_GET_RT(peek) == _rt - 2 && MIPS_GET_SIMMED(peek) == immed - 4){
-				mips = get_next_src();
-				count++;
-				while(has_next_src() && !is_j_dst(1)){
-					peek = peek_next_src();
-					if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_LWC1)
-						break;
-					if(MIPS_GET_RS(peek) != MIPS_GET_RS(mips))
-						break;
-					if(MIPS_GET_RT(peek) != MIPS_GET_RT(mips) - 2)
-						break;
-					if(MIPS_GET_SIMMED(peek) != MIPS_GET_SIMMED(mips) - 4)
-						break;
-					mips = get_next_src();
-					count++;
-				}
-				_rt = MIPS_GET_RT(mips);
-				immed = MIPS_GET_SIMMED(mips);
+	if(!isDelaySlot){
+		while(has_next_src() && !is_j_dst(1)){
+			if(peek_next_src() == MIPS_NOP){
+				get_next_src();
+				continue;
 			}
+			MIPS_instr peek = peek_next_src();
+			if(MIPS_GET_OPCODE(peek) == MIPS_OPCODE_LWC1 && MIPS_GET_RS(peek) == _rs){
+				if(MIPS_GET_RT(peek) == _rt + 2 && MIPS_GET_SIMMED(peek) == immed + 4){
+					mips = get_next_src();
+					count++;
+					while(has_next_src() && !is_j_dst(1)){
+						if(peek_next_src() == MIPS_NOP){
+							get_next_src();
+							continue;
+						}
+						peek = peek_next_src();
+						if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_LWC1)
+							break;
+						if(MIPS_GET_RS(peek) != MIPS_GET_RS(mips))
+							break;
+						if(MIPS_GET_RT(peek) != MIPS_GET_RT(mips) + 2)
+							break;
+						if(MIPS_GET_SIMMED(peek) != MIPS_GET_SIMMED(mips) + 4)
+							break;
+						mips = get_next_src();
+						count++;
+					}
+				} else if(MIPS_GET_RT(peek) == _rt - 2 && MIPS_GET_SIMMED(peek) == immed - 4){
+					mips = get_next_src();
+					count++;
+					while(has_next_src() && !is_j_dst(1)){
+						if(peek_next_src() == MIPS_NOP){
+							get_next_src();
+							continue;
+						}
+						peek = peek_next_src();
+						if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_LWC1)
+							break;
+						if(MIPS_GET_RS(peek) != MIPS_GET_RS(mips))
+							break;
+						if(MIPS_GET_RT(peek) != MIPS_GET_RT(mips) - 2)
+							break;
+						if(MIPS_GET_SIMMED(peek) != MIPS_GET_SIMMED(mips) - 4)
+							break;
+						mips = get_next_src();
+						count++;
+					}
+					_rt = MIPS_GET_RT(mips);
+					immed = MIPS_GET_SIMMED(mips);
+				}
+			}
+			break;
 		}
 	}
 #endif
@@ -1732,44 +2156,59 @@ static int LDC1(MIPS_instr mips){
 	short immed = MIPS_GET_SIMMED(mips);
 
 #ifdef FASTMEM
-	if(!isDelaySlot && !is_j_dst(1)){
-		MIPS_instr peek = peek_next_src();
-		if(MIPS_GET_OPCODE(peek) == MIPS_OPCODE_LDC1 && MIPS_GET_RS(peek) == _rs){
-			if(MIPS_GET_RT(peek) == _rt + 2 && MIPS_GET_SIMMED(peek) == immed + 8){
-				mips = get_next_src();
-				count++;
-				while(has_next_src() && !is_j_dst(1)){
-					peek = peek_next_src();
-					if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_LDC1)
-						break;
-					if(MIPS_GET_RS(peek) != MIPS_GET_RS(mips))
-						break;
-					if(MIPS_GET_RT(peek) != MIPS_GET_RT(mips) + 2)
-						break;
-					if(MIPS_GET_SIMMED(peek) != MIPS_GET_SIMMED(mips) + 8)
-						break;
-					mips = get_next_src();
-					count++;
-				}
-			} else if(MIPS_GET_RT(peek) == _rt - 2 && MIPS_GET_SIMMED(peek) == immed - 8){
-				mips = get_next_src();
-				count++;
-				while(has_next_src() && !is_j_dst(1)){
-					peek = peek_next_src();
-					if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_LDC1)
-						break;
-					if(MIPS_GET_RS(peek) != MIPS_GET_RS(mips))
-						break;
-					if(MIPS_GET_RT(peek) != MIPS_GET_RT(mips) - 2)
-						break;
-					if(MIPS_GET_SIMMED(peek) != MIPS_GET_SIMMED(mips) - 8)
-						break;
-					mips = get_next_src();
-					count++;
-				}
-				_rt = MIPS_GET_RT(mips);
-				immed = MIPS_GET_SIMMED(mips);
+	if(!isDelaySlot){
+		while(has_next_src() && !is_j_dst(1)){
+			if(peek_next_src() == MIPS_NOP){
+				get_next_src();
+				continue;
 			}
+			MIPS_instr peek = peek_next_src();
+			if(MIPS_GET_OPCODE(peek) == MIPS_OPCODE_LDC1 && MIPS_GET_RS(peek) == _rs){
+				if(MIPS_GET_RT(peek) == _rt + 2 && MIPS_GET_SIMMED(peek) == immed + 8){
+					mips = get_next_src();
+					count++;
+					while(has_next_src() && !is_j_dst(1)){
+						if(peek_next_src() == MIPS_NOP){
+							get_next_src();
+							continue;
+						}
+						peek = peek_next_src();
+						if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_LDC1)
+							break;
+						if(MIPS_GET_RS(peek) != MIPS_GET_RS(mips))
+							break;
+						if(MIPS_GET_RT(peek) != MIPS_GET_RT(mips) + 2)
+							break;
+						if(MIPS_GET_SIMMED(peek) != MIPS_GET_SIMMED(mips) + 8)
+							break;
+						mips = get_next_src();
+						count++;
+					}
+				} else if(MIPS_GET_RT(peek) == _rt - 2 && MIPS_GET_SIMMED(peek) == immed - 8){
+					mips = get_next_src();
+					count++;
+					while(has_next_src() && !is_j_dst(1)){
+						if(peek_next_src() == MIPS_NOP){
+							get_next_src();
+							continue;
+						}
+						peek = peek_next_src();
+						if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_LDC1)
+							break;
+						if(MIPS_GET_RS(peek) != MIPS_GET_RS(mips))
+							break;
+						if(MIPS_GET_RT(peek) != MIPS_GET_RT(mips) - 2)
+							break;
+						if(MIPS_GET_SIMMED(peek) != MIPS_GET_SIMMED(mips) - 8)
+							break;
+						mips = get_next_src();
+						count++;
+					}
+					_rt = MIPS_GET_RT(mips);
+					immed = MIPS_GET_SIMMED(mips);
+				}
+			}
+			break;
 		}
 	}
 #endif
@@ -1790,44 +2229,59 @@ static int SWC1(MIPS_instr mips){
 	short immed = MIPS_GET_SIMMED(mips);
 
 #ifdef FASTMEM
-	if(!isDelaySlot && !is_j_dst(1)){
-		MIPS_instr peek = peek_next_src();
-		if(MIPS_GET_OPCODE(peek) == MIPS_OPCODE_SWC1 && MIPS_GET_RS(peek) == _rs){
-			if(MIPS_GET_RT(peek) == _rt + 2 && MIPS_GET_SIMMED(peek) == immed + 4){
-				mips = get_next_src();
-				count++;
-				while(has_next_src() && !is_j_dst(1)){
-					peek = peek_next_src();
-					if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_SWC1)
-						break;
-					if(MIPS_GET_RS(peek) != MIPS_GET_RS(mips))
-						break;
-					if(MIPS_GET_RT(peek) != MIPS_GET_RT(mips) + 2)
-						break;
-					if(MIPS_GET_SIMMED(peek) != MIPS_GET_SIMMED(mips) + 4)
-						break;
-					mips = get_next_src();
-					count++;
-				}
-			} else if(MIPS_GET_RT(peek) == _rt - 2 && MIPS_GET_SIMMED(peek) == immed - 4){
-				mips = get_next_src();
-				count++;
-				while(has_next_src() && !is_j_dst(1)){
-					peek = peek_next_src();
-					if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_SWC1)
-						break;
-					if(MIPS_GET_RS(peek) != MIPS_GET_RS(mips))
-						break;
-					if(MIPS_GET_RT(peek) != MIPS_GET_RT(mips) - 2)
-						break;
-					if(MIPS_GET_SIMMED(peek) != MIPS_GET_SIMMED(mips) - 4)
-						break;
-					mips = get_next_src();
-					count++;
-				}
-				_rt = MIPS_GET_RT(mips);
-				immed = MIPS_GET_SIMMED(mips);
+	if(!isDelaySlot){
+		while(has_next_src() && !is_j_dst(1)){
+			if(peek_next_src() == MIPS_NOP){
+				get_next_src();
+				continue;
 			}
+			MIPS_instr peek = peek_next_src();
+			if(MIPS_GET_OPCODE(peek) == MIPS_OPCODE_SWC1 && MIPS_GET_RS(peek) == _rs){
+				if(MIPS_GET_RT(peek) == _rt + 2 && MIPS_GET_SIMMED(peek) == immed + 4){
+					mips = get_next_src();
+					count++;
+					while(has_next_src() && !is_j_dst(1)){
+						if(peek_next_src() == MIPS_NOP){
+							get_next_src();
+							continue;
+						}
+						peek = peek_next_src();
+						if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_SWC1)
+							break;
+						if(MIPS_GET_RS(peek) != MIPS_GET_RS(mips))
+							break;
+						if(MIPS_GET_RT(peek) != MIPS_GET_RT(mips) + 2)
+							break;
+						if(MIPS_GET_SIMMED(peek) != MIPS_GET_SIMMED(mips) + 4)
+							break;
+						mips = get_next_src();
+						count++;
+					}
+				} else if(MIPS_GET_RT(peek) == _rt - 2 && MIPS_GET_SIMMED(peek) == immed - 4){
+					mips = get_next_src();
+					count++;
+					while(has_next_src() && !is_j_dst(1)){
+						if(peek_next_src() == MIPS_NOP){
+							get_next_src();
+							continue;
+						}
+						peek = peek_next_src();
+						if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_SWC1)
+							break;
+						if(MIPS_GET_RS(peek) != MIPS_GET_RS(mips))
+							break;
+						if(MIPS_GET_RT(peek) != MIPS_GET_RT(mips) - 2)
+							break;
+						if(MIPS_GET_SIMMED(peek) != MIPS_GET_SIMMED(mips) - 4)
+							break;
+						mips = get_next_src();
+						count++;
+					}
+					_rt = MIPS_GET_RT(mips);
+					immed = MIPS_GET_SIMMED(mips);
+				}
+			}
+			break;
 		}
 	}
 #endif
@@ -1848,44 +2302,59 @@ static int SDC1(MIPS_instr mips){
 	short immed = MIPS_GET_SIMMED(mips);
 
 #ifdef FASTMEM
-	if(!isDelaySlot && !is_j_dst(1)){
-		MIPS_instr peek = peek_next_src();
-		if(MIPS_GET_OPCODE(peek) == MIPS_OPCODE_SDC1 && MIPS_GET_RS(peek) == _rs){
-			if(MIPS_GET_RT(peek) == _rt + 2 && MIPS_GET_SIMMED(peek) == immed + 8){
-				mips = get_next_src();
-				count++;
-				while(has_next_src() && !is_j_dst(1)){
-					peek = peek_next_src();
-					if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_SDC1)
-						break;
-					if(MIPS_GET_RS(peek) != MIPS_GET_RS(mips))
-						break;
-					if(MIPS_GET_RT(peek) != MIPS_GET_RT(mips) + 2)
-						break;
-					if(MIPS_GET_SIMMED(peek) != MIPS_GET_SIMMED(mips) + 8)
-						break;
-					mips = get_next_src();
-					count++;
-				}
-			} else if(MIPS_GET_RT(peek) == _rt - 2 && MIPS_GET_SIMMED(peek) == immed - 8){
-				mips = get_next_src();
-				count++;
-				while(has_next_src() && !is_j_dst(1)){
-					peek = peek_next_src();
-					if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_SDC1)
-						break;
-					if(MIPS_GET_RS(peek) != MIPS_GET_RS(mips))
-						break;
-					if(MIPS_GET_RT(peek) != MIPS_GET_RT(mips) - 2)
-						break;
-					if(MIPS_GET_SIMMED(peek) != MIPS_GET_SIMMED(mips) - 8)
-						break;
-					mips = get_next_src();
-					count++;
-				}
-				_rt = MIPS_GET_RT(mips);
-				immed = MIPS_GET_SIMMED(mips);
+	if(!isDelaySlot){
+		while(has_next_src() && !is_j_dst(1)){
+			if(peek_next_src() == MIPS_NOP){
+				get_next_src();
+				continue;
 			}
+			MIPS_instr peek = peek_next_src();
+			if(MIPS_GET_OPCODE(peek) == MIPS_OPCODE_SDC1 && MIPS_GET_RS(peek) == _rs){
+				if(MIPS_GET_RT(peek) == _rt + 2 && MIPS_GET_SIMMED(peek) == immed + 8){
+					mips = get_next_src();
+					count++;
+					while(has_next_src() && !is_j_dst(1)){
+						if(peek_next_src() == MIPS_NOP){
+							get_next_src();
+							continue;
+						}
+						peek = peek_next_src();
+						if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_SDC1)
+							break;
+						if(MIPS_GET_RS(peek) != MIPS_GET_RS(mips))
+							break;
+						if(MIPS_GET_RT(peek) != MIPS_GET_RT(mips) + 2)
+							break;
+						if(MIPS_GET_SIMMED(peek) != MIPS_GET_SIMMED(mips) + 8)
+							break;
+						mips = get_next_src();
+						count++;
+					}
+				} else if(MIPS_GET_RT(peek) == _rt - 2 && MIPS_GET_SIMMED(peek) == immed - 8){
+					mips = get_next_src();
+					count++;
+					while(has_next_src() && !is_j_dst(1)){
+						if(peek_next_src() == MIPS_NOP){
+							get_next_src();
+							continue;
+						}
+						peek = peek_next_src();
+						if(MIPS_GET_OPCODE(peek) != MIPS_OPCODE_SDC1)
+							break;
+						if(MIPS_GET_RS(peek) != MIPS_GET_RS(mips))
+							break;
+						if(MIPS_GET_RT(peek) != MIPS_GET_RT(mips) - 2)
+							break;
+						if(MIPS_GET_SIMMED(peek) != MIPS_GET_SIMMED(mips) - 8)
+							break;
+						mips = get_next_src();
+						count++;
+					}
+					_rt = MIPS_GET_RT(mips);
+					immed = MIPS_GET_SIMMED(mips);
+				}
+			}
+			break;
 		}
 	}
 #endif
@@ -1905,14 +2374,14 @@ static int CACHE(MIPS_instr mips){
 	case 0: // Index Invalidate
 	case 16: // Hit Invalidate
 	{
-		flushRegisters();
 		int rs = mapRegister(_rs);
-		invalidateRegisters();
+		flushRegisters();
 
-		if(immed){
-			GEN_ADDI(ppc, rs, rs, immed);
+		if(immed || rs != R3){
+			GEN_ADDI(ppc, R3, rs, immed);
 			set_next_dst(ppc);
 		}
+
 		GEN_B(ppc, add_jump(&invalidate_func, 1, 1), 0, 1);
 		set_next_dst(ppc);
 		GEN_LWZ(ppc, R0, DYNAOFF_LR, R1);
@@ -2825,7 +3294,7 @@ static int DSRA(MIPS_instr mips){
 
 	RegMapping rt = mapRegister64(_rt);
 	RegMapping rd = mapConstant64New(_rd, isRegisterConstant(_rt));
-	setRegisterConstant64(_rd, getRegisterConstant64(_rt) << sa);
+	setRegisterConstant64(_rd, getRegisterConstant64(_rt) >> sa);
 
 	if(sa){
 		// Shift LSW right by SA
@@ -2857,9 +3326,12 @@ static int DSLL32(MIPS_instr mips){
 	return INTERPRETED;
 #else // INTERPRET_DW || INTERPRET_DSLL32
 
-	RegMapping rt = mapRegister64( MIPS_GET_RT(mips) );
-	RegMapping rd = mapRegister64New( MIPS_GET_RD(mips) );
+	int _rt = MIPS_GET_RT(mips), _rd = MIPS_GET_RD(mips);
 	int sa = MIPS_GET_SA(mips);
+
+	RegMapping rt = mapRegister64(_rt);
+	RegMapping rd = mapConstant64New(_rd, isRegisterConstant(_rt));
+	setRegisterConstant64(_rd, (unsigned long long)getRegisterConstant64(_rt) << (32 + sa));
 
 	// Shift LSW into MSW and by SA
 	GEN_SLWI(ppc, rd.hi, rt.lo, sa);
@@ -2879,9 +3351,12 @@ static int DSRL32(MIPS_instr mips){
 	return INTERPRETED;
 #else // INTERPRET_DW || INTERPRET_DSRL32
 
-	RegMapping rt = mapRegister64( MIPS_GET_RT(mips) );
-	RegMapping rd = mapRegister64New( MIPS_GET_RD(mips) );
+	int _rt = MIPS_GET_RT(mips), _rd = MIPS_GET_RD(mips);
 	int sa = MIPS_GET_SA(mips);
+
+	RegMapping rt = mapRegister64(_rt);
+	RegMapping rd = mapConstant64New(_rd, isRegisterConstant(_rt));
+	setRegisterConstant64(_rd, (unsigned long long)getRegisterConstant64(_rt) >> (32 + sa));
 
 	// Shift MSW into LSW and by SA
 	GEN_SRWI(ppc, rd.lo, rt.hi, sa);
@@ -2901,9 +3376,12 @@ static int DSRA32(MIPS_instr mips){
 	return INTERPRETED;
 #else // INTERPRET_DW || INTERPRET_DSRA32
 
-	RegMapping rt = mapRegister64( MIPS_GET_RT(mips) );
-	RegMapping rd = mapRegister64New( MIPS_GET_RD(mips) );
+	int _rt = MIPS_GET_RT(mips), _rd = MIPS_GET_RD(mips);
 	int sa = MIPS_GET_SA(mips);
+
+	RegMapping rt = mapRegister64(_rt);
+	RegMapping rd = mapConstant64New(_rd, isRegisterConstant(_rt));
+	setRegisterConstant64(_rd, getRegisterConstant64(_rt) >> (32 + sa));
 
 	// Shift (arithmetically) MSW into LSW and by SA
 	GEN_SRAWI(ppc, rd.lo, rt.hi, sa);
@@ -3698,9 +4176,13 @@ static int SQRT_FP(MIPS_instr mips, int dbl){
 
 	genCheckFP();
 
+	int fs = mapFPR( MIPS_GET_FS(mips), dbl ); // maps to f1 (FP argument)
 	flushRegisters();
-	mapFPR( MIPS_GET_FS(mips), dbl ); // maps to f1 (FP argument)
-	invalidateRegisters();
+
+	if(fs != F1){
+		GEN_FMR(ppc, F1, fs);
+		set_next_dst(ppc);
+	}
 
 	// call sqrt
 	GEN_B(ppc, add_jump(dbl ? &__ieee754_sqrt : &__ieee754_sqrtf, 1, 1), 0, 1);
@@ -3804,10 +4286,14 @@ static int ROUND_L_FP(MIPS_instr mips, int dbl){
 	
 	genCheckFP();
 
-	flushRegisters();
 	int fd = MIPS_GET_FD(mips);
 	int fs = mapFPR( MIPS_GET_FS(mips), dbl );
-	invalidateFPR( MIPS_GET_FS(mips) );
+	flushRegisters();
+
+	if(fs != F1){
+		GEN_FMR(ppc, F1, fs);
+		set_next_dst(ppc);
+	}
 
 	// round
 	GEN_B(ppc, add_jump(dbl ? &round : &roundf, 1, 1), 0, 1);
@@ -3845,10 +4331,14 @@ static int TRUNC_L_FP(MIPS_instr mips, int dbl){
 
 	genCheckFP();
 
-	flushRegisters();
 	int fd = MIPS_GET_FD(mips);
 	int fs = mapFPR( MIPS_GET_FS(mips), dbl );
-	invalidateFPR( MIPS_GET_FS(mips) );
+	flushRegisters();
+
+	if(fs != F1){
+		GEN_FMR(ppc, F1, fs);
+		set_next_dst(ppc);
+	}
 
 	// convert
 	GEN_B(ppc, add_jump(dbl ? &__fixdfdi : &__fixsfdi, 1, 1), 0, 1);
@@ -3883,10 +4373,14 @@ static int CEIL_L_FP(MIPS_instr mips, int dbl){
 
 	genCheckFP();
 
-	flushRegisters();
 	int fd = MIPS_GET_FD(mips);
 	int fs = mapFPR( MIPS_GET_FS(mips), dbl );
-	invalidateFPR( MIPS_GET_FS(mips) );
+	flushRegisters();
+
+	if(fs != F1){
+		GEN_FMR(ppc, F1, fs);
+		set_next_dst(ppc);
+	}
 
 	// ceil
 	GEN_B(ppc, add_jump(dbl ? &ceil : &ceilf, 1, 1), 0, 1);
@@ -3924,10 +4418,14 @@ static int FLOOR_L_FP(MIPS_instr mips, int dbl){
 
 	genCheckFP();
 
-	flushRegisters();
 	int fd = MIPS_GET_FD(mips);
 	int fs = mapFPR( MIPS_GET_FS(mips), dbl );
-	invalidateFPR( MIPS_GET_FS(mips) );
+	flushRegisters();
+
+	if(fs != F1){
+		GEN_FMR(ppc, F1, fs);
+		set_next_dst(ppc);
+	}
 
 	// round
 	GEN_B(ppc, add_jump(dbl ? &floor : &floorf, 1, 1), 0, 1);
@@ -4156,10 +4654,14 @@ static int CVT_L_FP(MIPS_instr mips, int dbl){
 
 	genCheckFP();
 
-	flushRegisters();
 	int fd = MIPS_GET_FD(mips);
 	int fs = mapFPR( MIPS_GET_FS(mips), dbl );
-	invalidateFPR( MIPS_GET_FS(mips) );
+	flushRegisters();
+
+	if(fs != F1){
+		GEN_FMR(ppc, F1, fs);
+		set_next_dst(ppc);
+	}
 
 	// FIXME: I'm fairly certain this will always trunc
 	// convert
@@ -4768,6 +5270,7 @@ static int (*gen_ops[64])(MIPS_instr) =
 static void genCallInterp(MIPS_instr mips){
 	PowerPC_instr ppc = NEW_PPC_INSTR();
 	flushRegisters();
+	invalidateConstants();
 	reset_code_addr();
 	// Pass in whether this instruction is in the delay slot
 	GEN_LI(ppc, R5, isDelaySlot);
@@ -4956,7 +5459,7 @@ static void genCheckFP(void){
 
 #define check_memory() \
 { \
-	invalidateRegisters(); \
+	flushRegisters(); \
 	GEN_B(ppc, add_jump(&invalidate_func, 1, 1), 0, 1); \
 	set_next_dst(ppc); \
 	GEN_LWZ(ppc, R0, DYNAOFF_LR, R1); \
@@ -5006,24 +5509,25 @@ static void genCallDynaMem(memType type, int count, int _rs, int _rt, short imme
 	if(type == MEM_LWC1 || type == MEM_LDC1 || type == MEM_SWC1 || type == MEM_SDC1)
 		genCheckFP();
 
-	if(isVirtual || isUncached){
+	if(isVirtual){
 		flushRegisters();
 		reset_code_addr();
 	}
 
-	int rd = mapRegisterTemp();
 	int rs = mapRegister(_rs);
+	mapRegisterFixed(R3);
 
-	// addr = rs + immed
-	GEN_ADDI(ppc, rd, rs, immed);
-	set_next_dst(ppc);
+	if(immed || rs != R3){
+		GEN_ADDI(ppc, R3, rs, immed);
+		set_next_dst(ppc);
+	}
 
 #ifdef FASTMEM
 	int to_slow_id;
 	PowerPC_instr* ts_preCall;
 	if(isPhysical && isVirtual){
 		// If base in physical memory
-		GEN_XORIS(ppc, R0, rs, 0x8000);
+		GEN_XORIS(ppc, R0, R3, 0x8000);
 		set_next_dst(ppc);
 	#ifdef USE_EXPANSION
 		GEN_ANDIS(ppc, R0, R0, 0xDF80);
@@ -5039,682 +5543,1382 @@ static void genCallDynaMem(memType type, int count, int _rs, int _rt, short imme
 	}
 
 	if(isPhysical){
-		switch(type){
-			case MEM_LW:
-			{
-				for(i = 0; i < count; i++){
-					int rt = mapRegisterNew(_rt + i, 1);
-					if(i == 0){
-						GEN_RLWINM(ppc, R2, rd, 0, 8, 29);
-						set_next_dst(ppc);
-						GEN_LWZUX(ppc, rt, R2, DYNAREG_RDRAM);
-						set_next_dst(ppc);
-					} else {
-						GEN_LWZ(ppc, rt, i*4, R2);
-						set_next_dst(ppc);
+		if(isConstant == 1){
+			switch(type){
+				case MEM_LW:
+				{
+					void* address = &rdramb[constant & 0xFFFFFC];
+					for(i = 0; i < count; i++){
+						int rt = mapRegisterNew(_rt + i, 1);
+						if(i == 0){
+							GEN_LIS(ppc, R2, extractUpper16(address));
+							set_next_dst(ppc);
+							GEN_LWZU(ppc, rt, extractLower16(address), R2);
+							set_next_dst(ppc);
+						} else {
+							GEN_LWZ(ppc, rt, i*4, R2);
+							set_next_dst(ppc);
+						}
 					}
+					break;
 				}
-				break;
-			}
-			case MEM_ULW:
-			{
-				int rt = mapRegisterNew(_rt, 1);
-				GEN_RLWINM(ppc, R2, rd, 0, 8, 31);
-				set_next_dst(ppc);
-				GEN_LWZUX(ppc, rt, R2, DYNAREG_RDRAM);
-				set_next_dst(ppc);
-				break;
-			}
-			case MEM_LWU:
-			{
-				for(i = 0; i < count; i++){
-					int rt = mapRegisterNew(_rt + i, 0);
-					if(i == 0){
-						GEN_RLWINM(ppc, R2, rd, 0, 8, 29);
-						set_next_dst(ppc);
-						GEN_LWZUX(ppc, rt, R2, DYNAREG_RDRAM);
-						set_next_dst(ppc);
-					} else {
-						GEN_LWZ(ppc, rt, i*4, R2);
-						set_next_dst(ppc);
+				case MEM_ULW:
+				{
+					void* address = &rdramb[constant & 0xFFFFFF];
+					for(i = 0; i < count; i++){
+						int rt = mapRegisterNew(_rt + i, 1);
+						if(i == 0){
+							GEN_LIS(ppc, R2, extractUpper16(address));
+							set_next_dst(ppc);
+							GEN_LWZU(ppc, rt, extractLower16(address), R2);
+							set_next_dst(ppc);
+						} else {
+							GEN_LWZ(ppc, rt, i*4, R2);
+							set_next_dst(ppc);
+						}
 					}
+					break;
 				}
-				break;
-			}
-			case MEM_LH:
-			{
-				for(i = 0; i < count; i++){
-					int rt = mapRegisterNew(_rt + i, 1);
-					if(i == 0){
-						GEN_RLWINM(ppc, R2, rd, 0, 8, 30);
-						set_next_dst(ppc);
-						GEN_LHAUX(ppc, rt, R2, DYNAREG_RDRAM);
-						set_next_dst(ppc);
-					} else {
-						GEN_LHA(ppc, rt, i*2, R2);
-						set_next_dst(ppc);
+				case MEM_LWU:
+				{
+					void* address = &rdramb[constant & 0xFFFFFC];
+					for(i = 0; i < count; i++){
+						int rt = mapRegisterNew(_rt + i, 0);
+						if(i == 0){
+							GEN_LIS(ppc, R2, extractUpper16(address));
+							set_next_dst(ppc);
+							GEN_LWZU(ppc, rt, extractLower16(address), R2);
+							set_next_dst(ppc);
+						} else {
+							GEN_LWZ(ppc, rt, i*4, R2);
+							set_next_dst(ppc);
+						}
 					}
+					break;
 				}
-				break;
-			}
-			case MEM_LHU:
-			{
-				for(i = 0; i < count; i++){
-					int rt = mapRegisterNew(_rt + i, 0);
-					if(i == 0){
-						GEN_RLWINM(ppc, R2, rd, 0, 8, 30);
-						set_next_dst(ppc);
-						GEN_LHZUX(ppc, rt, R2, DYNAREG_RDRAM);
-						set_next_dst(ppc);
-					} else {
-						GEN_LHZ(ppc, rt, i*2, R2);
-						set_next_dst(ppc);
+				case MEM_LH:
+				{
+					void* address = &rdramb[constant & 0xFFFFFE];
+					for(i = 0; i < count; i++){
+						int rt = mapRegisterNew(_rt + i, 1);
+						if(i == 0){
+							GEN_LIS(ppc, R2, extractUpper16(address));
+							set_next_dst(ppc);
+							GEN_LHAU(ppc, rt, extractLower16(address), R2);
+							set_next_dst(ppc);
+						} else {
+							GEN_LHA(ppc, rt, i*2, R2);
+							set_next_dst(ppc);
+						}
 					}
+					break;
 				}
-				break;
-			}
-			case MEM_LB:
-			{
-				for(i = 0; i < count; i++){
-					int rt = mapRegisterNew(_rt + i, 1);
-					if(i == 0){
-						GEN_RLWINM(ppc, R2, rd, 0, 8, 31);
-						set_next_dst(ppc);
-						GEN_LBZUX(ppc, rt, R2, DYNAREG_RDRAM);
-						set_next_dst(ppc);
-					} else {
-						GEN_LBZ(ppc, rt, i, R2);
+				case MEM_LHU:
+				{
+					void* address = &rdramb[constant & 0xFFFFFE];
+					for(i = 0; i < count; i++){
+						int rt = mapRegisterNew(_rt + i, 0);
+						if(i == 0){
+							GEN_LIS(ppc, R2, extractUpper16(address));
+							set_next_dst(ppc);
+							GEN_LHZU(ppc, rt, extractLower16(address), R2);
+							set_next_dst(ppc);
+						} else {
+							GEN_LHZ(ppc, rt, i*2, R2);
+							set_next_dst(ppc);
+						}
+					}
+					break;
+				}
+				case MEM_LB:
+				{
+					void* address = &rdramb[constant & 0xFFFFFF];
+					for(i = 0; i < count; i++){
+						int rt = mapRegisterNew(_rt + i, 1);
+						if(i == 0){
+							GEN_LIS(ppc, R2, extractUpper16(address));
+							set_next_dst(ppc);
+							GEN_LBZU(ppc, rt, extractLower16(address), R2);
+							set_next_dst(ppc);
+						} else {
+							GEN_LBZ(ppc, rt, i, R2);
+							set_next_dst(ppc);
+						}
+						GEN_EXTSB(ppc, rt, rt);
 						set_next_dst(ppc);
 					}
-					GEN_EXTSB(ppc, rt, rt);
+					break;
+				}
+				case MEM_LBU:
+				{
+					void* address = &rdramb[constant & 0xFFFFFF];
+					for(i = 0; i < count; i++){
+						int rt = mapRegisterNew(_rt + i, 0);
+						if(i == 0){
+							GEN_LIS(ppc, R2, extractUpper16(address));
+							set_next_dst(ppc);
+							GEN_LBZU(ppc, rt, extractLower16(address), R2);
+							set_next_dst(ppc);
+						} else {
+							GEN_LBZ(ppc, rt, i, R2);
+							set_next_dst(ppc);
+						}
+					}
+					break;
+				}
+				case MEM_LD:
+				{
+					void* address = &rdramb[constant & 0xFFFFF8];
+					for(i = 0; i < count; i++){
+						RegMapping rt = mapRegister64New(_rt + i);
+						if(i == 0){
+							GEN_LIS(ppc, R2, extractUpper16(address));
+							set_next_dst(ppc);
+							GEN_LWZU(ppc, rt.hi, extractLower16(address), R2);
+							set_next_dst(ppc);
+						} else {
+							GEN_LWZ(ppc, rt.hi, i*8, R2);
+							set_next_dst(ppc);
+						}
+						GEN_LWZ(ppc, rt.lo, i*8+4, R2);
+						set_next_dst(ppc);
+					}
+					break;
+				}
+				case MEM_ULD:
+				{
+					void* address = &rdramb[constant & 0xFFFFFF];
+					for(i = 0; i < count; i++){
+						RegMapping rt = mapRegister64New(_rt + i);
+						if(i == 0){
+							GEN_LIS(ppc, R2, extractUpper16(address));
+							set_next_dst(ppc);
+							GEN_LWZU(ppc, rt.hi, extractLower16(address), R2);
+							set_next_dst(ppc);
+						} else {
+							GEN_LWZ(ppc, rt.hi, i*8, R2);
+							set_next_dst(ppc);
+						}
+						GEN_LWZ(ppc, rt.lo, i*8+4, R2);
+						set_next_dst(ppc);
+					}
+					break;
+				}
+				case MEM_LWC1:
+				{
+					void* address = &rdramb[constant & 0xFFFFFC];
+					for(i = 0; i < count; i++){
+						int rt = mapFPRNew(_rt + i*2, 0);
+						if(i == 0){
+							GEN_LIS(ppc, R2, extractUpper16(address));
+							set_next_dst(ppc);
+							GEN_LFSU(ppc, rt, extractLower16(address), R2);
+							set_next_dst(ppc);
+						} else {
+							GEN_LFS(ppc, rt, i*4, R2);
+							set_next_dst(ppc);
+						}
+					}
+					break;
+				}
+				case MEM_LDC1:
+				{
+					void* address = &rdramb[constant & 0xFFFFF8];
+					for(i = 0; i < count; i++){
+						int rt = mapFPRNew(_rt + i*2, 1);
+						if(i == 0){
+							GEN_LIS(ppc, R2, extractUpper16(address));
+							set_next_dst(ppc);
+							GEN_LFDU(ppc, rt, extractLower16(address), R2);
+							set_next_dst(ppc);
+						} else {
+							GEN_LFD(ppc, rt, i*8, R2);
+							set_next_dst(ppc);
+						}
+					}
+					break;
+				}
+				case MEM_LL:
+				{
+					void* address = &rdramb[constant & 0xFFFFFC];
+					int rt = mapRegisterNew(_rt, 1);
+					GEN_LIS(ppc, R2, extractUpper16(address));
 					set_next_dst(ppc);
-				}
-				break;
-			}
-			case MEM_LBU:
-			{
-				for(i = 0; i < count; i++){
-					int rt = mapRegisterNew(_rt + i, 0);
-					if(i == 0){
-						GEN_RLWINM(ppc, R2, rd, 0, 8, 31);
-						set_next_dst(ppc);
-						GEN_LBZUX(ppc, rt, R2, DYNAREG_RDRAM);
-						set_next_dst(ppc);
-					} else {
-						GEN_LBZ(ppc, rt, i, R2);
-						set_next_dst(ppc);
-					}
-				}
-				break;
-			}
-			case MEM_LD:
-			{
-				for(i = 0; i < count; i++){
-					RegMapping rt = mapRegister64New(_rt + i);
-					if(i == 0){
-						GEN_RLWINM(ppc, R2, rd, 0, 8, 28);
-						set_next_dst(ppc);
-						GEN_LWZUX(ppc, rt.hi, R2, DYNAREG_RDRAM);
-						set_next_dst(ppc);
-					} else {
-						GEN_LWZ(ppc, rt.hi, i*8, R2);
-						set_next_dst(ppc);
-					}
-					GEN_LWZ(ppc, rt.lo, i*8+4, R2);
+					GEN_LI(ppc, R0, 1);
 					set_next_dst(ppc);
-				}
-				break;
-			}
-			case MEM_ULD:
-			{
-				RegMapping rt = mapRegister64New(_rt);
-				GEN_RLWINM(ppc, R2, rd, 0, 8, 31);
-				set_next_dst(ppc);
-				GEN_LWZUX(ppc, rt.hi, R2, DYNAREG_RDRAM);
-				set_next_dst(ppc);
-				GEN_LWZ(ppc, rt.lo, 4, R2);
-				set_next_dst(ppc);
-				break;
-			}
-			case MEM_LWC1:
-			{
-				for(i = 0; i < count; i++){
-					int rt = mapFPRNew(_rt + i*2, 0);
-					if(i == 0){
-						GEN_RLWINM(ppc, R2, rd, 0, 8, 29);
-						set_next_dst(ppc);
-						GEN_LFSUX(ppc, rt, R2, DYNAREG_RDRAM);
-						set_next_dst(ppc);
-					} else {
-						GEN_LFS(ppc, rt, i*4, R2);
-						set_next_dst(ppc);
-					}
-				}
-				break;
-			}
-			case MEM_LDC1:
-			{
-				for(i = 0; i < count; i++){
-					int rt = mapFPRNew(_rt + i*2, 1);
-					if(i == 0){
-						GEN_RLWINM(ppc, R2, rd, 0, 8, 28);
-						set_next_dst(ppc);
-						GEN_LFDUX(ppc, rt, R2, DYNAREG_RDRAM);
-						set_next_dst(ppc);
-					} else {
-						GEN_LFD(ppc, rt, i*8, R2);
-						set_next_dst(ppc);
-					}
-				}
-				break;
-			}
-			case MEM_LL:
-			{
-				int rt = mapRegisterNew(_rt, 1);
-				GEN_RLWINM(ppc, R2, rd, 0, 8, 29);
-				set_next_dst(ppc);
-				GEN_LI(ppc, R0, 1);
-				set_next_dst(ppc);
-				GEN_LWZUX(ppc, rt, R2, DYNAREG_RDRAM);
-				set_next_dst(ppc);
-				GEN_STW(ppc, R0, SDAREL(llbit), R13);
-				set_next_dst(ppc);
-				break;
-			}
-			case MEM_LLD:
-			{
-				RegMapping rt = mapRegister64New(_rt);
-				GEN_RLWINM(ppc, R2, rd, 0, 8, 28);
-				set_next_dst(ppc);
-				GEN_LI(ppc, R0, 1);
-				set_next_dst(ppc);
-				GEN_LWZUX(ppc, rt.hi, R2, DYNAREG_RDRAM);
-				set_next_dst(ppc);
-				GEN_LWZ(ppc, rt.lo, 4, R2);
-				set_next_dst(ppc);
-				GEN_STW(ppc, R0, SDAREL(llbit), R13);
-				set_next_dst(ppc);
-				break;
-			}
-			case MEM_LWL:
-			{
-				int rt = mapRegister(_rt);
-				int word = mapRegisterTemp();
-				int mask = mapRegisterTemp();
-				GEN_RLWINM(ppc, R2, rd, 0, 8, 31);
-				set_next_dst(ppc);
-				GEN_LWZUX(ppc, word, R2, DYNAREG_RDRAM);
-				set_next_dst(ppc);
-				GEN_CLRLSLWI(ppc, R0, rd, 30, 3);
-				set_next_dst(ppc);
-				GEN_LI(ppc, mask, ~0);
-				set_next_dst(ppc);
-				GEN_SLW(ppc, mask, mask, R0);
-				set_next_dst(ppc);
-				GEN_ANDC(ppc, rt, rt, mask);
-				set_next_dst(ppc);
-				GEN_AND(ppc, word, word, mask);
-				set_next_dst(ppc);
-				GEN_OR(ppc, rt, rt, word);
-				set_next_dst(ppc);
-				mapRegisterNew(_rt, 1);
-				unmapRegisterTemp(word);
-				unmapRegisterTemp(mask);
-				break;
-			}
-			case MEM_LWR:
-			{
-				int rt = mapRegister(_rt);
-				int word = mapRegisterTemp();
-				int mask = mapRegisterTemp();
-				GEN_SUBI(ppc, rd, rd, 3);
-				set_next_dst(ppc);
-				GEN_NEG(ppc, R0, rd);
-				set_next_dst(ppc);
-				GEN_RLWINM(ppc, R2, rd, 0, 8, 31);
-				set_next_dst(ppc);
-				GEN_LWZUX(ppc, word, R2, DYNAREG_RDRAM);
-				set_next_dst(ppc);
-				GEN_CLRLSLWI(ppc, R0, R0, 30, 3);
-				set_next_dst(ppc);
-				GEN_LI(ppc, mask, ~0);
-				set_next_dst(ppc);
-				GEN_SRW(ppc, mask, mask, R0);
-				set_next_dst(ppc);
-				GEN_ANDC(ppc, rt, rt, mask);
-				set_next_dst(ppc);
-				GEN_AND(ppc, word, word, mask);
-				set_next_dst(ppc);
-				GEN_OR(ppc, rt, rt, word);
-				set_next_dst(ppc);
-				mapRegisterNew(_rt, 1);
-				unmapRegisterTemp(word);
-				unmapRegisterTemp(mask);
-				break;
-			}
-			case MEM_LDL:
-			{
-				RegMapping rt = mapRegister64(_rt);
-				int hi = mapRegisterTemp();
-				int lo = mapRegisterTemp();
-				int mask = mapRegisterTemp();
-				GEN_RLWINM(ppc, R2, rd, 0, 8, 31);
-				set_next_dst(ppc);
-				GEN_LWZUX(ppc, hi, R2, DYNAREG_RDRAM);
-				set_next_dst(ppc);
-				GEN_LWZ(ppc, lo, 4, R2);
-				set_next_dst(ppc);
-				GEN_RLWINM_(ppc, mask, rd, 3, 26, 26);
-				set_next_dst(ppc);
-				GEN_CLRLSLWI(ppc, R0, rd, 30, 3);
-				set_next_dst(ppc);
-				GEN_LI(ppc, mask, ~0);
-				set_next_dst(ppc);
-				GEN_SLW(ppc, mask, mask, R0);
-				set_next_dst(ppc);
-				GEN_BNE(ppc, CR0, 6, 0, 0);
-				set_next_dst(ppc);
-				GEN_ANDC(ppc, rt.lo, rt.lo, mask);
-				set_next_dst(ppc);
-				GEN_AND(ppc, lo, lo, mask);
-				set_next_dst(ppc);
-				GEN_OR(ppc, rt.lo, rt.lo, lo);
-				set_next_dst(ppc);
-				GEN_MR(ppc, rt.hi, hi);
-				set_next_dst(ppc);
-				GEN_B(ppc, 4, 0, 0);
-				set_next_dst(ppc);
-				GEN_ANDC(ppc, rt.hi, rt.hi, mask);
-				set_next_dst(ppc);
-				GEN_AND(ppc, hi, hi, mask);
-				set_next_dst(ppc);
-				GEN_OR(ppc, rt.hi, rt.hi, hi);
-				set_next_dst(ppc);
-				mapRegister64New(_rt);
-				unmapRegisterTemp(hi);
-				unmapRegisterTemp(lo);
-				unmapRegisterTemp(mask);
-				break;
-			}
-			case MEM_LDR:
-			{
-				RegMapping rt = mapRegister64(_rt);
-				int hi = mapRegisterTemp();
-				int lo = mapRegisterTemp();
-				int mask = mapRegisterTemp();
-				GEN_SUBI(ppc, rd, rd, 7);
-				set_next_dst(ppc);
-				GEN_NEG(ppc, R0, rd);
-				set_next_dst(ppc);
-				GEN_RLWINM(ppc, R2, rd, 0, 8, 31);
-				set_next_dst(ppc);
-				GEN_LWZUX(ppc, hi, R2, DYNAREG_RDRAM);
-				set_next_dst(ppc);
-				GEN_LWZ(ppc, lo, 4, R2);
-				set_next_dst(ppc);
-				GEN_RLWINM_(ppc, mask, R0, 3, 26, 26);
-				set_next_dst(ppc);
-				GEN_CLRLSLWI(ppc, R0, R0, 30, 3);
-				set_next_dst(ppc);
-				GEN_LI(ppc, mask, ~0);
-				set_next_dst(ppc);
-				GEN_SRW(ppc, mask, mask, R0);
-				set_next_dst(ppc);
-				GEN_BNE(ppc, CR0, 6, 0, 0);
-				set_next_dst(ppc);
-				GEN_ANDC(ppc, rt.hi, rt.hi, mask);
-				set_next_dst(ppc);
-				GEN_AND(ppc, hi, hi, mask);
-				set_next_dst(ppc);
-				GEN_OR(ppc, rt.hi, rt.hi, hi);
-				set_next_dst(ppc);
-				GEN_MR(ppc, rt.lo, lo);
-				set_next_dst(ppc);
-				GEN_B(ppc, 4, 0, 0);
-				set_next_dst(ppc);
-				GEN_ANDC(ppc, rt.lo, rt.lo, mask);
-				set_next_dst(ppc);
-				GEN_AND(ppc, lo, lo, mask);
-				set_next_dst(ppc);
-				GEN_OR(ppc, rt.lo, rt.lo, lo);
-				set_next_dst(ppc);
-				mapRegister64New(_rt);
-				unmapRegisterTemp(hi);
-				unmapRegisterTemp(lo);
-				unmapRegisterTemp(mask);
-				break;
-			}
-			case MEM_SW:
-			{
-				for(i = 0; i < count; i++){
-					int rt = mapRegister(_rt + i);
-					if(i == 0){
-						GEN_RLWINM(ppc, R2, rd, 0, 8, 29);
-						set_next_dst(ppc);
-						GEN_STWUX(ppc, rt, R2, DYNAREG_RDRAM);
-						set_next_dst(ppc);
-					} else {
-						GEN_STW(ppc, rt, i*4, R2);
-						set_next_dst(ppc);
-					}
-				}
-				if(isUncached) check_memory();
-				break;
-			}
-			case MEM_USW:
-			{
-				int rt = mapRegister(_rt);
-				GEN_RLWINM(ppc, R2, rd, 0, 8, 31);
-				set_next_dst(ppc);
-				GEN_STWUX(ppc, rt, R2, DYNAREG_RDRAM);
-				set_next_dst(ppc);
-				if(isUncached) check_memory();
-				break;
-			}
-			case MEM_SH:
-			{
-				for(i = 0; i < count; i++){
-					int rt = mapRegister(_rt + i);
-					if(i == 0){
-						GEN_RLWINM(ppc, R2, rd, 0, 8, 30);
-						set_next_dst(ppc);
-						GEN_STHUX(ppc, rt, R2, DYNAREG_RDRAM);
-						set_next_dst(ppc);
-					} else {
-						GEN_STH(ppc, rt, i*2, R2);
-						set_next_dst(ppc);
-					}
-				}
-				if(isUncached) check_memory();
-				break;
-			}
-			case MEM_SB:
-			{
-				for(i = 0; i < count; i++){
-					int rt = mapRegister(_rt + i);
-					if(i == 0){
-						GEN_RLWINM(ppc, R2, rd, 0, 8, 31);
-						set_next_dst(ppc);
-						GEN_STBUX(ppc, rt, R2, DYNAREG_RDRAM);
-						set_next_dst(ppc);
-					} else {
-						GEN_STB(ppc, rt, i, R2);
-						set_next_dst(ppc);
-					}
-				}
-				if(isUncached) check_memory();
-				break;
-			}
-			case MEM_SD:
-			{
-				for(i = 0; i < count; i++){
-					RegMapping rt = mapRegister64(_rt + i);
-					if(i == 0){
-						GEN_RLWINM(ppc, R2, rd, 0, 8, 28);
-						set_next_dst(ppc);
-						GEN_STWUX(ppc, rt.hi, R2, DYNAREG_RDRAM);
-						set_next_dst(ppc);
-					} else {
-						GEN_STW(ppc, rt.hi, i*8, R2);
-						set_next_dst(ppc);
-					}
-					GEN_STW(ppc, rt.lo, i*8+4, R2);
+					GEN_LWZU(ppc, rt, extractLower16(address), R2);
 					set_next_dst(ppc);
+					GEN_STW(ppc, R0, SDAREL(llbit), R13);
+					set_next_dst(ppc);
+					break;
 				}
-				if(isUncached) check_memory();
-				break;
-			}
-			case MEM_USD:
-			{
-				RegMapping rt = mapRegister64(_rt);
-				GEN_RLWINM(ppc, R2, rd, 0, 8, 31);
-				set_next_dst(ppc);
-				GEN_STWUX(ppc, rt.hi, R2, DYNAREG_RDRAM);
-				set_next_dst(ppc);
-				GEN_STW(ppc, rt.lo, 4, R2);
-				set_next_dst(ppc);
-				if(isUncached) check_memory();
-				break;
-			}
-			case MEM_SWC1:
-			{
-				for(i = 0; i < count; i++){
-					int rt = mapFPR(_rt + i*2, 0);
-					if(i == 0){
-						GEN_RLWINM(ppc, R2, rd, 0, 8, 29);
+				case MEM_LLD:
+				{
+					void* address = &rdramb[constant & 0xFFFFF8];
+					RegMapping rt = mapRegister64New(_rt);
+					GEN_LIS(ppc, R2, extractUpper16(address));
+					set_next_dst(ppc);
+					GEN_LI(ppc, R0, 1);
+					set_next_dst(ppc);
+					GEN_LWZU(ppc, rt.hi, extractLower16(address), R2);
+					set_next_dst(ppc);
+					GEN_LWZ(ppc, rt.lo, 4, R2);
+					set_next_dst(ppc);
+					GEN_STW(ppc, R0, SDAREL(llbit), R13);
+					set_next_dst(ppc);
+					break;
+				}
+				case MEM_LWL:
+				{
+					void* address = &rdramb[constant & 0xFFFFFF];
+					if((constant & 3) == 0){
+						int rt = mapRegisterNew(_rt, 1);
+						GEN_LIS(ppc, R2, extractUpper16(address));
 						set_next_dst(ppc);
-						GEN_STFSUX(ppc, rt, R2, DYNAREG_RDRAM);
+						GEN_LWZU(ppc, rt, extractLower16(address), R2);
 						set_next_dst(ppc);
 					} else {
-						GEN_STFS(ppc, rt, i*4, R2);
+						int rt = mapRegister(_rt);
+						GEN_LIS(ppc, R2, extractUpper16(address));
 						set_next_dst(ppc);
+						GEN_LWZU(ppc, R0, extractLower16(address), R2);
+						set_next_dst(ppc);
+						GEN_RLWIMI(ppc, rt, R0, 0, 0, 31 - (constant & 3) * 8);
+						set_next_dst(ppc);
+						mapRegisterNew(_rt, 1);
 					}
+					break;
 				}
-				if(isUncached) check_memory();
-				break;
-			}
-			case MEM_SDC1:
-			{
-				for(i = 0; i < count; i++){
-					int rt = mapFPR(_rt + i*2, 1);
-					if(i == 0){
-						GEN_RLWINM(ppc, R2, rd, 0, 8, 28);
+				case MEM_LWR:
+				{
+					void* address = &rdramb[constant & 0xFFFFFF];
+					if((-constant & 3) == 0){
+						int rt = mapRegisterNew(_rt, 1);
+						GEN_LIS(ppc, R2, extractUpper16(address));
 						set_next_dst(ppc);
-						GEN_STFDUX(ppc, rt, R2, DYNAREG_RDRAM);
+						GEN_LWZU(ppc, rt, extractLower16(address), R2);
 						set_next_dst(ppc);
 					} else {
-						GEN_STFD(ppc, rt, i*8, R2);
+						int rt = mapRegister(_rt);
+						GEN_LIS(ppc, R2, extractUpper16(address));
+						set_next_dst(ppc);
+						GEN_LWZU(ppc, R0, extractLower16(address), R2);
+						set_next_dst(ppc);
+						GEN_RLWIMI(ppc, rt, R0, 0, (-constant & 3) * 8, 31);
+						set_next_dst(ppc);
+						mapRegisterNew(_rt, 1);
+					}
+					break;
+				}
+				case MEM_LDL:
+				{
+					void* address = &rdramb[constant & 0xFFFFFF];
+					if((constant & 7) == 0){
+						RegMapping rt = mapRegister64New(_rt);
+						GEN_LIS(ppc, R2, extractUpper16(address));
+						set_next_dst(ppc);
+						GEN_LWZU(ppc, rt.hi, extractLower16(address), R2);
+						set_next_dst(ppc);
+						GEN_LWZ(ppc, rt.lo, 4, R2);
+						set_next_dst(ppc);
+					} else if((constant & 4) == 0){
+						RegMapping rt = mapRegister64(_rt);
+						GEN_LIS(ppc, R2, extractUpper16(address));
+						set_next_dst(ppc);
+						GEN_LWZU(ppc, rt.hi, extractLower16(address), R2);
+						set_next_dst(ppc);
+						GEN_LWZ(ppc, R0, 4, R2);
+						set_next_dst(ppc);
+						GEN_RLWIMI(ppc, rt.lo, R0, 0, 0, 31 - (constant & 3) * 8);
+						set_next_dst(ppc);
+						mapRegister64New(_rt);
+					} else if((constant & 3) == 0) {
+						RegMapping rt = mapRegister64(_rt);
+						GEN_LIS(ppc, R2, extractUpper16(address));
+						set_next_dst(ppc);
+						GEN_LWZU(ppc, rt.hi, extractLower16(address), R2);
+						set_next_dst(ppc);
+						mapRegister64New(_rt);
+					} else {
+						RegMapping rt = mapRegister64(_rt);
+						GEN_LIS(ppc, R2, extractUpper16(address));
+						set_next_dst(ppc);
+						GEN_LWZU(ppc, R0, extractLower16(address), R2);
+						set_next_dst(ppc);
+						GEN_RLWIMI(ppc, rt.hi, R0, 0, 0, 31 - (constant & 3) * 8);
+						set_next_dst(ppc);
+						mapRegister64New(_rt);
+					}
+					break;
+				}
+				case MEM_LDR:
+				{
+					void* address = &rdramb[constant & 0xFFFFFF];
+					if((-constant & 7) == 0){
+						RegMapping rt = mapRegister64New(_rt);
+						GEN_LIS(ppc, R2, extractUpper16(address));
+						set_next_dst(ppc);
+						GEN_LWZU(ppc, rt.hi, extractLower16(address), R2);
+						set_next_dst(ppc);
+						GEN_LWZ(ppc, rt.lo, 4, R2);
+						set_next_dst(ppc);
+					} else if((-constant & 4) == 0){
+						RegMapping rt = mapRegister64(_rt);
+						GEN_LIS(ppc, R2, extractUpper16(address));
+						set_next_dst(ppc);
+						GEN_LWZU(ppc, R0, extractLower16(address), R2);
+						set_next_dst(ppc);
+						GEN_LWZ(ppc, rt.lo, 4, R2);
+						set_next_dst(ppc);
+						GEN_RLWIMI(ppc, rt.hi, R0, 0, (-constant & 3) * 8, 31);
+						set_next_dst(ppc);
+						mapRegister64New(_rt);
+					} else if((-constant & 3) == 0){
+						RegMapping rt = mapRegister64(_rt);
+						GEN_LIS(ppc, R2, extractUpper16(address + 4));
+						set_next_dst(ppc);
+						GEN_LWZU(ppc, rt.lo, extractLower16(address + 4), R2);
+						set_next_dst(ppc);
+						mapRegister64New(_rt);
+					} else {
+						RegMapping rt = mapRegister64(_rt);
+						GEN_LIS(ppc, R2, extractUpper16(address + 4));
+						set_next_dst(ppc);
+						GEN_LWZU(ppc, R0, extractLower16(address + 4), R2);
+						set_next_dst(ppc);
+						GEN_RLWIMI(ppc, rt.lo, R0, 0, (-constant & 3) * 8, 31);
+						set_next_dst(ppc);
+						mapRegister64New(_rt);
+					}
+					break;
+				}
+				case MEM_SW:
+				{
+					void* address = &rdramb[constant & 0xFFFFFC];
+					for(i = 0; i < count; i++){
+						int rt = mapRegister(_rt + i);
+						if(i == 0){
+							GEN_LIS(ppc, R2, extractUpper16(address));
+							set_next_dst(ppc);
+							GEN_STWU(ppc, rt, extractLower16(address), R2);
+							set_next_dst(ppc);
+						} else {
+							GEN_STW(ppc, rt, i*4, R2);
+							set_next_dst(ppc);
+						}
+					}
+					if(isUncached) check_memory();
+					break;
+				}
+				case MEM_USW:
+				{
+					void* address = &rdramb[constant & 0xFFFFFF];
+					for(i = 0; i < count; i++){
+						int rt = mapRegister(_rt + i);
+						if(i == 0){
+							GEN_LIS(ppc, R2, extractUpper16(address));
+							set_next_dst(ppc);
+							GEN_STWU(ppc, rt, extractLower16(address), R2);
+							set_next_dst(ppc);
+						} else {
+							GEN_STW(ppc, rt, i*4, R2);
+							set_next_dst(ppc);
+						}
+					}
+					if(isUncached) check_memory();
+					break;
+				}
+				case MEM_SH:
+				{
+					void* address = &rdramb[constant & 0xFFFFFE];
+					for(i = 0; i < count; i++){
+						int rt = mapRegister(_rt + i);
+						if(i == 0){
+							GEN_LIS(ppc, R2, extractUpper16(address));
+							set_next_dst(ppc);
+							GEN_STHU(ppc, rt, extractLower16(address), R2);
+							set_next_dst(ppc);
+						} else {
+							GEN_STH(ppc, rt, i*2, R2);
+							set_next_dst(ppc);
+						}
+					}
+					if(isUncached) check_memory();
+					break;
+				}
+				case MEM_SB:
+				{
+					void* address = &rdramb[constant & 0xFFFFFF];
+					for(i = 0; i < count; i++){
+						int rt = mapRegister(_rt + i);
+						if(i == 0){
+							GEN_LIS(ppc, R2, extractUpper16(address));
+							set_next_dst(ppc);
+							GEN_STBU(ppc, rt, extractLower16(address), R2);
+							set_next_dst(ppc);
+						} else {
+							GEN_STB(ppc, rt, i, R2);
+							set_next_dst(ppc);
+						}
+					}
+					if(isUncached) check_memory();
+					break;
+				}
+				case MEM_SD:
+				{
+					void* address = &rdramb[constant & 0xFFFFF8];
+					for(i = 0; i < count; i++){
+						RegMapping rt = mapRegister64(_rt + i);
+						if(i == 0){
+							GEN_LIS(ppc, R2, extractUpper16(address));
+							set_next_dst(ppc);
+							GEN_STWU(ppc, rt.hi, extractLower16(address), R2);
+							set_next_dst(ppc);
+						} else {
+							GEN_STW(ppc, rt.hi, i*8, R2);
+							set_next_dst(ppc);
+						}
+						GEN_STW(ppc, rt.lo, i*8+4, R2);
 						set_next_dst(ppc);
 					}
+					if(isUncached) check_memory();
+					break;
 				}
-				if(isUncached) check_memory();
-				break;
+				case MEM_USD:
+				{
+					void* address = &rdramb[constant & 0xFFFFFF];
+					for(i = 0; i < count; i++){
+						RegMapping rt = mapRegister64(_rt + i);
+						if(i == 0){
+							GEN_LIS(ppc, R2, extractUpper16(address));
+							set_next_dst(ppc);
+							GEN_STWU(ppc, rt.hi, extractLower16(address), R2);
+							set_next_dst(ppc);
+						} else {
+							GEN_STW(ppc, rt.hi, i*8, R2);
+							set_next_dst(ppc);
+						}
+						GEN_STW(ppc, rt.lo, i*8+4, R2);
+						set_next_dst(ppc);
+					}
+					if(isUncached) check_memory();
+					break;
+				}
+				case MEM_SWC1:
+				{
+					void* address = &rdramb[constant & 0xFFFFFC];
+					for(i = 0; i < count; i++){
+						int rt = mapFPR(_rt + i*2, 0);
+						if(i == 0){
+							GEN_LIS(ppc, R2, extractUpper16(address));
+							set_next_dst(ppc);
+							GEN_STFSU(ppc, rt, extractLower16(address), R2);
+							set_next_dst(ppc);
+						} else {
+							GEN_STFS(ppc, rt, i*4, R2);
+							set_next_dst(ppc);
+						}
+					}
+					if(isUncached) check_memory();
+					break;
+				}
+				case MEM_SDC1:
+				{
+					void* address = &rdramb[constant & 0xFFFFF8];
+					for(i = 0; i < count; i++){
+						int rt = mapFPR(_rt + i*2, 1);
+						if(i == 0){
+							GEN_LIS(ppc, R2, extractUpper16(address));
+							set_next_dst(ppc);
+							GEN_STFDU(ppc, rt, extractLower16(address), R2);
+							set_next_dst(ppc);
+						} else {
+							GEN_STFD(ppc, rt, i*8, R2);
+							set_next_dst(ppc);
+						}
+					}
+					if(isUncached) check_memory();
+					break;
+				}
+				case MEM_SC:
+				{
+					void* address = &rdramb[constant & 0xFFFFFC];
+					int rt = mapRegister(_rt);
+					GEN_LWZ(ppc, R0, SDAREL(llbit), R13);
+					set_next_dst(ppc);
+					GEN_CMPLI(ppc, CR2, R0, 0);
+					set_next_dst(ppc);
+					GEN_BEQ(ppc, CR2, 6, 0, 0);
+					set_next_dst(ppc);
+					GEN_LIS(ppc, R2, extractUpper16(address));
+					set_next_dst(ppc);
+					GEN_STWU(ppc, rt, extractLower16(address), R2);
+					set_next_dst(ppc);
+					if(isUncached) check_memory();
+					GEN_MFCR(ppc, R2);
+					set_next_dst(ppc);
+					GEN_RLWINM(ppc, mapRegisterNew(_rt, 0), R2, 10, 31, 31);
+					set_next_dst(ppc);
+					GEN_STW(ppc, DYNAREG_ZERO, SDAREL(llbit), R13);
+					set_next_dst(ppc);
+					break;
+				}
+				case MEM_SCD:
+				{
+					void* address = &rdramb[constant & 0xFFFFF8];
+					RegMapping rt = mapRegister64(_rt);
+					GEN_LWZ(ppc, R0, SDAREL(llbit), R13);
+					set_next_dst(ppc);
+					GEN_CMPLI(ppc, CR2, R0, 0);
+					set_next_dst(ppc);
+					GEN_BEQ(ppc, CR2, 7, 0, 0);
+					set_next_dst(ppc);
+					GEN_LIS(ppc, R2, extractUpper16(address));
+					set_next_dst(ppc);
+					GEN_STWU(ppc, rt.hi, extractLower16(address), R2);
+					set_next_dst(ppc);
+					GEN_STW(ppc, rt.lo, 4, R2);
+					set_next_dst(ppc);
+					if(isUncached) check_memory();
+					GEN_MFCR(ppc, R2);
+					set_next_dst(ppc);
+					GEN_RLWINM(ppc, mapRegisterNew(_rt, 0), R2, 10, 31, 31);
+					set_next_dst(ppc);
+					GEN_STW(ppc, DYNAREG_ZERO, SDAREL(llbit), R13);
+					set_next_dst(ppc);
+					break;
+				}
+				case MEM_SWL:
+				{
+					void* address = &rdramb[constant & 0xFFFFFF];
+					if((constant & 3) == 0){
+						int rt = mapRegister(_rt);
+						GEN_LIS(ppc, R2, extractUpper16(address));
+						set_next_dst(ppc);
+						GEN_STWU(ppc, rt, extractLower16(address), R2);
+						set_next_dst(ppc);
+					} else {
+						int rt = mapRegister(_rt);
+						GEN_LIS(ppc, R2, extractUpper16(address));
+						set_next_dst(ppc);
+						GEN_LWZU(ppc, R0, extractLower16(address), R2);
+						set_next_dst(ppc);
+						GEN_RLWIMI(ppc, R0, rt, 0, 0, 31 - (constant & 3) * 8);
+						set_next_dst(ppc);
+						GEN_STW(ppc, R0, 0, R2);
+						set_next_dst(ppc);
+					}
+					if(isUncached) check_memory();
+					break;
+				}
+				case MEM_SWR:
+				{
+					void* address = &rdramb[constant & 0xFFFFFF];
+					if((-constant & 3) == 0){
+						int rt = mapRegister(_rt);
+						GEN_LIS(ppc, R2, extractUpper16(address));
+						set_next_dst(ppc);
+						GEN_STWU(ppc, rt, extractLower16(address), R2);
+						set_next_dst(ppc);
+					} else {
+						int rt = mapRegister(_rt);
+						GEN_LIS(ppc, R2, extractUpper16(address));
+						set_next_dst(ppc);
+						GEN_LWZU(ppc, R0, extractLower16(address), R2);
+						set_next_dst(ppc);
+						GEN_RLWIMI(ppc, R0, rt, 0, (-constant & 3) * 8, 31);
+						set_next_dst(ppc);
+						GEN_STW(ppc, R0, 0, R2);
+						set_next_dst(ppc);
+					}
+					if(isUncached) check_memory();
+					break;
+				}
+				case MEM_SDL:
+				{
+					void* address = &rdramb[constant & 0xFFFFFF];
+					if((constant & 7) == 0){
+						RegMapping rt = mapRegister64(_rt);
+						GEN_LIS(ppc, R2, extractUpper16(address));
+						set_next_dst(ppc);
+						GEN_STWU(ppc, rt.hi, extractLower16(address), R2);
+						set_next_dst(ppc);
+						GEN_STW(ppc, rt.lo, 4, R2);
+						set_next_dst(ppc);
+					} else if((constant & 4) == 0){
+						RegMapping rt = mapRegister64(_rt);
+						GEN_LIS(ppc, R2, extractUpper16(address));
+						set_next_dst(ppc);
+						GEN_STWU(ppc, rt.hi, extractLower16(address), R2);
+						set_next_dst(ppc);
+						GEN_LWZ(ppc, R0, 4, R2);
+						set_next_dst(ppc);
+						GEN_RLWIMI(ppc, R0, rt.lo, 0, 0, 31 - (constant & 3) * 8);
+						set_next_dst(ppc);
+						GEN_STW(ppc, R0, 4, R2);
+						set_next_dst(ppc);
+					} else if((constant & 3) == 0) {
+						RegMapping rt = mapRegister64(_rt);
+						GEN_LIS(ppc, R2, extractUpper16(address));
+						set_next_dst(ppc);
+						GEN_STWU(ppc, rt.hi, extractLower16(address), R2);
+						set_next_dst(ppc);
+					} else {
+						RegMapping rt = mapRegister64(_rt);
+						GEN_LIS(ppc, R2, extractUpper16(address));
+						set_next_dst(ppc);
+						GEN_LWZU(ppc, R0, extractLower16(address), R2);
+						set_next_dst(ppc);
+						GEN_RLWIMI(ppc, R0, rt.hi, 0, 0, 31 - (constant & 3) * 8);
+						set_next_dst(ppc);
+						GEN_STW(ppc, R0, 0, R2);
+						set_next_dst(ppc);
+					}
+					if(isUncached) check_memory();
+					break;
+				}
+				case MEM_SDR:
+				{
+					void* address = &rdramb[constant & 0xFFFFFF];
+					if((-constant & 7) == 0){
+						RegMapping rt = mapRegister64(_rt);
+						GEN_LIS(ppc, R2, extractUpper16(address));
+						set_next_dst(ppc);
+						GEN_STWU(ppc, rt.hi, extractLower16(address), R2);
+						set_next_dst(ppc);
+						GEN_STW(ppc, rt.lo, 4, R2);
+						set_next_dst(ppc);
+					} else if((-constant & 4) == 0){
+						RegMapping rt = mapRegister64(_rt);
+						GEN_LIS(ppc, R2, extractUpper16(address));
+						set_next_dst(ppc);
+						GEN_LWZU(ppc, R0, extractLower16(address), R2);
+						set_next_dst(ppc);
+						GEN_RLWIMI(ppc, R0, rt.hi, 0, (-constant & 3) * 8, 31);
+						set_next_dst(ppc);
+						GEN_STW(ppc, R0, 0, R2);
+						set_next_dst(ppc);
+						GEN_STW(ppc, rt.lo, 4, R2);
+						set_next_dst(ppc);
+					} else if((-constant & 3) == 0) {
+						RegMapping rt = mapRegister64(_rt);
+						GEN_LIS(ppc, R2, extractUpper16(address + 4));
+						set_next_dst(ppc);
+						GEN_STWU(ppc, rt.lo, extractLower16(address + 4), R2);
+						set_next_dst(ppc);
+					} else {
+						RegMapping rt = mapRegister64(_rt);
+						GEN_LIS(ppc, R2, extractUpper16(address + 4));
+						set_next_dst(ppc);
+						GEN_LWZU(ppc, R0, extractLower16(address + 4), R2);
+						set_next_dst(ppc);
+						GEN_RLWIMI(ppc, R0, rt.lo, 0, (-constant & 3) * 8, 31);
+						set_next_dst(ppc);
+						GEN_STW(ppc, R0, 0, R2);
+						set_next_dst(ppc);
+					}
+					if(isUncached) check_memory();
+					break;
+				}
 			}
-			case MEM_SC:
-			{
-				int rt = mapRegister(_rt);
-				GEN_LWZ(ppc, R0, SDAREL(llbit), R13);
-				set_next_dst(ppc);
-				GEN_CMPLI(ppc, CR2, R0, 0);
-				set_next_dst(ppc);
-				GEN_BEQ(ppc, CR2, 6, 0, 0);
-				set_next_dst(ppc);
-				GEN_RLWINM(ppc, R2, rd, 0, 8, 29);
-				set_next_dst(ppc);
-				GEN_STWUX(ppc, rt, R2, DYNAREG_RDRAM);
-				set_next_dst(ppc);
-				if(isUncached) check_memory();
-				GEN_MFCR(ppc, R2);
-				set_next_dst(ppc);
-				GEN_RLWINM(ppc, mapRegisterNew(_rt, 0), R2, 10, 31, 31);
-				set_next_dst(ppc);
-				GEN_STW(ppc, DYNAREG_ZERO, SDAREL(llbit), R13);
-				set_next_dst(ppc);
-				break;
-			}
-			case MEM_SCD:
-			{
-				RegMapping rt = mapRegister64(_rt);
-				GEN_LWZ(ppc, R0, SDAREL(llbit), R13);
-				set_next_dst(ppc);
-				GEN_CMPLI(ppc, CR2, R0, 0);
-				set_next_dst(ppc);
-				GEN_BEQ(ppc, CR2, 7, 0, 0);
-				set_next_dst(ppc);
-				GEN_RLWINM(ppc, R2, rd, 0, 8, 28);
-				set_next_dst(ppc);
-				GEN_STWUX(ppc, rt.hi, R2, DYNAREG_RDRAM);
-				set_next_dst(ppc);
-				GEN_STW(ppc, rt.lo, 4, R2);
-				set_next_dst(ppc);
-				if(isUncached) check_memory();
-				GEN_MFCR(ppc, R2);
-				set_next_dst(ppc);
-				GEN_RLWINM(ppc, mapRegisterNew(_rt, 0), R2, 10, 31, 31);
-				set_next_dst(ppc);
-				GEN_STW(ppc, DYNAREG_ZERO, SDAREL(llbit), R13);
-				set_next_dst(ppc);
-				break;
-			}
-			case MEM_SWL:
-			{
-				int rt = mapRegister(_rt);
-				int word = mapRegisterTemp();
-				int mask = mapRegisterTemp();
-				GEN_RLWINM(ppc, R2, rd, 0, 8, 31);
-				set_next_dst(ppc);
-				GEN_LWZUX(ppc, word, R2, DYNAREG_RDRAM);
-				set_next_dst(ppc);
-				GEN_CLRLSLWI(ppc, R0, rd, 30, 3);
-				set_next_dst(ppc);
-				GEN_LI(ppc, mask, ~0);
-				set_next_dst(ppc);
-				GEN_SLW(ppc, mask, mask, R0);
-				set_next_dst(ppc);
-				GEN_AND(ppc, R0, rt, mask);
-				set_next_dst(ppc);
-				GEN_ANDC(ppc, word, word, mask);
-				set_next_dst(ppc);
-				GEN_OR(ppc, word, word, R0);
-				set_next_dst(ppc);
-				GEN_STW(ppc, word, 0, R2);
-				set_next_dst(ppc);
-				if(isUncached) check_memory();
-				unmapRegisterTemp(word);
-				unmapRegisterTemp(mask);
-				break;
-			}
-			case MEM_SWR:
-			{
-				int rt = mapRegister(_rt);
-				int word = mapRegisterTemp();
-				int mask = mapRegisterTemp();
-				GEN_SUBI(ppc, rd, rd, 3);
-				set_next_dst(ppc);
-				GEN_NEG(ppc, R0, rd);
-				set_next_dst(ppc);
-				GEN_RLWINM(ppc, R2, rd, 0, 8, 31);
-				set_next_dst(ppc);
-				GEN_LWZUX(ppc, word, R2, DYNAREG_RDRAM);
-				set_next_dst(ppc);
-				GEN_CLRLSLWI(ppc, R0, R0, 30, 3);
-				set_next_dst(ppc);
-				GEN_LI(ppc, mask, ~0);
-				set_next_dst(ppc);
-				GEN_SRW(ppc, mask, mask, R0);
-				set_next_dst(ppc);
-				GEN_AND(ppc, R0, rt, mask);
-				set_next_dst(ppc);
-				GEN_ANDC(ppc, word, word, mask);
-				set_next_dst(ppc);
-				GEN_OR(ppc, word, word, R0);
-				set_next_dst(ppc);
-				GEN_STW(ppc, word, 0, R2);
-				set_next_dst(ppc);
-				if(isUncached) check_memory();
-				unmapRegisterTemp(word);
-				unmapRegisterTemp(mask);
-				break;
-			}
-			case MEM_SDL:
-			{
-				RegMapping rt = mapRegister64(_rt);
-				int hi = mapRegisterTemp();
-				int lo = mapRegisterTemp();
-				int mask = mapRegisterTemp();
-				GEN_RLWINM(ppc, R2, rd, 0, 8, 31);
-				set_next_dst(ppc);
-				GEN_LWZUX(ppc, hi, R2, DYNAREG_RDRAM);
-				set_next_dst(ppc);
-				GEN_LWZ(ppc, lo, 4, R2);
-				set_next_dst(ppc);
-				GEN_RLWINM_(ppc, mask, rd, 3, 26, 26);
-				set_next_dst(ppc);
-				GEN_CLRLSLWI(ppc, R0, rd, 30, 3);
-				set_next_dst(ppc);
-				GEN_LI(ppc, mask, ~0);
-				set_next_dst(ppc);
-				GEN_SLW(ppc, mask, mask, R0);
-				set_next_dst(ppc);
-				GEN_BNE(ppc, CR0, 6, 0, 0);
-				set_next_dst(ppc);
-				GEN_AND(ppc, R0, rt.lo, mask);
-				set_next_dst(ppc);
-				GEN_ANDC(ppc, lo, lo, mask);
-				set_next_dst(ppc);
-				GEN_OR(ppc, lo, lo, R0);
-				set_next_dst(ppc);
-				GEN_MR(ppc, hi, rt.hi);
-				set_next_dst(ppc);
-				GEN_B(ppc, 4, 0, 0);
-				set_next_dst(ppc);
-				GEN_AND(ppc, R0, rt.hi, mask);
-				set_next_dst(ppc);
-				GEN_ANDC(ppc, hi, hi, mask);
-				set_next_dst(ppc);
-				GEN_OR(ppc, hi, hi, R0);
-				set_next_dst(ppc);
-				GEN_STW(ppc, hi, 0, R2);
-				set_next_dst(ppc);
-				GEN_STW(ppc, lo, 4, R2);
-				set_next_dst(ppc);
-				if(isUncached) check_memory();
-				unmapRegisterTemp(hi);
-				unmapRegisterTemp(lo);
-				unmapRegisterTemp(mask);
-				break;
-			}
-			case MEM_SDR:
-			{
-				RegMapping rt = mapRegister64(_rt);
-				int hi = mapRegisterTemp();
-				int lo = mapRegisterTemp();
-				int mask = mapRegisterTemp();
-				GEN_SUBI(ppc, rd, rd, 7);
-				set_next_dst(ppc);
-				GEN_NEG(ppc, R0, rd);
-				set_next_dst(ppc);
-				GEN_RLWINM(ppc, R2, rd, 0, 8, 31);
-				set_next_dst(ppc);
-				GEN_LWZUX(ppc, hi, R2, DYNAREG_RDRAM);
-				set_next_dst(ppc);
-				GEN_LWZ(ppc, lo, 4, R2);
-				set_next_dst(ppc);
-				GEN_RLWINM_(ppc, mask, R0, 3, 26, 26);
-				set_next_dst(ppc);
-				GEN_CLRLSLWI(ppc, R0, R0, 30, 3);
-				set_next_dst(ppc);
-				GEN_LI(ppc, mask, ~0);
-				set_next_dst(ppc);
-				GEN_SRW(ppc, mask, mask, R0);
-				set_next_dst(ppc);
-				GEN_BNE(ppc, CR0, 6, 0, 0);
-				set_next_dst(ppc);
-				GEN_AND(ppc, R0, rt.hi, mask);
-				set_next_dst(ppc);
-				GEN_ANDC(ppc, hi, hi, mask);
-				set_next_dst(ppc);
-				GEN_OR(ppc, hi, hi, R0);
-				set_next_dst(ppc);
-				GEN_MR(ppc, lo, rt.lo);
-				set_next_dst(ppc);
-				GEN_B(ppc, 4, 0, 0);
-				set_next_dst(ppc);
-				GEN_AND(ppc, R0, rt.lo, mask);
-				set_next_dst(ppc);
-				GEN_ANDC(ppc, lo, lo, mask);
-				set_next_dst(ppc);
-				GEN_OR(ppc, lo, lo, R0);
-				set_next_dst(ppc);
-				GEN_STW(ppc, hi, 0, R2);
-				set_next_dst(ppc);
-				GEN_STW(ppc, lo, 4, R2);
-				set_next_dst(ppc);
-				if(isUncached) check_memory();
-				unmapRegisterTemp(hi);
-				unmapRegisterTemp(lo);
-				unmapRegisterTemp(mask);
-				break;
+		} else {
+			switch(type){
+				case MEM_LW:
+				{
+					for(i = 0; i < count; i++){
+						int rt = mapRegisterNew(_rt + i, 1);
+						if(i == 0){
+							GEN_RLWINM(ppc, R2, R3, 0, 8, 29);
+							set_next_dst(ppc);
+							GEN_LWZUX(ppc, rt, R2, DYNAREG_RDRAM);
+							set_next_dst(ppc);
+						} else {
+							GEN_LWZ(ppc, rt, i*4, R2);
+							set_next_dst(ppc);
+						}
+					}
+					break;
+				}
+				case MEM_ULW:
+				{
+					for(i = 0; i < count; i++){
+						int rt = mapRegisterNew(_rt + i, 1);
+						if(i == 0){
+							GEN_RLWINM(ppc, R2, R3, 0, 8, 31);
+							set_next_dst(ppc);
+							GEN_LWZUX(ppc, rt, R2, DYNAREG_RDRAM);
+							set_next_dst(ppc);
+						} else {
+							GEN_LWZ(ppc, rt, i*4, R2);
+							set_next_dst(ppc);
+						}
+					}
+					break;
+				}
+				case MEM_LWU:
+				{
+					for(i = 0; i < count; i++){
+						int rt = mapRegisterNew(_rt + i, 0);
+						if(i == 0){
+							GEN_RLWINM(ppc, R2, R3, 0, 8, 29);
+							set_next_dst(ppc);
+							GEN_LWZUX(ppc, rt, R2, DYNAREG_RDRAM);
+							set_next_dst(ppc);
+						} else {
+							GEN_LWZ(ppc, rt, i*4, R2);
+							set_next_dst(ppc);
+						}
+					}
+					break;
+				}
+				case MEM_LH:
+				{
+					for(i = 0; i < count; i++){
+						int rt = mapRegisterNew(_rt + i, 1);
+						if(i == 0){
+							GEN_RLWINM(ppc, R2, R3, 0, 8, 30);
+							set_next_dst(ppc);
+							GEN_LHAUX(ppc, rt, R2, DYNAREG_RDRAM);
+							set_next_dst(ppc);
+						} else {
+							GEN_LHA(ppc, rt, i*2, R2);
+							set_next_dst(ppc);
+						}
+					}
+					break;
+				}
+				case MEM_LHU:
+				{
+					for(i = 0; i < count; i++){
+						int rt = mapRegisterNew(_rt + i, 0);
+						if(i == 0){
+							GEN_RLWINM(ppc, R2, R3, 0, 8, 30);
+							set_next_dst(ppc);
+							GEN_LHZUX(ppc, rt, R2, DYNAREG_RDRAM);
+							set_next_dst(ppc);
+						} else {
+							GEN_LHZ(ppc, rt, i*2, R2);
+							set_next_dst(ppc);
+						}
+					}
+					break;
+				}
+				case MEM_LB:
+				{
+					for(i = 0; i < count; i++){
+						int rt = mapRegisterNew(_rt + i, 1);
+						if(i == 0){
+							GEN_RLWINM(ppc, R2, R3, 0, 8, 31);
+							set_next_dst(ppc);
+							GEN_LBZUX(ppc, rt, R2, DYNAREG_RDRAM);
+							set_next_dst(ppc);
+						} else {
+							GEN_LBZ(ppc, rt, i, R2);
+							set_next_dst(ppc);
+						}
+						GEN_EXTSB(ppc, rt, rt);
+						set_next_dst(ppc);
+					}
+					break;
+				}
+				case MEM_LBU:
+				{
+					for(i = 0; i < count; i++){
+						int rt = mapRegisterNew(_rt + i, 0);
+						if(i == 0){
+							GEN_RLWINM(ppc, R2, R3, 0, 8, 31);
+							set_next_dst(ppc);
+							GEN_LBZUX(ppc, rt, R2, DYNAREG_RDRAM);
+							set_next_dst(ppc);
+						} else {
+							GEN_LBZ(ppc, rt, i, R2);
+							set_next_dst(ppc);
+						}
+					}
+					break;
+				}
+				case MEM_LD:
+				{
+					for(i = 0; i < count; i++){
+						RegMapping rt = mapRegister64New(_rt + i);
+						if(i == 0){
+							GEN_RLWINM(ppc, R2, R3, 0, 8, 28);
+							set_next_dst(ppc);
+							GEN_LWZUX(ppc, rt.hi, R2, DYNAREG_RDRAM);
+							set_next_dst(ppc);
+						} else {
+							GEN_LWZ(ppc, rt.hi, i*8, R2);
+							set_next_dst(ppc);
+						}
+						GEN_LWZ(ppc, rt.lo, i*8+4, R2);
+						set_next_dst(ppc);
+					}
+					break;
+				}
+				case MEM_ULD:
+				{
+					for(i = 0; i < count; i++){
+						RegMapping rt = mapRegister64New(_rt + i);
+						if(i == 0){
+							GEN_RLWINM(ppc, R2, R3, 0, 8, 31);
+							set_next_dst(ppc);
+							GEN_LWZUX(ppc, rt.hi, R2, DYNAREG_RDRAM);
+							set_next_dst(ppc);
+						} else {
+							GEN_LWZ(ppc, rt.hi, i*8, R2);
+							set_next_dst(ppc);
+						}
+						GEN_LWZ(ppc, rt.lo, i*8+4, R2);
+						set_next_dst(ppc);
+					}
+					break;
+				}
+				case MEM_LWC1:
+				{
+					for(i = 0; i < count; i++){
+						int rt = mapFPRNew(_rt + i*2, 0);
+						if(i == 0){
+							GEN_RLWINM(ppc, R2, R3, 0, 8, 29);
+							set_next_dst(ppc);
+							GEN_LFSUX(ppc, rt, R2, DYNAREG_RDRAM);
+							set_next_dst(ppc);
+						} else {
+							GEN_LFS(ppc, rt, i*4, R2);
+							set_next_dst(ppc);
+						}
+					}
+					break;
+				}
+				case MEM_LDC1:
+				{
+					for(i = 0; i < count; i++){
+						int rt = mapFPRNew(_rt + i*2, 1);
+						if(i == 0){
+							GEN_RLWINM(ppc, R2, R3, 0, 8, 28);
+							set_next_dst(ppc);
+							GEN_LFDUX(ppc, rt, R2, DYNAREG_RDRAM);
+							set_next_dst(ppc);
+						} else {
+							GEN_LFD(ppc, rt, i*8, R2);
+							set_next_dst(ppc);
+						}
+					}
+					break;
+				}
+				case MEM_LL:
+				{
+					int rt = mapRegisterNew(_rt, 1);
+					GEN_RLWINM(ppc, R2, R3, 0, 8, 29);
+					set_next_dst(ppc);
+					GEN_LI(ppc, R0, 1);
+					set_next_dst(ppc);
+					GEN_LWZUX(ppc, rt, R2, DYNAREG_RDRAM);
+					set_next_dst(ppc);
+					GEN_STW(ppc, R0, SDAREL(llbit), R13);
+					set_next_dst(ppc);
+					break;
+				}
+				case MEM_LLD:
+				{
+					RegMapping rt = mapRegister64New(_rt);
+					GEN_RLWINM(ppc, R2, R3, 0, 8, 28);
+					set_next_dst(ppc);
+					GEN_LI(ppc, R0, 1);
+					set_next_dst(ppc);
+					GEN_LWZUX(ppc, rt.hi, R2, DYNAREG_RDRAM);
+					set_next_dst(ppc);
+					GEN_LWZ(ppc, rt.lo, 4, R2);
+					set_next_dst(ppc);
+					GEN_STW(ppc, R0, SDAREL(llbit), R13);
+					set_next_dst(ppc);
+					break;
+				}
+				case MEM_LWL:
+				{
+					int rt = mapRegister(_rt);
+					int word = mapRegisterTemp();
+					int mask = mapRegisterTemp();
+					GEN_RLWINM(ppc, R2, R3, 0, 8, 31);
+					set_next_dst(ppc);
+					GEN_LWZUX(ppc, word, R2, DYNAREG_RDRAM);
+					set_next_dst(ppc);
+					GEN_CLRLSLWI(ppc, R0, R3, 30, 3);
+					set_next_dst(ppc);
+					GEN_LI(ppc, mask, ~0);
+					set_next_dst(ppc);
+					GEN_SLW(ppc, mask, mask, R0);
+					set_next_dst(ppc);
+					GEN_ANDC(ppc, rt, rt, mask);
+					set_next_dst(ppc);
+					GEN_AND(ppc, word, word, mask);
+					set_next_dst(ppc);
+					GEN_OR(ppc, rt, rt, word);
+					set_next_dst(ppc);
+					mapRegisterNew(_rt, 1);
+					unmapRegisterTemp(word);
+					unmapRegisterTemp(mask);
+					break;
+				}
+				case MEM_LWR:
+				{
+					int rt = mapRegister(_rt);
+					int word = mapRegisterTemp();
+					int mask = mapRegisterTemp();
+					GEN_NEG(ppc, R0, R3);
+					set_next_dst(ppc);
+					GEN_RLWINM(ppc, R2, R3, 0, 8, 31);
+					set_next_dst(ppc);
+					GEN_LWZUX(ppc, word, R2, DYNAREG_RDRAM);
+					set_next_dst(ppc);
+					GEN_CLRLSLWI(ppc, R0, R0, 30, 3);
+					set_next_dst(ppc);
+					GEN_LI(ppc, mask, ~0);
+					set_next_dst(ppc);
+					GEN_SRW(ppc, mask, mask, R0);
+					set_next_dst(ppc);
+					GEN_ANDC(ppc, rt, rt, mask);
+					set_next_dst(ppc);
+					GEN_AND(ppc, word, word, mask);
+					set_next_dst(ppc);
+					GEN_OR(ppc, rt, rt, word);
+					set_next_dst(ppc);
+					mapRegisterNew(_rt, 1);
+					unmapRegisterTemp(word);
+					unmapRegisterTemp(mask);
+					break;
+				}
+				case MEM_LDL:
+				{
+					RegMapping rt = mapRegister64(_rt);
+					int hi = mapRegisterTemp();
+					int lo = mapRegisterTemp();
+					int mask = mapRegisterTemp();
+					GEN_RLWINM(ppc, R2, R3, 0, 8, 31);
+					set_next_dst(ppc);
+					GEN_LWZUX(ppc, hi, R2, DYNAREG_RDRAM);
+					set_next_dst(ppc);
+					GEN_LWZ(ppc, lo, 4, R2);
+					set_next_dst(ppc);
+					GEN_RLWINM_(ppc, mask, R3, 3, 26, 26);
+					set_next_dst(ppc);
+					GEN_CLRLSLWI(ppc, R0, R3, 30, 3);
+					set_next_dst(ppc);
+					GEN_LI(ppc, mask, ~0);
+					set_next_dst(ppc);
+					GEN_SLW(ppc, mask, mask, R0);
+					set_next_dst(ppc);
+					GEN_BNE(ppc, CR0, 6, 0, 0);
+					set_next_dst(ppc);
+					GEN_ANDC(ppc, rt.lo, rt.lo, mask);
+					set_next_dst(ppc);
+					GEN_AND(ppc, lo, lo, mask);
+					set_next_dst(ppc);
+					GEN_OR(ppc, rt.lo, rt.lo, lo);
+					set_next_dst(ppc);
+					GEN_MR(ppc, rt.hi, hi);
+					set_next_dst(ppc);
+					GEN_B(ppc, 4, 0, 0);
+					set_next_dst(ppc);
+					GEN_ANDC(ppc, rt.hi, rt.hi, mask);
+					set_next_dst(ppc);
+					GEN_AND(ppc, hi, hi, mask);
+					set_next_dst(ppc);
+					GEN_OR(ppc, rt.hi, rt.hi, hi);
+					set_next_dst(ppc);
+					mapRegister64New(_rt);
+					unmapRegisterTemp(hi);
+					unmapRegisterTemp(lo);
+					unmapRegisterTemp(mask);
+					break;
+				}
+				case MEM_LDR:
+				{
+					RegMapping rt = mapRegister64(_rt);
+					int hi = mapRegisterTemp();
+					int lo = mapRegisterTemp();
+					int mask = mapRegisterTemp();
+					GEN_NEG(ppc, R0, R3);
+					set_next_dst(ppc);
+					GEN_RLWINM(ppc, R2, R3, 0, 8, 31);
+					set_next_dst(ppc);
+					GEN_LWZUX(ppc, hi, R2, DYNAREG_RDRAM);
+					set_next_dst(ppc);
+					GEN_LWZ(ppc, lo, 4, R2);
+					set_next_dst(ppc);
+					GEN_RLWINM_(ppc, mask, R0, 3, 26, 26);
+					set_next_dst(ppc);
+					GEN_CLRLSLWI(ppc, R0, R0, 30, 3);
+					set_next_dst(ppc);
+					GEN_LI(ppc, mask, ~0);
+					set_next_dst(ppc);
+					GEN_SRW(ppc, mask, mask, R0);
+					set_next_dst(ppc);
+					GEN_BNE(ppc, CR0, 6, 0, 0);
+					set_next_dst(ppc);
+					GEN_ANDC(ppc, rt.hi, rt.hi, mask);
+					set_next_dst(ppc);
+					GEN_AND(ppc, hi, hi, mask);
+					set_next_dst(ppc);
+					GEN_OR(ppc, rt.hi, rt.hi, hi);
+					set_next_dst(ppc);
+					GEN_MR(ppc, rt.lo, lo);
+					set_next_dst(ppc);
+					GEN_B(ppc, 4, 0, 0);
+					set_next_dst(ppc);
+					GEN_ANDC(ppc, rt.lo, rt.lo, mask);
+					set_next_dst(ppc);
+					GEN_AND(ppc, lo, lo, mask);
+					set_next_dst(ppc);
+					GEN_OR(ppc, rt.lo, rt.lo, lo);
+					set_next_dst(ppc);
+					mapRegister64New(_rt);
+					unmapRegisterTemp(hi);
+					unmapRegisterTemp(lo);
+					unmapRegisterTemp(mask);
+					break;
+				}
+				case MEM_SW:
+				{
+					for(i = 0; i < count; i++){
+						int rt = mapRegister(_rt + i);
+						if(i == 0){
+							GEN_RLWINM(ppc, R2, R3, 0, 8, 29);
+							set_next_dst(ppc);
+							GEN_STWUX(ppc, rt, R2, DYNAREG_RDRAM);
+							set_next_dst(ppc);
+						} else {
+							GEN_STW(ppc, rt, i*4, R2);
+							set_next_dst(ppc);
+						}
+					}
+					if(isUncached) check_memory();
+					break;
+				}
+				case MEM_USW:
+				{
+					for(i = 0; i < count; i++){
+						int rt = mapRegister(_rt + i);
+						if(i == 0){
+							GEN_RLWINM(ppc, R2, R3, 0, 8, 31);
+							set_next_dst(ppc);
+							GEN_STWUX(ppc, rt, R2, DYNAREG_RDRAM);
+							set_next_dst(ppc);
+						} else {
+							GEN_STW(ppc, rt, i*4, R2);
+							set_next_dst(ppc);
+						}
+					}
+					if(isUncached) check_memory();
+					break;
+				}
+				case MEM_SH:
+				{
+					for(i = 0; i < count; i++){
+						int rt = mapRegister(_rt + i);
+						if(i == 0){
+							GEN_RLWINM(ppc, R2, R3, 0, 8, 30);
+							set_next_dst(ppc);
+							GEN_STHUX(ppc, rt, R2, DYNAREG_RDRAM);
+							set_next_dst(ppc);
+						} else {
+							GEN_STH(ppc, rt, i*2, R2);
+							set_next_dst(ppc);
+						}
+					}
+					if(isUncached) check_memory();
+					break;
+				}
+				case MEM_SB:
+				{
+					for(i = 0; i < count; i++){
+						int rt = mapRegister(_rt + i);
+						if(i == 0){
+							GEN_RLWINM(ppc, R2, R3, 0, 8, 31);
+							set_next_dst(ppc);
+							GEN_STBUX(ppc, rt, R2, DYNAREG_RDRAM);
+							set_next_dst(ppc);
+						} else {
+							GEN_STB(ppc, rt, i, R2);
+							set_next_dst(ppc);
+						}
+					}
+					if(isUncached) check_memory();
+					break;
+				}
+				case MEM_SD:
+				{
+					for(i = 0; i < count; i++){
+						RegMapping rt = mapRegister64(_rt + i);
+						if(i == 0){
+							GEN_RLWINM(ppc, R2, R3, 0, 8, 28);
+							set_next_dst(ppc);
+							GEN_STWUX(ppc, rt.hi, R2, DYNAREG_RDRAM);
+							set_next_dst(ppc);
+						} else {
+							GEN_STW(ppc, rt.hi, i*8, R2);
+							set_next_dst(ppc);
+						}
+						GEN_STW(ppc, rt.lo, i*8+4, R2);
+						set_next_dst(ppc);
+					}
+					if(isUncached) check_memory();
+					break;
+				}
+				case MEM_USD:
+				{
+					for(i = 0; i < count; i++){
+						RegMapping rt = mapRegister64(_rt + i);
+						if(i == 0){
+							GEN_RLWINM(ppc, R2, R3, 0, 8, 31);
+							set_next_dst(ppc);
+							GEN_STWUX(ppc, rt.hi, R2, DYNAREG_RDRAM);
+							set_next_dst(ppc);
+						} else {
+							GEN_STW(ppc, rt.hi, i*8, R2);
+							set_next_dst(ppc);
+						}
+						GEN_STW(ppc, rt.lo, i*8+4, R2);
+						set_next_dst(ppc);
+					}
+					if(isUncached) check_memory();
+					break;
+				}
+				case MEM_SWC1:
+				{
+					for(i = 0; i < count; i++){
+						int rt = mapFPR(_rt + i*2, 0);
+						if(i == 0){
+							GEN_RLWINM(ppc, R2, R3, 0, 8, 29);
+							set_next_dst(ppc);
+							GEN_STFSUX(ppc, rt, R2, DYNAREG_RDRAM);
+							set_next_dst(ppc);
+						} else {
+							GEN_STFS(ppc, rt, i*4, R2);
+							set_next_dst(ppc);
+						}
+					}
+					if(isUncached) check_memory();
+					break;
+				}
+				case MEM_SDC1:
+				{
+					for(i = 0; i < count; i++){
+						int rt = mapFPR(_rt + i*2, 1);
+						if(i == 0){
+							GEN_RLWINM(ppc, R2, R3, 0, 8, 28);
+							set_next_dst(ppc);
+							GEN_STFDUX(ppc, rt, R2, DYNAREG_RDRAM);
+							set_next_dst(ppc);
+						} else {
+							GEN_STFD(ppc, rt, i*8, R2);
+							set_next_dst(ppc);
+						}
+					}
+					if(isUncached) check_memory();
+					break;
+				}
+				case MEM_SC:
+				{
+					int rt = mapRegister(_rt);
+					GEN_LWZ(ppc, R0, SDAREL(llbit), R13);
+					set_next_dst(ppc);
+					GEN_CMPLI(ppc, CR2, R0, 0);
+					set_next_dst(ppc);
+					GEN_BEQ(ppc, CR2, 6, 0, 0);
+					set_next_dst(ppc);
+					GEN_RLWINM(ppc, R2, R3, 0, 8, 29);
+					set_next_dst(ppc);
+					GEN_STWUX(ppc, rt, R2, DYNAREG_RDRAM);
+					set_next_dst(ppc);
+					if(isUncached) check_memory();
+					GEN_MFCR(ppc, R2);
+					set_next_dst(ppc);
+					GEN_RLWINM(ppc, mapRegisterNew(_rt, 0), R2, 10, 31, 31);
+					set_next_dst(ppc);
+					GEN_STW(ppc, DYNAREG_ZERO, SDAREL(llbit), R13);
+					set_next_dst(ppc);
+					break;
+				}
+				case MEM_SCD:
+				{
+					RegMapping rt = mapRegister64(_rt);
+					GEN_LWZ(ppc, R0, SDAREL(llbit), R13);
+					set_next_dst(ppc);
+					GEN_CMPLI(ppc, CR2, R0, 0);
+					set_next_dst(ppc);
+					GEN_BEQ(ppc, CR2, 7, 0, 0);
+					set_next_dst(ppc);
+					GEN_RLWINM(ppc, R2, R3, 0, 8, 28);
+					set_next_dst(ppc);
+					GEN_STWUX(ppc, rt.hi, R2, DYNAREG_RDRAM);
+					set_next_dst(ppc);
+					GEN_STW(ppc, rt.lo, 4, R2);
+					set_next_dst(ppc);
+					if(isUncached) check_memory();
+					GEN_MFCR(ppc, R2);
+					set_next_dst(ppc);
+					GEN_RLWINM(ppc, mapRegisterNew(_rt, 0), R2, 10, 31, 31);
+					set_next_dst(ppc);
+					GEN_STW(ppc, DYNAREG_ZERO, SDAREL(llbit), R13);
+					set_next_dst(ppc);
+					break;
+				}
+				case MEM_SWL:
+				{
+					int rt = mapRegister(_rt);
+					int word = mapRegisterTemp();
+					int mask = mapRegisterTemp();
+					GEN_RLWINM(ppc, R2, R3, 0, 8, 31);
+					set_next_dst(ppc);
+					GEN_LWZUX(ppc, word, R2, DYNAREG_RDRAM);
+					set_next_dst(ppc);
+					GEN_CLRLSLWI(ppc, R0, R3, 30, 3);
+					set_next_dst(ppc);
+					GEN_LI(ppc, mask, ~0);
+					set_next_dst(ppc);
+					GEN_SLW(ppc, mask, mask, R0);
+					set_next_dst(ppc);
+					GEN_AND(ppc, R0, rt, mask);
+					set_next_dst(ppc);
+					GEN_ANDC(ppc, word, word, mask);
+					set_next_dst(ppc);
+					GEN_OR(ppc, word, word, R0);
+					set_next_dst(ppc);
+					GEN_STW(ppc, word, 0, R2);
+					set_next_dst(ppc);
+					if(isUncached) check_memory();
+					unmapRegisterTemp(word);
+					unmapRegisterTemp(mask);
+					break;
+				}
+				case MEM_SWR:
+				{
+					int rt = mapRegister(_rt);
+					int word = mapRegisterTemp();
+					int mask = mapRegisterTemp();
+					GEN_NEG(ppc, R0, R3);
+					set_next_dst(ppc);
+					GEN_RLWINM(ppc, R2, R3, 0, 8, 31);
+					set_next_dst(ppc);
+					GEN_LWZUX(ppc, word, R2, DYNAREG_RDRAM);
+					set_next_dst(ppc);
+					GEN_CLRLSLWI(ppc, R0, R0, 30, 3);
+					set_next_dst(ppc);
+					GEN_LI(ppc, mask, ~0);
+					set_next_dst(ppc);
+					GEN_SRW(ppc, mask, mask, R0);
+					set_next_dst(ppc);
+					GEN_AND(ppc, R0, rt, mask);
+					set_next_dst(ppc);
+					GEN_ANDC(ppc, word, word, mask);
+					set_next_dst(ppc);
+					GEN_OR(ppc, word, word, R0);
+					set_next_dst(ppc);
+					GEN_STW(ppc, word, 0, R2);
+					set_next_dst(ppc);
+					if(isUncached) check_memory();
+					unmapRegisterTemp(word);
+					unmapRegisterTemp(mask);
+					break;
+				}
+				case MEM_SDL:
+				{
+					RegMapping rt = mapRegister64(_rt);
+					int hi = mapRegisterTemp();
+					int lo = mapRegisterTemp();
+					int mask = mapRegisterTemp();
+					GEN_RLWINM(ppc, R2, R3, 0, 8, 31);
+					set_next_dst(ppc);
+					GEN_LWZUX(ppc, hi, R2, DYNAREG_RDRAM);
+					set_next_dst(ppc);
+					GEN_LWZ(ppc, lo, 4, R2);
+					set_next_dst(ppc);
+					GEN_RLWINM_(ppc, mask, R3, 3, 26, 26);
+					set_next_dst(ppc);
+					GEN_CLRLSLWI(ppc, R0, R3, 30, 3);
+					set_next_dst(ppc);
+					GEN_LI(ppc, mask, ~0);
+					set_next_dst(ppc);
+					GEN_SLW(ppc, mask, mask, R0);
+					set_next_dst(ppc);
+					GEN_BNE(ppc, CR0, 6, 0, 0);
+					set_next_dst(ppc);
+					GEN_AND(ppc, R0, rt.lo, mask);
+					set_next_dst(ppc);
+					GEN_ANDC(ppc, lo, lo, mask);
+					set_next_dst(ppc);
+					GEN_OR(ppc, lo, lo, R0);
+					set_next_dst(ppc);
+					GEN_MR(ppc, hi, rt.hi);
+					set_next_dst(ppc);
+					GEN_B(ppc, 4, 0, 0);
+					set_next_dst(ppc);
+					GEN_AND(ppc, R0, rt.hi, mask);
+					set_next_dst(ppc);
+					GEN_ANDC(ppc, hi, hi, mask);
+					set_next_dst(ppc);
+					GEN_OR(ppc, hi, hi, R0);
+					set_next_dst(ppc);
+					GEN_STW(ppc, hi, 0, R2);
+					set_next_dst(ppc);
+					GEN_STW(ppc, lo, 4, R2);
+					set_next_dst(ppc);
+					if(isUncached) check_memory();
+					unmapRegisterTemp(hi);
+					unmapRegisterTemp(lo);
+					unmapRegisterTemp(mask);
+					break;
+				}
+				case MEM_SDR:
+				{
+					RegMapping rt = mapRegister64(_rt);
+					int hi = mapRegisterTemp();
+					int lo = mapRegisterTemp();
+					int mask = mapRegisterTemp();
+					GEN_NEG(ppc, R0, R3);
+					set_next_dst(ppc);
+					GEN_RLWINM(ppc, R2, R3, 0, 8, 31);
+					set_next_dst(ppc);
+					GEN_LWZUX(ppc, hi, R2, DYNAREG_RDRAM);
+					set_next_dst(ppc);
+					GEN_LWZ(ppc, lo, 4, R2);
+					set_next_dst(ppc);
+					GEN_RLWINM_(ppc, mask, R0, 3, 26, 26);
+					set_next_dst(ppc);
+					GEN_CLRLSLWI(ppc, R0, R0, 30, 3);
+					set_next_dst(ppc);
+					GEN_LI(ppc, mask, ~0);
+					set_next_dst(ppc);
+					GEN_SRW(ppc, mask, mask, R0);
+					set_next_dst(ppc);
+					GEN_BNE(ppc, CR0, 6, 0, 0);
+					set_next_dst(ppc);
+					GEN_AND(ppc, R0, rt.hi, mask);
+					set_next_dst(ppc);
+					GEN_ANDC(ppc, hi, hi, mask);
+					set_next_dst(ppc);
+					GEN_OR(ppc, hi, hi, R0);
+					set_next_dst(ppc);
+					GEN_MR(ppc, lo, rt.lo);
+					set_next_dst(ppc);
+					GEN_B(ppc, 4, 0, 0);
+					set_next_dst(ppc);
+					GEN_AND(ppc, R0, rt.lo, mask);
+					set_next_dst(ppc);
+					GEN_ANDC(ppc, lo, lo, mask);
+					set_next_dst(ppc);
+					GEN_OR(ppc, lo, lo, R0);
+					set_next_dst(ppc);
+					GEN_STW(ppc, hi, 0, R2);
+					set_next_dst(ppc);
+					GEN_STW(ppc, lo, 4, R2);
+					set_next_dst(ppc);
+					if(isUncached) check_memory();
+					unmapRegisterTemp(hi);
+					unmapRegisterTemp(lo);
+					unmapRegisterTemp(mask);
+					break;
+				}
 			}
 		}
 	}
@@ -5736,8 +6940,13 @@ static void genCallDynaMem(memType type, int count, int _rs, int _rt, short imme
 
 	if(isVirtual){
 		invalidateRegisters();
+		if((type != MEM_LWC1 && type != MEM_LDC1 && type < MEM_SW) || type == MEM_SC || type == MEM_SCD)
+			for(i = 0; i < count; i++)
+				invalidateConstant(_rt + i);
+
 		GEN_LI(ppc, R4, _rt);
 		set_next_dst(ppc);
+		// count passed as arg 3
 		GEN_LI(ppc, R5, count);
 		set_next_dst(ppc);
 		// Pass PC as arg 5 (upper half)
@@ -5775,8 +6984,6 @@ static void genCallDynaMem(memType type, int count, int _rs, int _rt, short imme
 		set_jump_special(not_fastmem_id, callSize+1);
 	}
 #endif
-
-	unmapRegisterTemp(rd);
 }
 
 static int mips_is_jump(MIPS_instr instr){

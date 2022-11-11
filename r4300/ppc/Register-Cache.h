@@ -52,6 +52,8 @@ int mapConstantNew(int gpr, int constant, int sign);
 // Create a mapping for a 64-bit register (gpr) to 2 HW registers (returned)
 // The value mapped may have a constant value (constant) to be set later
 RegMapping mapConstant64New(int gpr, int constant);
+// Unmap a register's (gpr) constant value
+void invalidateConstant(int gpr);
 // Return whether a register (gpr) has a constant value mapped to it
 int isRegisterConstant(int gpr);
 // Get the constant value held by a 32-bit register (gpr)
@@ -81,13 +83,17 @@ void flushFPR(int fpr);
 void flushRegisters(void);
 // Unmap all registers without storing any
 void invalidateRegisters(void);
+// Unmap all constants
+void invalidateConstants(void);
 // Reserve a HW register to be used but not associated with any registers
 // When the register is no longer needed, be sure to call unmapRegisterTemp
 int mapRegisterTemp(void);
+void mapRegisterFixed(int tmp);
 // Frees a previously reserved register
 void unmapRegisterTemp(int tmp);
 // Temporary FPR management
 int mapFPRTemp(void);
+void mapFPRFixed(int tmp);
 void unmapFPRTemp(int tmp);
 
 #endif

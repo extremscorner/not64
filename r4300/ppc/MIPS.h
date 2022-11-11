@@ -320,4 +320,6 @@ typedef unsigned int MIPS_instr;
 #define MIPS_REG_FP	30	// Frame  pointer
 #define MIPS_REG_LR	31	// Link   register
 
+#define MIPS_NOP (0x00000000)
+
 #endif
