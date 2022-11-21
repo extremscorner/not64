@@ -86,7 +86,7 @@ int has_next_src(void){ return (src_last-src) > 0; }
  int is_j_dst(int i){ return isJmpDst[i + ((get_src_pc()&0xfff)>>2)]; }
 // Returns the MIPS PC
 unsigned int get_src_pc(void){ return addr_first + ((src-1-src_first)<<2); }
-void set_next_dst(PowerPC_instr i){ *(dst++) = i; ++code_length; }
+void set_next_dst(PowerPC_instr ppc){ *(dst++) = ppc; ++code_length; }
 // Adjusts the code_addr for the current instruction to account for flushes
 void reset_code_addr(void){ if(src<=src_last) code_addr[src-1-src_first] = dst; }
 
@@ -169,7 +169,7 @@ PowerPC_func* recompile_block(PowerPC_block* ppc_block, unsigned int addr){
 				  func->end_addr == (*node)->function->end_addr){
 			// func is a hole in fn->function
 			PowerPC_func_hole_node* hole = malloc(sizeof(PowerPC_func_hole_node));
-			hole->addr = func->start_addr&0xffff;
+			hole->addr = func->start_addr;
 			hole->next = (*node)->function->holes;
 			(*node)->function->holes = hole;
 			// Free this func since its just a hole now
@@ -460,7 +460,7 @@ static int pass0(PowerPC_block* ppc_block){
 		          opcode == MIPS_OPCODE_B     ||
 		          (opcode == MIPS_OPCODE_COP1 &&
 		           MIPS_GET_RS(*src) == MIPS_FRMT_BC)){
-			short bd = MIPS_GET_IMMED(*src);
+			short bd = MIPS_GET_SIMMED(*src);
 			src+=2; ++pc;
 			if(!is_j_out(bd, 0)){
 				assert( index + 1 + bd >= 0 && index + 1 + bd < 1024 );

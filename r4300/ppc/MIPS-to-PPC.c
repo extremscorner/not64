@@ -2082,6 +2082,8 @@ static int LWC1(MIPS_instr mips){
 	int _rs = MIPS_GET_RS(mips), _rt = MIPS_GET_RT(mips);
 	short immed = MIPS_GET_SIMMED(mips);
 
+	genCheckFP();
+
 #ifdef FASTMEM
 	if(!isDelaySlot){
 		while(has_next_src() && !is_j_dst(1)){
@@ -2154,6 +2156,8 @@ static int LDC1(MIPS_instr mips){
 	int count = 1;
 	int _rs = MIPS_GET_RS(mips), _rt = MIPS_GET_RT(mips);
 	short immed = MIPS_GET_SIMMED(mips);
+
+	genCheckFP();
 
 #ifdef FASTMEM
 	if(!isDelaySlot){
@@ -2228,6 +2232,8 @@ static int SWC1(MIPS_instr mips){
 	int _rs = MIPS_GET_RS(mips), _rt = MIPS_GET_RT(mips);
 	short immed = MIPS_GET_SIMMED(mips);
 
+	genCheckFP();
+
 #ifdef FASTMEM
 	if(!isDelaySlot){
 		while(has_next_src() && !is_j_dst(1)){
@@ -2300,6 +2306,8 @@ static int SDC1(MIPS_instr mips){
 	int count = 1;
 	int _rs = MIPS_GET_RS(mips), _rt = MIPS_GET_RT(mips);
 	short immed = MIPS_GET_SIMMED(mips);
+
+	genCheckFP();
 
 #ifdef FASTMEM
 	if(!isDelaySlot){
@@ -5506,15 +5514,8 @@ static void genCallDynaMem(memType type, int count, int _rs, int _rt, short imme
 	if(type < MEM_SW || type > MEM_SD)
 		isUncached = 0;
 
-	if(type == MEM_LWC1 || type == MEM_LDC1 || type == MEM_SWC1 || type == MEM_SDC1)
-		genCheckFP();
-
-	if(isVirtual){
-		flushRegisters();
-		reset_code_addr();
-	}
-
 	int rs = mapRegister(_rs);
+	if(isVirtual) flushRegisters();
 	mapRegisterFixed(R3);
 
 	if(immed || rs != R3){
