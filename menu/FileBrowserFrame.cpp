@@ -19,6 +19,7 @@
 **/
 
 #include <math.h>
+#include <unistd.h>
 #include <cstdlib>
 #include "MenuContext.h"
 #include "FileBrowserFrame.h"
@@ -470,6 +471,8 @@ void fileBrowserFrame_LoadFile(int i)
 		
 		if(!ret){	// If the read succeeded.
 			if(skipMenu){
+				// FIX94: after init wpad wait a bit
+				sleep(6);
 				pMenuContext->setActiveFrame(MenuContext::FRAME_MAIN);
 				Func_SetPlayGame();
 				Func_PlayGame();
