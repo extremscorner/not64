@@ -104,7 +104,7 @@ EXPORT void CALL AiLenChanged(void)
 		}
 		
 		if (scalePitch || Timers.vis > VILimit)
-			AESND_SetVoiceFrequency(voice, freq * (Timers.vis / VILimit));
+			AESND_SetVoiceFrequencyRatio(voice, (Timers.vis * freq) / (VILimit * DSP_DEFAULT_FREQ));
 		
 		IRQ_Restore(level);
 	}

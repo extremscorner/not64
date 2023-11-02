@@ -181,7 +181,7 @@ void gSPProcessVertex( u32 v )
 #ifndef __GX__
 		Normalize( &gSP.vertices[v].nx );
 #else //!__GX__
-		guVecNormalize((guVector*) &gSP.vertices[v].nx );
+		guVecNormalize((guVector*) &gSP.vertices[v].nx,(guVector*) &gSP.vertices[v].nx );
 #endif //__GX__
 
 		r = gSP.lights[gSP.numLights].r;
@@ -219,7 +219,7 @@ void gSPProcessVertex( u32 v )
 #ifndef __GX__
 			Normalize( &gSP.vertices[v].nx );
 #else //!__GX__
-			guVecNormalize((guVector*) &gSP.vertices[v].nx );
+			guVecNormalize((guVector*) &gSP.vertices[v].nx,(guVector*) &gSP.vertices[v].nx );
 #endif //__GX__
 
 			if (gSP.geometryMode & G_TEXTURE_GEN_LINEAR)
@@ -482,7 +482,7 @@ void gSPLight( u32 l, s32 n )
 #ifndef __GX__
 		Normalize( &gSP.lights[n].x );
 #else //!__GX__
-		guVecNormalize((guVector*) &gSP.lights[n].x );
+		guVecNormalize((guVector*) &gSP.lights[n].x,(guVector*) &gSP.lights[n].x );
 #endif //__GX__
 	}
 

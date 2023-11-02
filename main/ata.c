@@ -17,6 +17,7 @@
 
 #define IDE_EXI_V1 0
 #define IDE_EXI_V2 1
+#define IDE_EXI_V3 2
 
 u16 buffer[256] ATTRIBUTE_ALIGN (32);
 static int __ata_init[3] = {0,0,0};
@@ -153,7 +154,7 @@ static inline void ata_read_buffer(int chn, u32 *dst)
 	}
 	else {
 		// IDE_EXI_V2, no need to select / deselect all the time
-		EXI_ImmEx(chn,dst,512,EXI_READ);
+		EXI_DmaEx(chn,dst,512,EXI_READ);
 		EXI_Deselect(chn);
 		EXI_Unlock(chn);
 	}
@@ -172,7 +173,7 @@ static inline void ata_write_buffer(int chn, u32 *src)
 	EXI_Lock(chn, dev, NULL);
 	EXI_Select(chn,dev,EXI_SPEED32MHZ);
 	EXI_ImmEx(chn,&dat,3,EXI_WRITE);
-	EXI_ImmEx(chn, src,512,EXI_WRITE);
+	EXI_DmaEx(chn, src,512,EXI_WRITE);
 	dat = 0;
 	EXI_ImmEx(chn,&dat,1,EXI_WRITE);	// Burn an extra cycle for the IDE-EXI to know to stop serving data
 	EXI_Deselect(chn);
@@ -187,8 +188,8 @@ int _ideExiVersion(int chn) {
 	}
 	u32 cid = 0;
 	EXI_GetID(chn,dev,&cid);
-	if(cid==0x49444532) {
-		return IDE_EXI_V2;
+	if((cid&~0xff)==0x49444500) {
+		return (cid&0xff)-'1';
 	}
 	else {
 		return IDE_EXI_V1;
@@ -204,7 +205,7 @@ u32 _ataDriveIdentify(int chn) {
 
   	memset(&ataDriveInfo, 0, sizeof(typeDriveInfo));
 
-	// Get the ID to see if it's a V2
+	// Get the ID to see if it's a V2+
 	_ideexi_version = _ideExiVersion(chn);
 	if(_ideexi_version == IDE_EXI_V1 && chn == EXI_CHANNEL_2) {
 		return -1;
@@ -433,9 +434,14 @@ int _ataWriteSector(int chn, u64 lba, u32 *Buffer)
 	while(!(ataReadStatusReg(chn) & ATA_SR_DRQ));
 
 	// Write data to the drive
-	u16 *ptr = (u16*)Buffer;
-	for (i=0; i<256; i++) {
-		ataWriteu16(chn, ptr[i]);
+	if(_ideexi_version < IDE_EXI_V3) {
+		u16 *ptr = (u16*)Buffer;
+		for (i=0; i<256; i++) {
+			ataWriteu16(chn, ptr[i]);
+		}
+	}
+	else {
+		ata_write_buffer(chn, Buffer);
 	}
 	
 	// Wait for the write to finish

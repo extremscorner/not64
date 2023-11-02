@@ -135,7 +135,6 @@ bool isEEPROM16k()
 /* Loads the ROM into the ROM cache */
 int rom_read(fileBrowser_file* file){
 
-   char buffer[1024];
    int i;
 
    ROMCache_init(file);
@@ -147,14 +146,13 @@ int rom_read(fileBrowser_file* file){
    ROMCache_read(&ROM_HEADER, 0, sizeof(rom_header));
 
   //Copy header name as Goodname (in the .ini we can use CRC to identify ROMS)
-  memset((char*)buffer,0,1024);
-  strncpy(buffer, (char*)ROM_HEADER.Name,32);
-  //Maximum ROM name is 32 bytes. Lets make sure we cut off trailing spaces
-  for(i = strlen(buffer); i>0; i--)
+  memcpy(ROM_SETTINGS.goodname, ROM_HEADER.Name, 20);
+  ROM_SETTINGS.goodname[20] = '\0';
+  //Maximum ROM name is 20 bytes. Lets make sure we cut off trailing spaces
+  for(i = strlen(ROM_SETTINGS.goodname); i>0; i--)
   {
-    if(buffer[i-1] !=  ' ') {
-  		strncpy(&ROM_SETTINGS.goodname[0],&buffer[0],i);
-  		ROM_SETTINGS.goodname[i] = 0; //terminate it too
+    if(ROM_SETTINGS.goodname[i-1] !=  ' ') {
+  		ROM_SETTINGS.goodname[i] = '\0';
   		break;
     }
   }
