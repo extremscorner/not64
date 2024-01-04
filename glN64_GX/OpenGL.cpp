@@ -1154,7 +1154,6 @@ void OGL_DrawTriangles()
 	glDrawArrays( GL_TRIANGLES, 0, OGL.numVertices );
 #else // !__GX__
 	GXColor GXcol;
-	float invW;
 
 #ifdef GLN64_SDLOG
 	sprintf(txtbuffer,"OGL_DrawTris: numTri %d, numVert %d, useT0 %d, useT1 %d\n", OGL.numTriangles, OGL.numVertices, combiner.usesT0, combiner.usesT1);
@@ -1165,10 +1164,7 @@ void OGL_DrawTriangles()
 	if(OGL.GXupdateMtx)
 	{
 		OGL_UpdateViewport();
-		if(OGL.GXuseCombW)
-			GX_LoadProjectionMtx(OGL.GXcombW, GX_PERSPECTIVE);
-		else
-			GX_LoadProjectionMtx(OGL.GXprojIdent, GX_ORTHOGRAPHIC);
+		GX_LoadProjectionMtx(OGL.GXprojIdent, GX_PERSPECTIVE);
 		OGL.GXupdateMtx = false;
 	}
 
@@ -1213,21 +1209,13 @@ void OGL_DrawTriangles()
 
 
 #ifdef SHOW_DEBUG
-	if (OGL.GXuseCombW) CntTriProjW += OGL.numTriangles;
-	else CntTriOther += OGL.numTriangles;
-	if (OGL.GXuseCombW && OGL.GXuseProjWnear) CntTriNear += OGL.numTriangles;
+	CntTriOther += OGL.numTriangles;
 	if (OGL.GXpolyOffset) CntTriPolyOffset += OGL.numTriangles;
 #endif
 
 	GX_Begin(GX_TRIANGLES, GX_VTXFMT0, OGL.numVertices);
 	for (int i = 0; i < OGL.numVertices; i++) {
-		if(OGL.GXuseCombW)
-			GX_Position3f32( OGL.vertices[i].x, OGL.vertices[i].y, -OGL.vertices[i].w );
-		else
-		{
-			invW = (OGL.vertices[i].w != 0) ? 1/OGL.vertices[i].w : 0.0f;
-			GX_Position3f32( OGL.vertices[i].x*invW, OGL.vertices[i].y*invW, OGL.vertices[i].z*invW );
-		}
+		GX_Position3f32( OGL.vertices[i].x, OGL.vertices[i].y, -OGL.vertices[i].w );
 		GXcol.r = GXcastf32u8(OGL.vertices[i].color.r);
 		GXcol.g = GXcastf32u8(OGL.vertices[i].color.g);
 		GXcol.b = GXcastf32u8(OGL.vertices[i].color.b);
@@ -1290,16 +1278,12 @@ void OGL_DrawLine( SPVertex *vertices, int v0, int v1, float width )
 	GX_SetLineWidth( width * OGL.GXscaleX * 6, GX_TO_ZERO );
 
 	GXColor GXcol;
-	float invW;
 
 	//Update MV & P Matrices
 	if(OGL.GXupdateMtx)
 	{
 		OGL_UpdateViewport();
-		if(OGL.GXuseCombW)
-			GX_LoadProjectionMtx(OGL.GXcombW, GX_PERSPECTIVE);
-		else
-			GX_LoadProjectionMtx(OGL.GXprojIdent, GX_ORTHOGRAPHIC);
+		GX_LoadProjectionMtx(OGL.GXprojIdent, GX_PERSPECTIVE);
 		OGL.GXupdateMtx = false;
 	}
 
@@ -1328,13 +1312,7 @@ void OGL_DrawLine( SPVertex *vertices, int v0, int v1, float width )
 	GX_Begin(GX_LINES, GX_VTXFMT0, 2);
 		for (int i = 0; i < 2; i++)
 		{
-			if(OGL.GXuseCombW)
-				GX_Position3f32( OGL.vertices[i].x, OGL.vertices[i].y, -OGL.vertices[i].w );
-			else
-			{
-				invW = (OGL.vertices[i].w != 0) ? 1/OGL.vertices[i].w : 0.0f;
-				GX_Position3f32( OGL.vertices[i].x*invW, OGL.vertices[i].y*invW, OGL.vertices[i].z*invW );
-			}
+			GX_Position3f32( OGL.vertices[i].x, OGL.vertices[i].y, -OGL.vertices[i].w );
 			color.r = vertices[v[i]].r;
 			color.g = vertices[v[i]].g;
 			color.b = vertices[v[i]].b;
