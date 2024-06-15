@@ -148,7 +148,7 @@ void dma_pi_read()
      }
 
    longueur = (pi_register.pi_rd_len_reg & 0xFFFFFE)+2;
-   i = (pi_register.pi_cart_addr_reg-0x10000000)&0x3FFFFFE;
+   i = (pi_register.pi_cart_addr_reg-0x10000000)&0xFFFFFFE;
    longueur = (i + longueur) > rom_length ?
      (rom_length - i) : longueur;
    longueur = (pi_register.pi_dram_addr_reg + longueur) > MEMMASK ?
@@ -226,7 +226,7 @@ void dma_pi_write()
      }
 
    longueur = (pi_register.pi_wr_len_reg & 0xFFFFFE)+2;
-   i = (pi_register.pi_cart_addr_reg-0x10000000)&0x3FFFFFE;
+   i = (pi_register.pi_cart_addr_reg-0x10000000)&0xFFFFFFE;
    longueur = (i + longueur) > rom_length ?
      (rom_length - i) : longueur;
    longueur = (pi_register.pi_dram_addr_reg + longueur) > MEMMASK ?

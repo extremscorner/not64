@@ -53,7 +53,7 @@ static char *ROMCACHE_LO = &GC_ROM_CACHE[0];
 #define BLOCK_MASK  (BLOCK_SIZE-1)
 #define OFFSET_MASK (0xFFFFFFFF-BLOCK_MASK)
 #define BLOCK_SHIFT (16)	//only change ME and BLOCK_SIZE
-#define MAX_ROMSIZE (64*1024*1024)
+#define MAX_ROMSIZE (256*1024*1024)
 #define NUM_BLOCKS  (MAX_ROMSIZE/BLOCK_SIZE)
 
 static u32   ROMSize;

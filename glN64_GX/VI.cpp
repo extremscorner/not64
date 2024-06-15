@@ -72,7 +72,9 @@ void VI_UpdateSize()
 
 	u32 width = _SHIFTR( *REG.VI_WIDTH, 0, 12 );
 
-	VI.width = hEnd == hStart ? width : lrint(abs(hEnd - hStart) * xScale / 2) * 2;
+	VI.width = hEnd == hStart ? width : lrint(abs(hEnd - hStart) * xScale / 4) * 4;
+
+	if (VI.width > width) VI.width = width;
 
 	yScale *= width  / VI.width;
 	vEnd   += vStart % 2;
@@ -80,7 +82,7 @@ void VI_UpdateSize()
 	vStart  = vStart / 2 - 1;
 	vEnd    = vEnd   / 2 + 1;
 
-	VI.height = lrint(abs(vEnd - vStart) * yScale / 2) * 2;
+	VI.height = lrint(abs(vEnd - vStart) * yScale / 4) * 4;
 
 	if (VI.width == 0) VI.width = 320;
 	if (VI.height == 0) VI.height = 240;

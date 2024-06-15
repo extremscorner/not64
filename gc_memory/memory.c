@@ -3076,22 +3076,22 @@ void read_rom()
 	rom_written = 0;
      }
    else
-     word = *(unsigned long *)ROMCache_pointer(address & 0x3FFFFFF);
+     word = *(unsigned long *)ROMCache_pointer(address & 0xFFFFFFF);
 }
 
 void read_romb()
 {
-   byte = *(unsigned char *)ROMCache_pointer(address & 0x3FFFFFF);
+   byte = *(unsigned char *)ROMCache_pointer(address & 0xFFFFFFF);
 }
 
 void read_romh()
 {
-   hword = *(unsigned short *)ROMCache_pointer(address & 0x3FFFFFF);
+   hword = *(unsigned short *)ROMCache_pointer(address & 0xFFFFFFF);
 }
 
 void read_romd()
 {
-   dword = *(unsigned long long *)ROMCache_pointer(address & 0x3FFFFFF);
+   dword = *(unsigned long long *)ROMCache_pointer(address & 0xFFFFFFF);
 }
 
 void write_rom()
