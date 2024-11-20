@@ -505,97 +505,97 @@ int ataShutdown(int chn) {
 }
 
 
-static bool __ataa_startup(void)
+static bool __ataa_startup(DISC_INTERFACE *disc)
 {
 	return ataIsInserted(0);
 }
 
-static bool __ataa_isInserted(void)
+static bool __ataa_isInserted(DISC_INTERFACE *disc)
 {
 	return ataIsInserted(0);
 }
 
-static bool __ataa_readSectors(sec_t sector, sec_t numSectors, void *buffer)
+static bool __ataa_readSectors(DISC_INTERFACE *disc, sec_t sector, sec_t numSectors, void *buffer)
 {
 	return !ataReadSectors(0, (u64)sector, numSectors, buffer);
 }
 
-static bool __ataa_writeSectors(sec_t sector, sec_t numSectors, void *buffer)
+static bool __ataa_writeSectors(DISC_INTERFACE *disc, sec_t sector, sec_t numSectors, void *buffer)
 {
 	return !ataWriteSectors(0, (u64)sector, numSectors, buffer);
 }
 
-static bool __ataa_clearStatus(void)
+static bool __ataa_clearStatus(DISC_INTERFACE *disc)
 {
 	return true;
 }
 
-static bool __ataa_shutdown(void)
+static bool __ataa_shutdown(DISC_INTERFACE *disc)
 {
 	return true;
 }
 
-static bool __atab_startup(void)
+static bool __atab_startup(DISC_INTERFACE *disc)
 {
 	return ataIsInserted(1);
 }
 
-static bool __atab_isInserted(void)
+static bool __atab_isInserted(DISC_INTERFACE *disc)
 {
 	return ataIsInserted(1);
 }
 
-static bool __atab_readSectors(sec_t sector, sec_t numSectors, void *buffer)
+static bool __atab_readSectors(DISC_INTERFACE *disc, sec_t sector, sec_t numSectors, void *buffer)
 {
 	return !ataReadSectors(1, (u64)sector, numSectors, buffer);
 }
 
-static bool __atab_writeSectors(sec_t sector, sec_t numSectors, void *buffer)
+static bool __atab_writeSectors(DISC_INTERFACE *disc, sec_t sector, sec_t numSectors, void *buffer)
 {
 	return !ataWriteSectors(1, (u64)sector, numSectors, buffer);
 }
 
-static bool __atab_clearStatus(void)
+static bool __atab_clearStatus(DISC_INTERFACE *disc)
 {
 	return true;
 }
 
-static bool __atab_shutdown(void)
+static bool __atab_shutdown(DISC_INTERFACE *disc)
 {
 	return true;
 }
 
-static bool __ata1_startup(void)
+static bool __ata1_startup(DISC_INTERFACE *disc)
 {
 	return ataIsInserted(2);
 }
 
-static bool __ata1_isInserted(void)
+static bool __ata1_isInserted(DISC_INTERFACE *disc)
 {
 	return ataIsInserted(2);
 }
 
-static bool __ata1_readSectors(sec_t sector, sec_t numSectors, void *buffer)
+static bool __ata1_readSectors(DISC_INTERFACE *disc, sec_t sector, sec_t numSectors, void *buffer)
 {
 	return !ataReadSectors(2, (u64)sector, numSectors, buffer);
 }
 
-static bool __ata1_writeSectors(sec_t sector, sec_t numSectors, void *buffer)
+static bool __ata1_writeSectors(DISC_INTERFACE *disc, sec_t sector, sec_t numSectors, void *buffer)
 {
 	return !ataWriteSectors(2, (u64)sector, numSectors, buffer);
 }
 
-static bool __ata1_clearStatus(void)
+static bool __ata1_clearStatus(DISC_INTERFACE *disc)
 {
 	return true;
 }
 
-static bool __ata1_shutdown(void)
+static bool __ata1_shutdown(DISC_INTERFACE *disc)
 {
 	return true;
 }
 
-const DISC_INTERFACE __io_ataa = {
+DISC_INTERFACE __io_ataa = {
 	DEVICE_TYPE_GC_ATA,
 	FEATURE_MEDIUM_CANREAD | FEATURE_MEDIUM_CANWRITE | FEATURE_GAMECUBE_SLOTA,
 	(FN_MEDIUM_STARTUP)&__ataa_startup,
@@ -603,9 +603,11 @@ const DISC_INTERFACE __io_ataa = {
 	(FN_MEDIUM_READSECTORS)&__ataa_readSectors,
 	(FN_MEDIUM_WRITESECTORS)&__ataa_writeSectors,
 	(FN_MEDIUM_CLEARSTATUS)&__ataa_clearStatus,
-	(FN_MEDIUM_SHUTDOWN)&__ataa_shutdown
+	(FN_MEDIUM_SHUTDOWN)&__ataa_shutdown,
+	0x1000000000000,
+	512
 } ;
-const DISC_INTERFACE __io_atab = {
+DISC_INTERFACE __io_atab = {
 	DEVICE_TYPE_GC_ATA,
 	FEATURE_MEDIUM_CANREAD | FEATURE_MEDIUM_CANWRITE | FEATURE_GAMECUBE_SLOTB,
 	(FN_MEDIUM_STARTUP)&__atab_startup,
@@ -613,9 +615,11 @@ const DISC_INTERFACE __io_atab = {
 	(FN_MEDIUM_READSECTORS)&__atab_readSectors,
 	(FN_MEDIUM_WRITESECTORS)&__atab_writeSectors,
 	(FN_MEDIUM_CLEARSTATUS)&__atab_clearStatus,
-	(FN_MEDIUM_SHUTDOWN)&__atab_shutdown
+	(FN_MEDIUM_SHUTDOWN)&__atab_shutdown,
+	0x1000000000000,
+	512
 } ;
-const DISC_INTERFACE __io_ata1 = {
+DISC_INTERFACE __io_ata1 = {
 	DEVICE_TYPE_GC_ATA,
 	FEATURE_MEDIUM_CANREAD | FEATURE_MEDIUM_CANWRITE | FEATURE_GAMECUBE_PORT1,
 	(FN_MEDIUM_STARTUP)&__ata1_startup,
@@ -623,5 +627,7 @@ const DISC_INTERFACE __io_ata1 = {
 	(FN_MEDIUM_READSECTORS)&__ata1_readSectors,
 	(FN_MEDIUM_WRITESECTORS)&__ata1_writeSectors,
 	(FN_MEDIUM_CLEARSTATUS)&__ata1_clearStatus,
-	(FN_MEDIUM_SHUTDOWN)&__ata1_shutdown
+	(FN_MEDIUM_SHUTDOWN)&__ata1_shutdown,
+	0x1000000000000,
+	512
 } ;

@@ -42,18 +42,18 @@ extern int stop;
 #ifdef HW_RVL
 #include <sdcard/wiisd_io.h>
 #include <ogc/usbstorage.h>
-const DISC_INTERFACE* frontsd = &__io_wiisd;
-const DISC_INTERFACE* usb = &__io_usbstorage;
+static DISC_INTERFACE* frontsd = &__io_wiisd;
+static DISC_INTERFACE* usb = &__io_usbstorage;
 #else
 #include <ogc/dvd.h>
-const DISC_INTERFACE* gcloader = &__io_gcode;
+static DISC_INTERFACE* gcloader = &__io_gcode;
 #endif
-const DISC_INTERFACE* carda = &__io_gcsda;
-const DISC_INTERFACE* cardb = &__io_gcsdb;
-const DISC_INTERFACE* cardc = &__io_gcsd2;
-const DISC_INTERFACE* ideexia = &__io_ataa;
-const DISC_INTERFACE* ideexib = &__io_atab;
-const DISC_INTERFACE* ideexic = &__io_ata1;
+static DISC_INTERFACE* carda = &__io_gcsda;
+static DISC_INTERFACE* cardb = &__io_gcsdb;
+static DISC_INTERFACE* cardc = &__io_gcsd2;
+static DISC_INTERFACE* ideexia = &__io_ataa;
+static DISC_INTERFACE* ideexib = &__io_atab;
+static DISC_INTERFACE* ideexic = &__io_ata1;
 
 // Threaded insertion/removal detection
 #define THREAD_SLEEP 100
@@ -149,12 +149,12 @@ static void *removalCallback (void *arg)
   {
 #ifdef HW_RVL
     if(sdMounted==FRONTSD)
-      if(!frontsd->isInserted()) {
+      if(!frontsd->isInserted(frontsd)) {
         sdNeedsUnmount=FRONTSD;
         sdMounted=0;
       }
     if(fatMounted==USB)
-      if(!usb->isInserted()) {
+      if(!usb->isInserted(usb)) {
         fatNeedsUnmount=USB;
         fatMounted = 0;
       }
@@ -204,15 +204,14 @@ int fileBrowser_libfat_readDir(fileBrowser_file* file, fileBrowser_file** dir){
 		stat((*dir)[i].name, &fstat);
 		(*dir)[i].offset = 0;
 		(*dir)[i].size   = fstat.st_size;
-		(*dir)[i].attr   = S_ISDIR(fstat.st_mode) ?
-		                     FILE_BROWSER_ATTR_DIR : 0;
+		(*dir)[i].attr   = S_ISDIR(fstat.st_mode) ? FILE_BROWSER_ATTR_DIR : 0;
 		++i;
 	}
 	
 	closedir(dp);
 	continueRemovalThread();
 
-	return num_entries;
+	return i;
 }
 
 int fileBrowser_libfat_seekFile(fileBrowser_file* file, unsigned int where, unsigned int type){
@@ -266,7 +265,6 @@ int fileBrowser_libfat_init(fileBrowser_file* f){
       pauseRemovalThread();
       if(sdNeedsUnmount==FRONTSD) {
         fatUnmount(f->name);
-        frontsd->shutdown();
         sdNeedsUnmount = 0;
       }
       if(fatMountSimple("sd", frontsd)) {
@@ -293,7 +291,6 @@ int fileBrowser_libfat_init(fileBrowser_file* f){
       pauseRemovalThread();
       if(fatNeedsUnmount==USB) {
         fatUnmount(f->name);
-        usb->shutdown();
         fatNeedsUnmount=0;
       }
       usleep(devsleep);
