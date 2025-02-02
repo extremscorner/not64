@@ -137,7 +137,8 @@ static int _GetKeys(int Control, BUTTONS * Keys, controller_config_t* config)
 		else if(b & PAD_BUTTON_DOWN)
 			c->Y_AXIS = -80;
 	}
-	if(config->invertedY) c->Y_AXIS = -c->Y_AXIS;
+	if(config->inverted & 2) c->X_AXIS = -c->X_AXIS;
+	if(config->inverted & 1) c->Y_AXIS = -c->Y_AXIS;
 
 	// Return whether the exit button(s) are pressed
 	return isHeld(config->exit);
@@ -181,23 +182,23 @@ controller_t controller_GC =
 	  analog_sources,
 	  sizeof(menu_combos)/sizeof(menu_combos[0]),
 	  menu_combos,
-	  { .DU        = &buttons[1],  // D-Pad Up
-	    .DL        = &buttons[2],  // D-Pad Left
-	    .DR        = &buttons[3],  // D-Pad Right
-	    .DD        = &buttons[4],  // D-Pad Down
-	    .Z         = &buttons[21], // Left Trigger
-	    .L         = &buttons[5],  // Z
-	    .R         = &buttons[22], // Right Trigger
-	    .A         = &buttons[8],  // A
-	    .B         = &buttons[9],  // B
-	    .START     = &buttons[12], // Start
-	    .CU        = &buttons[13], // C-Stick Up
-	    .CL        = &buttons[14], // C-Stick Left
-	    .CR        = &buttons[15], // C-Stick Right
-	    .CD        = &buttons[16], // C-Stick Down
-	    .analog    = &analog_sources[0],
-	    .exit      = &menu_combos[0],
-	    .invertedY = 0,
+	  { .DU       = &buttons[1],  // D-Pad Up
+	    .DL       = &buttons[2],  // D-Pad Left
+	    .DR       = &buttons[3],  // D-Pad Right
+	    .DD       = &buttons[4],  // D-Pad Down
+	    .Z        = &buttons[21], // Left Trigger
+	    .L        = &buttons[5],  // Z
+	    .R        = &buttons[22], // Right Trigger
+	    .A        = &buttons[8],  // A
+	    .B        = &buttons[9],  // B
+	    .START    = &buttons[12], // Start
+	    .CU       = &buttons[13], // C-Stick Up
+	    .CL       = &buttons[14], // C-Stick Left
+	    .CR       = &buttons[15], // C-Stick Right
+	    .CD       = &buttons[16], // C-Stick Down
+	    .analog   = &analog_sources[0],
+	    .exit     = &menu_combos[0],
+	    .inverted = 0,
 	  }
 	 };
 

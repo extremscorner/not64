@@ -78,6 +78,7 @@ static button_t buttons[] = {
 static button_t analog_sources_wmn[] = {
 	{ 0, NUNCHUK_AS_ANALOG,  "Nunchuk" },
 	{ 1, IR_AS_ANALOG,       "IR" },
+	{ 2, BUTTON_AS_ANALOG,   "D-Pad" },
 };
 
 static button_t analog_sources_wm[] = {
@@ -149,16 +150,39 @@ static int _GetKeys(int Control, BUTTONS * Keys, controller_config_t* config,
 		c->X_AXIS = 512 - wpad->accel.y;
 		c->Y_AXIS = wpad->accel.z - 512;
 	} else if(config->analog->mask == BUTTON_AS_ANALOG){
-		if(b & WPAD_BUTTON_DOWN)
-			c->X_AXIS = +80;
-		else if(b & WPAD_BUTTON_UP)
-			c->X_AXIS = -80;
-		if(b & WPAD_BUTTON_RIGHT)
-			c->Y_AXIS = +80;
-		else if(b & WPAD_BUTTON_LEFT)
-			c->Y_AXIS = -80;
+		if(!wpad->ir.raw_valid && wpad->exp.type == WPAD_EXP_NONE){
+			if(wpad->orient.roll <= 0.0f){
+				if(b & WPAD_BUTTON_DOWN)
+					c->X_AXIS = +80;
+				else if(b & WPAD_BUTTON_UP)
+					c->X_AXIS = -80;
+				if(b & WPAD_BUTTON_RIGHT)
+					c->Y_AXIS = +80;
+				else if(b & WPAD_BUTTON_LEFT)
+					c->Y_AXIS = -80;
+			} else {
+				if(b & WPAD_BUTTON_UP)
+					c->X_AXIS = +80;
+				else if(b & WPAD_BUTTON_DOWN)
+					c->X_AXIS = -80;
+				if(b & WPAD_BUTTON_LEFT)
+					c->Y_AXIS = +80;
+				else if(b & WPAD_BUTTON_RIGHT)
+					c->Y_AXIS = -80;
+			}
+		} else {
+			if(b & WPAD_BUTTON_RIGHT)
+				c->X_AXIS = +80;
+			else if(b & WPAD_BUTTON_LEFT)
+				c->X_AXIS = -80;
+			if(b & WPAD_BUTTON_UP)
+				c->Y_AXIS = +80;
+			else if(b & WPAD_BUTTON_DOWN)
+				c->Y_AXIS = -80;
+		}
 	}
-	if(config->invertedY) c->Y_AXIS = -c->Y_AXIS;
+	if(config->inverted & 2) c->X_AXIS = -c->X_AXIS;
+	if(config->inverted & 1) c->Y_AXIS = -c->Y_AXIS;
 
 	// Return whether the exit button(s) are pressed
 	return isHeld(config->exit);
@@ -285,23 +309,23 @@ controller_t controller_Wiimote =
 	  analog_sources_wm,
 	  sizeof(menu_combos)/sizeof(menu_combos[0]),
 	  menu_combos,
-	  { .DU    = &buttons[0],  // None
-		.DL    = &buttons[0],  // None
-		.DR    = &buttons[0],  // None
-		.DD    = &buttons[0],  // None
-		.Z     = &buttons[6],  // B
-		.L     = &buttons[8],  // -
-		.R     = &buttons[7],  // +
-		.A     = &buttons[11], // 2
-		.B     = &buttons[10], // 1
-		.START = &buttons[9],  // Home
-		.CU    = &buttons[3],  // D Right
-		.CL    = &buttons[1],  // D Up
-		.CR    = &buttons[4],  // D Down
-		.CD    = &buttons[2],  // D Left
-		.analog    = &analog_sources_wm[0],
-		.exit      = &menu_combos[0],
-		.invertedY = 0
+	  { .DU       = &buttons[0],  // None
+	    .DL       = &buttons[0],  // None
+	    .DR       = &buttons[0],  // None
+	    .DD       = &buttons[0],  // None
+	    .Z        = &buttons[6],  // B
+	    .L        = &buttons[8],  // -
+	    .R        = &buttons[7],  // +
+	    .A        = &buttons[11], // 2
+	    .B        = &buttons[10], // 1
+	    .START    = &buttons[9],  // Home
+	    .CU       = &buttons[3],  // D Right
+	    .CL       = &buttons[1],  // D Up
+	    .CR       = &buttons[4],  // D Down
+	    .CD       = &buttons[2],  // D Left
+	    .analog   = &analog_sources_wm[0],
+	    .exit     = &menu_combos[0],
+	    .inverted = 0
 	  }
 	};
 
@@ -321,23 +345,23 @@ controller_t controller_WiimoteNunchuk =
 	  analog_sources_wmn,
 	  sizeof(menu_combos)/sizeof(menu_combos[0]),
 	  menu_combos,
-	  { .DU    = &buttons[0],  // None
-	    .DL    = &buttons[0],  // None
-	    .DR    = &buttons[0],  // None
-	    .DD    = &buttons[0],  // None
-	    .Z     = &buttons[13], // Z
-	    .L     = &buttons[12], // C
-	    .R     = &buttons[6],  // B
-	    .A     = &buttons[5],  // A
-	    .B     = &buttons[7],  // +
-	    .START = &buttons[9],  // Home
-	    .CU    = &buttons[1], // D Up
-	    .CL    = &buttons[2], // D Left
-	    .CR    = &buttons[3], // D Right
-	    .CD    = &buttons[4], // D Down
-	    .analog    = &analog_sources_wmn[0],
-	    .exit      = &menu_combos[0],
-	    .invertedY = 0
+	  { .DU       = &buttons[0],  // None
+	    .DL       = &buttons[0],  // None
+	    .DR       = &buttons[0],  // None
+	    .DD       = &buttons[0],  // None
+	    .Z        = &buttons[13], // Z
+	    .L        = &buttons[12], // C
+	    .R        = &buttons[6],  // B
+	    .A        = &buttons[5],  // A
+	    .B        = &buttons[7],  // +
+	    .START    = &buttons[9],  // Home
+	    .CU       = &buttons[1], // D Up
+	    .CL       = &buttons[2], // D Left
+	    .CR       = &buttons[3], // D Right
+	    .CD       = &buttons[4], // D Down
+	    .analog   = &analog_sources_wmn[0],
+	    .exit     = &menu_combos[0],
+	    .inverted = 0
 	  }
 	 };
 

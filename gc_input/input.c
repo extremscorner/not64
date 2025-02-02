@@ -484,7 +484,7 @@ int load_configurations(FILE* f, controller_t* controller){
 			getPointer(controller->analog_sources, controller->num_analog_sources);
 		controller->config_slot[i].exit =
 			getPointer(controller->menu_combos, controller->num_menu_combos);
-		fread(&controller->config_slot[i].invertedY, 4, 1, f);
+		fread(&controller->config_slot[i].inverted, 4, 1, f);
 	}
 
 	if (loadButtonSlot != LOADBUTTON_DEFAULT)
@@ -524,6 +524,6 @@ void save_configurations(FILE* f, controller_t* controller){
 		
 		fwrite(&controller->config_slot[i].analog->index, 4, 1, f);
 		fwrite(&controller->config_slot[i].exit->index, 4, 1, f);
-		fwrite(&controller->config_slot[i].invertedY, 4, 1, f);
+		fwrite(&controller->config_slot[i].inverted, 4, 1, f);
 	}
 }

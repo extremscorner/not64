@@ -217,7 +217,8 @@ static int GetKeysCC(int Control, BUTTONS * Keys, controller_config_t* config)
 		else if(b & CLASSIC_CTRL_BUTTON_DOWN)
 			c->Y_AXIS = -80;
 	}
-	if(config->invertedY) c->Y_AXIS = -c->Y_AXIS;
+	if(config->inverted & 2) c->X_AXIS = -c->X_AXIS;
+	if(config->inverted & 1) c->Y_AXIS = -c->Y_AXIS;
 
 	// Return whether the exit button(s) are pressed
 	return isHeld(config->exit);
@@ -305,7 +306,8 @@ static int GetKeysWUP(int Control, BUTTONS * Keys, controller_config_t* config)
 		else if(b & WIIU_PRO_CTRL_BUTTON_DOWN)
 			c->Y_AXIS = -80;
 	}
-	if(config->invertedY) c->Y_AXIS = -c->Y_AXIS;
+	if(config->inverted & 2) c->X_AXIS = -c->X_AXIS;
+	if(config->inverted & 1) c->Y_AXIS = -c->Y_AXIS;
 
 	// Return whether the exit button(s) are pressed
 	return isHeld(config->exit);
@@ -350,23 +352,23 @@ controller_t controller_Classic =
 	  analog_sources,
 	  sizeof(menu_combos)/sizeof(menu_combos[0]),
 	  menu_combos,
-	  { .DU        = &buttons[1],  // D-Pad Up
-	    .DL        = &buttons[2],  // D-Pad Left
-	    .DR        = &buttons[3],  // D-Pad Right
-	    .DD        = &buttons[4],  // D-Pad Down
-	    .Z         = &buttons[5],  // Left Trigger
-	    .L         = &buttons[8],  // Right Z
-	    .R         = &buttons[6],  // Right Trigger
-	    .A         = &buttons[9],  // A
-	    .B         = &buttons[10], // B
-	    .START     = &buttons[13], // +
-	    .CU        = &buttons[16], // Right Stick Up
-	    .CL        = &buttons[17], // Right Stick Left
-	    .CR        = &buttons[18], // Right Stick Right
-	    .CD        = &buttons[19], // Right Stick Down
-	    .analog    = &analog_sources[0],
-	    .exit      = &menu_combos[2],
-	    .invertedY = 0,
+	  { .DU       = &buttons[1],  // D-Pad Up
+	    .DL       = &buttons[2],  // D-Pad Left
+	    .DR       = &buttons[3],  // D-Pad Right
+	    .DD       = &buttons[4],  // D-Pad Down
+	    .Z        = &buttons[5],  // Left Trigger
+	    .L        = &buttons[8],  // Right Z
+	    .R        = &buttons[6],  // Right Trigger
+	    .A        = &buttons[9],  // A
+	    .B        = &buttons[10], // B
+	    .START    = &buttons[13], // +
+	    .CU       = &buttons[16], // Right Stick Up
+	    .CL       = &buttons[17], // Right Stick Left
+	    .CR       = &buttons[18], // Right Stick Right
+	    .CD       = &buttons[19], // Right Stick Down
+	    .analog   = &analog_sources[0],
+	    .exit     = &menu_combos[2],
+	    .inverted = 0,
 	  }
 	 };
 
@@ -386,23 +388,23 @@ controller_t controller_WiiUPro =
 	  analog_sources,
 	  sizeof(menu_combos)/sizeof(menu_combos[0]),
 	  menu_combos,
-	  { .DU        = &buttons[1],  // D-Pad Up
-	    .DL        = &buttons[2],  // D-Pad Left
-	    .DR        = &buttons[3],  // D-Pad Right
-	    .DD        = &buttons[4],  // D-Pad Down
-	    .Z         = &buttons[7],  // Left Z
-	    .L         = &buttons[6],  // Right Trigger
-	    .R         = &buttons[8],  // Right Z
-	    .A         = &buttons[9],  // A
-	    .B         = &buttons[10], // B
-	    .START     = &buttons[13], // +
-	    .CU        = &buttons[16], // Right Stick Up
-	    .CL        = &buttons[17], // Right Stick Left
-	    .CR        = &buttons[18], // Right Stick Right
-	    .CD        = &buttons[19], // Right Stick Down
-	    .analog    = &analog_sources[0],
-	    .exit      = &menu_combos[2],
-	    .invertedY = 0,
+	  { .DU       = &buttons[1],  // D-Pad Up
+	    .DL       = &buttons[2],  // D-Pad Left
+	    .DR       = &buttons[3],  // D-Pad Right
+	    .DD       = &buttons[4],  // D-Pad Down
+	    .Z        = &buttons[7],  // Left Z
+	    .L        = &buttons[6],  // Right Trigger
+	    .R        = &buttons[8],  // Right Z
+	    .A        = &buttons[9],  // A
+	    .B        = &buttons[10], // B
+	    .START    = &buttons[13], // +
+	    .CU       = &buttons[16], // Right Stick Up
+	    .CL       = &buttons[17], // Right Stick Left
+	    .CR       = &buttons[18], // Right Stick Right
+	    .CD       = &buttons[19], // Right Stick Down
+	    .analog   = &analog_sources[0],
+	    .exit     = &menu_combos[2],
+	    .inverted = 0,
 	  }
 	 };
 

@@ -266,7 +266,8 @@ static int GetKeysNES(int Control, BUTTONS * Keys, controller_config_t* config)
 		else if(b & EXTENMOTE_NES_BUTTON_DOWN)
 			c->Y_AXIS = -80;
 	}
-	if(config->invertedY) c->Y_AXIS = -c->Y_AXIS;
+	if(config->inverted & 2) c->X_AXIS = -c->X_AXIS;
+	if(config->inverted & 1) c->Y_AXIS = -c->Y_AXIS;
 
 	// Return whether the exit button(s) are pressed
 	return isHeld(config->exit);
@@ -330,7 +331,8 @@ static int GetKeysSNES(int Control, BUTTONS * Keys, controller_config_t* config)
 		else if(b & EXTENMOTE_SNES_BUTTON_DOWN)
 			c->Y_AXIS = -80;
 	}
-	if(config->invertedY) c->Y_AXIS = -c->Y_AXIS;
+	if(config->inverted & 2) c->X_AXIS = -c->X_AXIS;
+	if(config->inverted & 1) c->Y_AXIS = -c->Y_AXIS;
 
 	// Return whether the exit button(s) are pressed
 	return isHeld(config->exit);
@@ -416,7 +418,8 @@ static int GetKeysN64(int Control, BUTTONS * Keys, controller_config_t* config)
 		else if(b & EXTENMOTE_N64_BUTTON_DOWN)
 			c->Y_AXIS = -80;
 	}
-	if(config->invertedY) c->Y_AXIS = -c->Y_AXIS;
+	if(config->inverted & 2) c->X_AXIS = -c->X_AXIS;
+	if(config->inverted & 1) c->Y_AXIS = -c->Y_AXIS;
 
 	// Return whether the exit button(s) are pressed
 	return isHeld(config->exit);
@@ -509,7 +512,8 @@ static int GetKeysGC(int Control, BUTTONS * Keys, controller_config_t* config)
 		else if(b & EXTENMOTE_GC_BUTTON_DOWN)
 			c->Y_AXIS = -80;
 	}
-	if(config->invertedY) c->Y_AXIS = -c->Y_AXIS;
+	if(config->inverted & 2) c->X_AXIS = -c->X_AXIS;
+	if(config->inverted & 1) c->Y_AXIS = -c->Y_AXIS;
 
 	// Return whether the exit button(s) are pressed
 	return isHeld(config->exit);
@@ -556,23 +560,23 @@ controller_t controller_ExtenmoteNES =
 	  analog_sources,
 	  NUM_NES_COMBOS,
 	  menu_combos,
-	  { .DU        = &buttons_nes[1], // D-Pad Up
-	    .DL        = &buttons_nes[2], // D-Pad Left
-	    .DR        = &buttons_nes[3], // D-Pad Right
-	    .DD        = &buttons_nes[4], // D-Pad Down
-	    .Z         = &buttons_nes[8], // Select
-	    .L         = &buttons_nes[0], // None
-	    .R         = &buttons_nes[0], // None
-	    .A         = &buttons_nes[5], // A
-	    .B         = &buttons_nes[6], // B
-	    .START     = &buttons_nes[7], // Start
-	    .CU        = &buttons_nes[0], // None
-	    .CL        = &buttons_nes[0], // None
-	    .CR        = &buttons_nes[0], // None
-	    .CD        = &buttons_nes[0], // None
-	    .analog    = &analog_sources[1],
-	    .exit      = &menu_combos[0],
-	    .invertedY = 0,
+	  { .DU       = &buttons_nes[1], // D-Pad Up
+	    .DL       = &buttons_nes[2], // D-Pad Left
+	    .DR       = &buttons_nes[3], // D-Pad Right
+	    .DD       = &buttons_nes[4], // D-Pad Down
+	    .Z        = &buttons_nes[8], // Select
+	    .L        = &buttons_nes[0], // None
+	    .R        = &buttons_nes[0], // None
+	    .A        = &buttons_nes[5], // A
+	    .B        = &buttons_nes[6], // B
+	    .START    = &buttons_nes[7], // Start
+	    .CU       = &buttons_nes[0], // None
+	    .CL       = &buttons_nes[0], // None
+	    .CR       = &buttons_nes[0], // None
+	    .CD       = &buttons_nes[0], // None
+	    .analog   = &analog_sources[1],
+	    .exit     = &menu_combos[0],
+	    .inverted = 0,
 	  }
 	 };
 
@@ -592,23 +596,23 @@ controller_t controller_ExtenmoteSNES =
 	  analog_sources,
 	  sizeof(menu_combos)/sizeof(menu_combos[0]),
 	  menu_combos,
-	  { .DU        = &buttons_snes[1],  // D-Pad Up
-	    .DL        = &buttons_snes[2],  // D-Pad Left
-	    .DR        = &buttons_snes[3],  // D-Pad Right
-	    .DD        = &buttons_snes[4],  // D-Pad Down
-	    .Z         = &buttons_snes[12], // Select
-	    .L         = &buttons_snes[0],  // None
-	    .R         = &buttons_snes[0],  // None
-	    .A         = &buttons_snes[8],  // B
-	    .B         = &buttons_snes[10], // Y
-	    .START     = &buttons_snes[11], // Start
-	    .CU        = &buttons_snes[9],  // X
-	    .CL        = &buttons_snes[5],  // Left Trigger
-	    .CR        = &buttons_snes[6],  // Right Trigger
-	    .CD        = &buttons_snes[7],  // A
-	    .analog    = &analog_sources[1],
-	    .exit      = &menu_combos[0],
-	    .invertedY = 0,
+	  { .DU       = &buttons_snes[1],  // D-Pad Up
+	    .DL       = &buttons_snes[2],  // D-Pad Left
+	    .DR       = &buttons_snes[3],  // D-Pad Right
+	    .DD       = &buttons_snes[4],  // D-Pad Down
+	    .Z        = &buttons_snes[12], // Select
+	    .L        = &buttons_snes[0],  // None
+	    .R        = &buttons_snes[0],  // None
+	    .A        = &buttons_snes[8],  // B
+	    .B        = &buttons_snes[10], // Y
+	    .START    = &buttons_snes[11], // Start
+	    .CU       = &buttons_snes[9],  // X
+	    .CL       = &buttons_snes[5],  // Left Trigger
+	    .CR       = &buttons_snes[6],  // Right Trigger
+	    .CD       = &buttons_snes[7],  // A
+	    .analog   = &analog_sources[1],
+	    .exit     = &menu_combos[0],
+	    .inverted = 0,
 	  }
 	 };
 
@@ -628,23 +632,23 @@ controller_t controller_ExtenmoteN64 =
 	  analog_sources_n64,
 	  sizeof(menu_combos_n64)/sizeof(menu_combos_n64[0]),
 	  menu_combos_n64,
-	  { .DU        = &buttons_n64[1],  // D-Pad Up
-	    .DL        = &buttons_n64[2],  // D-Pad Left
-	    .DR        = &buttons_n64[3],  // D-Pad Right
-	    .DD        = &buttons_n64[4],  // D-Pad Down
-	    .Z         = &buttons_n64[5],  // Z
-	    .L         = &buttons_n64[6],  // Left Trigger
-	    .R         = &buttons_n64[7],  // Right Trigger
-	    .A         = &buttons_n64[8],  // A
-	    .B         = &buttons_n64[9],  // B
-	    .START     = &buttons_n64[10], // Start
-	    .CU        = &buttons_n64[11], // C-Up
-	    .CL        = &buttons_n64[12], // C-Left
-	    .CR        = &buttons_n64[13], // C-Right
-	    .CD        = &buttons_n64[14], // C-Down
-	    .analog    = &analog_sources_n64[0],
-	    .exit      = &menu_combos_n64[0],
-	    .invertedY = 0,
+	  { .DU       = &buttons_n64[1],  // D-Pad Up
+	    .DL       = &buttons_n64[2],  // D-Pad Left
+	    .DR       = &buttons_n64[3],  // D-Pad Right
+	    .DD       = &buttons_n64[4],  // D-Pad Down
+	    .Z        = &buttons_n64[5],  // Z
+	    .L        = &buttons_n64[6],  // Left Trigger
+	    .R        = &buttons_n64[7],  // Right Trigger
+	    .A        = &buttons_n64[8],  // A
+	    .B        = &buttons_n64[9],  // B
+	    .START    = &buttons_n64[10], // Start
+	    .CU       = &buttons_n64[11], // C-Up
+	    .CL       = &buttons_n64[12], // C-Left
+	    .CR       = &buttons_n64[13], // C-Right
+	    .CD       = &buttons_n64[14], // C-Down
+	    .analog   = &analog_sources_n64[0],
+	    .exit     = &menu_combos_n64[0],
+	    .inverted = 0,
 	  }
 	 };
 
@@ -664,23 +668,23 @@ controller_t controller_ExtenmoteGC =
 	  analog_sources_gc,
 	  sizeof(menu_combos_gc)/sizeof(menu_combos_gc[0]),
 	  menu_combos_gc,
-	  { .DU        = &buttons_gc[1],  // D-Pad Up
-	    .DL        = &buttons_gc[2],  // D-Pad Left
-	    .DR        = &buttons_gc[3],  // D-Pad Right
-	    .DD        = &buttons_gc[4],  // D-Pad Down
-	    .Z         = &buttons_gc[21], // Left Trigger
-	    .L         = &buttons_gc[5],  // Z
-	    .R         = &buttons_gc[22], // Right Trigger
-	    .A         = &buttons_gc[8],  // A
-	    .B         = &buttons_gc[9],  // B
-	    .START     = &buttons_gc[12], // Start
-	    .CU        = &buttons_gc[13], // C-Stick Up
-	    .CL        = &buttons_gc[14], // C-Stick Left
-	    .CR        = &buttons_gc[15], // C-Stick Right
-	    .CD        = &buttons_gc[16], // C-Stick Down
-	    .analog    = &analog_sources_gc[0],
-	    .exit      = &menu_combos_gc[0],
-	    .invertedY = 0,
+	  { .DU       = &buttons_gc[1],  // D-Pad Up
+	    .DL       = &buttons_gc[2],  // D-Pad Left
+	    .DR       = &buttons_gc[3],  // D-Pad Right
+	    .DD       = &buttons_gc[4],  // D-Pad Down
+	    .Z        = &buttons_gc[21], // Left Trigger
+	    .L        = &buttons_gc[5],  // Z
+	    .R        = &buttons_gc[22], // Right Trigger
+	    .A        = &buttons_gc[8],  // A
+	    .B        = &buttons_gc[9],  // B
+	    .START    = &buttons_gc[12], // Start
+	    .CU       = &buttons_gc[13], // C-Stick Up
+	    .CL       = &buttons_gc[14], // C-Stick Left
+	    .CR       = &buttons_gc[15], // C-Stick Right
+	    .CD       = &buttons_gc[16], // C-Stick Down
+	    .analog   = &analog_sources_gc[0],
+	    .exit     = &menu_combos_gc[0],
+	    .inverted = 0,
 	  }
 	 };
 

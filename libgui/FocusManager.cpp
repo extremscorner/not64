@@ -184,24 +184,70 @@ void Focus::updateFocus()
 				if (currentButtonsDownWii & (WPAD_BUTTON_B | WPAD_GC_BUTTON_B)) buttonsDown |= ACTION_BACK;
 				break;
 			default:
-				switch (currentButtonsDownWii & 0xf) {
-				case WPAD_BUTTON_LEFT:
-					focusDirection = DIRECTION_LEFT;
-					break;
-				case WPAD_BUTTON_RIGHT:
-					focusDirection = DIRECTION_RIGHT;
-					break;
-				case WPAD_BUTTON_DOWN:
-					focusDirection = DIRECTION_DOWN;
-					break;
-				case WPAD_BUTTON_UP:
-					focusDirection = DIRECTION_UP;
-					break;
-				default:
-					focusDirection = DIRECTION_NONE;
+				if (!wpad[i].ir.raw_valid && wpad[i].exp.type == WPAD_EXP_NONE)
+				{
+					if (wpad[i].orient.roll <= 0.0f)
+					{
+						switch (currentButtonsDownWii & 0xf) {
+						case WPAD_BUTTON_UP:
+							focusDirection = DIRECTION_LEFT;
+							break;
+						case WPAD_BUTTON_DOWN:
+							focusDirection = DIRECTION_RIGHT;
+							break;
+						case WPAD_BUTTON_LEFT:
+							focusDirection = DIRECTION_DOWN;
+							break;
+						case WPAD_BUTTON_RIGHT:
+							focusDirection = DIRECTION_UP;
+							break;
+						default:
+							focusDirection = DIRECTION_NONE;
+						}
+					}
+					else
+					{
+						switch (currentButtonsDownWii & 0xf) {
+						case WPAD_BUTTON_DOWN:
+							focusDirection = DIRECTION_LEFT;
+							break;
+						case WPAD_BUTTON_UP:
+							focusDirection = DIRECTION_RIGHT;
+							break;
+						case WPAD_BUTTON_RIGHT:
+							focusDirection = DIRECTION_DOWN;
+							break;
+						case WPAD_BUTTON_LEFT:
+							focusDirection = DIRECTION_UP;
+							break;
+						default:
+							focusDirection = DIRECTION_NONE;
+						}
+					}
+					if (currentButtonsDownWii & WPAD_BUTTON_2) buttonsDown |= ACTION_SELECT;
+					if (currentButtonsDownWii & WPAD_BUTTON_1) buttonsDown |= ACTION_BACK;
 				}
-				if (currentButtonsDownWii & WPAD_BUTTON_A) buttonsDown |= ACTION_SELECT;
-				if (currentButtonsDownWii & WPAD_BUTTON_B) buttonsDown |= ACTION_BACK;
+				else
+				{
+					switch (currentButtonsDownWii & 0xf) {
+					case WPAD_BUTTON_LEFT:
+						focusDirection = DIRECTION_LEFT;
+						break;
+					case WPAD_BUTTON_RIGHT:
+						focusDirection = DIRECTION_RIGHT;
+						break;
+					case WPAD_BUTTON_DOWN:
+						focusDirection = DIRECTION_DOWN;
+						break;
+					case WPAD_BUTTON_UP:
+						focusDirection = DIRECTION_UP;
+						break;
+					default:
+						focusDirection = DIRECTION_NONE;
+					}
+					if (currentButtonsDownWii & WPAD_BUTTON_A) buttonsDown |= ACTION_SELECT;
+					if (currentButtonsDownWii & WPAD_BUTTON_B) buttonsDown |= ACTION_BACK;
+				}
 				break;
 			}
 			if (freezeAction)
