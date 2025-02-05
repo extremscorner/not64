@@ -655,7 +655,14 @@ static inline void menuStack_push(menu_item*);
 		VIDEO_Flush();
 		VIDEO_WaitVSync ();        /*** Wait for VBL ***/
 		void (*rld)() = (void (*)()) 0x80001800;
-		rld();
+		#define HBC_STUB 0x53545542
+		#define HBC_HAXX 0x48415858
+		//Load HBC Stub if STUBAXX signature is present
+		if(*(volatile unsigned int*)0x80001804 == HBC_STUB &&
+			*(volatile unsigned int*)0x80001808 == HBC_HAXX)
+  			rld();
+  		else // Wii channel support
+  			SYS_ResetSystem(SYS_RETURNTOMENU, 0, 0);
 	}
 #define EXIT_INDEX MAIN_MENU_SIZE - 3
 #define EXIT_ITEM \
