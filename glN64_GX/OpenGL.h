@@ -125,7 +125,6 @@ struct GLInfo
 	GXColor	GXfogColor;
 	GXColor GXclearColor;
 	u8		GXfogType;
-	u8*		GXclearBufferTex;
 	bool	GXupdateFog;
 	bool	GXpolyOffset;
 	bool	GXrenderTexRect;

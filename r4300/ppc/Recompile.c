@@ -266,7 +266,7 @@ PowerPC_func* recompile_block(PowerPC_block* ppc_block, unsigned int addr){
 
 	// Since this is a fresh block of code,
 	// Make sure it wil show up in the ICache
-	DCFlushRange(func->code, code_length*sizeof(PowerPC_instr));
+	DCStoreRange(func->code, code_length*sizeof(PowerPC_instr));
 	ICInvalidateRange(func->code, code_length*sizeof(PowerPC_instr));
 
 	return func;
