@@ -95,6 +95,7 @@ extern timers Timers;
        char creditsScrolling;
        char padNeedScan;
        char wpadNeedScan;
+       char drcNeedScan;
        char shutdown;
 	   char saveStateDevice;
 	   char pakMode[4];
@@ -213,6 +214,20 @@ u16 readWPAD(void){
 	   	b |= (w & CLASSIC_CTRL_BUTTON_RIGHT) ? PAD_BUTTON_RIGHT : 0;
 	   	b |= (w & CLASSIC_CTRL_BUTTON_A) ? PAD_BUTTON_A : 0;
 	   	b |= (w & CLASSIC_CTRL_BUTTON_B) ? PAD_BUTTON_B : 0;
+	}
+	
+	if(drcNeedScan){ WiiDRC_ScanPads(); drcNeedScan = 0; }
+	const WiiDRCData* drc = WiiDRC_Data();
+
+	if(WiiDRC_Inited() && WiiDRC_Connected())
+	{
+	   	u16 w = drc->button;
+	   	b |= (w & WIIDRC_BUTTON_UP)    ? PAD_BUTTON_UP    : 0;
+	   	b |= (w & WIIDRC_BUTTON_DOWN)  ? PAD_BUTTON_DOWN  : 0;
+	   	b |= (w & WIIDRC_BUTTON_LEFT)  ? PAD_BUTTON_LEFT  : 0;
+	   	b |= (w & WIIDRC_BUTTON_RIGHT) ? PAD_BUTTON_RIGHT : 0;
+	   	b |= (w & WIIDRC_BUTTON_A) ? PAD_BUTTON_A : 0;
+	   	b |= (w & WIIDRC_BUTTON_B) ? PAD_BUTTON_B : 0;
 	}
 
 	return b;
@@ -382,7 +397,7 @@ static void rsp_info_init(void){
 }
 
 void ScanPADSandReset() {
-	padNeedScan = wpadNeedScan = 1;
+	drcNeedScan = padNeedScan = wpadNeedScan = 1;
 	if(!((*(u32*)0xCC003000)>>16))
 		stop = 1;
 }
