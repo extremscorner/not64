@@ -34,7 +34,8 @@ void LoadingBar_showBar(float percent, const char* string);
 
 static char  ROMTooBig;
 static char  ROMCompressed;
-static char* ROMBase = ROMCACHE_LO;
+static char* ROMCache = ROMCACHE_LO;
+static int   ROMCacheSize = ROMCACHE_SIZE;
 
 void ROMCache_init(fileBrowser_file* file)
 {
@@ -51,30 +52,73 @@ void ROMCache_init(fileBrowser_file* file)
 		ROMCompressed = 0;
 	}
 	
-	ROMTooBig = rom_length > ROMCACHE_SIZE;
+	switch (SYS_GetPhysicalMem2Size()) {
+		default:
+			ROMCache = ROMCACHE_LO;
+			ROMCacheSize = ROMCACHE_SIZE;
+			break;
+		case 128*MB:
+			switch (SYS_GetSimulatedMem2Size()) {
+				case 128*MB:
+					ROMCache = ROMCACHE_128MB_LO;
+					ROMCacheSize = ROMCACHE_128MB_SIZE;
+					break;
+				case 64*MB:
+					ROMCache = ROMCACHE_64_128MB_LO;
+					ROMCacheSize = ROMCACHE_64_128MB_SIZE;
+					break;
+				default:
+					ROMCache = ROMCACHE_LO;
+					ROMCacheSize = ROMCACHE_SIZE;
+					break;
+			}
+			break;
+		case 256*MB:
+			switch (SYS_GetSimulatedMem2Size()) {
+				case 256*MB:
+					ROMCache = ROMCACHE_256MB_LO;
+					ROMCacheSize = ROMCACHE_256MB_SIZE;
+					break;
+				case 128*MB:
+					ROMCache = ROMCACHE_128_256MB_LO;
+					ROMCacheSize = ROMCACHE_128_256MB_SIZE;
+					break;
+				case 64*MB:
+					ROMCache = ROMCACHE_64_256MB_LO;
+					ROMCacheSize = ROMCACHE_64_256MB_SIZE;
+					break;
+				default:
+					ROMCache = ROMCACHE_LO;
+					ROMCacheSize = ROMCACHE_SIZE;
+					break;
+			}
+			break;
+	}
+	
+	ROMTooBig = rom_length > ROMCacheSize;
 }
 
 void ROMCache_deinit()
 {
 	if (ROMTooBig) {
-		ROMBase = ROMCACHE_LO;
+		ROMCache = NULL;
 		VM_Deinit();
 	}
 }
 
 void* ROMCache_pointer(u32 rom_offset)
 {
-	return ROMBase + rom_offset;
+	return ROMCache + rom_offset;
 }
 
 void ROMCache_read(u8* ram_dest, u32 rom_offset, u32 length)
 {
-	memcpy(ram_dest, ROMBase + rom_offset, length);
+	memcpy(ram_dest, ROMCache + rom_offset, length);
 }
 
 void ROMCache_write(u8* ram_src, u32 rom_offset, u32 length)
 {
-	memcpy(ROMBase + rom_offset, ram_src, length);
+	memcpy(ROMCache + rom_offset, ram_src, length);
 }
 
 int ROMCache_load(fileBrowser_file* file)
@@ -88,7 +132,8 @@ int ROMCache_load(fileBrowser_file* file)
 		if (VMBase == NULL)
 			return ROM_CACHE_ERROR_READ;
 		
-		ROMBase = VMBase;
+		ROMCache = VMBase;
+		ROMCacheSize = rom_length;
 	}
 	
 	sprintf(txt, "Loading ROM %s into MEM2", ROMTooBig ? "partially" : "fully");
@@ -100,16 +145,16 @@ int ROMCache_load(fileBrowser_file* file)
 			if (bytes_read < 0)
 				return ROM_CACHE_ERROR_READ;
 			
-			bytes_read = inflate_chunk(ROMBase + i, buf, bytes_read);
+			bytes_read = inflate_chunk(ROMCache + i, buf, bytes_read);
 			if (bytes_read < 0)
 				return ROM_CACHE_ERROR_READ;
 			
-			if (i == 0 && init_byte_swap(*(u32*)ROMBase) == BYTE_SWAP_BAD) {
+			if (i == 0 && init_byte_swap(*(u32*)ROMCache) == BYTE_SWAP_BAD) {
 				romFile_deinit(file);
 				return ROM_CACHE_INVALID_ROM;
 			}
 			
-			byte_swap(ROMBase + (i & ~3), bytes_read + (i & 3));
+			byte_swap(ROMCache + (i & ~3), bytes_read + (i & 3));
 			i += bytes_read;
 			
 			if (VIDEO_GetRetraceCount() - count > 2) {
@@ -119,16 +164,16 @@ int ROMCache_load(fileBrowser_file* file)
 		} while (i < rom_length);
 	} else {
 		do {
-			bytes_read = romFile_readFile(file, ROMBase + i, 32*KB);
+			bytes_read = romFile_readFile(file, ROMCache + i, 32*KB);
 			if (bytes_read < 0)
 				return ROM_CACHE_ERROR_READ;
 			
-			if (i == 0 && init_byte_swap(*(u32*)ROMBase) == BYTE_SWAP_BAD) {
+			if (i == 0 && init_byte_swap(*(u32*)ROMCache) == BYTE_SWAP_BAD) {
 				romFile_deinit(file);
 				return ROM_CACHE_INVALID_ROM;
 			}
 			
-			byte_swap(ROMBase + (i & ~3), bytes_read + (i & 3));
+			byte_swap(ROMCache + (i & ~3), bytes_read + (i & 3));
 			i += bytes_read;
 			
 			if (VIDEO_GetRetraceCount() - count > 2) {
