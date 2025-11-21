@@ -4,7 +4,7 @@
 
 #include <stdio.h>
 #include "winlnxdefs.h"
-#include "ogc/lwp_watchdog.h"
+#include <ogc/timesupp.h>
 #include "rom.h"
 #include "timers.h"
 #include "../r4300/r4300.h"
@@ -14,7 +14,7 @@ timers Timers = {0.0, 0.0, 0, 1, 0, 100};
 float VILimit = 60.0;
 double VILimitMicroseconds = 1000000.0/60.0;
 
-int GetVILimit(void)
+float GetVILimit(void)
 {
 	switch (ROM_HEADER.Country_code&0xFF)
 	{
@@ -27,7 +27,7 @@ int GetVILimit(void)
 		case 0x55:
 		case 0x58:
 		case 0x59:
-			return 50;
+			return 50.0;
 			break;
 
 		// NTSC codes
@@ -35,12 +35,12 @@ int GetVILimit(void)
 		case 0x41:
 		case 0x45:
 		case 0x4a:
-			return 60;
+			return 60.0;
 			break;
 
 		// Fallback for unknown codes
 		default:
-			return 60;
+			return 60.0;
 	}
 }
 

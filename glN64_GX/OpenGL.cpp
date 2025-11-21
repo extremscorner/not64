@@ -1185,7 +1185,7 @@ void OGL_DrawTriangles()
 
 	//set vertex description here
 	GX_ClearVtxDesc();
-	GX_SetVtxDesc(GX_VA_PTNMTXIDX, GX_PNMTX0);
+	GX_SetVtxDesc(GX_VA_PNMTXIDX, GX_PNMTX0);
 //	if (combiner.usesT0) GX_SetVtxDesc(GX_VA_TEX0MTXIDX, GX_TEXMTX0);
 //	if (combiner.usesT1) GX_SetVtxDesc(GX_VA_TEX1MTXIDX, GX_TEXMTX0);
 	GX_SetVtxDesc(GX_VA_TEX0MTXIDX, GX_TEXMTX0);
@@ -1316,7 +1316,7 @@ void OGL_DrawLine( SPVertex *vertices, int v0, int v1, float width )
 
 	//set vertex description here
 	GX_ClearVtxDesc();
-	GX_SetVtxDesc(GX_VA_PTNMTXIDX, GX_PNMTX0);
+	GX_SetVtxDesc(GX_VA_PNMTXIDX, GX_PNMTX0);
 	GX_SetVtxDesc(GX_VA_TEX2MTXIDX, GX_TEXMTX0);
 	GX_SetVtxDesc(GX_VA_POS, GX_DIRECT);
 	GX_SetVtxDesc(GX_VA_CLR0, GX_DIRECT);
@@ -1406,7 +1406,7 @@ void OGL_DrawRect( int ulx, int uly, int lrx, int lry, float *color )
 
 	//set vertex description here
 	GX_ClearVtxDesc();
-	GX_SetVtxDesc(GX_VA_PTNMTXIDX, GX_PNMTX0);
+	GX_SetVtxDesc(GX_VA_PNMTXIDX, GX_PNMTX0);
 	GX_SetVtxDesc(GX_VA_TEX2MTXIDX, GX_TEXMTX0);
 	GX_SetVtxDesc(GX_VA_POS, GX_DIRECT);
 	GX_SetVtxDesc(GX_VA_CLR0, GX_DIRECT);
@@ -1725,7 +1725,7 @@ void OGL_DrawTexturedRect( float ulx, float uly, float lrx, float lry, float uls
 
 	//set vertex description here
 	GX_ClearVtxDesc();
-	GX_SetVtxDesc(GX_VA_PTNMTXIDX, GX_PNMTX0);
+	GX_SetVtxDesc(GX_VA_PNMTXIDX, GX_PNMTX0);
 	GX_SetVtxDesc(GX_VA_TEX0MTXIDX, GX_TEXMTX0);
 	GX_SetVtxDesc(GX_VA_TEX1MTXIDX, GX_TEXMTX0);
 	GX_SetVtxDesc(GX_VA_TEX2MTXIDX, GX_TEXMTX0);
@@ -2000,7 +2000,7 @@ void OGL_GXinitDlist()
 	//Set PassColor TEV mode
 	GX_SetNumChans (1);
 	GX_SetNumTexGens (0);
-	GX_SetTevOrder (GX_TEVSTAGE0, GX_TEXCOORDNULL, GX_TEXMAP_NULL, GX_COLOR0A0);
+	GX_SetTevOrder (GX_TEVSTAGE0, GX_TEXCOORD_NULL, GX_TEXMAP_NULL, GX_COLOR0A0);
 	GX_SetTevOp (GX_TEVSTAGE0, GX_PASSCLR);
 	//Set CopyModeDraw blend modes here
 	GX_SetBlendMode(GX_BM_BLEND, GX_BL_SRCALPHA, GX_BL_INVSRCALPHA, GX_LO_CLEAR); //Fix src alpha

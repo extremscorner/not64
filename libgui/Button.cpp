@@ -131,7 +131,7 @@ void Button::setFontSize(float size)
 	fontSize = size;
 }
 
-#include "ogc/lwp_watchdog.h"
+#include <ogc/timesupp.h>
 
 void Button::setLabelMode(int mode)
 {

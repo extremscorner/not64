@@ -28,7 +28,7 @@
 #include <malloc.h>
 #include <string.h>
 #include <stdio.h>
-#include "ogc/lwp_watchdog.h"
+#include <ogc/timesupp.h>
 #include "ppc/Recompile.h"
 #include "ARAM-blocks.h"
 #include "../gui/DEBUG.h"

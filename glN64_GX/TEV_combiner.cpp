@@ -282,7 +282,7 @@ TEVCombiner *Compile_TEV_combine( Combiner *color, Combiner *alpha )
 	for (int i = 0; i < TEV_MAX_STAGES; i++)
 	{
 		TEVcombiner->TEVstage[i].texmap = GX_TEXMAP_NULL;
-		TEVcombiner->TEVstage[i].texcoord = GX_TEXCOORDNULL;
+		TEVcombiner->TEVstage[i].texcoord = GX_TEXCOORD_NULL;
 		TEVcombiner->TEVstage[i].color = GX_COLOR0A0;
 		TEVcombiner->TEVstage[i].colorClamp = GX_DISABLE;
 		TEVcombiner->TEVstage[i].alphaClamp = GX_DISABLE;
@@ -837,7 +837,7 @@ void Set_TEV_combine( TEVCombiner *TEVcombiner )	//Called from OGL_UpdateStates(
 	}
 	//Configure final stage for Ztexture
 	GX_SetTevOp ((u8) TEVcombiner->numTevStages, GX_PASSCLR);
-	GX_SetTevOrder ((u8) TEVcombiner->numTevStages, GX_TEXMAP2, GX_TEXMAP2, GX_COLORNULL);
+	GX_SetTevOrder ((u8) TEVcombiner->numTevStages, GX_TEXMAP2, GX_TEXMAP2, GX_COLOR_NULL);
 }
 
 // ****************************

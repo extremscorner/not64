@@ -48,9 +48,6 @@ static DISC_INTERFACE* usb = &__io_usbstorage;
 #include <ogc/dvd.h>
 static DISC_INTERFACE* gcloader = &__io_gcode;
 #endif
-static DISC_INTERFACE* carda = &__io_gcsda;
-static DISC_INTERFACE* cardb = &__io_gcsdb;
-static DISC_INTERFACE* cardc = &__io_gcsd2;
 static DISC_INTERFACE* ideexia = &__io_ataa;
 static DISC_INTERFACE* ideexib = &__io_atab;
 static DISC_INTERFACE* ideexic = &__io_ata1;
@@ -271,11 +268,11 @@ int fileBrowser_libfat_init(fileBrowser_file* f){
         sdMounted = FRONTSD;
         res = 1;
       }
-      else if(fatMountSimple("sd", cardb)) {
+      else if(fatMountSimple("sd", get_io_gcsdb())) {
         sdMounted = CARD_B;
         res = 1;
       }
-      else if(fatMountSimple("sd", carda)) {
+      else if(fatMountSimple("sd", get_io_gcsda())) {
         sdMounted = CARD_A;
         res = 1;
       }
@@ -316,15 +313,15 @@ int fileBrowser_libfat_init(fileBrowser_file* f){
 #else
   if(!strncmp(f->name, "sd", 2)) {
     if(!sdMounted) {
-      if(fatMountSimple("sd", cardc)) {
+      if(fatMountSimple("sd", get_io_gcsd2())) {
         sdMounted = CARD_C;
         res = 1;
       }
-      else if(fatMountSimple("sd", cardb)) {
+      else if(fatMountSimple("sd", get_io_gcsdb())) {
         sdMounted = CARD_B;
         res = 1;
       }
-      else if(fatMountSimple("sd", carda)) {
+      else if(fatMountSimple("sd", get_io_gcsda())) {
         sdMounted = CARD_A;
         res = 1;
       }

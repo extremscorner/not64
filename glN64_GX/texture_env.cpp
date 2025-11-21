@@ -229,7 +229,7 @@ void Set_texture_env( TexEnv *texEnv )
 	else 
 	{
 		GX_SetNumTexGens (0);
-		GX_SetTevOrder (GX_TEVSTAGE0, GX_TEXCOORDNULL, GX_TEXMAP_NULL, GX_COLOR0A0);
+		GX_SetTevOrder (GX_TEVSTAGE0, GX_TEXCOORD_NULL, GX_TEXMAP_NULL, GX_COLOR0A0);
 		GXmode = GX_PASSCLR;
 	}
 	GX_SetTevOp(GX_TEVSTAGE0,GXmode);

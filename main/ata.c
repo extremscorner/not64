@@ -36,7 +36,7 @@ static inline u8 ataReadStatusReg(int chn)
 	}
 	// read ATA_REG_CMDSTATUS1 | 0x00 (dummy)
 	u16 dat = 0x1700;
-	EXI_Lock(chn, dev, NULL);
+	EXI_LockEx(chn,dev);
 	EXI_Select(chn,dev,EXI_SPEED32MHZ);
 	EXI_ImmEx(chn,&dat,2,EXI_WRITE);
 	EXI_ImmEx(chn,&dat,1,EXI_READ);
@@ -55,7 +55,7 @@ static inline u8 ataReadErrorReg(int chn)
 	}
 	// read ATA_REG_ERROR | 0x00 (dummy)
 	u16 dat = 0x1100;
-	EXI_Lock(chn, dev, NULL);
+	EXI_LockEx(chn,dev);
 	EXI_Select(chn,dev,EXI_SPEED32MHZ);
 	EXI_ImmEx(chn,&dat,2,EXI_WRITE);
 	EXI_ImmEx(chn,&dat,1,EXI_READ);
@@ -73,9 +73,9 @@ static inline void ataWriteByte(int chn, u8 addr, u8 data)
 		dev = EXI_DEVICE_2;
 	}
 	u32 dat = 0x80000000 | (addr << 24) | (data<<16);
-	EXI_Lock(chn, dev, NULL);
+	EXI_LockEx(chn,dev);
 	EXI_Select(chn,dev,EXI_SPEED32MHZ);
-	EXI_ImmEx(chn,&dat,3,EXI_WRITE);	
+	EXI_ImmEx(chn,&dat,3,EXI_WRITE);
 	EXI_Deselect(chn);
 	EXI_Unlock(chn);
 }
@@ -90,7 +90,7 @@ static inline void ataWriteu16(int chn, u16 data)
 	}
 	// write 16 bit to ATA_REG_DATA | data LSB | data MSB | 0x00 (dummy)
 	u32 dat = 0xD0000000 | (((data>>8) & 0xff)<<16) | ((data & 0xff)<<8);
-	EXI_Lock(chn, dev, NULL);
+	EXI_LockEx(chn,dev);
 	EXI_Select(chn,dev,EXI_SPEED32MHZ);
 	EXI_ImmEx(chn,&dat,4,EXI_WRITE);
 	EXI_Deselect(chn);
@@ -107,8 +107,8 @@ static inline u16 ataReadu16(int chn)
 		dev = EXI_DEVICE_2;
 	}
 	// read 16 bit from ATA_REG_DATA | 0x00 (dummy)
-	u16 dat = 0x5000;  	
-	EXI_Lock(chn, dev, NULL);
+	u16 dat = 0x5000;
+	EXI_LockEx(chn,dev);
 	EXI_Select(chn,dev,EXI_SPEED32MHZ);
 	EXI_ImmEx(chn,&dat,2,EXI_WRITE);
 	EXI_ImmEx(chn,&dat,2,EXI_READ); // read LSB & MSB
@@ -129,7 +129,7 @@ static inline void ata_read_buffer(int chn, u32 *dst)
 	u16 dwords = 128;	// 128 * 4 = 512 bytes
 	// (31:29) 011b | (28:24) 10000b | (23:16) <num_words_LSB> | (15:8) <num_words_MSB> | (7:0) 00h (4 bytes)
 	u32 dat = 0x70000000 | ((dwords&0xff) << 16) | (((dwords>>8)&0xff) << 8);
-	EXI_Lock(chn, dev, NULL);
+	EXI_LockEx(chn,dev);
 	EXI_Select(chn,dev,EXI_SPEED32MHZ);
 	EXI_ImmEx(chn,&dat,4,EXI_WRITE);
 	if(_ideexi_version == IDE_EXI_V1) {
@@ -139,14 +139,14 @@ static inline void ata_read_buffer(int chn, u32 *dst)
 		u32 i = 0;
 		u32 *ptr = dst;
 		for(i = 0; i < dwords; i++) {
-			EXI_Lock(chn, dev, NULL);
+			EXI_LockEx(chn,dev);
 			EXI_Select(chn,dev,EXI_SPEED32MHZ);
 			EXI_ImmEx(chn,ptr,4,EXI_READ);
 			ptr++;
 			EXI_Deselect(chn);
 			EXI_Unlock(chn);
 		}
-		EXI_Lock(chn, dev, NULL);
+		EXI_LockEx(chn,dev);
 		EXI_Select(chn,dev,EXI_SPEED32MHZ);
 		EXI_ImmEx(chn,&dat,4,EXI_READ);
 		EXI_Deselect(chn);
@@ -170,7 +170,7 @@ static inline void ata_write_buffer(int chn, u32 *src)
 	u16 dwords = 128;	// 128 * 4 = 512 bytes
 	// (23:21) 111b | (20:16) 10000b | (15:8) <num_words_LSB> | (7:0) <num_words_MSB> (3 bytes)
 	u32 dat = 0xF0000000 | ((dwords&0xff) << 16) | (((dwords>>8)&0xff) << 8);
-	EXI_Lock(chn, dev, NULL);
+	EXI_LockEx(chn,dev);
 	EXI_Select(chn,dev,EXI_SPEED32MHZ);
 	EXI_ImmEx(chn,&dat,3,EXI_WRITE);
 	EXI_DmaEx(chn, src,512,EXI_WRITE);

@@ -438,7 +438,7 @@ void FrameBuffer_RenderBuffer( u32 address )
 
 			//set vertex description here
 			GX_ClearVtxDesc();
-			GX_SetVtxDesc(GX_VA_PTNMTXIDX, GX_PNMTX0);
+			GX_SetVtxDesc(GX_VA_PNMTXIDX, GX_PNMTX0);
 			GX_SetVtxDesc(GX_VA_TEX0MTXIDX, GX_TEXMTX0);
 			GX_SetVtxDesc(GX_VA_POS, GX_DIRECT);
 			GX_SetVtxDesc(GX_VA_TEX0, GX_DIRECT);
@@ -570,7 +570,7 @@ void FrameBuffer_RestoreBuffer( u32 address, u16 size, u16 width )
 
 			//set vertex description here
 			GX_ClearVtxDesc();
-			GX_SetVtxDesc(GX_VA_PTNMTXIDX, GX_PNMTX0);
+			GX_SetVtxDesc(GX_VA_PNMTXIDX, GX_PNMTX0);
 			GX_SetVtxDesc(GX_VA_TEX0MTXIDX, GX_TEXMTX0);
 			GX_SetVtxDesc(GX_VA_POS, GX_DIRECT);
 			GX_SetVtxDesc(GX_VA_TEX0, GX_DIRECT);

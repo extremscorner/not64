@@ -21,7 +21,7 @@
 #include "Logo.h"
 #include "GraphicsGX.h"
 #include <math.h>
-#include "ogc/lwp_watchdog.h"
+#include <ogc/timesupp.h>
 
 namespace menu {
 
@@ -441,7 +441,7 @@ void Logo::drawComponent(Graphics& gfx)
 
 	// setup the vertex descriptor
 	GX_ClearVtxDesc ();
-	GX_SetVtxDesc(GX_VA_PTNMTXIDX, GX_PNMTX0);
+	GX_SetVtxDesc(GX_VA_PNMTXIDX, GX_PNMTX0);
 	GX_SetVtxDesc (GX_VA_POS, GX_INDEX8);
 	GX_SetVtxDesc (GX_VA_CLR0, GX_INDEX8);
 	
@@ -457,7 +457,7 @@ void Logo::drawComponent(Graphics& gfx)
 	
 	GX_SetNumChans (1);
 	GX_SetNumTexGens (0);
-	GX_SetTevOrder (GX_TEVSTAGE0, GX_TEXCOORDNULL, GX_TEXMAP_NULL, GX_COLOR0A0);
+	GX_SetTevOrder (GX_TEVSTAGE0, GX_TEXCOORD_NULL, GX_TEXMAP_NULL, GX_COLOR0A0);
 	GX_SetTevOp (GX_TEVSTAGE0, GX_PASSCLR);
 
 	if (logoMode == LOGO_N)

@@ -111,7 +111,7 @@ void Gui::draw()
 		{
 			VIDEO_SetBlack(true);
 			VIDEO_Flush();
-		 	VIDEO_WaitVSync();
+		 	VIDEO_WaitForFlush();
 			if(shutdown==1)	//Power off System
 				SYS_ResetSystem(SYS_POWEROFF);
 			else			//Return to Loader

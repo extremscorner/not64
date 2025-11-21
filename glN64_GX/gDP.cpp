@@ -504,10 +504,20 @@ void gDPSetFogColor( u32 r, u32 g, u32 b, u32 a )
 
 void gDPSetFillColor( u32 c )
 {
-	gDP.fillColor.r = _FIXED2FLOAT( (u8)_SHIFTR( c, 11, 5 ), 5);
-	gDP.fillColor.g = _FIXED2FLOAT( (u8)_SHIFTR( c,  6, 5 ), 5);
-	gDP.fillColor.b = _FIXED2FLOAT( (u8)_SHIFTR( c,  1, 5 ), 5);
-	gDP.fillColor.a = (u8)_SHIFTR( c, 0, 1 );
+	if (gDP.colorImage.size == G_IM_SIZ_32b)
+	{
+		gDP.fillColor.r = GXcastu8f32( _SHIFTR( c, 24, 8 ) );
+		gDP.fillColor.g = GXcastu8f32( _SHIFTR( c, 16, 8 ) );
+		gDP.fillColor.b = GXcastu8f32( _SHIFTR( c,  8, 8 ) );
+		gDP.fillColor.a = GXcastu8f32( _SHIFTR( c,  0, 8 ) );
+	}
+	else
+	{
+		gDP.fillColor.r = _FIXED2FLOAT( (u8)_SHIFTR( c, 11, 5 ), 5);
+		gDP.fillColor.g = _FIXED2FLOAT( (u8)_SHIFTR( c,  6, 5 ), 5);
+		gDP.fillColor.b = _FIXED2FLOAT( (u8)_SHIFTR( c,  1, 5 ), 5);
+		gDP.fillColor.a = (u8)_SHIFTR( c, 0, 1 );
+	}
 
 	gDP.fillColor.z = (u16)_SHIFTR( c, 2, 14 );
 	gDP.fillColor.dz = (u8)_SHIFTR( c, 0, 2 );

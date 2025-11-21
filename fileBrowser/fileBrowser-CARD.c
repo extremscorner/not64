@@ -53,13 +53,6 @@ int mount_card(int slot) {
   CARD_Init ("N64E", "OS");
 	if(!SysArea) SysArea = memalign(32,CARD_WORKAREA);
   int Slot_error = CARD_Mount (slot, SysArea, card_removed_cb);
-    
-  /* Lets try 50 times to mount it. Sometimes it takes a while */
-  if (Slot_error < 0) {
-   	int i = 0;
-   	for(i = 0; i<50; i++)
-   		Slot_error = CARD_Mount (slot, SysArea, card_removed_cb);
-	}
 	return Slot_error;
 }
 

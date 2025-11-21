@@ -183,7 +183,7 @@ Graphics::Graphics(GXRModeObj *rmode)
 
 	VIDEO_SetNextFramebuffer(xfb[which_fb]);
 	VIDEO_Flush();
-	VIDEO_WaitVSync();
+	VIDEO_WaitForFlush();
 	which_fb ^= 1;
 
 	//Pass vmode, xfb[0] and xfb[1] back to main program
@@ -248,7 +248,7 @@ void Graphics::drawInit()
 	GX_SetVtxAttrFmt(GX_VTXFMT0, GX_VA_TEX0, GX_TEX_ST, GX_F32, 0);
 
 	GX_ClearVtxDesc();
-	GX_SetVtxDesc(GX_VA_PTNMTXIDX, GX_PNMTX0);
+	GX_SetVtxDesc(GX_VA_PNMTXIDX, GX_PNMTX0);
 	GX_SetVtxDesc(GX_VA_TEX0MTXIDX, GX_TEXMTX0);
 	GX_SetVtxDesc(GX_VA_POS, GX_DIRECT);
 	GX_SetVtxDesc(GX_VA_CLR0, GX_DIRECT);
@@ -272,7 +272,7 @@ void Graphics::swapBuffers()
 		VIDEO_SetBlack(false);
 	}
 	VIDEO_Flush();
- 	VIDEO_WaitVSync();
+	VIDEO_WaitForFlush();
 	which_fb ^= 1;
 }
 

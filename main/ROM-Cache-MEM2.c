@@ -24,6 +24,8 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <ogc/system.h>
+#include <ogc/video.h>
 #include "../gc_memory/MEM2.h"
 #include "ROM-Cache.h"
 #include "rom.h"

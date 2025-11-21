@@ -141,9 +141,11 @@ void VI_UpdateScreen()
 		VI_GX_showLoadIcon();
 		VI_GX_showFPS();
 		VI_GX_showDEBUG();
+		GX_SetDispCopyGamma((*REG.VI_STATUS & 8) ? GX_GM_2_2 : GX_GM_1_0);
 		GX_SetCopyClear ((GXColor){0,0,0,255}, GX_MAX_Z24);
 		GX_CopyDisp(VI.xfb[VI.which_fb], GX_TRUE);
 		GX_SetDrawSync(VI.which_fb);
+		GX_SetDispCopyGamma(GX_GM_1_0);
 	}
 	else if (OGL.frameBufferTextures)
 	{
@@ -166,9 +168,11 @@ void VI_UpdateScreen()
 			VI_GX_showFPS();
 			VI_GX_showDEBUG();
 			//Copy EFB->XFB
+			GX_SetDispCopyGamma((*REG.VI_STATUS & 8) ? GX_GM_2_2 : GX_GM_1_0);
 			GX_SetCopyClear ((GXColor){0,0,0,255}, GX_MAX_Z24);
 			GX_CopyDisp(VI.xfb[VI.which_fb], GX_TRUE);
 			GX_SetDrawSync(VI.which_fb);
+			GX_SetDispCopyGamma(GX_GM_1_0);
 
 			//Restore current EFB
 			FrameBuffer_RestoreBuffer( gDP.colorImage.address, gDP.colorImage.size, gDP.colorImage.width );
@@ -185,9 +189,12 @@ void VI_UpdateScreen()
 			VI_GX_showLoadIcon();
 			VI_GX_showFPS();
 			VI_GX_showDEBUG();
+			GX_SetDispCopyGamma((*REG.VI_STATUS & 8) ? GX_GM_2_2 : GX_GM_1_0);
 			GX_SetCopyClear ((GXColor){0,0,0,255}, GX_MAX_Z24);
 			GX_CopyDisp(VI.xfb[VI.which_fb], GX_TRUE);
 			GX_SetDrawSync(VI.which_fb);
+			GX_SetDispCopyGamma(GX_GM_1_0);
+
 			gSP.changed &= ~CHANGED_COLORBUFFER;
 		}
 	}
@@ -272,7 +279,7 @@ void VI_GX_showLoadIcon()
 	GX_LoadProjectionMtx(GXprojection2D, GX_ORTHOGRAPHIC); //load current 2D projection matrix
 	//draw rectangle from ulx,uly to lrx,lry
 	GX_ClearVtxDesc();
-	GX_SetVtxDesc(GX_VA_PTNMTXIDX, GX_PNMTX2);
+	GX_SetVtxDesc(GX_VA_PNMTXIDX, GX_PNMTX2);
 	GX_SetVtxDesc(GX_VA_POS, GX_DIRECT);
 	GX_SetVtxDesc(GX_VA_CLR0, GX_DIRECT);
 	//set vertex attribute formats here
@@ -282,7 +289,7 @@ void VI_GX_showLoadIcon()
 	//disable textures
 	GX_SetNumChans (1);
 	GX_SetNumTexGens (0);
-	GX_SetTevOrder (GX_TEVSTAGE0, GX_TEXCOORDNULL, GX_TEXMAP_NULL, GX_COLOR0A0);
+	GX_SetTevOrder (GX_TEVSTAGE0, GX_TEXCOORD_NULL, GX_TEXMAP_NULL, GX_COLOR0A0);
 	GX_SetTevOp (GX_TEVSTAGE0, GX_PASSCLR);
 	//set blend mode
 	GX_SetBlendMode(GX_BM_NONE, GX_BL_ONE, GX_BL_ZERO, GX_LO_CLEAR); //Fix src alpha
@@ -338,7 +345,7 @@ void VI_GX_showLoadIcon()
 	GX_SetScissor((u32) 0,(u32) 0,(u32) OGL.width,(u32) OGL.height);	//Set to the same size as the viewport.
 
 	GX_ClearVtxDesc();
-	GX_SetVtxDesc(GX_VA_PTNMTXIDX, GX_PNMTX2);
+	GX_SetVtxDesc(GX_VA_PNMTXIDX, GX_PNMTX2);
 	GX_SetVtxDesc(GX_VA_POS, GX_DIRECT);
 	GX_SetVtxDesc(GX_VA_TEX0, GX_DIRECT);
 	//set vertex attribute formats here
@@ -348,7 +355,7 @@ void VI_GX_showLoadIcon()
 	//disable textures
 	GX_SetNumChans (0);
 	GX_SetNumTexGens (1);
-	GX_SetTevOrder (GX_TEVSTAGE0, GX_TEXCOORD0, GX_TEXMAP0, GX_COLORNULL);
+	GX_SetTevOrder (GX_TEVSTAGE0, GX_TEXCOORD0, GX_TEXMAP0, GX_COLOR_NULL);
 	GX_SetTevOp (GX_TEVSTAGE0, GX_REPLACE);
 	//set blend mode
 	GX_SetBlendMode(GX_BM_BLEND, GX_BL_SRCALPHA, GX_BL_INVSRCALPHA, GX_LO_CLEAR); //Fix src alpha
@@ -584,7 +591,7 @@ void VI_GX_renderCpuFramebuffer()
 
 	//set vertex description
 	GX_ClearVtxDesc();
-	GX_SetVtxDesc(GX_VA_PTNMTXIDX, GX_PNMTX0);
+	GX_SetVtxDesc(GX_VA_PNMTXIDX, GX_PNMTX0);
 	GX_SetVtxDesc(GX_VA_TEX0MTXIDX, GX_TEXMTX0);
 	GX_SetVtxDesc(GX_VA_POS, GX_DIRECT);
 	GX_SetVtxDesc(GX_VA_TEX0, GX_DIRECT);
@@ -614,7 +621,7 @@ void VI_GX_renderCpuFramebuffer()
 	__lwp_heap_free(GXtexCache, FBtex);
 }
 
-void VI_GX_PreRetraceCallback(u32 retraceCnt)
+void VI_GX_PreRetraceCallback(u32 retraceCount)
 {
 	VI.which_fb ^= 1;
 	VIDEO_SetPreRetraceCallback(NULL);
