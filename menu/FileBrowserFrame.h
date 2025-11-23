@@ -34,7 +34,7 @@ public:
 private:
 	u16 previousButtonsGC[4];
 	u32 previousButtonsWii[4];
-
+	u32 previousButtonsDRC[4];
 };
 
 #endif

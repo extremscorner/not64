@@ -272,6 +272,8 @@ void ConfigureButtonsFrame::activateSubmenu(int submenu)
 		activePadType = ACTIVEPADTYPE_WIIUPRO;
 	else if (virtualControllers[activePad].control == &controller_Classic)
 		activePadType = ACTIVEPADTYPE_CLASSIC;
+	else if (virtualControllers[activePad].control == &controller_DRC)
+		activePadType = ACTIVEPADTYPE_CLASSIC;
 	else if (virtualControllers[activePad].control == &controller_WiimoteNunchuk)
 		activePadType = ACTIVEPADTYPE_WIIMOTENUNCHUCK;
 	else if (virtualControllers[activePad].control == &controller_Wiimote)
