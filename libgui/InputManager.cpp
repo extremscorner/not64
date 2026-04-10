@@ -22,6 +22,7 @@
 #include "FocusManager.h"
 #include "CursorManager.h"
 #include "../main/wii64config.h"
+#include <wiidrc/wiidrc.h>
 
 extern char shutdown;
 extern int stop;
@@ -40,6 +41,7 @@ Input::Input()
 	WPAD_SetVRes(WPAD_CHAN_ALL, 640, 480);
 	WPAD_SetDataFormat(WPAD_CHAN_ALL, WPAD_FMT_BTNS_ACC_IR); 
 	SYS_SetPowerCallback(PowerCallback);
+	WiiDRC_Init();
 #endif
 	SYS_SetResetCallback(ResetCallback);
 }
@@ -53,6 +55,7 @@ void Input::refreshInput()
 	PAD_ScanPads();
 #ifdef HW_RVL
 	WPAD_ScanPads();
+	if(drcNeedScan){ WiiDRC_ScanPads(); drcNeedScan = 0; }
 #endif
 }
 

@@ -64,6 +64,7 @@ private:
 	int buttonsPressed, previousButtonsPressed;
 	u32 previousButtonsWii[4];
 	u16 previousButtonsGC[4];
+	u32 previousButtonsDRC[4];
 	ComponentList focusList;
 	Component *primaryFocusOwner, *secondaryFocusOwner;
 	Frame *currentFrame;

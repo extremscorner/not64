@@ -582,6 +582,31 @@ void SettingsFrame::drawChildren(menu::Graphics &gfx)
 				}
 				break;
 			}
+			else if (i == 0 && WiiDRC_Inited() && WiiDRC_Connected() && (WiiDRC_ButtonsHeld() ^ previousButtonsDRC[i]))
+			{
+				u32 currentButtonsDownDRC = (WiiDRC_ButtonsHeld() ^ previousButtonsDRC[i]) & WiiDRC_ButtonsHeld();
+				previousButtonsDRC[i] = WiiDRC_ButtonsHeld();
+				if (currentButtonsDownDRC & WIIDRC_BUTTON_R)
+				{
+					//move to next tab
+					if(activeSubmenu < SUBMENU_SAVES) 
+					{
+						activateSubmenu(activeSubmenu+1);
+						menu::Focus::getInstance().clearPrimaryFocus();
+					}
+					break;
+				}
+				else if (currentButtonsDownDRC & WIIDRC_BUTTON_L)
+				{
+					//move to the previous tab
+					if(activeSubmenu > SUBMENU_GENERAL) 
+					{
+						activateSubmenu(activeSubmenu-1);
+						menu::Focus::getInstance().clearPrimaryFocus();
+					}
+					break;
+				}
+			}
 #endif //HW_RVL
 		}
 

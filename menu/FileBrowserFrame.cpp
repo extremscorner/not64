@@ -260,6 +260,33 @@ void FileBrowserFrame::drawChildren(menu::Graphics &gfx)
 				}
 				break;
 			}
+			else if (i == 0 && WiiDRC_Inited() && WiiDRC_Connected() && (WiiDRC_ButtonsHeld() ^ previousButtonsDRC[i]))
+			{
+				u32 currentButtonsDownDRC = (WiiDRC_ButtonsHeld() ^ previousButtonsDRC[i]) & WiiDRC_ButtonsHeld();
+				previousButtonsDRC[i] = WiiDRC_ButtonsHeld();
+				if (currentButtonsDownDRC & WIIDRC_BUTTON_R)
+				{
+					//move to next set & return
+					if(current_page+1 < max_page) 
+					{
+						current_page +=1;
+						fileBrowserFrame_FillPage();
+						menu::Focus::getInstance().clearPrimaryFocus();
+					}
+					break;
+				}
+				else if (currentButtonsDownDRC & WIIDRC_BUTTON_L)
+				{
+					//move to the previous set & return
+					if(current_page > 0) 
+					{
+						current_page -= 1;
+						fileBrowserFrame_FillPage();
+						menu::Focus::getInstance().clearPrimaryFocus();
+					}
+					break;
+				}
+			}
 #endif //HW_RVL
 		}
 

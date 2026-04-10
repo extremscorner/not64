@@ -38,7 +38,7 @@
 static CONTROL_INFO control_info;
 static BOOL lastData[4];
 
-virtualControllers_t virtualControllers[4];
+virtualControllers_t virtualControllers[5];
 
 controller_t* controller_ts[num_controller_t] =
 #if defined(WII) && !defined(NO_BT)
@@ -49,6 +49,7 @@ controller_t* controller_ts[num_controller_t] =
 	  &controller_ExtenmoteNES,
 	  &controller_WiiUPro,
 	  &controller_Classic,
+	  &controller_DRC,
 	  &controller_WiimoteNunchuk,
 	  &controller_Wiimote,
 	 };
@@ -335,7 +336,8 @@ EXPORT void CALL WM_KeyDown( WPARAM wParam, LPARAM lParam )
 EXPORT void CALL WM_KeyUp( WPARAM wParam, LPARAM lParam )
 {
 }
-void pauseInput(void){
+
+void pauseInput(void){
 	int i;
 	for(i=0; i<4; ++i){
 		if(virtualControllers[i].inUse){
